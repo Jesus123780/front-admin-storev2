@@ -1,0 +1,67 @@
+name: Deployment Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [develop]
+    types: [opened, synchronize]
+
+env:
+  DOCKER_COMPOSE_FILE: ./docker/production/Dockerfile
+  REMOTE_PATH: proyects/front-admin-store
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_DIGITAL_OCEAN }}
+  SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+  DEPLOY_USER: SHA256:M+TnZQFB8/ewAurTcryvpyTCQqm37ACqgoxiXBl9SOY.
+  SERVER_IP: 167.172.137.233
+
+jobs:
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - name: Install dependencies
+      run: npm install -no-audit --no-fund --no-optional -f
+    - run: npm run check:eslint -f
+    - name: Build
+      run: npm run build -f
+
+  login-docker:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/production/Dockerfile
+        push: true
+        tags: juvinaojesus/front-admin-store
+
+    - name: Set up SSH connection
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+    - name: Deploy to DigitalOcean
+      run: |
+        ssh "$DEPLOY_USER"@"$SERVER_IP" "cd $REMOTE_PATH && docker-compose pull && docker-compose up -d"

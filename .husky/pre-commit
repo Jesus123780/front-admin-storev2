@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+#Run Link
+npm run lint:fix -f
+npx snyk code test # general code 
+npx snyk test # general package.json

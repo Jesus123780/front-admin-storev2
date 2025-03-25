@@ -1,0 +1,14 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  hello_word:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: test
+        run: |
+          echo "test is running successfully"
+

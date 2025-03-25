@@ -19,8 +19,8 @@
     "postinstall": "electron-builder install-app-deps",
     "electron:dist": "electron-builder --dir",
     "electron:dist:deb": "electron-builder --linux deb",
-    "electron:build": "tsup",
     "build": "run-s next:build electron:build",
+    "electron:build": "electron-builder",
     "dist": "run-s build electron:dist",
     "dev": "npm-run-all --parallel electron:dev next:dev",
     "electron:build_watch": "tsup --watch",
@@ -33,9 +33,12 @@
     "cross-env": "^7.0.3",
     "get-port-please": "^3.1.2",
     "next": "^15.2.4",
+    "npm-pkg-hook": "1.10.7",
+    "pkg-components": "^2.0.71",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "sharp": "^0.33.4"
+    "sharp": "^0.33.4",
+    "styled-components": "^5.3.5"
   },
   "devDependencies": {
     "@types/node": "^22.1.0",
@@ -82,16 +85,9 @@
       }
     ],
     "win": {
-      "signingHashAlgorithms": [],
       "target": [
         "nsis"
       ]
-    },
-    "linux": {
-      "target": [
-        "deb"
-      ],
-      "category": "Development"
     }
   }
 }

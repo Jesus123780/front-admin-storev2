@@ -1,15 +1,15 @@
 import { CounterClientComponent } from "@/components/ClientComponent";
 import { ElectronCheck } from "@/components/ElectronCheck";
 import { ServerPokemonComponent } from "@/components/ServerComponent";
-
-export default function Home() {
+import { Home } from "@/container/Home";
+export default function HomePage() {
   return (
     <main className="flex min-h-screen items-center justify-around p-24 flex-row">
-      <ElectronCheck />
+      {/* <ElectronCheck /> */}
 
-      <ServerPokemonComponent />
+      {/* <ServerPokemonComponent /> */}
 
-      <CounterClientComponent />
+      <Home />
     </main>
   );
 }

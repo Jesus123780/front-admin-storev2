@@ -1,5 +1,5 @@
 export const ServerPokemonComponent = async () => {
-  const data = await fetch("https://pokeapi.co/api/v2/pokemon/ditto");
+  const data = await fetch("https://pokeapi.co/api/v2/pokemon/pikachu");
   const pokemon = await data.json();
 
   return (
@@ -23,6 +23,8 @@ export const ServerPokemonComponent = async () => {
         alt={pokemon.name}
         style={{ width: "150px", height: "150px", borderRadius: "50%" }}
       />
+
+      
     </div>
   );
 };
