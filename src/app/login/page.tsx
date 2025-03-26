@@ -1,12 +1,13 @@
-"use client";
+"use client"
 
-import { Column, Text } from 'pkg-components';
+import { Column } from 'pkg-components'
 import React from 'react'
+import { Login } from '../../container/Login'
 
 export default function Entrar() {
     return (
         <Column as='main'>
-            <Text>Entrar</Text>
+            <Login />
         </Column>
     );
 }

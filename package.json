@@ -28,17 +28,25 @@
     "electron:watch": "cross-env NODE_ENV='development' nodemon"
   },
   "dependencies": {
+    "@apollo/client": "^3.13.5",
     "@electron-toolkit/utils": "^3.0.0",
+    "@fingerprintjs/fingerprintjs": "^4.6.1",
     "@next/env": "^14.2.5",
+    "apollo-upload-client": "^17.0.0",
     "cross-env": "^7.0.3",
+    "deepmerge": "^4.3.1",
     "get-port-please": "^3.1.2",
+    "jsonwebtoken": "^9.0.1",
+    "lodash": "^4.17.21",
     "next": "^15.2.4",
+    "next-auth": "^4.24.11",
     "npm-pkg-hook": "1.10.7",
     "pkg-components": "^2.0.71",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sharp": "^0.33.4",
-    "styled-components": "^5.3.5"
+    "styled-components": "^5.3.5",
+    "subscriptions-transport-ws": "^0.11.0"
   },
   "devDependencies": {
     "@types/node": "^22.1.0",
