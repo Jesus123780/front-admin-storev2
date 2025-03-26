@@ -36,10 +36,12 @@ import {
 } from 'npm-pkg-hook'
 import { useSession, signIn, getProviders, signOut } from 'next-auth/react'
 import { getUserFromToken, decodeToken } from '../../utils'
+import { useRouter } from 'next/navigation'
 
 const isDev = process.env.NODE_ENV === 'development'
 const EXPIRED_MESSAGE = 'Session expired, refresh needed'
 export const Login = () => {
+  const router = useRouter()
   const [handleRegisterDeviceUser] = useRegisterDeviceUser()
   const { setAlertBox } = useContext(Context)
   const [onClickLogout] = useLogout()
@@ -113,15 +115,8 @@ export const Login = () => {
           { name: 'session', value: token }
         ]
         await handleSession({ cookies: cookiesToSave })
-        const protocol = window.location.protocol // Obtiene el protocolo actual (http: o https:)
-        const baseUrl = process.env.URL_BASE.replace(/^https?:/, protocol) // Reemplaza el protocolo en la URL base
-        
-        window.location.href = `${baseUrl}/restaurante/getDataVerify`
-        
       }
-      const protocol = window.location.protocol // Obtiene el protocolo actual (http: o https:)
-      const baseUrl = process.env.URL_BASE.replace(/^https?:/, protocol) // Reemplaza el protocolo en la URL base
-      window.location.href = `${baseUrl}/restaurante/getDataVerify`
+      router.push('/restaurante/getDataVerify')
     } catch (error) {
       if (session) await signOut({ redirect: false })
       setAlertBox({
