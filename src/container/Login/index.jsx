@@ -110,13 +110,14 @@ export const Login = () => {
 
       if (storeUserId) {
         const cookiesToSave = [
-          { name: 'restaurant', value: idStore },
+          { name: 'merchant', value: idStore },
           { name: 'usuario', value: decode?.id || id },
           { name: 'session', value: token }
         ]
         await handleSession({ cookies: cookiesToSave })
+        return router.push('/dashboard')
       }
-      router.push('/restaurante/getDataVerify')
+      router.push('/merchant')
     } catch (error) {
       if (session) await signOut({ redirect: false })
       setAlertBox({

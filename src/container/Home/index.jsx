@@ -13,7 +13,7 @@ export const Home = () => {
 
 
   const handleLogin = () => {
-    router.push('/entrar')
+    router.push('/login')
   }
   const handleRegister = () => {
     router.push('/register')

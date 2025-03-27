@@ -47,7 +47,7 @@ const startNextJSServer = async () => {
       customServer: true,
       allowRetry: false,
       keepAliveTimeout: 5000,
-      minimalMode: true,
+      minimalMode: false,
     });
 
     return nextJSPort;

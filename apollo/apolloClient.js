@@ -115,8 +115,8 @@ function createApolloClient() {
   const getLink = async (operation) => {
     const headers = await authLink()
     const service = operation.getContext().clientName
-    let uri = `${process.env.URL_BACK_SERVER}/graphql`
-    if (service === SERVICES.MAIN) uri = `${process.env.URL_BACK_SERVER}/graphql`
+    let uri = `${process.env.NEXT_PUBLIC_URL_BACK_SERVER}/graphql`
+    if (service === SERVICES.MAIN) uri = `${process.env.NEXT_PUBLIC_URL_BACK_SERVER}/graphql`
     if (service === SERVICES.ADMIN_STORE) uri = `${URL_ADMIN}graphql`
     if (service === SERVICES.WEB_SOCKET_CHAT) uri = `${process.env.URL_WEB_SOCKET_CHAT}/graphql`
     if (service === SERVICES.ADMIN_SERVER) uri = `${process.env.URL_ADMIN_SERVER_SOCKET_HTTPS}`
