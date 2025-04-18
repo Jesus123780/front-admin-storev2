@@ -8,7 +8,7 @@ import {
 import PropTypes from 'prop-types'
 import { RippleButton, InputOTPHook } from 'pkg-components'
 import { EColor } from 'public/colors'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import { decodeToken, getTokenState } from 'utils'
 import { EmptyLayout } from 'pages/_app'
 

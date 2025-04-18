@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import {
   createContext,
   useCallback,
@@ -37,11 +37,13 @@ const initialStateContext = {
     title = '',
     description = '',
     backgroundColor = ''
-  }) => { return {
-    title,
-    description,
-    backgroundColor
-  } },
+  }) => {
+    return {
+      title,
+      description,
+      backgroundColor
+    }
+  },
   setIsOpenOrder: (state) => { return state },
   setCollapsed: (boolean) => { return boolean },
   setCompanyLink: () => { return },
@@ -60,11 +62,13 @@ const initialStateContext = {
     message = '',
     color = '',
     duration = 3000
-  }) => { return {
-    message,
-    color,
-    duration
-  } }
+  }) => {
+    return {
+      message,
+      color,
+      duration
+    }
+  }
 }
 export const Context = createContext(initialStateContext)
 // 22/05/2023 VALERIA
@@ -90,8 +94,10 @@ const Provider = ({ children }) => {
   const router = useRouter()
 
   const setSessionActive = useCallback(sessionValue => { return setIsSession(sessionValue) }, [])
+  console.log({ pathname: router.pathname })
+  // const pathname = router.pathname === '/dashboard/[...name]'
+  const pathname = usePathname()
 
-  const pathname = router.pathname === '/dashboard/[...name]'
   const food = router?.query?.food
   /**
  * Handles the lateral menu interaction and sets the component modal accordingly.
@@ -103,19 +109,19 @@ const Provider = ({ children }) => {
       HIDE_MODAL: 3,
       SHOW_DASHBOARD_MODAL: 4
     }
-  
+
     const isFood = !!food
-  
+
     // Check if the current menu option should hide the modal
     const shouldHideModal = index === MENU_OPTIONS.HIDE_MODAL && pathname
-  
+
     // Check if food is selected, then redirect to remove the food parameter from the URL
     const shouldRedirectFood = isFood
     if (shouldRedirectFood) {
       router?.push({ query: { ...router.query, food: '' } }, undefined, { shallow: true })
       return
     }
-  
+
     let showComponentModal
     if (shouldHideModal) {
       showComponentModal = false
@@ -150,7 +156,7 @@ const Provider = ({ children }) => {
         setError(null)
       }, error.duration || 3000)
 
-      return () => {return clearTimeout(timeout)}
+      return () => { return clearTimeout(timeout) }
     }
     return () => { return }
   }, [error])
@@ -181,16 +187,14 @@ const Provider = ({ children }) => {
 
   const setSalesOpen = () => {
     setSalesOpenModal(!salesOpen)
-    router.push(
-      {
-        query: {
-          ...router.query,
-          sale: salesOpen ? '' : 'true'
-        }
-      },
-      undefined,
-      { shallow: true }
-    )
+    const newQuery = {
+      ...router.query,
+      saleOpen: !salesOpen
+    }
+    if (typeof router.push !== "function") return
+    router.push(pathname, {
+      query: newQuery,
+    })
   }
   useEffect(() => {
     if (router.query?.sale === 'true') {

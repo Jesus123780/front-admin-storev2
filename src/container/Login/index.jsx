@@ -337,7 +337,7 @@ export const Login = () => {
             )
           })}
           <WrapperActiveLink>
-            <ActiveLink activeClassName='active' href='/entrar/email'>
+            {/* <ActiveLink activeClassName='active' href='/entrar/email'>
               <a>
                 <Button
                 standard={String(false)}
@@ -348,8 +348,8 @@ export const Login = () => {
                   Correo
                 </Button>
               </a>
-            </ActiveLink>
-            <ActiveLink activeClassName='active' href='/register'>
+            </ActiveLink> */}
+            {/* <ActiveLink activeClassName='active' href='/register'>
               <a>
                 <Button
                   standard={String(false)}
@@ -360,7 +360,7 @@ export const Login = () => {
                   Registrate
                 </Button>
               </a>
-            </ActiveLink>
+            </ActiveLink> */}
           </WrapperActiveLink>
         </Form>
       </Content>

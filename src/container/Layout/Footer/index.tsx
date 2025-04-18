@@ -12,14 +12,14 @@ const navLinks = [
 export const Footer = () => {
   return (
     <footer className={styles.footer}>
-      {navLinks.map(({ href, icon, label }) => (
+      {/* {navLinks.map(({ href, icon, label }) => (
         <ActiveLink key={href} activeClassName={styles.active} href={href}>
           <a className={styles.anchor}>
             <Icon icon={icon} size={20} />
             <Text>{label}</Text>
           </a>
         </ActiveLink>
-      ))}
+      ))} */}
     </footer>
   )
 }

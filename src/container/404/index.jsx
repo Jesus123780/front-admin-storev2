@@ -10,7 +10,7 @@ import {
   Divider,
   Image
 } from 'pkg-components'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import { BGColor, SECColor } from 'public/colors'
 import styles from './styles.module.css'
 

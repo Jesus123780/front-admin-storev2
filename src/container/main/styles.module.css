@@ -1,0 +1,85 @@
+/* styles.module.css */
+.main {
+    padding: var(--spacing-2xl);
+    cursor: pointer;
+    width: 30%;
+}
+
+.main__card {
+    border: 1px solid var(--color-neutral-gray-silver);
+    border-radius: 8px;
+    padding: 20px;
+    width: 100%;
+    position: relative;
+    box-shadow: var(--box-shadow-2xs);
+    transition: all .5s ease;
+}
+
+.main__user-email {
+    margin-bottom: 10px;
+    align-items: center;
+    display: flex;
+    justify-content: space-around;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.main__store-info {
+    margin-top: 20px;
+    position: relative;
+
+}
+
+.main__store-button {
+    padding: 5px;
+    width: 100%;
+    justify-content: center;
+}
+
+.main__store-initials {
+    align-items: center;
+    background-color: var(--color-base-white);
+    border-radius: 50%;
+    border: 1px solid var(--color-neutral-gray-dark);
+    bottom: -160px;
+    color: var(--color-neutral-gray-dark);
+    display: flex;
+    font-size: 1.5rem;
+    font-weight: bold;
+    height: 50px;
+    justify-content: center;
+    left: 0;
+    margin: auto;
+    position: absolute;
+    right: 0;
+    width: 50px;
+}
+
+.image_profile {
+    border-radius: 9999px;
+    width: 3.25rem;
+    min-width: 3.25rem;
+    height: 3.25rem;
+    min-height: 3.25rem;
+    margin: 0 20px 0 0;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+
+
+  
+  .main__card:hover {
+    transform: translateX(20px);
+  }
+  
+  .iconWrapper {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: min-content;
+    transform: translateY(-50%);
+    transition: opacity 0.3s ease-in-out;
+  }
+  

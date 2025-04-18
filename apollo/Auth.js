@@ -6,7 +6,7 @@ import {
   useMutation, 
   useQuery
 } from '@apollo/client'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import { isLoggedVar } from './cache'
 import { UPDATE_TOKEN } from './queries'
 import { 

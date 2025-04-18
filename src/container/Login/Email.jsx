@@ -29,7 +29,7 @@ import {
   Text,
   GoBack
 } from './styled'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import { EMAIL_SESSION } from './queries'
 import { Context } from './../../context/Context'
 import { decodeToken } from 'utils';

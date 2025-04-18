@@ -2,7 +2,7 @@
 
 import { Column } from 'pkg-components'
 import React from 'react'
-import { Login } from '../../container/Login'
+import { Login } from '../../container/login'
 
 export default function Entrar() {
     return (

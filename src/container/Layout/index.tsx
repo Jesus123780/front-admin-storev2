@@ -3,7 +3,7 @@
 import PropTypes from 'prop-types'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import React, {
   useContext,
   useEffect,
@@ -83,6 +83,7 @@ export const MemoLayout = ({
   settings
 }) => {
   const location = useRouter()
+  const pathname = usePathname()
 
   const {
     collapsed,
@@ -203,10 +204,7 @@ export const MemoLayout = ({
 
   const handleViewOrder = (pCodeRef: string) => {
     setIsOpenOrder(false)
-    location.push({
-      pathname: '/pedidos',
-      query: { saleId: pCodeRef }
-    })
+    location.push(`/pedidos?saleId=${encodeURIComponent(pCodeRef)}`)
   }
   const [openDeliveryTime, setOpenDeliveryTime] = useState(false)
   const handleOpenDeliveryTime = () => {
@@ -328,14 +326,14 @@ export const MemoLayout = ({
         show={isOpenOrder}
         zIndex={getGlobalStyle('--z-index-99999')}
       />
-      <DeliveryTime
+      {/* <DeliveryTime
         createDeliveryTime={createDeliveryTime}
         deliveryTime={deliveryTime}
         handleDeliveryTimeChange={handleDeliveryTimeChange}
         isOpen={openDeliveryTime}
         loading={loadingDeliveryTime}
         setDeliveryTimeOpen={handleOpenDeliveryTime}
-      />
+      /> */}
       <Orders
         deliveryTimeMinutes={deliveryTimeMinutes}
         handleSetIsOpenOrder={handleSetIsOpenOrder}
@@ -344,10 +342,10 @@ export const MemoLayout = ({
         orders={orders}
       />
       
-      <AlertBox err={error} />
+      {/* <AlertBox err={error} /> */}
 
       {/* {showModal && !loading && <AlertInfo message= type='warning' />} */}
-      <main className={`${styles.main} ${!Boolean('/' !== location.pathname) ? styles.noAside : ''}`}>
+      <main className={`${styles.main} ${!Boolean('/' !== pathname) ? styles.noAside : ''}`}>
         <Header
           count={count}
           countOrders={countOrders}
@@ -370,8 +368,8 @@ export const MemoLayout = ({
         />
 
         <Aside
-          collapsed={collapsed}
-          countOrders={countOrders}
+          collapsed={collapsed ? 'collapsed' : undefined}
+          countOrders={countOrders as number}
           dataStore={dataStore}
           handleClick={handleClick}
           handleOpenDeliveryTime={handleOpenDeliveryTime}
@@ -386,7 +384,7 @@ export const MemoLayout = ({
           setSalesOpen={setSalesOpen}
           setShowComponentModal={setShowComponentModal}
           version={version}
-        />
+        /> 
         <div
           style={{
             backgroundColor: getGlobalStyle('--color-neutral-gray-white'),
@@ -423,12 +421,12 @@ export const MemoLayout = ({
 
         <div style={{ gridArea: 'right' }}>
           <Overline
-            bgColor='#00000012'
             onClick={() => {
               return onCloseLateralMenu()
             }}
             show={showModalComponent}
             zIndex='99990000'
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
           />
           {/* <LateralModal
             height={customHeights ? customHeights[[showModalComponent]] : heights[showModalComponent]}

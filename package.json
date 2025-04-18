@@ -22,6 +22,7 @@
     "build": "run-s next:build electron:build",
     "electron:build": "electron-builder",
     "dist": "run-s build electron:dist",
+    "prebuild:backend": "node electron/src/build-backend.js",
     "dev": "npm-run-all --parallel electron:dev next:dev",
     "electron:build_watch": "tsup --watch",
     "electron:dev": "npm-run-all --parallel electron:build_watch electron:watch",
@@ -45,7 +46,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sharp": "^0.33.4",
-    "styled-components": "^5.3.5",
+    "styled-components": "^5.3.11",
     "subscriptions-transport-ws": "^0.11.0"
   },
   "devDependencies": {

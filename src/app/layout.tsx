@@ -12,6 +12,15 @@ import { MemoLayout } from '@/container/Layout'
 
 const inter = Inter({ subsets: ['latin'] })
 
+const ROUTES_WITHOUT_LAYOUT = new Set([
+  '/',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email'
+])
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<number>(0)
   const [hidden, setHidden] = useState(true)
@@ -61,9 +70,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Context>
           <SessionProvider>
             <ApolloClientProvider>
-              <MemoLayout>
-                {children}
-              </MemoLayout>
+              {ROUTES_WITHOUT_LAYOUT.has(pathname)
+                ? children
+                : <MemoLayout>
+                  {children}
+                </MemoLayout>
+              }
             </ApolloClientProvider>
           </SessionProvider>
         </Context>
