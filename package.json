@@ -23,9 +23,9 @@
     "electron:build": "electron-builder",
     "dist": "run-s build electron:dist",
     "prebuild:backend": "node electron/src/build-backend.js",
-    "dev": "npm-run-all --parallel electron:dev next:dev",
+    "dev": "concurrently -n \"NEXT,ELECTRON\" -c \"yellow,blue\" --kill-others \"next dev -p 3000\" \"wait-on http://localhost:3000 && electron .\"",
     "electron:build_watch": "tsup --watch",
-    "electron:dev": "npm-run-all --parallel electron:build_watch electron:watch",
+    "electron:dev": "cross-env NODE_ENV='development' electron .",
     "electron:watch": "cross-env NODE_ENV='development' nodemon"
   },
   "dependencies": {
@@ -36,12 +36,14 @@
     "apollo-upload-client": "^17.0.0",
     "cross-env": "^7.0.3",
     "deepmerge": "^4.3.1",
+    "electron-log": "^5.3.4",
     "get-port-please": "^3.1.2",
     "jsonwebtoken": "^9.0.1",
     "lodash": "^4.17.21",
     "next": "^15.2.4",
     "next-auth": "^4.24.11",
     "npm-pkg-hook": "1.10.7",
+    "pg": "8.14.1",
     "pkg-components": "^2.0.71",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -53,6 +55,7 @@
     "@types/node": "^22.1.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "concurrently": "9.1.2",
     "electron": "^31.3.1",
     "electron-builder": "^24.13.3",
     "eslint": "^8.5.7",
@@ -62,41 +65,50 @@
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.7",
     "tsup": "^8.2.4",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "wait-on": "8.0.3"
   },
   "build": {
-    "asar": true,
-    "executableName": "NextJSElectronJ",
-    "appId": "com.saybackend.nextjs-electronJ",
-    "asarUnpack": [
-      "node_modules/next",
-      "node_modules/@img",
-      "node_modules/sharp",
-      "**\\*.{node,dll}"
-    ],
-    "files": [
-      "build",
-      {
-        "from": ".next/standalone",
-        "to": "app",
-        "filter": [
-          "!**/.env",
-          "!**/package.json"
-        ]
-      },
-      {
-        "from": ".next/static",
-        "to": "app/.next/static"
-      },
-      {
-        "from": "public",
-        "to": "app/public"
-      }
-    ],
-    "win": {
-      "target": [
-        "nsis"
+  "asar": true,
+  "executableName": "NextJSElectronJ",
+  "appId": "com.saybackend.nextjs-electronJ",
+  "asarUnpack": [
+    "node_modules/next",
+    "node_modules/@img",
+    "node_modules/sharp",
+    "**/*.node",
+    "**/*.dll"
+  ],
+  "files": [
+    "build",
+    {
+      "from": ".next/standalone",
+      "to": "app",
+      "filter": [
+        "!**/.env",
+        "!**/package.json"
       ]
+    },
+    {
+      "from": ".next/static",
+      "to": "app/.next/static"
+    },
+    {
+      "from": "public",
+      "to": "app/public"
     }
+  ],
+"extraResources": [
+    {
+      "from": "front-back-server/front-back-server.exe",
+      "to": "front-back-server.exe"
+    }
+  ],
+  "win": {
+    "target": [
+      "nsis"
+    ]
   }
+}
+
 }

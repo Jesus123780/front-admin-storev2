@@ -4,7 +4,7 @@ import React from 'react'
 
 const NotFount = () => {
   const handleBack = () => {
-    window.history.back()
+    // window.history.back()
   }
   return (
     <div>

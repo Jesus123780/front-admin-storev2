@@ -28,7 +28,7 @@ import {
   Icon
 } from 'pkg-components'
 import {
-  useConnection,
+  // useConnection,
   useManageQueryParams,
   useTotalSales,
   useMobile,
@@ -151,7 +151,7 @@ export const MemoLayout = ({
     ? 'Conexión a internet restablecida.'
     : 'Conexión a internet perdida.'
 
-  useConnection({ setConnectionStatus })
+  // useConnection({ setConnectionStatus })
 
   useEffect(() => {
     if (connectionStatus === 'initial') return

@@ -275,7 +275,7 @@ export const Login = () => {
         <Form>
           <Text size='30px'>¡Falta poco para iniciar tus ventas!</Text>
           <Text size='15px'>¿Cómo deseas continuar?</Text>
-          {isDev && (
+          {true && (
             <>
               <Button
                 standard={String(false)}

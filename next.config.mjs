@@ -4,6 +4,7 @@ const nextConfig = {
   env: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+    NEXT_PUBLIC_BUSINESS_TITLE: process.env.NEXT_PUBLIC_BUSINESS_TITLE,
   },
   eslint: {
     ignoreDuringBuilds: true, // 🔹 Ignorar errores de ESLint en la build
@@ -15,11 +16,7 @@ const nextConfig = {
   compiler: {
     reactRemoveProperties: true, // 🔹 Remueve propiedades problemáticas en producción
     removeConsole: true, // 🔹 Elimina console.log() en producción
-    styledComponents: true,
-     
-  },
-  experimental: {
-    strictMode: false, // 🔹 Intenta forzar la desactivación del modo estricto
+    styledComponents: true, // 🔹 Habilitar soporte para styled-components
   }
 };
 

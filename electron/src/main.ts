@@ -1,71 +1,105 @@
-import { is } from "@electron-toolkit/utils";
-import { app, BrowserWindow, ipcMain } from "electron";
-import { getPort } from "get-port-please";
-import { startServer } from "next/dist/server/lib/start-server";
-import { join } from "path";
+import { is } from '@electron-toolkit/utils'
+import { app, BrowserWindow, ipcMain } from 'electron'
+import { getPort } from 'get-port-please'
+import { startServer } from 'next/dist/server/lib/start-server'
+import { dirname, join } from 'path'
+import { fork, spawn } from 'child_process'
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     webPreferences: {
-      preload: join(__dirname, "preload.js"),
+      preload: join(__dirname, 'preload.js'),
       nodeIntegration: true,
     },
-  });
+  })
 
-  mainWindow.on("ready-to-show", () => mainWindow.show());
+  mainWindow.on('ready-to-show', () => mainWindow.show())
 
   const loadURL = async () => {
     if (is.dev) {
-      mainWindow.loadURL("http://localhost:3000");
+      mainWindow.loadURL('http://localhost:3000')
     } else {
       try {
-        const port = await startNextJSServer();
-        console.log("Next.js server started on port:", port);
-        mainWindow.loadURL(`http://localhost:${port}`);
+        const port = await startNextJSServer()
+        console.log('Next.js server started on port:', port)
+        mainWindow.loadURL(`http://localhost:${port}`)
       } catch (error) {
-        console.error("Error starting Next.js server:", error);
+        console.error('Error starting Next.js server:', error)
       }
     }
-  };
+  }
 
-  loadURL();
-  return mainWindow;
-};
+  loadURL()
+  return mainWindow
+}
+
+const startBackendServer = async () => {
+  try {
+    const isDev = is.dev
+    const backendDir = isDev
+    ? join(__dirname, '..', 'front-back-server', 'front-back-server.exe')
+    : join(process.resourcesPath, 'front-back-server.exe')  
+
+    console.log(`[ELECTRON] Backend server path: ${backendDir}`);
+    
+    const backendProcess = spawn(backendDir, [], { stdio: 'inherit' });
+
+    backendProcess.on('error', (error) => {
+      console.error('[ELECTRON] Error starting backend server process:', error);
+      throw error;
+    });
+
+    backendProcess.on('exit', (code) => {
+      console.log(`[ELECTRON] Backend server process exited with code: ${code}`);
+    });
+  } catch (error) {
+    console.error('[ELECTRON] Error starting backend server:', error)
+    throw error
+  }
+}
 
 const startNextJSServer = async () => {
   try {
-    const nextJSPort = await getPort({ portRange: [30_011, 50_000] });
-    const webDir = join(app.getAppPath(), "app");
+    const nextJSPort = await getPort({ portRange: [30_011, 50_000] })
+    const webDir = join(app.getAppPath(), 'app')
 
     await startServer({
       dir: webDir,
       isDev: false,
-      hostname: "localhost",
+      hostname: 'localhost',
       port: nextJSPort,
       customServer: true,
       allowRetry: false,
       keepAliveTimeout: 5000,
       minimalMode: false,
-    });
+    })
 
-    return nextJSPort;
+    return nextJSPort
   } catch (error) {
-    console.error("Error starting Next.js server:", error);
-    throw error;
+    console.error('Error starting Next.js server:', error)
+    throw error
   }
-};
+}
 
-app.whenReady().then(() => {
-  createWindow();
+app.whenReady().then(async () => {
+  try {
+    await startBackendServer();
+    createWindow();
 
-  ipcMain.on("ping", () => console.log("pong"));
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
+    ipcMain.on('ping', () => console.log('pong'));
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  } catch (error) {
+    console.error('Error starting backend server:', error);
+    app.quit();
+  }
 });
 
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit()
+})
