@@ -1,0 +1,40 @@
+.quick-filters {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    justify-content: flex-start;
+}
+
+.container_query {
+    width: 300px;
+}
+
+.row_sales {
+    gap: 20px;
+    background-color: var(--color-neutral-gray-light);
+}
+.title {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-size: var(--font-size-titles-3xs);
+}
+
+.card {
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 15px 0;
+    max-height: 200px;
+    min-height: 200px;
+    padding: 0.75rem;
+    background-color: var(--color-base-white);
+    box-shadow: var(--box-shadow-sm, 0 1px 1px rgba(23, 43, 77, 0.2), 0 0 1px rgba(23, 43, 77, 0.2));
+    transition: background-color 140ms ease-in-out 0s, color 140ms ease-in-out 0s;
+}
+
+.input_query {
+    height: 3.75rem;
+}

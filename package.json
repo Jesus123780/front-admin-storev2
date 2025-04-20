@@ -42,7 +42,7 @@
     "lodash": "^4.17.21",
     "next": "^15.2.4",
     "next-auth": "^4.24.11",
-    "npm-pkg-hook": "1.10.7",
+    "npm-pkg-hook": "^1.10.8",
     "pg": "8.14.1",
     "pkg-components": "^2.0.71",
     "react": "^19.0.0",
@@ -69,46 +69,53 @@
     "wait-on": "8.0.3"
   },
   "build": {
-  "asar": true,
-  "executableName": "NextJSElectronJ",
-  "appId": "com.saybackend.nextjs-electronJ",
-  "asarUnpack": [
-    "node_modules/next",
-    "node_modules/@img",
-    "node_modules/sharp",
-    "**/*.node",
-    "**/*.dll"
-  ],
-  "files": [
-    "build",
-    {
-      "from": ".next/standalone",
-      "to": "app",
-      "filter": [
-        "!**/.env",
-        "!**/package.json"
+    "asar": true,
+    "executableName": "NextJSElectronJ",
+    "appId": "com.saybackend.nextjs-electronJ",
+    "asarUnpack": [
+      "node_modules/next",
+      "node_modules/@img",
+      "node_modules/sharp",
+      "**/*.node",
+      "**/*.dll"
+    ],
+    "files": [
+      "build",
+      {
+        "from": ".next/standalone",
+        "to": "app",
+        "filter": [
+          "!**/.env",
+          "!**/package.json"
+        ]
+      },
+      {
+        "from": ".next/static",
+        "to": "app/.next/static"
+      },
+      {
+        "from": "public",
+        "to": "app/public"
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "front-back-server/front-back-server.exe",
+        "to": "front-back-server.exe"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
       ]
     },
-    {
-      "from": ".next/static",
-      "to": "app/.next/static"
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
-    {
-      "from": "public",
-      "to": "app/public"
-    }
-  ],
-"extraResources": [
-    {
-      "from": "front-back-server/front-back-server.exe",
-      "to": "front-back-server.exe"
-    }
-  ],
-  "win": {
-    "target": [
-      "nsis"
-    ]
+    "copyright": "Copyright (c) 2025 Venty"
   }
-}
-
 }

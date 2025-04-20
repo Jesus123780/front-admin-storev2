@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 import { 
   useStore, 
   useUser, 
+  useLocalBackendIp, 
   useColorByLetters
 } from 'npm-pkg-hook'
 import { 
@@ -11,6 +12,7 @@ import {
   Divider, 
   getGlobalStyle, 
   Icon, 
+  ImageQRCode, 
   Row, 
   Text
 } from 'pkg-components'
@@ -25,8 +27,10 @@ interface User {
 
 export const Main = ({ user = {} as User }) => {
   const [dataUser] = useUser()
+  const { ip } = useLocalBackendIp()
   const router = useRouter()
   const { email } = dataUser || {}
+  console.log("🚀 ~ Main ~ email:", email)
   const [dataStore] = useStore()
   const { storeName, idStore } = dataStore || {}
   const nameStore = storeName?.replace(/\s/g, '-').toLowerCase()
@@ -105,6 +109,7 @@ export const Main = ({ user = {} as User }) => {
               </div>
             </div>
           </Row>
+          <ImageQRCode value={ip} />
         </Row>
       </Row>
       <ChatStatistic />

@@ -2,8 +2,8 @@ import { is } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { getPort } from 'get-port-please'
 import { startServer } from 'next/dist/server/lib/start-server'
-import { dirname, join } from 'path'
-import { fork, spawn } from 'child_process'
+import { join } from 'path'
+import { spawn } from 'child_process'
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
@@ -18,8 +18,9 @@ const createWindow = () => {
   mainWindow.on('ready-to-show', () => mainWindow.show())
 
   const loadURL = async () => {
+    const port = 3000
     if (is.dev) {
-      mainWindow.loadURL('http://localhost:3000')
+      mainWindow.loadURL(`http://localhost:${port}`)
     } else {
       try {
         const port = await startNextJSServer()
@@ -38,22 +39,26 @@ const createWindow = () => {
 const startBackendServer = async () => {
   try {
     const isDev = is.dev
+    if (isDev) {
+      console.log('[ELECTRON] Backend server is not started in production mode')
+      return
+    }
     const backendDir = isDev
     ? join(__dirname, '..', 'front-back-server', 'front-back-server.exe')
     : join(process.resourcesPath, 'front-back-server.exe')  
 
-    console.log(`[ELECTRON] Backend server path: ${backendDir}`);
+    console.log(`[ELECTRON] Backend server path: ${backendDir}`)
     
-    const backendProcess = spawn(backendDir, [], { stdio: 'inherit' });
+    const backendProcess = spawn(backendDir, [], { stdio: 'ignore' })
 
     backendProcess.on('error', (error) => {
-      console.error('[ELECTRON] Error starting backend server process:', error);
-      throw error;
-    });
+      console.error('[ELECTRON] Error starting backend server process:', error)
+      throw error
+    })
 
     backendProcess.on('exit', (code) => {
-      console.log(`[ELECTRON] Backend server process exited with code: ${code}`);
-    });
+      console.log(`[ELECTRON] Backend server process exited with code: ${code}`)
+    })
   } catch (error) {
     console.error('[ELECTRON] Error starting backend server:', error)
     throw error
@@ -85,19 +90,19 @@ const startNextJSServer = async () => {
 
 app.whenReady().then(async () => {
   try {
-    await startBackendServer();
-    createWindow();
+    await startBackendServer()
+    createWindow()
 
-    ipcMain.on('ping', () => console.log('pong'));
+    ipcMain.on('ping', () => console.log('pong'))
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createWindow();
-    });
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    })
   } catch (error) {
-    console.error('Error starting backend server:', error);
-    app.quit();
+    console.error('Error starting backend server:', error)
+    app.quit()
   }
-});
+})
 
 
 app.on('window-all-closed', () => {
