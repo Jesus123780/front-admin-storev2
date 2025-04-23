@@ -1,0 +1,8 @@
+.text_prices {
+    text-wrap: nowrap;
+}
+
+.text_prices__discount {
+    text-decoration: line-through;
+    color: var(--color-feedback-success-dark);
+}

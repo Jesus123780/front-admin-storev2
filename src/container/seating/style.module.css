@@ -1,0 +1,119 @@
+.container {
+    position: relative;
+    height: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    width: min-content;
+    margin: 50px;
+  }
+  
+  .table {
+    position: relative;
+    background-color: var(--color-neutral-gray-silver);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+  }
+  
+  .seat {
+    position: absolute;
+    background-color: var(--color-neutral-gray-silver);
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    box-shadow: var(--box-shadow-xs);
+  }
+.number_table {
+  position: absolute;
+  right: 0.3125rem;
+  top: 0.3125rem;
+  margin: auto;
+  border: 2px solid var(--color-neutral-gray-white);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  place-content: center;
+  align-items: center;
+}
+  .seatList {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .seatOption {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: 1px solid var(--color-neutral-gray-silver);
+    border-radius: 5px;
+    width: 100%;
+    transition: background-color 0.3s;
+  }
+  
+  .seatOption:hover {
+    background-color: #f0f0f0;
+  }
+
+  
+  .seat {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .backrest {
+    position: absolute;
+    width: 100%;
+    height: 10px;
+    background-color: #333;
+    border-radius: 3px;
+  }
+  
+/* Espaldar en las orientaciones laterales ocupa todo el alto de la silla */
+.seat[data-side='left'] .backrest {
+  width: 20%;
+  height: 100%;
+  top: 0;
+  right: 25px;
+  transform: none;
+}
+
+.seat[data-side='right'] .backrest {
+  width: 20%;
+  height: 100%;
+  top: 0;
+  left: 25px;
+  transform: none;
+}
+
+/* Espaldar en las orientaciones superior e inferior */
+.seat[data-side='top'] .backrest {
+  bottom: 120%;
+  left: 50%;
+  width: 100%;
+  height: 5px;
+  transform: translateX(-50%);
+}
+
+.seat[data-side='bottom'] .backrest {
+  top: 120%;
+  left: 50%;
+  width: 100%;
+  height: 5px;
+  transform: translateX(-50%);
+}

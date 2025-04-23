@@ -60,6 +60,7 @@ import { Footer } from './Footer/index'
 // import { Food } from '../../container/update/Products/food'
 // import useSound from 'use-sound'
 import { heights, widths } from './helpers'
+import { CreateSales } from '../orders/create'
 import packageJson from '../../../package.json'
 import styles from './styles.module.css'
 
@@ -91,6 +92,7 @@ export const MemoLayout = ({
     isOpenOrder,
     messagesToast,
     salesOpen,
+    isElectron,
     showModalComponent,
     handleClick,
     sendNotification,
@@ -371,6 +373,7 @@ export const MemoLayout = ({
           collapsed={collapsed ? 'collapsed' : undefined}
           countOrders={countOrders as number}
           dataStore={dataStore}
+          isElectron={isElectron}
           handleClick={handleClick}
           handleOpenDeliveryTime={handleOpenDeliveryTime}
           isMobile={isMobile}
@@ -399,7 +402,7 @@ export const MemoLayout = ({
 
             {!loading && <PaymentAlert text={daysRemaining > 0 ? `Disfruta de tu periodo de prueba, Quedan ${daysRemaining} día(s) de prueba gratuita.` : 'Tu período de prueba gratuita ha finalizado.'} />}
           </>
-          {/* <DynamicGenerateSales setShow={setSalesOpen} show={salesOpen} /> */}
+          <CreateSales setShow={setSalesOpen} show={salesOpen} />
           <div
             style={{
               position: 'fixed',

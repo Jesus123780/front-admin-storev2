@@ -250,11 +250,21 @@ const Provider = ({ children }) => {
     setSelectedStore(sessionValue)
   }, [selectedStore, hidden])
 
+    const [isElectron, setIsElectron] = useState(false);
+    useEffect(() => {
+      if (typeof window !== "undefined" && /Electron/.test(navigator.userAgent)) {
+        setIsElectron(true);
+      } else {
+        setIsElectron(false);
+      }
+    }, []);
+
   const value = useMemo(
     () => {
       return {
         alert,
         authData,
+        isElectron,
         collapsed,
         company,
         countPedido,
@@ -299,6 +309,7 @@ const Provider = ({ children }) => {
       countPedido,
       DataCompany,
       isOpenOrder,
+      isElectron,
       error,
       hidden,
       isCompany,

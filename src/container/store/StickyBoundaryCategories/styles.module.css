@@ -1,0 +1,63 @@
+.container_carrusel {
+    display: grid;
+    grid-gap: 28px;
+    max-width: 1366px;
+    margin: 30px auto 20px;
+}
+
+/* content_search.module.css */
+
+.content_search {
+    max-width: 1366px;
+    margin: 5px auto;
+    font-size: 1.5rem;
+    line-height: 1em;
+    flex-grow: 1;
+    display: flex;
+    place-content: space-between;
+    align-items: center;
+    font-family: PFont-Light;
+    /* Asegúrate de definir --bg-color en tu theme global */
+}
+
+.content_search button {
+    background-color: transparent;
+}
+
+.content_search input {
+    margin: 5px auto;
+    font-size: 1.5rem;
+    line-height: 1em;
+    flex-grow: 1;
+    display: flex;
+    place-content: space-between;
+    align-items: center;
+    font-family: PFont-Light;
+    outline: none;
+    border: none;
+    border-bottom: 2px solid gray;
+}
+
+
+@media only screen and (min-width: 960px) {
+    .container_carrusel {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0;
+    }
+
+    .container_carrusel>div {
+        padding: 0;
+    }
+}
+
+@media only screen and (min-width: 743px) {
+    .container_carrusel {
+        grid-gap: 20px;
+        padding: 0;
+        width: 100%;
+    }
+
+    .container_carrusel>div {
+        padding: 0;
+    }
+}

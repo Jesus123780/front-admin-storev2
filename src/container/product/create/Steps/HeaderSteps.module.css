@@ -1,0 +1,23 @@
+.tabs {
+  cursor: pointer;
+  position: relative;
+  flex: 1;
+}
+
+.slider {
+  background-color: var(--color-primary-red);
+  bottom: 0;
+  height: 3px;
+  position: absolute;
+  transition: all 0.3s ease;
+  width: 80%;
+}
+
+.text {
+  -webkit-line-clamp: 2;
+  color: var(--color-text-gray-light);
+  justify-content: center;
+  line-height: var(--spacing-3xl);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

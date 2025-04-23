@@ -34,15 +34,20 @@ import {
   SearchBar, 
   getGlobalStyle
 } from 'pkg-components'
+import { ButtonsAction } from './options/index'
 // import { Food } from '../update/Products/food'
 // import { Categories } from '../Categories'
 // import { Product } from './Product'
 // import { ButtonsAction } from './Options/index'
-// import { StickyBoundaryCategories } from './StickyBoundaryCategories'
+import { StickyBoundaryCategories } from './StickyBoundaryCategories'
 import { Banner } from './banner'
-// import { UploadFilesProducts } from '../uploadFilesProducts'
-// import { TableSeating } from '../seatingArea'
+import { UploadFilesProducts } from '../../container/product/create/uploadFilesProducts'
 import styles from './styles.module.css'
+import { FoodComponent } from '../product/create'
+import { Product } from '../product'
+import { Categories } from '../categories'
+import { TableSeating } from '../seating'
+import { ProductView } from '../product/view/product'
 
 export const Store = () => {
   // STATES
@@ -176,12 +181,12 @@ export const Store = () => {
     modal: true,
     padding: 0,
     show: show,
-    title: titleModal[show],
+    title: show ? titleModal[show] : '',
     size: '100%',
     sizeIconClose: '35px',
     zIndex: getGlobalStyle('--z-index-99999'),
-    onCancel: () => { return handleHidden(select[show]) },
-    onHide: () => { return handleHidden(select[show]) }
+    onCancel: () => { return show ? handleHidden(select[show]) : null },
+    onHide: () => { return show ? handleHidden(select[show]) : null }
   }
 
   const {
@@ -268,13 +273,19 @@ export const Store = () => {
     handleAddList,
     setData
   }
-  const handleDeleteProduct = (data) => {
+  const handleDeleteProduct = (data: any) => {
     handleDelete(data)
     handleClick(1)
   }
-  const selectedDays = (Array.isArray(product?.getAllAvailableProduct) && product?.getAllAvailableProduct?.length) ? product?.getAllAvailableProduct?.map((day) => {
-    return day?.dayAvailable
-  }) : []
+  interface AvailableProduct {
+    dayAvailable: string;
+  }
+
+  const selectedDays: string[] = (Array.isArray(product?.getAllAvailableProduct) && product?.getAllAvailableProduct?.length) 
+    ? product?.getAllAvailableProduct?.map((day: AvailableProduct) => {
+        return day?.dayAvailable;
+      }) 
+    : [];
   const { days } = useSaveAvailableProduct()
   const [alertModal, setAlertModal] = useState(false)
   const [checkStock, setCheckStock] = useState(false)
@@ -283,9 +294,9 @@ export const Store = () => {
      * Updates stock management state
      * @param {boolean} newState - The new value of manageStock
      */
-  const updateStockState = useCallback(async (newState) => {
+  const updateStockState = useCallback(async (newState: any) => {
     const response = await updateManageStock({ pId, manageStock: newState })
-    const notifyUpdateResult = (success, message) => {
+    const notifyUpdateResult = (success: any, message: any) => {
       sendNotification({
         title: success ? 'Exitoso' : 'Error',
         description: message,
@@ -410,11 +421,11 @@ export const Store = () => {
   }, [data, searchQuery])
 
   const component = {
-    // 1: <Product {...productProps} />,
-    // 2: <Categories />,
-    // 3: <Food />,
-    // 4: <UploadFilesProducts handleClick={handleClick} />,
-    // 5: <TableSeating />
+    1: <ProductView {...productProps} />,
+    2: <Categories />,
+    3: <Product />,
+    4: <UploadFilesProducts handleClick={handleClick} />,
+    5: <TableSeating />
   }
 
     const placeholder = 'Buscar productos'
@@ -459,7 +470,7 @@ export const Store = () => {
       </AwesomeModal>
       <div className={styles.container}>
         <Banner isMobile={isMobile} store={store} />
-        {/* <ButtonsAction handle={handleActionClick} /> */}
+        <ButtonsAction handle={handleActionClick} />
         <div style={{ marginTop: 20 }} />
         <SearchBar
           handleChange={handleChange}
@@ -467,7 +478,7 @@ export const Store = () => {
           placeholder={placeholder}
         />
         <div style={{ marginTop: 20 }} />
-        {/* <StickyBoundaryCategories
+        <StickyBoundaryCategories
           data={categoriesWithProduct}
           handleChange={handleChange}
           handleGetOneProduct={handleProduct}
@@ -477,7 +488,7 @@ export const Store = () => {
           reference={ref}
           sendNotification={sendNotification}
           setAlertBox={setAlertBox}
-        /> */}
+        />
       </div>
       <AwesomeModal {...modalProps} >
         {component[show]}

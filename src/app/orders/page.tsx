@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Orders } from '../../container/ordersStore'
+import { Orders } from '../../container/orders'
 
 const orders = () => {
   return (

@@ -1,0 +1,63 @@
+.container__success-invoice {
+    padding: 30px;
+    background-color: #fcebea;
+}
+.wrapper__success-invoice {
+    display: grid;
+    gap: 48px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    justify-content: center;
+    cursor: pointer;
+    height: 100%;
+    justify-items: center;
+}
+
+.card__success-invoice:hover {
+    box-shadow: var(--box-shadow-sm);
+}
+
+.card__success-invoice {
+    background-color: var(--color-background-primary-light);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: var(--box-shadow-xs);
+    width: 100%;
+    transition: .5s ease;
+    max-width: 400px;
+    height: 100px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .card__success-invoice-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .card__success-invoice-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  
+  .card__success-invoice-action {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+
+@media screen and (max-width: 767px) {
+    .wrapper__success-invoice {
+        display: grid;
+        grid-gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        justify-content: center;
+        align-items: center;
+    }
+
+}
