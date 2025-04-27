@@ -1,0 +1,38 @@
+.title {
+    padding: 30px;
+}
+.container_stores {
+    height: 650px;
+    display: flex;
+    flex-direction: column;
+    max-height: 650px;
+    max-width: 600px;
+    padding: 10px;
+    overflow: hidden auto ;
+    background-color: var(--color-base-white);
+}
+
+.card_content_stores {
+    align-items: center;
+    background-color: var(--color-base-white);
+    border-radius: 5px;
+    border: 1px solid var(--color-icons-gray-light);
+    box-shadow: var(--box-shadow-xs);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    width: 100%;
+}
+
+.card_content_stores:hover {
+    box-shadow: var(--box-shadow-2xs);
+    transform: translateY(-5px) scale(1.02);
+}
+
+.card_content_stores svg {
+    width: 40px;
+    transition: fill 0.3s ease;
+}
+

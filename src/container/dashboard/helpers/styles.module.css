@@ -1,0 +1,7 @@
+.grid-stack {
+    background: var(--color-neutral-gray-white);
+  }
+
+.grid-stack-item-content {
+    background-color: white;
+}

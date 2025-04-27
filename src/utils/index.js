@@ -2,7 +2,7 @@
 import jwt, { decode } from 'jsonwebtoken'
 
 import { resolve } from 'path'
-import { useEffect } from 'react'
+// import { useEffect } from 'react'
 
 // https://codesandbox.io/s/calculadora-de-salario-qi0ft?file=/src/index.js:293-298
 export const REFRESH_TOKEN_COOKIE_OPTIONS = {
@@ -958,15 +958,15 @@ export const mongoObjectId = function () {
   }).toLowerCase()
 }
 
-export default function useKeypress(key, action) {
-  useEffect(() => {
-    function onKeyup(e) {
-      if (e.key === key) action()
-    }
-    window.addEventListener('keyup', onKeyup)
-    return () => { return window.removeEventListener('keyup', onKeyup) }
-  }, [action, key])
-}
+// export default function useKeypress(key, action) {
+//   useEffect(() => {
+//     function onKeyup(e) {
+//       if (e.key === key) action()
+//     }
+//     window.addEventListener('keyup', onKeyup)
+//     return () => { return window.removeEventListener('keyup', onKeyup) }
+//   }, [action, key])
+// }
 export const CalculateIva = (quantity, rate, iPercentage, state) => {
   const rateNumber = parseInt(rate)
   const PercentageNumber = parseInt(iPercentage)

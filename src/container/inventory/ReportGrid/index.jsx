@@ -1,6 +1,7 @@
 'use client'
 
 import { 
+  CounterAnimation,
   Icon, 
   Paragraph, 
   Text
@@ -20,10 +21,14 @@ export const ReportGrid = ({ data }) => {
         return (
           <div className={`${styles.card} ${item.className}`} key={index}>
             <Text as='h3' className={styles.title}>
-              {item.label}
+              {item.label} 
             </Text>
             <Paragraph className={styles.value}>
-              {item.value}
+              <CounterAnimation 
+                number={item?.value ?? 0} 
+                size='2rem'
+                numberformat={item.numberformat ?? false}
+              />
             </Paragraph>
             <Icon
               color={color}

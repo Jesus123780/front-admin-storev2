@@ -46,6 +46,7 @@ import {
   useDeliveryTime,
   useUser,
   useSubscriptionValidation,
+  useUpdateModuleOrder,
   version as logicalVersion,
   Cookies,
   usePushNotifications
@@ -106,7 +107,15 @@ export const MemoLayout = ({
   const dataLocation = usePosition(watch, settings)
   const { handleCleanQuery } = useManageQueryParams()
   const [dataUser] = useUser()
-  const { modules } = useModules(dataUser)
+  const [modulesOrder, setModulesOrder] = useState<any[]>([])
+  const [updateModulesOrder] = useUpdateModuleOrder()
+
+  useModules({
+    dataUser,
+    callback: (modules: any) => {
+      setModulesOrder(modules)
+    }
+  })
   const [dataStore] = useStore()
   const [count, { loading: loadingCount }] = useTotalSales()
   const style = useScrollHook()
@@ -292,6 +301,35 @@ export const MemoLayout = ({
   }
   const customHeights = heightsByRoute[location?.route] ?? heights[showModalComponent]
 
+  
+  const onDragEnd = async (result) => {
+    const { destination, source } = result;
+  
+    // Si no se ha movido el ítem (destino es null o es el mismo), no hacer nada
+    if (!destination || destination.index === source.index) return;
+  
+    // Reordenar los módulos
+    const reorderedModules = Array.from(modulesOrder);
+  
+    // Sacar el módulo que se está moviendo
+    const [removed] = reorderedModules.splice(source.index, 1);
+    
+    // Insertar el módulo en su nueva posición
+    reorderedModules.splice(destination.index, 0, removed);
+  
+    // Ajustar las prioridades
+    const updatedModules = reorderedModules.map((module, index) => {
+      return {
+        ...module,
+        mPriority: index + 1  // La prioridad se asigna según la nueva posición en el arreglo
+      };
+    });
+    setModulesOrder(updatedModules);
+    // Actualizamos el estado con el nuevo orden y prioridades
+    await updateModulesOrder(updatedModules)
+  };
+  
+
   return (
     <>
       <Head>
@@ -370,18 +408,19 @@ export const MemoLayout = ({
         />
 
         <Aside
-          collapsed={collapsed ? 'collapsed' : undefined}
+          collapsed={collapsed ? true : undefined}
           countOrders={countOrders as number}
           dataStore={dataStore}
-          isElectron={isElectron}
           handleClick={handleClick}
           handleOpenDeliveryTime={handleOpenDeliveryTime}
+          isElectron={isElectron}
           isMobile={isMobile}
           loading={false}
           loadingDeliveryTime={loadingDeliveryTime}
           location={location}
           logicalVersion={logicalVersion}
-          modules={modules}
+          modules={modulesOrder}
+          onDragEnd={onDragEnd}
           salesOpen={salesOpen}
           setCollapsed={setCollapsed}
           setSalesOpen={setSalesOpen}

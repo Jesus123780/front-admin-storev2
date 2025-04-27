@@ -8,10 +8,18 @@ import {
   useTotalProductsInStock,
   useTotalAllSales
 } from 'npm-pkg-hook'
-import { Column, getGlobalStyle, Icon, numberFormat, Row, StockMovementsChart, Text } from 'pkg-components'
+import { 
+  Column, 
+  getGlobalStyle, 
+  Icon, 
+  numberFormat, 
+  Row, 
+  StockMovementsChart, 
+  Text
+} from 'pkg-components'
 import { ReportGrid } from './ReportGrid'
-import styles from './styles.module.css'
 import { useEffect, useState } from 'react'
+import styles from './styles.module.css'
 
 export const InventoryC = () => {
   const [stocksMovements] = useStockMovements()
@@ -34,7 +42,8 @@ export const InventoryC = () => {
   const data = [
     {
       label: 'Valor total de ventas',
-      value: numberFormat(totalAllSales) ?? 0,
+      value: totalAllSales ?? 0,
+      numberformat: true,
       icon: {
         icon: 'IconUpTrend',
         color: getGlobalStyle('--color-icons-success'),
