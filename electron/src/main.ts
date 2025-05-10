@@ -4,6 +4,11 @@ import { getPort } from 'get-port-please'
 import { startServer } from 'next/dist/server/lib/start-server'
 import { join } from 'path'
 import { spawn } from 'child_process'
+// 👉 CARGAS LAS VARIABLES .env AQUÍ
+import dotenv from 'dotenv'
+dotenv.config();
+
+import { startGoogleAuth } from './auth'
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
@@ -21,19 +26,20 @@ const createWindow = () => {
     const port = 3000
     if (is.dev) {
       mainWindow.loadURL(`http://localhost:${port}`)
+      return port
     } else {
       try {
         const port = await startNextJSServer()
         console.log('Next.js server started on port:', port)
         mainWindow.loadURL(`http://localhost:${port}`)
+        return port
       } catch (error) {
         console.error('Error starting Next.js server:', error)
       }
     }
   }
-
-  loadURL()
-  return mainWindow
+  const port = loadURL()
+  return port
 }
 
 const startBackendServer = async () => {
@@ -91,8 +97,13 @@ const startNextJSServer = async () => {
 app.whenReady().then(async () => {
   try {
     await startBackendServer()
-    createWindow()
+    const portApp = await createWindow()
+    console.log('Electron app started on port:', portApp)
 
+    ipcMain.handle('start-google-auth', async (event) => {
+      const mainWindow = BrowserWindow.getFocusedWindow();
+      await startGoogleAuth(mainWindow, portApp);
+    });
     ipcMain.on('ping', () => console.log('pong'))
 
     app.on('activate', () => {

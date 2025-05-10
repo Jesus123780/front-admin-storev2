@@ -36,7 +36,7 @@ import {
   useReactToPrint,
   useFormatDate
 } from 'npm-pkg-hook'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 // import { SubItems } from '../Sales/SubItems'
 import { Bubble, ContainerDrag } from './styled'
 // import { Ticket } from '../Sales/Ticket'
@@ -48,6 +48,7 @@ export const DragOrders = ({
 }) => {
   // STATES
   const { sendNotification } = useContext(Context)
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [dataStore] = useStore()
   const initialState = {
@@ -342,16 +343,10 @@ export const DragOrders = ({
         pCodeRef: pCodeRef === undefined || pCodeRef === null ? '' : pCodeRef
       }
     })
-    router.push(
-      {
-        query: {
-          ...router.query,
-          saleId: pCodeRef
-        }
-      },
-      undefined,
-      { shallow: true }
-    )
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('saleId', pCodeRef) // añade o actualiza el query param
+
+    router.push(`?${params.toString()}`)
     handleModalProductSale(pCodeRef)
   }
 

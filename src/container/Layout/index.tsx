@@ -3,7 +3,7 @@
 import PropTypes from 'prop-types'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import React, {
   useContext,
   useEffect,
@@ -86,6 +86,7 @@ export const MemoLayout = ({
 }) => {
   const location = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const {
     collapsed,
@@ -105,7 +106,7 @@ export const MemoLayout = ({
     setStatus
   } = useContext(Context)
   const dataLocation = usePosition(watch, settings)
-  const { handleCleanQuery } = useManageQueryParams()
+   const { handleCleanQuery } = useManageQueryParams({ router: location, searchParams: searchParams })
   const [dataUser] = useUser()
   const [modulesOrder, setModulesOrder] = useState<any[]>([])
   const [updateModulesOrder] = useUpdateModuleOrder()

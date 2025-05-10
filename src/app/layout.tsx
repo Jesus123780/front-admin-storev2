@@ -49,8 +49,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return () => clearInterval(interval)
   }, [pathname])
 
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   return (
     <html lang='es'>
+      <div id='portal' />
       <Script
         dangerouslySetInnerHTML={{
           __html: `
@@ -66,8 +72,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       />
 
       <body className={inter.className}>
-        <ProgressBar progress={progress} hidden={hidden} />
-        <Context>
+        {/* <ProgressBar progress={progress} hidden={hidden} /> */}
+        {isMounted && <Context>
           <SessionProvider>
             <ApolloClientProvider>
               {ROUTES_WITHOUT_LAYOUT.has(pathname)
@@ -79,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </ApolloClientProvider>
           </SessionProvider>
         </Context>
+        }
       </body>
     </html>
   )

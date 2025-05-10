@@ -29,12 +29,12 @@ import {
   Text,
   GoBack
 } from './styled'
-import { useRouter } from 'next/navigation'
 import { EMAIL_SESSION } from './queries'
 import { Context } from './../../context/Context'
 import { decodeToken } from 'utils';
 import { RegisterUser } from '../user'
 import { getDeviceId } from '../../apollo/getDeviceId'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export const Email = () => {
   const [handleChange, handleSubmit, setDataValue, {
@@ -42,14 +42,15 @@ export const Email = () => {
     errorForm,
     setForcedError
   }] = useFormTools()
-
+  const searchParams = useSearchParams()
   const [otp, setOTP] = useState(0)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(0)
   const router = useRouter()
   const [registerEmailLogin] = useMutation(EMAIL_SESSION)
-  const { handleQuery } = useManageQueryParams()
+    const { handleQuery } = useManageQueryParams({ router, searchParams })
+  
   const { setAlertBox } = useContext(Context)
 
   const handleForm = async (e, show) => {

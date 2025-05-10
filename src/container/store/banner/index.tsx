@@ -67,11 +67,9 @@ export const Banner = ({ isMobile, store }: BannerProps) => {
     srcLogo,
     store
   }
-  return (
-    <div>
-      <BannerStore {...props} />
-    </div>
-  )
+  console.log("🚀 ~ Banner ~ props:", props)
+
+  return (<BannerStore {...props} />)
 }
 
 Banner.propTypes = {

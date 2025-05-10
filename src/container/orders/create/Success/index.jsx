@@ -41,10 +41,7 @@ export const SuccessSaleModal = ({
       icon: 'IconSales',
       tooltip: 'Puedes mirar el resumen del pedido y el estado.',
       onClick: () => {
-        router.push({
-          pathname: `${process.env.URL_BASE}/pedidos`,
-          query: { saleId: code }
-        }) 
+        window.location.href = `${process.env.NEXT_PUBLIC_URL_BASE}/orders?saleId=${code}`
         return handleCloseModal()
        }
     },
@@ -94,11 +91,9 @@ export const SuccessSaleModal = ({
 
           {arrayOptions.map((option) => {
             return (
-              <>
+              <React.Fragment key={option.id}>
                 <div
                   className={styles['wrapper__success-invoice']}
-                  key={option.id}
-                  
                 >
                   <div>
                     <Icon
@@ -142,7 +137,7 @@ export const SuccessSaleModal = ({
                   </div>
                 </div>
                 <Divider marginBottom='0.9375rem' />
-              </>
+              </React.Fragment>
             )
           })}
         </div>

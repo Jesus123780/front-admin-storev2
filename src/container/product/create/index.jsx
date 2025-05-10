@@ -1,7 +1,6 @@
 'use client'
 
 import PropTypes from 'prop-types'
-import { useRouter } from 'next/navigation'
 import React, {
   useState,
   memo,
@@ -46,6 +45,7 @@ import { Context } from '../../../context/Context'
 import { filterKeyObject } from '../../../utils'
 import styles from './styles.module.css'
 import { productSchema } from './schema/producSchema'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 
 export const FoodComponentMemo = ({
   alt,
@@ -97,6 +97,7 @@ export const FoodComponentMemo = ({
   ...props
 }) => {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { setAlertBox, sendNotification } = useContext(Context)
 
   const [dataStore] = useStore()
@@ -110,7 +111,11 @@ export const FoodComponentMemo = ({
     handleAddTag: () => { return false },
     tags: []
   }
-  const { handleQuery, handleCleanQuery } = useManageQueryParams()
+  const { handleQuery, handleCleanQuery } = useManageQueryParams({
+    router,
+    searchParams
+  })
+
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const {
     handleDaySelection,
@@ -412,6 +417,7 @@ export const FoodComponentMemo = ({
  * Función principal para continuar con el registro o con los siguientes pasos.
  */
   const handleContinue = async () => {
+    console.log('handleContinue', active)
     try {
       if (active === 0) {
         const {
@@ -441,8 +447,9 @@ export const FoodComponentMemo = ({
         await handleNextSteps()
       }
     } catch (error) {
+      console.log("🚀 ~ handleContinue ~ error:", error)
       sendNotification({
-        description: 'Ha ocurrido un error',
+        description: 'Ha ocurrido un error jejej',
         title: 'Error',
         backgroundColor: 'error'
       })

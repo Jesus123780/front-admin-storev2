@@ -1,3 +1,5 @@
+'use client'
+
 import PropTypes from 'prop-types'
 import React, {
   useEffect,
@@ -41,8 +43,12 @@ export const CreateSales = ({
   }
 }) => {
   // STATES
-  const { sendNotification, setAlertBox, setMessagesToast, setSalesOpen } =
-    useContext(Context)
+  const { 
+    sendNotification, 
+    setAlertBox, 
+    setMessagesToast, 
+    setSalesOpen
+   } = useContext(Context)
   const [client, setClient] = useState({
     clientName: '',
     ccClient: '',

@@ -1,5 +1,5 @@
-import React, { useLayoutEffect, createRef, useRef } from 'react'
-import { GridStack } from 'pkg-components'
+import React, { useLayoutEffect, createRef, useRef, useState } from 'react'
+import { getGlobalStyle, GridStack, ToggleSwitch } from 'pkg-components'
 import { useComponents } from '../context'
 import { DishStore } from '@/container/main/components/main.dishStore'
 import { SalesDay } from '@/container/main/components/main.salesDay'
@@ -16,8 +16,8 @@ export const COMPONENT_MAP = {
 const Item = ({ id, component }: { id: string; component: React.ReactNode }) => {
     const view = COMPONENT_MAP[Number(id) as keyof typeof COMPONENT_MAP];
     const componentProps = typeof component === 'object' && !Array.isArray(component) && component !== null
-      ? { ...component }
-      : {};
+        ? { ...component }
+        : {};
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
@@ -32,8 +32,9 @@ interface ControlledStackProps {
 
 const ControlledStack = ({ items }: ControlledStackProps) => {
     const refs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>({});
-    const gridRef = useRef<GridStack | undefined>();
-    const gridContainerRef = useRef(null);
+    const gridRef = useRef<GridStack | undefined>()
+    const gridContainerRef = useRef(null)
+    const [editMode, setEditMode] = useState(false)
     refs.current = {};
 
     if (Object.keys(refs.current).length !== items.length) {
@@ -51,40 +52,62 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
     ];
 
     useLayoutEffect(() => {
-      if (!gridRef.current) {
-        if (!gridContainerRef.current) return
-          (gridRef.current = GridStack.init(
-              {
-                  float: false,
-                  animate: true,
-                  alwaysShowResizeHandle: true,
-                  acceptWidgets: true,
-                  column: 12, // Número de columnas por defecto
-                  minRow: 12,
-                  cellHeight: 'auto',
-                  cellHeightThrottle: 100,
-                  cellHeightUnit: '%',
-                  columnOpts: {
-                      breakpointForWindow: true, // Esta opción asegura que GridStack pueda responder a cambios de ventana
-                      breakpoints: BREAKPOINTS, // Puntos de quiebre personalizados
-                      columnMax: 6, // Número máximo de columnas
-                  },
-              },
-              gridContainerRef.current
-          ));
-      } else {
-          const grid = gridRef.current
-          const layout = items.map((a) =>
-              refs.current[a.id].current?.gridstackNode || { ...a, el: refs.current[a.id].current ?? undefined }
-          );
-          grid._ignoreCB = true;
-          grid.load(layout);
-          delete grid._ignoreCB;
-      }
-  }, [items]);
+        if (!gridRef.current) {
+            if (!gridContainerRef.current) return
+            (gridRef.current = GridStack.init(
+                {
+                    float: false,
+                    animate: true,
+                    alwaysShowResizeHandle: true,
+                    acceptWidgets: true,
+                    column: 12, // Número de columnas por defecto
+                    minRow: 12,
+                    cellHeight: 'auto',
+                    cellHeightThrottle: 100,
+                    cellHeightUnit: '%',
+                    columnOpts: {
+                        breakpointForWindow: true, // Esta opción asegura que GridStack pueda responder a cambios de ventana
+                        breakpoints: BREAKPOINTS, // Puntos de quiebre personalizados
+                        columnMax: 6, // Número máximo de columnas
+                    },
+                },
+                gridContainerRef.current
+            ))
+            if (gridRef.current) {
+                gridRef.current.setStatic(!editMode)
+              }
+        } else {
+            const grid = gridRef.current
+            const layout = items.map((a) =>
+                refs.current[a.id].current?.gridstackNode || { ...a, el: refs.current[a.id].current ?? undefined }
+            );
+            grid._ignoreCB = true
+            grid.load(layout)
+            delete grid._ignoreCB
+        }
+    }, [items]);
 
+    const handleEditMode = () => {
+      setEditMode(prev => {
+        const newMode = !prev
+        if (gridRef.current) {
+          gridRef.current.setStatic(!newMode)
+        }
+        return newMode
+      })
+    }
+    
     return (
         <div style={{ width: '100%', marginRight: '10px' }}>
+            <ToggleSwitch
+                checked={editMode}
+                id='edit_mode'
+                label='Modo Edición'
+                onChange={() => {
+                    return handleEditMode()
+                }}
+                successColor='green'
+            />
             <div className='grid-stack' ref={gridContainerRef}>
                 {items.map((item, i) => {
                     const attrs: any = {
@@ -125,7 +148,7 @@ export const GridStackWrapper = () => {
     const { components: items } = useComponents();
     return (
         <div>
-            <div style={{ display: 'flex', backgroundColor: 'lightgrey', padding: '10px' }}>
+            <div style={{ display: 'flex', backgroundColor: getGlobalStyle('--color-neutral-gray') }}>
                 <div style={{ display: 'flex' }}>
                     <ControlledStack items={items} />
                 </div>

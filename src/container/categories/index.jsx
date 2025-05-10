@@ -219,7 +219,7 @@ export const Categories = ({ isDragDisabled = true }) => {
     <>
       {loading && <Loading />}
       <DragDropContext onDragEnd={handleOnDragEnd}>
-        <Droppable droppableId='droppable-table' isDropDisabled={false}  isCombineEnabled={false} ignoreContainerClipping={false}  >
+        <Droppable droppableId='droppable-table' isCombineEnabled={false} ignoreContainerClipping={false}>
           {(provided) => {
             return (
               <div ref={provided.innerRef} {...provided.droppableProps}>

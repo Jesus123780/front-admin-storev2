@@ -1,15 +1,15 @@
 "use client"
 
-import React, { 
-  useContext, 
-  useEffect, 
+import React, {
+  useContext,
+  useEffect,
   useLayoutEffect,
   useState
 } from 'react'
 import { getDeviceId } from '../../../apollo/getDeviceId'
 import {
   Content,
-  Form, 
+  Form,
   Card,
   Text,
   ButtonSubmit,
@@ -37,10 +37,20 @@ import {
 import { useSession, signIn, getProviders, signOut } from 'next-auth/react'
 import { getUserFromToken, decodeToken } from '../../utils'
 import { useRouter } from 'next/navigation'
+import styles from './styles.module.css'
+import { GoogleUserBody } from './types'
 
 const isDev = process.env.NODE_ENV === 'development'
 const EXPIRED_MESSAGE = 'Session expired, refresh needed'
-export const Login = () => {
+
+interface ILogin {
+  refFloatBntLogin: React.RefObject<HTMLDivElement>
+  googleLoaded?: boolean
+}
+export const Login: React.FC<ILogin> = ({
+  refFloatBntLogin,
+  googleLoaded = false
+}: ILogin): React.ReactElement => {
   const router = useRouter()
   const [handleRegisterDeviceUser] = useRegisterDeviceUser()
   const { setAlertBox } = useContext(Context)
@@ -115,9 +125,15 @@ export const Login = () => {
           { name: 'session', value: token }
         ]
         await handleSession({ cookies: cookiesToSave })
-        return router.push('/dashboard')
+      
+        // Redirección con recarga completa
+        window.location.href = `${process.env.NEXT_PUBLIC_URL_BASE}/dashboard`
+        return
       }
-      router.push('/merchant')
+      
+      // Redirección sin recarga completa
+      window.location.href = `${process.env.NEXT_PUBLIC_URL_BASE}/merchant`
+      
     } catch (error) {
       if (session) await signOut({ redirect: false })
       setAlertBox({
@@ -128,6 +144,66 @@ export const Login = () => {
       setLoading(false)
     }
   }
+
+
+  useEffect(() => {
+    if (googleLoaded && window.google && refFloatBntLogin.current) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string,
+        callback: (response: { credential: string }) => {
+          const { credential } = response
+          if (credential) {
+            const data: DecodedToken = decodeToken(credential)
+            const { name, email, picture, sub: id } = data
+            const device = getDeviceId()
+            const body: GoogleUserBody = {
+              user: {
+                name,
+                username: name,
+                lastName: name,
+                email,
+                id,
+                locationFormat: [],
+                useragent: window?.navigator?.userAgent ?? null,
+                deviceid: device,
+                imageUrl: picture
+              }
+            }
+            responseGoogle(body)
+          }
+        },
+        auto_select: true,
+      })
+
+      // Interfaces
+      interface DecodedToken {
+        name: string
+        email: string
+        picture: string
+        sub: string
+      }
+
+ 
+
+      window.google.accounts.id.renderButton(refFloatBntLogin.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'signin_with',
+        shape: 'pill',
+        logo_alignment: 'left',
+        width: 400,
+        locale: 'es',
+        click_listener: () => {
+          console.log('Botón de Google clickeado');
+        },
+        cancel_on_tap_outside: true
+      })
+
+      window.google.accounts.id.prompt()
+    }
+  }, [googleLoaded, refFloatBntLogin, router])
+
   useEffect(() => {
     (async () => {
       setLoading(true)
@@ -266,7 +342,6 @@ export const Login = () => {
       </ButtonSubmit>
     )
   }
- 
 
   return (
     <>
@@ -275,12 +350,12 @@ export const Login = () => {
         <Form>
           <Text size='30px'>¡Falta poco para iniciar tus ventas!</Text>
           <Text size='15px'>¿Cómo deseas continuar?</Text>
-          {true && (
+          {false && (
             <>
               <Button
                 standard={String(false)}
                 onClick={async () => {
-                  const cookiesDefault = [ 
+                  const cookiesDefault = [
                     {
                       name: process.env.SESSION_NAME,
                       value: 'Fe26.2*1*106b053b3238cae195945ba793098117b42fa94ee47e8c15ba71cbdb9d6307dc*LTmDD5JW4SiXC8NkoyBYWQ*P-i_qH9AdGJlOzkFInFNrTiFAgDVEekgMXCThkjeLUBF5xt9q-mVrOOwBNHMcJpPTexJ0mVReG6fgfsEL9_lwrBRTKP6nb6sh4AfVr93Euv1vE1SZtYb1E0xrnYZhspYhhGtgAlqLbsm8ohf8ozfaFr3kK8CDQ6NuJ_3EkjxewTaLIavuHXaclkbd_-IG78G4bu-Pl4bxVgkDQJ1hPI1zmvhqUaZYFQIYnYr9pmL_rDhkjt7aOq2dVMDxkhrLGlMajo2yfQs6C0nit3EPxrBaDdodvuhAFS9F7y4ZrTD_vEOoF8eXnWhHJJJxdolxpJ81E1MMpunnLm8bbrhS-laMDuViutc7odrWsyc0Bja-RPM26VDfB1-Yu70ohLtDUAvvsKo1vZBlKC68IVm7Doa7IqVsu7xOblhKwm3-NRgPPyXAMaAWocMvMED6qQgRlrBqos5137CXT_DGvWelQ_v9kmMrhNwLzRbYCXpqyrC0dqZaQC2D-7swobtR8FYgJN7g0QxCmTTIahAp7IbJ47Kw56jSxwcjdGC32r15u9AVkL992FoHQkhukHJHJdGD4BiDYYeYnMsJs0hAOaRgOx6ML0Q4Dhf6inhE6cAcR_TYkZjus0AC0Y2QgAHzsaPLDD_A1MVeaw0pFMxAtqPzDhtmyRWxYF-CYe4Yng42AfZ-o9ncX61pE8EZSPNUijbaWGo-S9AJlphGwiP3kOc9WwboFECHZtRT06j1FReg-0tLhPkTXv9KbAZXODrjwFwVK4303X3qFeMsWjO7vfTt_dXqaEl_rx-bnuAEu5zsXkzFJpU3GZCjocZhcV4006HmYnGfY4s1Yxpvg-RyLp1HjfQbryiBcf-BJIIeW3ijEolgGE*1708376347843*aa58b0647f46203099eb91d3c1352a785ca12259abac806a50db69b2e73ee2ff*eYa64DxURtb_xVdbVtnvbvAI2Z1RrZENtuTHwSjSkm4~2'
@@ -331,11 +406,13 @@ export const Login = () => {
               </button>
             </>
           )}
-          {Object.values(providers).map((provider) => {
+          {/* {Object.values(providers).map((provider) => {
             return (
               <div key={provider?.name}>{buttonComponents[provider.id]}</div>
             )
-          })}
+          })} */}
+          <div ref={refFloatBntLogin} id="g_id_onload" className={styles.btn_login} />
+
           <WrapperActiveLink>
             {/* <ActiveLink activeClassName='active' href='/entrar/email'>
               <a>

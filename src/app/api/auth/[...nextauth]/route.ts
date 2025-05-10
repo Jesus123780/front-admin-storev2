@@ -1,10 +1,11 @@
 import NextAuth from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
 import AppleProvider from "next-auth/providers/apple";
 import FacebookProvider from "next-auth/providers/facebook";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import InstagramProvider from "next-auth/providers/instagram";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
 const authOptions = {
   providers: [
@@ -41,10 +42,12 @@ const authOptions = {
     error: "/404",
   },
   callbacks: {
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
+    async redirect(props) {
+      console.log("🚀 ~ redirect ~ props:", props)
+      // console.log("🚀 ~ redirect ~ url, baseUrl:", url, baseUrl)
+      // if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // if (new URL(url).origin === baseUrl) return url;
+      // return baseUrl;
     },
     async signIn({ user, account, profile }) {
       const { id, name, email } = user || {};
@@ -114,9 +117,14 @@ const authOptions = {
 
 // **Definición de los métodos HTTP (GET y POST) para NextAuth**
 export const GET = async (req, res) => {
+  console.log("🚀 ~ GET ~ req:", req)
   return NextAuth(req, res, authOptions);
 };
 
 export const POST = async (req, res) => {
+  if (req.method === "POST" && req.url?.includes("logout")) {
+    (await cookies()).delete('merchant')
+        return NextResponse.json({ message: 'Logged out successfully' })
+  }
   return NextAuth(req, res, authOptions);
 };

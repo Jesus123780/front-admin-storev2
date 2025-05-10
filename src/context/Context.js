@@ -14,6 +14,7 @@ const initialCompanyState = {
 }
 const initialStateContext = {
   alert: false,
+  isElectron: false,
   authData: {},
   collapsed: false,
   company: initialCompanyState,

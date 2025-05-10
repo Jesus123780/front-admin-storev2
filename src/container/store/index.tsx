@@ -1,7 +1,7 @@
 'use client'
 
 import { Context } from '../../context/Context'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   useMobile,
   useCatWithProduct,
@@ -26,12 +26,12 @@ import React, {
   useRef,
   useState
 } from 'react'
-import { 
+import {
   AlertInfo,
-  AwesomeModal, 
-  RippleButton, 
-  Row, 
-  SearchBar, 
+  AwesomeModal,
+  RippleButton,
+  Row,
+  SearchBar,
   getGlobalStyle
 } from 'pkg-components'
 import { ButtonsAction } from './options/index'
@@ -51,6 +51,8 @@ import { ProductView } from '../product/view/product'
 
 export const Store = () => {
   // STATES
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [showDessert, setShowDessert] = useState(false)
   const ref = useRef(null)
   const {
@@ -70,7 +72,10 @@ export const Store = () => {
   const [modal, setModal] = useState(false)
   // HOOKS
   const { isMobile } = useMobile()
-  const { handleQuery, handleCleanQuery } = useManageQueryParams()
+  const { handleQuery, handleCleanQuery } = useManageQueryParams({
+    router,
+    searchParams
+  })
   const { handleDelete, loading: loadingDeleteProduct } = useDeleteProductsFood({
     sendNotification,
     onSuccess: () => {
@@ -88,7 +93,6 @@ export const Store = () => {
       dataOptional
     }
   ] = useGetOneProductsFood()
-  const router = useRouter()
   const [store] = useStore()
 
   const [data, {
@@ -281,15 +285,15 @@ export const Store = () => {
     dayAvailable: string;
   }
 
-  const selectedDays: string[] = (Array.isArray(product?.getAllAvailableProduct) && product?.getAllAvailableProduct?.length) 
+  const selectedDays: string[] = (Array.isArray(product?.getAllAvailableProduct) && product?.getAllAvailableProduct?.length)
     ? product?.getAllAvailableProduct?.map((day: AvailableProduct) => {
-        return day?.dayAvailable;
-      }) 
+      return day?.dayAvailable;
+    })
     : [];
   const { days } = useSaveAvailableProduct()
   const [alertModal, setAlertModal] = useState(false)
   const [checkStock, setCheckStock] = useState(false)
-    
+
   /**
      * Updates stock management state
      * @param {boolean} newState - The new value of manageStock
@@ -305,7 +309,7 @@ export const Store = () => {
     }
     notifyUpdateResult(response.success, response.message)
   }, [pId, updateManageStock])
-    
+
   /**
      * Toggles checkStock and updates it
      */
@@ -428,19 +432,19 @@ export const Store = () => {
     5: <TableSeating />
   }
 
-    const placeholder = 'Buscar productos'
-    const justifyContent = 'normal'
-    const center = isMobile ? true : false
+  const placeholder = 'Buscar productos'
+  const justifyContent = 'normal'
+  const center = isMobile ? true : false
   return (
     <div
       className={`${styles.wrapper} ${center ? styles.center : ""}`}
       style={{ justifyContent: justifyContent || "normal" }}
     >
-      <AwesomeModal 
+      <AwesomeModal
         customHeight='30%'
         footer={false}
         header={true}
-        onHide={() => { return setAlertModal(false)}}
+        onHide={() => { return setAlertModal(false) }}
         padding={getGlobalStyle('--spacing-lg')}
         show={alertModal && show === 1}
         size='40%'
@@ -455,7 +459,7 @@ export const Store = () => {
               return setAlertModal(false)
             }}
           >
-              Cancelar
+            Cancelar
           </RippleButton >
           <RippleButton
             loading={loadingDeleteProduct}
@@ -464,7 +468,7 @@ export const Store = () => {
               return handleDelete({ pId, pState: 1 })
             }}
           >
-                Confirmar
+            Confirmar
           </RippleButton>
         </Row>
       </AwesomeModal>
