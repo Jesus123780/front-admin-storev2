@@ -9,9 +9,11 @@ import { Coordinates, DashboardComponent } from './types';
 const DEFAULT = {
   components: [],
   setComponents: () => {},
+  handleAddComponent: () => {},
 } as {
-  components: ComponentInfo[];
-  setComponents: React.Dispatch<React.SetStateAction<ComponentInfo[]>>;
+  components: ComponentInfo[]
+  setComponents: React.Dispatch<React.SetStateAction<ComponentInfo[]>>
+  handleAddComponent: () => void;
 };
 
 const ComponentsContext = createContext(DEFAULT);
@@ -40,12 +42,22 @@ export const ComponentsContextProvider: React.FC<{ children: React.ReactNode }> 
     };
   });
   const [components, setComponents] = useState<ComponentInfo[]>(DEFAULT_COMPONENTS)
-  
+  const handleAddComponent = () => {
+    const newComponent = {
+      id: Math.random().toString(36).substring(2, 15),
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+    };
+    setComponents((prev) => [...prev, newComponent]);
+  }
   return (
     <ComponentsContext.Provider
       value={{
         components: components,
-        setComponents
+        setComponents,
+        handleAddComponent,
       }}
     >
       {children}

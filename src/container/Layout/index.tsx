@@ -220,7 +220,7 @@ export const MemoLayout = ({
   }
   const [openDeliveryTime, setOpenDeliveryTime] = useState(false)
   const handleOpenDeliveryTime = () => {
-    setOpenDeliveryTime(!openDeliveryTime)
+    setOpenDeliveryTime((prev) => !prev)
   }
   const deliveryTimeMinutes = dataStore?.deliveryTimeMinutes
   const { deliveryTime, handleDeliveryTimeChange } = useDeliveryTime({
@@ -367,14 +367,14 @@ export const MemoLayout = ({
         show={isOpenOrder}
         zIndex={getGlobalStyle('--z-index-99999')}
       />
-      {/* <DeliveryTime
+      <DeliveryTime
         createDeliveryTime={createDeliveryTime}
         deliveryTime={deliveryTime}
         handleDeliveryTimeChange={handleDeliveryTimeChange}
         isOpen={openDeliveryTime}
         loading={loadingDeliveryTime}
         setDeliveryTimeOpen={handleOpenDeliveryTime}
-      /> */}
+      />
       <Orders
         deliveryTimeMinutes={deliveryTimeMinutes}
         handleSetIsOpenOrder={handleSetIsOpenOrder}
@@ -433,13 +433,11 @@ export const MemoLayout = ({
             backgroundColor: getGlobalStyle('--color-neutral-gray-white'),
             gridArea: 'main',
             overflowY: 'auto',
-            marginBottom: '4.6875rem'
+            marginBottom: '35px'
           }}
         >
-          <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           <>
             {children}
-
             {!loading && <PaymentAlert text={daysRemaining > 0 ? `Disfruta de tu periodo de prueba, Quedan ${daysRemaining} día(s) de prueba gratuita.` : 'Tu período de prueba gratuita ha finalizado.'} />}
           </>
           <CreateSales setShow={setSalesOpen} show={salesOpen} />

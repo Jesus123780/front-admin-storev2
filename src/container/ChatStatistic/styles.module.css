@@ -1,0 +1,29 @@
+.containerSelect select {
+  background-color: var(--color-base-white);
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  font-size: 16px;
+  padding: 10px;
+  width: 200px;
+}
+
+.containerSelect select:focus {
+  border-color: #333333;
+  outline: none;
+}
+
+.containerSelect option {
+  background-color: #f2f2f2;
+  padding: 10px;
+}
+
+.containChart {
+  background-color: var(--color-base-white);
+  display: grid;
+  grid-gap: 19px 12px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  margin: 10px 0;
+  padding: 10px;
+  position: relative;
+  width: 100%;
+}

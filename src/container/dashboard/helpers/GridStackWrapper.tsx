@@ -1,16 +1,34 @@
-import React, { useLayoutEffect, createRef, useRef, useState } from 'react'
-import { getGlobalStyle, GridStack, ToggleSwitch } from 'pkg-components'
+'use client'
+
+import React, {
+    useLayoutEffect,
+    createRef,
+    useRef,
+    useState
+} from 'react'
+import {
+    Column,
+    Devices,
+    GridStack,
+    Text,
+    ToggleSwitch
+} from 'pkg-components'
 import { useComponents } from '../context'
 import { DishStore } from '@/container/main/components/main.dishStore'
 import { SalesDay } from '@/container/main/components/main.salesDay'
 import { Goal } from '@/container/main/components/main.goal'
 import { QrCode } from '@/container/main/components/main.qr'
+import { ChatStatistic } from '@/container/ChatStatistic'
+import { TeamStore } from '@/container/TeamStore'
 
 export const COMPONENT_MAP = {
     1: DishStore,
     2: Goal,
     3: QrCode,
-    4: SalesDay
+    4: SalesDay,
+    5: ChatStatistic,
+    6: TeamStore,
+    7: Devices,
 };
 
 const Item = ({ id, component }: { id: string; component: React.ReactNode }) => {
@@ -20,7 +38,7 @@ const Item = ({ id, component }: { id: string; component: React.ReactNode }) => 
         : {};
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
+        <div style={{ width: '100%' }}>
             {view ? React.createElement(view, componentProps) : null}
         </div>
     );
@@ -35,7 +53,7 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
     const gridRef = useRef<GridStack | undefined>()
     const gridContainerRef = useRef(null)
     const [editMode, setEditMode] = useState(false)
-    refs.current = {};
+    refs.current = {}
 
     if (Object.keys(refs.current).length !== items.length) {
         items.forEach(({ id }) => {
@@ -47,7 +65,7 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
     const BREAKPOINTS = [
         { c: 1, w: 700 },
         { c: 2, w: 850 },
-        { c: 4, w: 950 },
+        { c: 3, w: 950 },
         { c: 6, w: 1100 },
     ];
 
@@ -56,7 +74,7 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
             if (!gridContainerRef.current) return
             (gridRef.current = GridStack.init(
                 {
-                    float: false,
+                   float: false,
                     animate: true,
                     alwaysShowResizeHandle: true,
                     acceptWidgets: true,
@@ -75,28 +93,26 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
             ))
             if (gridRef.current) {
                 gridRef.current.setStatic(!editMode)
-              }
+            }
         } else {
             const grid = gridRef.current
             const layout = items.map((a) =>
                 refs.current[a.id].current?.gridstackNode || { ...a, el: refs.current[a.id].current ?? undefined }
-            );
-            grid._ignoreCB = true
+            )
             grid.load(layout)
-            delete grid._ignoreCB
         }
     }, [items]);
 
     const handleEditMode = () => {
-      setEditMode(prev => {
-        const newMode = !prev
-        if (gridRef.current) {
-          gridRef.current.setStatic(!newMode)
-        }
-        return newMode
-      })
+        setEditMode(prev => {
+            const newMode = !prev
+            if (gridRef.current) {
+                gridRef.current.setStatic(!newMode)
+            }
+            return newMode
+        })
     }
-    
+
     return (
         <div style={{ width: '100%', marginRight: '10px' }}>
             <ToggleSwitch
@@ -110,29 +126,48 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
             />
             <div className='grid-stack' ref={gridContainerRef}>
                 {items.map((item, i) => {
-                    const attrs: any = {
+                    const attrs: React.HTMLAttributes<HTMLDivElement> & {
+                        ref: React.RefObject<HTMLDivElement>
+                        'gs-id': string
+                        'gs-w': number
+                        'gs-h': number
+                        'gs-x': number
+                        'gs-y': number
+                        'gs-no-move'?: string
+                        'gs-locked'?: string
+                        'gs-no-resize'?: string
+                    } = {
                         ref: refs.current[item.id],
-                        key: item.id,
                         className: 'grid-stack-item',
                         'gs-id': item.id,
                         'gs-w': item.w,
                         'gs-h': item.h,
                         'gs-x': item.x,
-                        'gs-y': item.y,
+                        'gs-y': item.y
                     };
 
                     if (item.noMove) {
                         attrs['gs-no-move'] = 'true';
-                        attrs['gs-locked'] = 'true'; // Evita que lo muevan otros
-                        attrs['gs-no-resize'] = 'true'; // Opcional
+                        attrs['gs-locked'] = 'true';
+                        attrs['gs-no-resize'] = 'true';
                     }
+
 
                     return (
                         <div
                             {...attrs}
                             key={item.id}
-                            className={`grid-stack-item ${item.className ?? ''}`}
                         >
+                            <Column style={{
+                                position: 'absolute',
+                                top: -15,
+                                left: 10,
+                                width: '100%'
+                            }}>
+                                <Text as='h2' size='2xl'>
+                                    {item.title}
+                                </Text>
+                            </Column>
                             <div className='grid-stack-item-content'>
                                 <Item {...item} />
                             </div>
@@ -148,7 +183,7 @@ export const GridStackWrapper = () => {
     const { components: items } = useComponents();
     return (
         <div>
-            <div style={{ display: 'flex', backgroundColor: getGlobalStyle('--color-neutral-gray') }}>
+            <div>
                 <div style={{ display: 'flex' }}>
                     <ControlledStack items={items} />
                 </div>

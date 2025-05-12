@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { AmountInput, AwesomeModal, Button, Column, CounterAnimation, getGlobalStyle, Icon, KmhGoalChart, numberFormat, Text } from 'pkg-components'
+import { AmountInput, AwesomeModal, Button, Column, getGlobalStyle, Icon, KmhGoalChart, numberFormat, Text } from 'pkg-components'
 import { useStore, useGetSalesAmountToday, useFormTools, useAmountInput, useUpsertGoal } from 'npm-pkg-hook'
 import { Context } from '@/context/Context'
 import styles from '../styles.module.css'
@@ -76,9 +76,7 @@ export const Goal = () => {
                     </Button>
                 </form>
             </AwesomeModal>
-            <Text size="lg" weight="normal">
-                Tu meta de <strong>ventas del dia</strong>  propuesta es de: <strong> <CounterAnimation number={dailyGoal ?? 0} size="14px" /></strong>
-            </Text>
+           
             <Column className={styles.goal_chart_action}>
                 <button onClick={handleOpenEditgoal} className={styles.goal_chart_action_button}>
                     <Icon icon='IconDost' />

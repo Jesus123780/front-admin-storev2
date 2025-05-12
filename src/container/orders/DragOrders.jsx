@@ -56,7 +56,7 @@ export const DragOrders = ({
     pDatCre: null,
     channel: 0,
     change: 0,
-    getAllPedidoStore: []
+    getStoreOrders: []
   }
   const invoiceClient = {
     clientName: '',
@@ -110,13 +110,13 @@ export const DragOrders = ({
     setSelectedItem(data)
   }
 
-  const { getOnePedidoStore, loading: saleLoading } = useGetSale({ callback: setItemSale })
+  const { getStoreOrderById, loading: saleLoading } = useGetSale({ callback: setItemSale })
   const sale = selectedItem ?? {
     pCodeRef: '',
     pDatCre: '',
     channel: 0,
     change: 0,
-    getAllPedidoStore: []
+    getStoreOrders: []
   }
 
   const [changePPStatePPedido, { loading: LoadingStatusOrder }] = useMutation(CHANGE_STATE_STORE_PEDIDO, {
@@ -210,9 +210,9 @@ export const DragOrders = ({
           pCodeRef: pCodeRef,
           pDatMod: new Date()
         },
-        update: async (cache, { data: { getAllPedidoStoreFinal } }) => {
+        update: async (cache, { data: { getStoreOrdersFinal } }) => {
           const updatedData = {
-            nameFun1: getAllPedidoStoreFinal
+            nameFun1: getStoreOrdersFinal
           }
           if (pCodeRef !== 4) {
             client.query({
@@ -226,7 +226,7 @@ export const DragOrders = ({
           return updateMultipleCache({
             cache,
             queries: [
-              { query: GET_ALL_PEDIDOS, dataNew: updatedData.nameFun1, nameFun: 'getAllPedidoStoreFinal' }
+              { query: GET_ALL_PEDIDOS, dataNew: updatedData.nameFun1, nameFun: 'getStoreOrdersFinal' }
             ]
           })
         }
@@ -243,7 +243,7 @@ export const DragOrders = ({
 
 
   const handleModalItem = (pid) => {
-    const listShoppingCard = sale?.getAllPedidoStore?.find((Shopping) => {
+    const listShoppingCard = sale?.getStoreOrders?.find((Shopping) => {
       return Shopping?.getAllShoppingCard?.productFood?.pId === pid
     })
     const productModel = listShoppingCard?.getAllShoppingCard || {}
@@ -277,12 +277,12 @@ export const DragOrders = ({
     setOpenModalDetails(true)
     setLoading(true)
 
-    getOnePedidoStore({
+    getStoreOrderById({
       variables: {
         pCodeRef: saleId || ''
       }
     }).then((res) => {
-      const order = res?.data?.getOnePedidoStore || {}
+      const order = res?.data?.getStoreOrderById || {}
       if (order) {
         setSelectedItem(order || {})
         setSelectedTempItem(order || {})
@@ -338,7 +338,7 @@ export const DragOrders = ({
     const { pSState } = item || {}
     setStateSale(pSState)
     const { pCodeRef } = item || {}
-    await getOnePedidoStore({
+    await getStoreOrderById({
       variables: {
         pCodeRef: pCodeRef === undefined || pCodeRef === null ? '' : pCodeRef
       }

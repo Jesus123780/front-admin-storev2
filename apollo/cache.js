@@ -34,7 +34,7 @@ export const cache = new InMemoryCache({
           read: () => {return isLoggedVar()}
         },
         allPosts: concatPagination(),
-        getOnePedidoStore: {
+        getStoreOrderById: {
           keyArgs: ['pCodeRef'],
           merge(existing, incoming) {
             if (!incoming) return existing
@@ -44,22 +44,22 @@ export const cache = new InMemoryCache({
             const merged = {
               ...existing,
               ...incoming,
-              getOnePedidoStore: [
-                ...(existing.getAllPedidoStore || []),
-                ...(incoming.getAllPedidoStore || [])
+              getStoreOrderById: [
+                ...(existing.getStoreOrders || []),
+                ...(incoming.getStoreOrders || [])
               ]
             }
 
             return merged
           }
         },
-        getAllPedidoStoreFinal: {
+        getStoreOrdersFinal: {
           keyArgs: ['idStore', 'search', 'statusOrder'],
           merge(existing, incoming, { args: { max = Infinity } }) {
             try {
-              // Verificar que el objeto exista y tenga la propiedad getAllPedidoStore
-              const existingResults = existing?.getAllPedidoStore ?? []
-              const incomingResults = incoming?.getAllPedidoStore ?? []
+              // Verificar que el objeto exista y tenga la propiedad getStoreOrders
+              const existingResults = existing?.getStoreOrders ?? []
+              const incomingResults = incoming?.getStoreOrders ?? []
               // Concatenamos los resultados entrantes con los existentes
               const merged = [...existingResults]
               for (let i = 0; i < incomingResults.length && merged.length < max; ++i) {
@@ -71,7 +71,7 @@ export const cache = new InMemoryCache({
               }
               return {
                 ...incoming,
-                getAllPedidoStoreFinal: merged
+                getStoreOrdersFinal: merged
               }
             } catch (error) {
               return existing

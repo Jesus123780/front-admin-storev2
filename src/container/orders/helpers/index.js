@@ -1,5 +1,5 @@
 export const dataToPrintProduct = (sale) => {
-  return sale?.getAllPedidoStore?.length ? sale?.getAllPedidoStore?.map((sale) => {
+  return sale?.getStoreOrders?.length ? sale?.getStoreOrders?.map((sale) => {
     const product = {
       ...sale?.getAllShoppingCard?.productFood,
       ProQuantity: sale?.getAllShoppingCard?.cantProducts || 0,

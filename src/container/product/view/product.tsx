@@ -112,7 +112,7 @@ export const ProductView = ({
         </Button>
         <Button
           onClick={() => {
-            if (pId) return router.push(`products/edit?pId=${pId}`)
+            if (pId) return router.push(`/products/edit?pId=${pId}`)
             return null
           }}
         >

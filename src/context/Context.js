@@ -95,7 +95,6 @@ const Provider = ({ children }) => {
   const router = useRouter()
 
   const setSessionActive = useCallback(sessionValue => { return setIsSession(sessionValue) }, [])
-  console.log({ pathname: router.pathname })
   // const pathname = router.pathname === '/dashboard/[...name]'
   const pathname = usePathname()
 

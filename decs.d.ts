@@ -1,5 +1,7 @@
- declare module "npm-pkg-hook"
-//  Property 'accounts' does not exist on type 'typeof google'.ts(2339)
+declare module "npm-pkg-hook" {
+  // Puedes exportar tipos o valores específicos del paquete aquí si los conoces
+  export {};
+}
 
 export {};
 

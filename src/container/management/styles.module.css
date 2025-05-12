@@ -1,0 +1,26 @@
+.container_form {
+    overflow-y: auto;
+    line-height: 1.15;
+    font-size: 16px;
+    overflow-y: auto;
+    height: 100%;
+    padding: 16px 0px;
+}
+
+.bottom_actions {
+    align-items: flex-end;
+    border-top: 2px solid #f5f0eb;
+    justify-content: space-between;
+    padding: 20px;
+    height: 85px;
+    width: 100%;
+}
+
+.header-action {
+    align-items: center;
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: var(--spacing-xs);
+}

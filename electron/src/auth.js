@@ -68,7 +68,6 @@ const startGoogleAuth = async (mainWindow, port) => {
 
     try {
         const code = await getOAuthCodeByInteraction(authWindow, url)
-        console.log("🚀 ~ startGoogleAuth ~ code:", code)
         const { tokens } = await client.getToken(code)
 
         if (tokens) {
