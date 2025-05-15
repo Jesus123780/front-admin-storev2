@@ -19,10 +19,6 @@ import {
   PColor
 } from 'pkg-components'
 import { Context } from '../../context/Context'
-// import {
-//   BGColor,
-//   PColor
-// } from '../../public/colors'
 import { updateMultipleCache } from '../../utils'
 import { useApolloClient, useMutation } from '@apollo/client'
 import { CHANGE_STATE_STORE_PEDIDO, GET_ALL_PEDIDOS } from './queries'
@@ -380,16 +376,20 @@ export const DragOrders = ({
     NitStore: dataStore?.NitStore || '',
     storeName: dataStore?.storeName || ''
   }
-  function formatDate(date) {
+
+function convertUTCToUTCMinus5(utcDate) {
+  const date = new Date(utcDate)
     const options = {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }
-    return new Date(date).toLocaleString('en-US', { ...options, timeZone: 'America/Bogota' })
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: 'long', // puedes usar 'short' si prefieres 'may' en vez de 'mayo'
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
   }
+  return new Intl.DateTimeFormat('es-CO', options).format(new Date(date.getTime() - 5 * 60 * 60 * 1000))
+}
   const color = {
     0: '#63ba3c',
     1: getGlobalStyle('--color-feedback-warning-light'),
@@ -524,7 +524,7 @@ export const DragOrders = ({
                       </Column>
                       <Column>
                         <Text color={isSelected ? 'white' : 'default'} size='sm'>
-                          {formatDate(item?.pDatCre)}
+                          {convertUTCToUTCMinus5(item?.pDatCre)}
                         </Text>
                       </Column>
                       <Divider

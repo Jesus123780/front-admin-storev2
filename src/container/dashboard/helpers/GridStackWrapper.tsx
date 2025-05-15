@@ -1,7 +1,7 @@
 'use client'
 
 import React, {
-    useLayoutEffect,
+    useEffect,
     createRef,
     useRef,
     useState
@@ -13,6 +13,7 @@ import {
     Text,
     ToggleSwitch
 } from 'pkg-components'
+import { useUpdateDashboardComponent } from 'npm-pkg-hook'
 import { useComponents } from '../context'
 import { DishStore } from '@/container/main/components/main.dishStore'
 import { SalesDay } from '@/container/main/components/main.salesDay'
@@ -20,6 +21,7 @@ import { Goal } from '@/container/main/components/main.goal'
 import { QrCode } from '@/container/main/components/main.qr'
 import { ChatStatistic } from '@/container/ChatStatistic'
 import { TeamStore } from '@/container/TeamStore'
+
 
 export const COMPONENT_MAP = {
     1: DishStore,
@@ -45,11 +47,13 @@ const Item = ({ id, component }: { id: string; component: React.ReactNode }) => 
 };
 
 interface ControlledStackProps {
-    items: any[];
+    items: any[]
+    setComponents: React.Dispatch<React.SetStateAction<any[]>>
 }
 
-const ControlledStack = ({ items }: ControlledStackProps) => {
-    const refs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>({});
+const ControlledStack = ({ items, setComponents }: ControlledStackProps) => {
+    const refs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>({})
+    const { updateComponent, loading, error, data } = useUpdateDashboardComponent()
     const gridRef = useRef<GridStack | undefined>()
     const gridContainerRef = useRef(null)
     const [editMode, setEditMode] = useState(false)
@@ -69,39 +73,113 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
         { c: 6, w: 1100 },
     ];
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         if (!gridRef.current) {
-            if (!gridContainerRef.current) return
-            (gridRef.current = GridStack.init(
+            if (!gridContainerRef.current) return;
+            gridRef.current = GridStack.init(
                 {
-                   float: false,
+                    float: false,
                     animate: true,
                     alwaysShowResizeHandle: true,
                     acceptWidgets: true,
-                    column: 12, // Número de columnas por defecto
+                    column: 12,
                     minRow: 12,
                     cellHeight: 'auto',
                     cellHeightThrottle: 100,
                     cellHeightUnit: '%',
                     columnOpts: {
-                        breakpointForWindow: true, // Esta opción asegura que GridStack pueda responder a cambios de ventana
-                        breakpoints: BREAKPOINTS, // Puntos de quiebre personalizados
-                        columnMax: 6, // Número máximo de columnas
+                        breakpointForWindow: true,
+                        breakpoints: BREAKPOINTS,
+                        columnMax: 6,
                     },
                 },
                 gridContainerRef.current
-            ))
-            if (gridRef.current) {
-                gridRef.current.setStatic(!editMode)
-            }
+            );
+
+            gridRef.current.setStatic(!editMode);
+
+            // 📌 Agregar listener para detectar cambios
+            gridRef.current.on('dragstop', (_e, itemsChanged) => {
+                const node = itemsChanged.gridstackNode
+                console.log("🚀 ~ gridRef.current.on ~ node:", node)
+                console.log({
+                    info: `you just dragged node #${node.id} to ${node.x},${node.y} – good job!`,
+                });
+                setComponents((prev) => {
+                    const newItems = [...prev];
+                    const index = newItems.findIndex((item) => item.id === node.id);
+                    if (index !== -1) {
+                        newItems[index] = {
+                            ...newItems[index],
+                            x: node.x,
+                            y: node.y,
+                            w: node.w,
+                            h: node.h,
+                        };
+                    }
+                    return newItems;
+                })
+                console.log("🚀 ~ setComponents ~ node.h:", node.h)
+                console.log("🚀 ~ setComponents ~ node.w:", node.w)
+                console.log("🚀 ~ setComponents ~ node.y:", node.y)
+                console.log("🚀 ~ setComponents ~ node.x:", node.x)
+                updateComponent({
+                    id: node.id,
+                    coordinates: {
+                        x: node.x,
+                        y: node.y,
+                        w: node.w,
+                        h: node.h,
+                    },
+                });
+            })
+            gridRef.current.on('resizestop', (_e, itemsChanged) => {
+                const node = itemsChanged.gridstackNode
+                console.log("🚀 ~ gridRef.current.on ~ node:", node)
+                console.log({
+                    info: `you just resized node #${node.id} to ${node.x},${node.y} – good job!`,
+                });
+                setComponents((prev) => {
+                    const newItems = [...prev];
+                    const index = newItems.findIndex((item) => item.id === node.id);
+                    if (index !== -1) {
+                        newItems[index] = {
+                            ...newItems[index],
+                            x: node.x,
+                            y: node.y,
+                            w: node.w,
+                            h: node.h,
+                        };
+                    }
+                    return newItems;
+                })
+                updateComponent({
+                    id: node.id,
+                    coordinates: {
+                        x: node.x,
+                        y: node.y,
+                        w: node.w,
+                        h: node.h,
+                    },
+                });
+            })
         } else {
-            const grid = gridRef.current
-            const layout = items.map((a) =>
-                refs.current[a.id].current?.gridstackNode || { ...a, el: refs.current[a.id].current ?? undefined }
-            )
-            grid.load(layout)
+            const grid = gridRef.current;
+            const layout = items
+                .slice()
+                .sort((a, b) => a.y - b.y || a.x - b.x) // orden vertical primero
+                .map(a =>
+                    refs.current[a.id].current?.gridstackNode || {
+                        ...a,
+                        el: refs.current[a.id].current ?? undefined,
+                    }
+                );
+
+            grid.load(layout);
+
         }
     }, [items]);
+
 
     const handleEditMode = () => {
         setEditMode(prev => {
@@ -112,7 +190,7 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
             return newMode
         })
     }
-
+    console.log(items)
     return (
         <div style={{ width: '100%', marginRight: '10px' }}>
             <ToggleSwitch
@@ -133,7 +211,8 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
                         'gs-h': number
                         'gs-x': number
                         'gs-y': number
-                        'gs-no-move'?: string
+                        'gs-no-move': string
+                        'gs-auto-position': string
                         'gs-locked'?: string
                         'gs-no-resize'?: string
                     } = {
@@ -141,6 +220,10 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
                         className: 'grid-stack-item',
                         'gs-id': item.id,
                         'gs-w': item.w,
+                        'gs-auto-position': 'false',
+                        'gs-no-resize': 'false',
+                        'gs-locked': 'false',
+                        'gs-no-move': 'false',
                         'gs-h': item.h,
                         'gs-x': item.x,
                         'gs-y': item.y
@@ -180,12 +263,12 @@ const ControlledStack = ({ items }: ControlledStackProps) => {
 };
 
 export const GridStackWrapper = () => {
-    const { components: items } = useComponents();
+    const { components: items, setComponents } = useComponents();
     return (
         <div>
             <div>
                 <div style={{ display: 'flex' }}>
-                    <ControlledStack items={items} />
+                    <ControlledStack items={items} setComponents={setComponents} />
                 </div>
             </div>
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Button,
   InputQuery,
@@ -24,18 +24,16 @@ import styles from './styles.module.css'
 export const Orders = () => {
   const [handleChange, handleSubmit, setDataValue, { dataForm }] = useFormTools()
 
-  const getInitialDates = () => {
+  const getInitialDates = useMemo(() => {
     const todayRange = new UtilDateRange()
     const { start, end } = todayRange.getRange()
 
     return { fromDate: start, toDate: end }
-  }
-  const initialDates = getInitialDates()
+  }, [])
+  const initialDates = getInitialDates
   const [{ fromDate, toDate }, setDateValues] = useState(initialDates)
-  console.log("🚀 ~ OrdersStore ~ fromDate, toDate:", fromDate, toDate)
-
   
-  const [data] = useOrdersFromStore({
+  const [data, { refetch }] = useOrdersFromStore({
     fromDate: fromDate,
     toDate: toDate,
     search: dataForm.search
@@ -64,7 +62,13 @@ export const Orders = () => {
   ])
 
   const onChangeInput = (e) => {
-    setDateValues({ fromDate, toDate, [e.target.name]: e.target.value })
+
+    const { value } = e.target
+    console.log("🚀 ~ onChangeInput ~ e.target:", e.target)
+    setDateValues({
+      ...initialDates,
+      [e.target.name]: value
+    })
   }
 
   useEffect(() => {
@@ -89,13 +93,10 @@ export const Orders = () => {
   }, [data])
 
   const handleClearFilters = () => {
-    setDataValue({
-      ...dataForm,
-      search: ''
-    })
-    setDateValues({
-      fromDate: fromDate,
-      toDate: fromDate
+   refetch({
+      fromDate: value,
+      toDate: value,
+      search: dataForm.search
     })
   }
   function areAllArraysEmpty(arr) {
