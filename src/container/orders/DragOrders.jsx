@@ -355,7 +355,7 @@ export const DragOrders = ({
     clientNumber: ''
   }
 
-  const { yearMonthDay, longDayName } = useFormatDate({})
+  const { yearMonthDay, longDayName, formatDateInTimeZone } = useFormatDate({})
   const localDate = new Date().toLocaleTimeString()
   const customDate = `${yearMonthDay + ' - ' + localDate + ' - ' + longDayName}`
 
@@ -377,19 +377,7 @@ export const DragOrders = ({
     storeName: dataStore?.storeName || ''
   }
 
-function convertUTCToUTCMinus5(utcDate) {
-  const date = new Date(utcDate)
-    const options = {
-    timeZone: 'America/Bogota',
-    year: 'numeric',
-    month: 'long', // puedes usar 'short' si prefieres 'may' en vez de 'mayo'
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  }
-  return new Intl.DateTimeFormat('es-CO', options).format(new Date(date.getTime() - 5 * 60 * 60 * 1000))
-}
+
   const color = {
     0: '#63ba3c',
     1: getGlobalStyle('--color-feedback-warning-light'),
@@ -466,7 +454,7 @@ function convertUTCToUTCMinus5(utcDate) {
               <Column key={grp.title}>
                 <Column>
                   <Text as='h2' className={styles.title} >
-                    {grp.title} {(Number(grp?.items?.length))}
+                    {grp.title} {(Number(grp?.items?.length ?? 0) )}
                   </Text>
                 </Column>
                 {uniqueItems?.length > 0 && Array.from(new Set(uniqueItems?.map((item) => {
@@ -524,7 +512,7 @@ function convertUTCToUTCMinus5(utcDate) {
                       </Column>
                       <Column>
                         <Text color={isSelected ? 'white' : 'default'} size='sm'>
-                          {convertUTCToUTCMinus5(item?.pDatCre)}
+                          {formatDateInTimeZone(item?.pDatCre)}
                         </Text>
                       </Column>
                       <Divider

@@ -1,6 +1,10 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { 
+  useState, 
+  useEffect, 
+  useMemo
+} from 'react'
 import {
   Button,
   InputQuery,
@@ -9,7 +13,8 @@ import {
   EmptyData,
   getGlobalStyle,
   InputDate,
-  Divider
+  Divider,
+  ToggleSwitch
 } from 'pkg-components'
 import {
   useFormTools,
@@ -21,23 +26,28 @@ import { DragOrders } from './DragOrders'
 import { QuickFiltersButton } from './QuickFiltersButton'
 import styles from './styles.module.css'
 
-export const Orders = () => {
-  const [handleChange, handleSubmit, setDataValue, { dataForm }] = useFormTools()
-
-  const getInitialDates = useMemo(() => {
+export const OrdersMemo = () => {
+  const [loading, setLoading] = useState(false) 
+    const initialDates = useMemo(() => {
     const todayRange = new UtilDateRange()
     const { start, end } = todayRange.getRange()
 
     return { fromDate: start, toDate: end }
   }, [])
-  const initialDates = getInitialDates
-  const [{ fromDate, toDate }, setDateValues] = useState(initialDates)
-  
-  const [data, { refetch }] = useOrdersFromStore({
-    fromDate: fromDate,
-    toDate: toDate,
-    search: dataForm.search
+  const [inCludeRange, setIncludeRange] = useState(true)
+  const [handleChange, handleSubmit, setDataValue, { dataForm }] = useFormTools({
+    callback: () => {
+      setDataValue({
+        ...initialDates
+      })
+    }
   })
+
+  const [data, { refetch }] = useOrdersFromStore({
+    fromDate: dataForm.fromDate,
+    toDate: dataForm.toDate
+  })
+  
   const [list, setList] = useState([
     {
       title: '',
@@ -61,16 +71,6 @@ export const Orders = () => {
     }
   ])
 
-  const onChangeInput = (e) => {
-
-    const { value } = e.target
-    console.log("🚀 ~ onChangeInput ~ e.target:", e.target)
-    setDateValues({
-      ...initialDates,
-      [e.target.name]: value
-    })
-  }
-
   useEffect(() => {
     const { ACCEPT, PROCESSING, READY, CONCLUDES, REJECTED } = data || {}
 
@@ -92,12 +92,21 @@ export const Orders = () => {
     setList(updatedList)
   }, [data])
 
-  const handleClearFilters = () => {
-   refetch({
-      fromDate: value,
-      toDate: value,
-      search: dataForm.search
+  const handleClearFilters = async () => {
+    try {
+    setLoading(true)
+    setDataValue({
+      ...initialDates
     })
+    await refetch({
+    fromDate: initialDates.fromDate,
+    toDate: initialDates.toDate,
+    search: dataForm.search
+    })
+    setLoading(false)
+  } catch (e) {
+    setLoading(false)
+  }
   }
   function areAllArraysEmpty(arr) {
     return arr.every((obj) => {
@@ -115,40 +124,63 @@ export const Orders = () => {
         />
         <Divider marginTop={getGlobalStyle('--spacing-xl')} />
         <div className={styles['quick-filters']}>
-          <div className={styles.container_query}>
+          {!inCludeRange && <ToggleSwitch
+          checked={inCludeRange}
+          id='include-range'
+          label='Incluir rango de fechas en la busqueda'
+          onChange={() => {
+
+            setIncludeRange(!inCludeRange)
+            }}
+            successColor='green'
+            />}
+            <div className={styles.container_query}>
             <InputQuery
               className={styles.input_query}
               dataForm={dataForm}
-              handleChange={handleChange}
+              handleChange={(e) => {
+                handleChange(e)
+              // Espera a que termine de escribir antes de llamar a refetch
+              if (window.searchTimeout) clearTimeout(window.searchTimeout)
+              window.searchTimeout = setTimeout(() => {
+              refetch({
+                fromDate: dataForm.fromDate,
+                toDate: dataForm.toDate,
+                search: e.target.value
+              })
+              }, 500)
+              }}
               placeholder='busca por ref de orden'
             />
-          </div>
-          <QuickFiltersButton
+            </div>
+            <QuickFiltersButton
             onClick={() => {
               return
             }}
           />
           <InputDate
-            date={fromDate}
+            date={dataForm.fromDate}
             label='Desde'
+            disabled={!inCludeRange}
             name='fromDate'
             onChange={(value) => {
-              onChangeInput({
+              handleChange({
                 target: {
                   name: 'fromDate',
                   value
                 }
               })
             }}
-            value={fromDate}
-            width={'20%'}
+            value={dataForm.fromDate}
+            width='20%'
           />
           <InputDate
-            date={toDate}
+            disabled={!inCludeRange}
+            date={dataForm.toDate}
             label='Hasta'
             name='toDate'
             onChange={(value) => {
-              onChangeInput({
+              handleChange({
                 target: {
                   name: 'toDate',
                   value
@@ -156,25 +188,52 @@ export const Orders = () => {
               })
             }}
             type='date'
-            value={toDate}
+            value={dataForm.toDate}
           />
           <Button
             borderRadius='5px'
             onClick={handleClearFilters}
+            padding='0 10px'
+            loading={loading}
+            primary
+            styles={{
+              height: '3.75rem'
+            }}
+          >
+            Quitar filtros
+          </Button>
+          <Button
+            type='submit'
+            borderRadius='5px'
+            onClick={(e) => {
+            handleSubmit({
+            event: e,
+            action: () => {
+            setLoading(true)
+            refetch({
+              fromDate: dataForm.fromDate,
+              toDate: dataForm.toDate,
+              search: dataForm.search
+            })
+            setLoading(false)
+      }
+      })
+             
+            }}
             padding='0 10px'
             primary
             styles={{
               height: '3.75rem'
             }}
           >
-            Borrar filtro
+            Realizar busqueda
           </Button>
         </div>
         <Divider marginTop={getGlobalStyle('--spacing-xl')} />
 
         <DateRange
-          endDate={toDate}
-          startDate={fromDate}
+          endDate={dataForm.toDate}
+          startDate={dataForm.fromDate}
         />
         <Divider marginTop={getGlobalStyle('--spacing-xl')} />
         <div className='form-container-orders'></div>
@@ -187,3 +246,7 @@ export const Orders = () => {
     </div>
   )
 }
+
+export const Orders = React.memo(OrdersMemo)
+
+OrdersMemo.displayName = 'OrdersMemo'

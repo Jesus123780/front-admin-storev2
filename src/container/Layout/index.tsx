@@ -438,7 +438,7 @@ export const MemoLayout = ({
         >
           <>
             {children}
-            {!loading && <PaymentAlert text={daysRemaining > 0 ? `Disfruta de tu periodo de prueba, Quedan ${daysRemaining} día(s) de prueba gratuita.` : 'Tu período de prueba gratuita ha finalizado.'} />}
+            {false && !loading && <PaymentAlert text={daysRemaining > 0 ? `Disfruta de tu periodo de prueba, Quedan ${daysRemaining} día(s) de prueba gratuita.` : 'Tu período de prueba gratuita ha finalizado.'} />}
           </>
           <CreateSales setShow={setSalesOpen} show={salesOpen} />
           <div
