@@ -6,6 +6,7 @@ const nextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXT_PUBLIC_BUSINESS_TITLE: process.env.NEXT_PUBLIC_BUSINESS_TITLE,
     URL_ADMIN_SERVER: process.env.URL_ADMIN_SERVER,
+    NEXT_PUBLIC_URL_BASE: process.env.NEXT_PUBLIC_URL_BASE,
   },
   eslint: {
     ignoreDuringBuilds: true, // 🔹 Ignorar errores de ESLint en la build

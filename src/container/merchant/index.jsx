@@ -49,6 +49,7 @@ import { StepOne } from './Forms/StepOne'
 import { StepCero } from './Forms/StepCero'
 import Joi from 'joi'
 import styles from './styles.module.css'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const Restaurant = ({ userToken = {} } = {}) => {
   // STATES
@@ -204,7 +205,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
             description: `${message}`,
             title: `${message}`
           })
-          return 
+          return
         }
         const messages = {
           success: {
@@ -362,8 +363,8 @@ export const Restaurant = ({ userToken = {} } = {}) => {
   const handleChooseStore = async (store) => {
     const { idStore } = store ?? {
       idStore: null
-    } 
-  
+    }
+
     const responseLogin = await loginEmployee(
       idStore,
       email
@@ -375,7 +376,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
       const cookies = [
         { name: 'restaurant', value: idStore },
         { name: 'session', value: token }
-        
+
       ]
       await handleSession({ cookies: cookies })
       window.location.href = `${process.env.URL_BASE}/dashboard`
@@ -395,7 +396,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
   }
 
   const showStores = (dataUser && Array.isArray(dataUser?.associateStore))
-  console.log({values}, {dataForm})
+
   return (
     <Content>
       <div
@@ -426,7 +427,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
         }}
         padding={getGlobalStyle('--spacing-2xl')}
         show={modalConfirm}
-        size='30%'
+        size={MODAL_SIZES.small}
         title='¿Quieres abandonar esta página?'
       >
         <Column>
@@ -465,7 +466,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
       </AwesomeModal>
 
       <Card>
-
+        {/* vacio */}
       </Card>
 
       <div className='container-step'>
@@ -511,7 +512,10 @@ export const Restaurant = ({ userToken = {} } = {}) => {
                   return validateRouter()
                 }}
               >
-                {/* <IconArrowLeft color={PLColor} size='25px' /> */}
+                <Icon
+                  icon='IconArrowLeft'
+                  color={getGlobalStyle('--color-icons-primary')}
+                />
               </GoBack>
               <Text
                 align='center'

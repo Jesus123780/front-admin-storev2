@@ -9,6 +9,7 @@ import { ChatStatistic } from '../ChatStatistic'
 // import { ChartAllSales } from '../ChartSales'
 
 export const Reports = () => {
+  console.log('Reports')
   return (
     <Column>
       <ChatStatistic />

@@ -16,7 +16,8 @@ const createWindow = () => {
     height: 670,
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
-      nodeIntegration: true,
+      nodeIntegration: false,
+      contextIsolation: true,
     },
   })
 
@@ -50,11 +51,11 @@ const startBackendServer = async () => {
       return
     }
     const backendDir = isDev
-    ? join(__dirname, '..', 'front-back-server', 'front-back-server.exe')
-    : join(process.resourcesPath, 'front-back-server.exe')  
+      ? join(__dirname, '..', 'front-back-server', 'front-back-server.exe')
+      : join(process.resourcesPath, 'front-back-server.exe')
 
     console.log(`[ELECTRON] Backend server path: ${backendDir}`)
-    
+
     const backendProcess = spawn(backendDir, [], { stdio: 'ignore' })
 
     backendProcess.on('error', (error) => {
@@ -94,6 +95,8 @@ const startNextJSServer = async () => {
   }
 }
 
+
+
 app.whenReady().then(async () => {
   try {
     await startBackendServer()
@@ -104,8 +107,12 @@ app.whenReady().then(async () => {
       const mainWindow = BrowserWindow.getFocusedWindow();
       await startGoogleAuth(mainWindow, portApp);
     });
-    ipcMain.on('ping', () => console.log('pong'))
 
+    ipcMain.on('ping', () => console.log('pong'))
+    ipcMain.on('google-auth-success', (event, userData) => {
+      console.log('Datos del usuario autenticado:', userData)
+
+    })
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
@@ -115,6 +122,13 @@ app.whenReady().then(async () => {
   }
 })
 
+app.on('open-url', (event, data) => {
+  event.preventDefault()
+  const mainWindow = BrowserWindow.getFocusedWindow()
+  if (mainWindow) {
+    mainWindow.webContents.send('login-success', data)
+  }
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()

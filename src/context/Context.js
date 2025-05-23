@@ -20,7 +20,11 @@ const initialStateContext = {
   company: initialCompanyState,
   countPedido: 0,
   DataCompany: {},
-  error: {},
+  error: {
+    message: null,
+    color: null,
+    duration: 3000
+  },
   hidden: false,
   isCompany: {},
   isSession: null,

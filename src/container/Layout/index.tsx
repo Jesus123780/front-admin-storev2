@@ -450,12 +450,12 @@ export const MemoLayout = ({
               width: 'min-content'
             }}
           >
-            <Toast
-              autoDelete={true}
-              autoDeleteTime={7000}
-              position={'bottom-right'}
-              toastList={messagesToast}
-            />
+              <Toast
+                autoDelete={true}
+                autoDeleteTime={7000}
+                position={'bottom-right'}
+                toastList={messagesToast}
+              />
           </div>
         </div>
         <Footer />

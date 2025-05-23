@@ -110,7 +110,6 @@ export const ExtrasProductsItems = ({
         loading={false}
         {...propsExtra}
       />
-
       {editing &&
       <CreateExtra {...propsExtra} />
       }

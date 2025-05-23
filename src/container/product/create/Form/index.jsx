@@ -60,6 +60,7 @@ const FormProduct = ({
         type='text'
         value={names}
       />
+      <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
       <AmountInput
         allowDecimals={true}
         decimalSeparator=','

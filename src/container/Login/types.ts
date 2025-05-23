@@ -5,9 +5,10 @@ export interface GoogleUserBody {
         lastName: string
         email: string
         id: string
+        image: string
         locationFormat: any[]
         useragent: string | null
-        deviceid: Promise<string>
+        deviceid?: string | null
         imageUrl: string
     }
 }

@@ -3,17 +3,17 @@ import React, {
   useEffect,
   useContext
 } from 'react'
-import {
-  BColor,
-  EColor,
-  PLColor
-} from 'public/colors'
+
 import {
   InputHooks,
   RippleButton,
   Loading,
   InputOTPHook,
-  validateEmail
+  validateEmail,
+    BColor,
+    IconArrowLeft,
+  EColor,
+  PLColor
 } from 'pkg-components'
 import {
   useFormTools,
@@ -21,7 +21,6 @@ import {
   fetchJson
 } from 'npm-pkg-hook'
 import { useMutation } from '@apollo/client'
-import { IconArrowLeft } from 'public/icons'
 import {
   Content,
   Form,
@@ -31,10 +30,10 @@ import {
 } from './styled'
 import { EMAIL_SESSION } from './queries'
 import { Context } from './../../context/Context'
-import { decodeToken } from 'utils';
-import { RegisterUser } from '../user'
-import { getDeviceId } from '../../apollo/getDeviceId'
+// import { RegisterUser } from '../user'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { decodeToken } from '@/utils'
+import { getDeviceId } from '../../../apollo/getDeviceId'
 
 export const Email = () => {
   const [handleChange, handleSubmit, setDataValue, {
@@ -148,7 +147,7 @@ export const Email = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  if (otp === 0) return <RegisterUser />
+  // if (otp === 0) return <RegisterUser />
   return (
     <Content>
       {loading && <Loading />}

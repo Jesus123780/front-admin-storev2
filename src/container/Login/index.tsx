@@ -7,72 +7,76 @@ import React, {
   useState
 } from 'react'
 import { getDeviceId } from '../../../apollo/getDeviceId'
-import {
-  Content,
-  Form,
-  Card,
-  Text,
-  ButtonSubmit,
-  WrapperActiveLink
-} from './styled'
 import { Context } from '../../context/Context'
 import {
-  ActiveLink,
-  Button,
   LoadingButton,
-  Portal,
-  Icon
+  Icon,
+  Text,
+  Divider,
+  getGlobalStyle,
+  Button,
+  Column,
+  GoogleLogin
 } from 'pkg-components'
 import {
   fetchJson,
   signOutAuth,
   encryptSession,
-  BroadcastChannel,
   useLogout,
   useSetSession,
   isTokenExpired,
   useRegisterDeviceUser,
   Cookies
 } from 'npm-pkg-hook'
-import { useSession, signIn, getProviders, signOut } from 'next-auth/react'
 import { getUserFromToken, decodeToken } from '../../utils'
 import { useRouter } from 'next/navigation'
-import styles from './styles.module.css'
 import { GoogleUserBody } from './types'
+import styles from './styles.module.css'
 
-const isDev = process.env.NODE_ENV === 'development'
 const EXPIRED_MESSAGE = 'Session expired, refresh needed'
 
 interface ILogin {
-  refFloatBntLogin: React.RefObject<HTMLDivElement>
   googleLoaded?: boolean
 }
-export const Login: React.FC<ILogin> = ({
-  refFloatBntLogin,
-  googleLoaded = false
+export const Login: React.FC<ILogin> = ({ googleLoaded = false,
 }: ILogin): React.ReactElement => {
   const router = useRouter()
   const [handleRegisterDeviceUser] = useRegisterDeviceUser()
-  const { setAlertBox } = useContext(Context)
+  const { setAlertBox, isElectron, sendNotification } = useContext(Context)
   const [onClickLogout] = useLogout()
   const [handleSession] = useSetSession()
   const [loading, setLoading] = useState(false)
-  const [providers, setProviders] = useState({
-    google: {
-      id: 'google',
-      name: 'Google',
-      type: 'oauth'
+  const handleLogin = async (type: string) => {
+    try {
+      if (type === 'login-google') {
+        setAlertBox({ message: 'Iniciando sesión con Google, abre tu navegador y selecciona un perfil' })
+        if (typeof window !== 'undefined' && window.electron) {
+          sendNotification({
+            title: 'Iniciando sesión',
+            description: 'Abre tu navegador y selecciona un perfil',
+            backgroundColor: 'success'
+          })
+          if (window.electron.ipcRenderer && typeof window.electron.ipcRenderer.invoke === 'function') {
+            window.electron.ipcRenderer.invoke('start-google-auth')
+          } else {
+            sendNotification({
+              title: 'Error',
+              description: 'No se pudo iniciar sesión con Google, por favor intenta de nuevo',
+              backgroundColor: 'error'
+            })
+          }
+        }
+      }
+    } catch (error) {
+      setAlertBox({ message: 'Error al iniciar sesión con Google' })
+      sendNotification({
+        title: 'Error',
+        description: 'No se pudo iniciar sesión con Google, por favor intenta de nuevo',
+        backgroundColor: 'error'
+      })
     }
-  })
-
-  const { data: session, status } = useSession({
-    required: false,
-    onUnauthenticated() {
-      return
-    }
-  })
-
-  const responseGoogle = async (response) => {
+  }
+  const responseGoogle = async (response: GoogleUserBody) => {
     setLoading(true)
     const { user } = response || {}
     const { name, email, id, image } = user || {}
@@ -104,7 +108,11 @@ export const Login: React.FC<ILogin> = ({
       }
       const encryptedData = encryptSession(JSON.stringify(requestLogin))
       setAlertBox({ message: requestLogin.message, color: 'success' })
-
+      sendNotification({
+        title: 'Success',
+        description: 'Iniciaste sesión correctamente',
+        backgroundColor: 'success'
+      })
       const { storeUserId, token } = requestLogin
       const { idStore, id } = storeUserId || {}
       const decode = decodeToken(token) ?? {
@@ -114,7 +122,7 @@ export const Login: React.FC<ILogin> = ({
         { name: 'restaurant', value: idStore },
         { name: 'usuario', value: decode?.id || id },
         { name: 'session', value: token },
-        { name: process.env.SESSION_NAME, value: encryptedData }
+        { name: process.env.NEXT_PUBLIC_SESSION_NAME, value: encryptedData }
       ]
       await handleSession({ cookies: cookiesDefault })
 
@@ -125,17 +133,17 @@ export const Login: React.FC<ILogin> = ({
           { name: 'session', value: token }
         ]
         await handleSession({ cookies: cookiesToSave })
-      
+        await handleRegisterDeviceUser({ deviceId: device })
         // Redirección con recarga completa
         window.location.href = `${process.env.NEXT_PUBLIC_URL_BASE}/dashboard`
         return
       }
-      
+
       // Redirección sin recarga completa
       window.location.href = `${process.env.NEXT_PUBLIC_URL_BASE}/merchant`
-      
+
     } catch (error) {
-      if (session) await signOut({ redirect: false })
+      // if (session) await signOut({ redirect: false })
       setAlertBox({
         message: 'Lo sentimos ha ocurrido un error',
         color: 'error'
@@ -147,15 +155,19 @@ export const Login: React.FC<ILogin> = ({
 
 
   useEffect(() => {
-    if (googleLoaded && window.google && refFloatBntLogin.current) {
+    if (googleLoaded && window.google) {
       window.google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string,
-        callback: (response: { credential: string }) => {
+        callback: async (response: { credential: string }) => {
           const { credential } = response
           if (credential) {
             const data: DecodedToken = decodeToken(credential)
-            const { name, email, picture, sub: id } = data
-            const device = getDeviceId()
+            const {
+              name,
+              email,
+              picture,
+              sub: id
+            } = data
             const body: GoogleUserBody = {
               user: {
                 name,
@@ -163,9 +175,9 @@ export const Login: React.FC<ILogin> = ({
                 lastName: name,
                 email,
                 id,
+                image: picture,
                 locationFormat: [],
                 useragent: window?.navigator?.userAgent ?? null,
-                deviceid: device,
                 imageUrl: picture
               }
             }
@@ -182,36 +194,10 @@ export const Login: React.FC<ILogin> = ({
         picture: string
         sub: string
       }
-
- 
-
-      window.google.accounts.id.renderButton(refFloatBntLogin.current, {
-        type: 'standard',
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-        shape: 'pill',
-        logo_alignment: 'left',
-        width: 400,
-        locale: 'es',
-        click_listener: () => {
-          console.log('Botón de Google clickeado');
-        },
-        cancel_on_tap_outside: true
-      })
-
       window.google.accounts.id.prompt()
     }
-  }, [googleLoaded, refFloatBntLogin, router])
+  }, [googleLoaded, router])
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true)
-      const providers = await getProviders()
-      setProviders(providers)
-      setLoading(false)
-    })()
-  }, [])
 
   useLayoutEffect(() => {
     const jwtSession = Cookies.get('session')
@@ -234,7 +220,7 @@ export const Login: React.FC<ILogin> = ({
   }, [])
 
   useEffect(() => {
-    const ironSession = Cookies.get(process.env.SESSION_NAME)
+    const ironSession = Cookies.get(process.env.NEXT_PUBLIC_SESSION_NAME)
     const jwtSession = Cookies.get('session')
     const isExpired = isTokenExpired(jwtSession)
     const expired = isExpired && jwtSession
@@ -249,198 +235,194 @@ export const Login: React.FC<ILogin> = ({
       })
     }
     if (ironSession) return
-    if (session && status === 'authenticated' && !ironSession && !expired) {
-      (async () => {
-        setLoading(true)
-        if (jwtSession) {
-          const { message } = await getUserFromToken(jwtSession)
-          const sessionExpired = message === EXPIRED_MESSAGE
-          if (sessionExpired) {
-            await onClickLogout({ redirect: false })
-            return await signOutAuth({
-              redirect: true,
-              callbackUrl: '/',
-              reload: false
-            }).catch(() => {
-              setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
-            })
+    // if (session && status === 'authenticated' && !ironSession && !expired) {
+    //   (async () => {
+    //     setLoading(true)
+    //     if (jwtSession) {
+    //       const { message } = await getUserFromToken(jwtSession)
+    //       const sessionExpired = message === EXPIRED_MESSAGE
+    //       if (sessionExpired) {
+    //         await onClickLogout({ redirect: false })
+    //         return await signOutAuth({
+    //           redirect: true,
+    //           callbackUrl: '/',
+    //           reload: false
+    //         }).catch(() => {
+    //           setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
+    //         })
+    //       }
+    //     }
+    //     const { token, storeUserId } = session.session ?? {
+    //       token: '',
+    //       storeUserId: null
+    //     }
+    //     const { idStore, id } = storeUserId || {}
+    //     const decode = decodeToken(token) || {
+    //       id: null
+    //     }
+    //     const cookiesDefault = [
+    //       {
+    //         name: process.env.NEXT_PUBLIC_SESSION_NAME,
+    //         value: session[process.env.NEXT_PUBLIC_SESSION_NAME]
+    //       },
+    //       { name: 'restaurant', value: idStore },
+    //       { name: 'usuario', value: decode?.id || id },
+    //       { name: 'session', value: token }
+    //     ]
+    //     await handleSession({ cookies: cookiesDefault })
+    //     const deviceId = await getDeviceId()
+
+    //     await handleRegisterDeviceUser({ deviceId })
+    //     window.location.href =
+    //       process.env.NODE_ENV === 'production'
+    //         ? `${process.env.URL_BASE}/restaurante/getDataVerify`
+    //         : `${window.location.origin}/restaurante/getDataVerify`
+    //     setLoading(false)
+    //   })()
+    // }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.electron) {
+      const listener = (_event: any, data: any) => {
+        const { user_info } = data || {}
+        const { name, email, sub: id, picture } = user_info || {}
+        const session = {
+          user: {
+            name,
+            username: name,
+            lastName: name,
+            email,
+            id,
+            image: picture,
+            imageUrl: picture,
+            locationFormat: [],
+            useragent: window?.navigator?.userAgent ?? null
           }
         }
-        const { token, storeUserId } = session.session ?? {
-          token: '',
-          storeUserId: null
-        }
-        const { idStore, id } = storeUserId || {}
-        const decode = decodeToken(token) || {
-          id: null
-        }
-        const cookiesDefault = [
-          {
-            name: process.env.SESSION_NAME,
-            value: session[process.env.SESSION_NAME]
-          },
-          { name: 'restaurant', value: idStore },
-          { name: 'usuario', value: decode?.id || id },
-          { name: 'session', value: token }
-        ]
-        await handleSession({ cookies: cookiesDefault })
-        const deviceId = await getDeviceId()
-
-        await handleRegisterDeviceUser({ deviceId })
-        window.location.href =
-          process.env.NODE_ENV === 'production'
-            ? `${process.env.URL_BASE}/restaurante/getDataVerify`
-            : `${window.location.origin}/restaurante/getDataVerify`
         setLoading(false)
-      })()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session])
+        return responseGoogle(session)
+      }
+      const errorListener = () => {
+        setLoading(false)
+        setAlertBox({ message: 'Error al iniciar sesión con Google' })
+        sendNotification({
+          title: 'Error',
+          description: 'No se pudo iniciar sesión con Google, por favor intenta de nuevo',
+          backgroundColor: 'error'
+        })
+      }
 
-  const label = 'Continuar con Google'
-  const buttonComponents = {
-    google: (
-      <ButtonSubmit
-        color='2'
-        colorFont={'red'}
-        height='40px'
-        onClick={async () => {
-          setLoading(true)
-          await onClickLogout({ redirect: false })
-          await signOutAuth({
-            redirect: true,
-            callbackUrl: '/',
-            reload: false
-          }).catch(() => {
-            setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
-          })
-          return signIn('google')
-        }}
-        size='14px'
-        type='button'
-      >
-        <Icon icon='IconGoogleFullColor' size='30px' />
-        {loading ? <LoadingButton /> : label}
-        <div style={{ width: 'min-content' }} />
-      </ButtonSubmit>
-    ),
-    _: (
-      <ButtonSubmit
-        color='2'
-        colorFont={'red'}
-        disabled={loading}
-        height='40px'
-        onClick={() => {
-          return signIn('facebook')
-        }}
-        size='14px'
-        type='button'
-      >
-        <Icon icon='Facebook' color='#365899' size='30px' />
-        {loading ? <LoadingButton /> : 'Continuar con facebook'}
-        <div style={{ width: 'min-content' }} />
-      </ButtonSubmit>
-    )
-  }
+      if (window.electron && window.electron.ipcRenderer && typeof window.electron.ipcRenderer.on === 'function') {
+        window.electron.ipcRenderer.on('google-auth-success', listener)
+        window.electron.ipcRenderer.on('google-auth-error', errorListener)
+      }
+      return () => {
+        // Limpia el listener cuando el componente se desmonta
+        setLoading(false)
+        if (
+          window.electron &&
+          window.electron.ipcRenderer &&
+          typeof window.electron.ipcRenderer.removeListener === 'function'
+        ) {
+          window.electron.ipcRenderer.removeListener('google-auth-success', listener)
+        }
+      }
+    }
+  }, [])
 
   return (
     <>
-      <Content>
-        <Card />
-        <Form>
-          <Text size='30px'>¡Falta poco para iniciar tus ventas!</Text>
-          <Text size='15px'>¿Cómo deseas continuar?</Text>
-          {false && (
-            <>
-              <Button
-                standard={String(false)}
-                onClick={async () => {
-                  const cookiesDefault = [
-                    {
-                      name: process.env.SESSION_NAME,
-                      value: 'Fe26.2*1*106b053b3238cae195945ba793098117b42fa94ee47e8c15ba71cbdb9d6307dc*LTmDD5JW4SiXC8NkoyBYWQ*P-i_qH9AdGJlOzkFInFNrTiFAgDVEekgMXCThkjeLUBF5xt9q-mVrOOwBNHMcJpPTexJ0mVReG6fgfsEL9_lwrBRTKP6nb6sh4AfVr93Euv1vE1SZtYb1E0xrnYZhspYhhGtgAlqLbsm8ohf8ozfaFr3kK8CDQ6NuJ_3EkjxewTaLIavuHXaclkbd_-IG78G4bu-Pl4bxVgkDQJ1hPI1zmvhqUaZYFQIYnYr9pmL_rDhkjt7aOq2dVMDxkhrLGlMajo2yfQs6C0nit3EPxrBaDdodvuhAFS9F7y4ZrTD_vEOoF8eXnWhHJJJxdolxpJ81E1MMpunnLm8bbrhS-laMDuViutc7odrWsyc0Bja-RPM26VDfB1-Yu70ohLtDUAvvsKo1vZBlKC68IVm7Doa7IqVsu7xOblhKwm3-NRgPPyXAMaAWocMvMED6qQgRlrBqos5137CXT_DGvWelQ_v9kmMrhNwLzRbYCXpqyrC0dqZaQC2D-7swobtR8FYgJN7g0QxCmTTIahAp7IbJ47Kw56jSxwcjdGC32r15u9AVkL992FoHQkhukHJHJdGD4BiDYYeYnMsJs0hAOaRgOx6ML0Q4Dhf6inhE6cAcR_TYkZjus0AC0Y2QgAHzsaPLDD_A1MVeaw0pFMxAtqPzDhtmyRWxYF-CYe4Yng42AfZ-o9ncX61pE8EZSPNUijbaWGo-S9AJlphGwiP3kOc9WwboFECHZtRT06j1FReg-0tLhPkTXv9KbAZXODrjwFwVK4303X3qFeMsWjO7vfTt_dXqaEl_rx-bnuAEu5zsXkzFJpU3GZCjocZhcV4006HmYnGfY4s1Yxpvg-RyLp1HjfQbryiBcf-BJIIeW3ijEolgGE*1708376347843*aa58b0647f46203099eb91d3c1352a785ca12259abac806a50db69b2e73ee2ff*eYa64DxURtb_xVdbVtnvbvAI2Z1RrZENtuTHwSjSkm4~2'
-                    },
-                    { name: 'restaurant', value: '013e5387-34a1-6a78-303d-5098f17bf640' },
-                    { name: 'usuario', value: '013e5387-34a1-6a78-303d-5098f17bf640' },
-                    { name: 'session', value: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSmVzdXMgSnV2aW5hbyIsImVtYWlsIjoianV2aW5hb2plc3VzZEBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Ikplc3VzIEp1dmluYW8iLCJyZXN0YXVyYW50Ijp7ImlkU3RvcmUiOiIwMTNlNTM4Ny0zNGExLTZhNzgtMzAzZC01MDk4ZjE3YmY2NDAiLCJpZCI6IjAxM2U1Mzg3LTM0YTEtNmE3OC0zMDNkLTUwOThmMTdiZjY0MCJ9LCJpZCI6IjAxM2U1Mzg3LTM0YTEtNmE3OC0zMDNkLTUwOThmMTdiZjY0MCIsImlhdCI6MTcwNzA4MDM0NywiZXhwIjoxNzA3MTY2NzQ3fQ.pdDGTwjKLeAsBHh4Lu8Ex9b-RLxtTdM4B5P172dzfO4' }
-                  ]
-                  await handleSession({ cookies: cookiesDefault })
-                  channel.post({
-                    event: 'session',
-                    data: { trigger: 'session_open' }
-                  })
-                }}
-                type='button'
-              >
-                Click
-              </Button>
-              <button
-                onClick={async () => {
-                  await onClickLogout()
-                  return signOut({ redirect: false })
-                }}
-                type='button'
-              >
-                Logout
-              </button>
-              <button
-                onClick={() => {
-                  const session = {
-                    user: {
-                      name: 'Jesus Juvinao',
-                      username: 'Jesus Juvinao',
-                      lastName: 'Jesus Juvinao',
-                      email: 'juvinaojesusd+2@gmail.com',
-                      id: '595752',
-                      locationFormat: [],
-                      useragent:
-                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-                      deviceid: 'b764c99d45aaf95c9725d55c8ffe1c57'
-                    }
+      <div className={styles.container}>
+        <div className={styles.card} />
+        <Column as='form' className={styles.form_login}>
+          <Text size='xxl'>
+            ¡Falta poco para iniciar tus ventas!
+          </Text>
+          <Divider marginTop={getGlobalStyle('--spacing-xl')} />
+          <Text size='xl'>
+            ¿Cómo deseas continuar?
+          </Text>
+          <Divider marginTop={getGlobalStyle('--spacing-xl')} />
+          {isElectron && <Button
+            border='none'
+            className={styles.btn_login}
+            styles={{
+              borderRadius: getGlobalStyle('--border-radius-2xs'),
+              border: 'none',
+              padding: getGlobalStyle('--spacing-xl'),
+              boxShadow: getGlobalStyle('--box-shadow-sm'),
+            }}
+            onClick={async () => {
+              setLoading(true)
+              await onClickLogout({ redirect: false })
+              await signOutAuth({
+                redirect: true,
+                callbackUrl: '/',
+                reload: false
+              }).catch(() => {
+                setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
+              })
+              return handleLogin('login-google')
+            }}
+            type='button'
+          >
+            <Icon icon='IconGoogleFullColor' size={30} />
+            {loading ? <LoadingButton /> : 'Continuar con Google'}
+            <div style={{ width: 'min-content' }} />
+          </Button>}
+          {!isElectron &&
+            <GoogleLogin
+              clientId={process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string}
+              onSuccess={(e) => {
+                setLoading(false)
+                const { profileObj } = e || {}
+                const { name, email, familyName, givenName, googleId, imageUrl } = profileObj || {}
+                const data = {
+                  user: {
+                    name,
+                    username: name,
+                    lastName: familyName,
+                    email,
+                    id: googleId,
+                    image: imageUrl,
+                    locationFormat: [],
+                    useragent: window?.navigator?.userAgent ?? null,
+                    imageUrl
                   }
-                  return responseGoogle(session)
-                }}
-                type='button'
-              >
-                Login false
-              </button>
-            </>
-          )}
-          {/* {Object.values(providers).map((provider) => {
-            return (
-              <div key={provider?.name}>{buttonComponents[provider.id]}</div>
-            )
-          })} */}
-          <div ref={refFloatBntLogin} id="g_id_onload" className={styles.btn_login} />
+                }
+                responseGoogle(data)
+              }}
+              onFailure={(e) => {
+                setLoading(false)
+              }}
 
-          <WrapperActiveLink>
-            {/* <ActiveLink activeClassName='active' href='/entrar/email'>
-              <a>
+              render={({ onClick, disabled }) => (
                 <Button
-                standard={String(false)}
-                  bgColor={'gray'}
-                  margin='10px auto'
+                  className={styles.btn_login}
+                  styles={{
+                    borderRadius: getGlobalStyle('--border-radius-2xs'),
+                    border: 'none',
+                    padding: getGlobalStyle('--spacing-xl'),
+                    boxShadow: getGlobalStyle('--box-shadow-sm'),
+                  }}
+                  onClick={() => {
+                    onClick()
+                    setLoading(true)
+                  }}
+                  disabled={disabled}
                   type='button'
                 >
-                  Correo
+                  <Icon icon='IconGoogleFullColor' size={30} />
+                  {loading ? <LoadingButton /> : 'Continuar con Google'}
+                  <div style={{ width: 'min-content' }} />
                 </Button>
-              </a>
-            </ActiveLink> */}
-            {/* <ActiveLink activeClassName='active' href='/register'>
-              <a>
-                <Button
-                  standard={String(false)}
-                  bgColor={'gray'}
-                  margin='10px auto'
-                  type='button'
-                >
-                  Registrate
-                </Button>
-              </a>
-            </ActiveLink> */}
-          </WrapperActiveLink>
-        </Form>
-      </Content>
+              )}
+            />
+          }
+        </Column>
+      </div>
     </>
   )
 }

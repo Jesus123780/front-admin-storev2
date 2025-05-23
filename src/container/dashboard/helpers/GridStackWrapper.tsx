@@ -4,11 +4,11 @@ import React, {
     useEffect,
     createRef,
     useRef,
-    useState
+    useState,
+    useContext
 } from 'react'
 import {
     Column,
-    Devices,
     GridStack,
     Text,
     ToggleSwitch
@@ -21,6 +21,8 @@ import { Goal } from '@/container/main/components/main.goal'
 import { QrCode } from '@/container/main/components/main.qr'
 import { ChatStatistic } from '@/container/ChatStatistic'
 import { TeamStore } from '@/container/TeamStore'
+import { Context } from '@/context/Context'
+import { Devices } from '@/container/Devices'
 
 
 export const COMPONENT_MAP = {
@@ -54,6 +56,8 @@ interface ControlledStackProps {
 const ControlledStack = ({ items, setComponents }: ControlledStackProps) => {
     const refs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>({})
     const { updateComponent, loading, error, data } = useUpdateDashboardComponent()
+    const { sendNotification } = useContext(Context)
+
     const gridRef = useRef<GridStack | undefined>()
     const gridContainerRef = useRef(null)
     const [editMode, setEditMode] = useState(false)
@@ -119,10 +123,6 @@ const ControlledStack = ({ items, setComponents }: ControlledStackProps) => {
                     }
                     return newItems;
                 })
-                console.log("🚀 ~ setComponents ~ node.h:", node.h)
-                console.log("🚀 ~ setComponents ~ node.w:", node.w)
-                console.log("🚀 ~ setComponents ~ node.y:", node.y)
-                console.log("🚀 ~ setComponents ~ node.x:", node.x)
                 updateComponent({
                     id: node.id,
                     coordinates: {
@@ -184,13 +184,20 @@ const ControlledStack = ({ items, setComponents }: ControlledStackProps) => {
     const handleEditMode = () => {
         setEditMode(prev => {
             const newMode = !prev
+            if (newMode !== true) {
+                sendNotification({
+                    title: 'Tus cambios han sido guardados',
+                    description: 'Los cambios han sido guardados correctamente',
+                    backgroundColor: 'success',
+                })
+            }
             if (gridRef.current) {
                 gridRef.current.setStatic(!newMode)
             }
             return newMode
         })
     }
-    console.log(items)
+
     return (
         <div style={{ width: '100%', marginRight: '10px' }}>
             <ToggleSwitch

@@ -10,14 +10,6 @@ const ROUTES_WITHOUT_LAYOUT = new Set([
   '/verify-email'
 ])
 
-const ROUTES_WITHOUT_AUTH = new Set([
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
-  '/verify-email'
-])
-
 export function middleware(request: NextRequest) {
   const merchant = request.cookies.get('merchant')
   const pathname = request.nextUrl.pathname

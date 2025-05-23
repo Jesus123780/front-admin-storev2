@@ -42,7 +42,6 @@ export const ComponentsContextProvider: React.FC<{ children: React.ReactNode }> 
     };
   });
   const [components, setComponents] = useState<ComponentInfo[]>(DEFAULT_COMPONENTS)
-  console.log("🚀 ~ components:", components)
   const handleAddComponent = () => {
     const newComponent = {
       id: Math.random().toString(36).substring(2, 15),

@@ -1,20 +1,20 @@
 'use client'
 
-import { SessionProvider } from 'next-auth/react'
 import { Inter } from 'next/font/google'
 import ApolloClientProvider from './providers/ApolloProvider'
 import Context from '@/context/Context'
 import Script from 'next/script'
-import { ProgressBar } from 'pkg-components'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { MemoLayout } from '@/container/Layout'
+import StyledComponentsRegistry from '@/utils/registry'
 
 const inter = Inter({ subsets: ['latin'] })
 
 const ROUTES_WITHOUT_LAYOUT = new Set([
   '/',
   '/login',
+  '/merchant',
   '/register',
   '/forgot-password',
   '/reset-password',
@@ -50,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }, [pathname])
 
   const [isMounted, setIsMounted] = useState(false)
+
   useEffect(() => {
     setIsMounted(true)
   }, [])
@@ -74,16 +75,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         {/* <ProgressBar progress={progress} hidden={hidden} /> */}
         {isMounted && <Context>
-          <SessionProvider>
-            <ApolloClientProvider>
-              {ROUTES_WITHOUT_LAYOUT.has(pathname)
-                ? children
-                : <MemoLayout>
-                  {children}
-                </MemoLayout>
-              }
-            </ApolloClientProvider>
-          </SessionProvider>
+          <StyledComponentsRegistry>
+              <ApolloClientProvider>
+                {ROUTES_WITHOUT_LAYOUT.has(pathname)
+                  ? children
+                  : <MemoLayout>
+                    {children}
+                  </MemoLayout>
+                }
+              </ApolloClientProvider>
+          </StyledComponentsRegistry>
         </Context>
         }
       </body>

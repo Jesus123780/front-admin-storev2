@@ -19,7 +19,9 @@ import {
   Portal,
   getGlobalStyle,
   Image,
-  Divider
+  Divider,
+  HeaderSteps,
+  Column
 } from 'pkg-components'
 import {
   useGetOneProductsFood,
@@ -27,19 +29,18 @@ import {
   useAmountInput,
   useSaveAvailableProduct,
   useManageQueryParams,
+  useLogout,
   useDessertWithPrice,
   useDessert,
   useStore
 } from 'npm-pkg-hook'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import FormProduct from './Form'
-import { HeaderSteps } from './Steps'
 import { ActionStep } from './styles'
 import { Categories } from '../../categories'
 import {
   Card,
-  Container,
-  ContainerAnimation
+  Container
 } from './styled'
 import { Context } from '../../../context/Context'
 import { filterKeyObject } from '../../../utils'
@@ -97,11 +98,18 @@ export const FoodComponentMemo = ({
   ...props
 }) => {
   const router = useRouter()
+    const location = useRouter()
   const searchParams = useSearchParams()
+  const [onClickLogout] = useLogout({})
+
+   const { getQuery } = useManageQueryParams({ router: location, searchParams: searchParams })
+
   const { setAlertBox, sendNotification } = useContext(Context)
 
   const [dataStore] = useStore()
-  const { food } = router.query || {}
+  
+  const food = getQuery('product')
+  
   const {
     dataTags,
     handleAddTag,
@@ -358,11 +366,22 @@ export const FoodComponentMemo = ({
       if (success) {
         sendSuccessNotification()
       } else {
+        const { message } = response?.data.registerAvailableProduct || {
+          message: 'Ha ocurrido un error al guardar los días disponibles'
+        }
         sendNotification({
-          description: 'Ha ocurrido un error al guardar los días disponibles',
+          description: message,
           title: 'Error',
           backgroundColor: 'error'
         })
+        if (message === 'Session expired') {
+          await onClickLogout({ redirect: true })
+          setAlertBox({
+            description: 'La sesión ha expirado, por favor vuelve a iniciar sesión',
+            title: 'Error',
+            backgroundColor: 'error'
+          })
+        }
       }
     } catch (error) {
       sendNotification({
@@ -370,6 +389,7 @@ export const FoodComponentMemo = ({
         title: 'Error',
         backgroundColor: 'error'
       })
+      
     }
   }
 
@@ -417,7 +437,6 @@ export const FoodComponentMemo = ({
  * Función principal para continuar con el registro o con los siguientes pasos.
  */
   const handleContinue = async () => {
-    console.log('handleContinue', active)
     try {
       if (active === 0) {
         const {
@@ -467,7 +486,163 @@ export const FoodComponentMemo = ({
     3: check?.noAvailability ? Boolean(!selectedDays.length > 0) : false
   }
   const asSaveAvailableProduct = disabled && selectedDays?.length > 0
+  const titleHeaders = ['DETALLES', 'ADICIONALES', 'COMPLEMENTOS', 'DISPONIBILIDAD']
 
+  const components = {
+    0:      <>
+              <Card bgColor={getGlobalStyle('--color-base-white')} state='30%'>
+                <FormProduct {...propsForm} />
+              </Card>
+              {false && <Card state='20%'>
+                <Text
+                  fontSize='sm'
+                  margin='10px 0'
+                  style={{
+                    '-webkitLine-clamp': 2,
+                    color: '#3e3e3e',
+                    fontSize: '1.125rem',
+                    lineHeight: '1.5rem',
+                    marginBottom: '9px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  Tags
+                </Text>
+                {!!Array.isArray(dataTags) && dataTags?.map((tag) => {
+                  return (
+                    <Button
+                      border='none'
+                      borderRadius='0'
+                      key={tag.id}
+                      onClick={() => { return handleAddTag(tag.id, tag.tag) }}
+                      padding='0'
+                      style={{ display: 'flex', flexWrap: 'wrap' }}
+                    >
+                      <Tag label={tag.tag} />
+                    </Button>
+                  )
+                })}
+              </Card>
+              }
+              <Card state='30%'>
+                <Text
+                  fontSize='16px'
+                  margin='10px 0'
+                  style={{
+                    '-webkitLine-clamp': 2,
+                    color: getGlobalStyle('--color-text-gray-light'),
+                    fontSize: '.9rem',
+                    lineHeight: '1.5rem',
+                    marginBottom: '9px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  Vista previa
+                </Text>
+                <Card bgColor={getGlobalStyle('--color-base-white')}>
+                  <MemoCardProductSimple
+                    {...values}
+                    alt={alt}
+                    fileInputRef={fileInputRef}
+                    height='100%'
+                    onFileInputChange={onFileInputChange}
+                    onTargetClick={onTargetClick}
+                    pName={names}
+                    src={src}
+                    tag={tags}
+                  />
+                </Card>
+              </Card>
+            </>,
+    1: <OptionalExtraProducts
+              data={dataLines}
+              dataListIds={dataListIds}
+              handleAdd={handleAdd}
+              handleAddList={handleAddList}
+              handleChangeItems={handleChangeItems}
+              handleCheck={handleCheckDessert}
+              handleRemoveList={handleRemoveList}
+              isCustomSubOpExPid={true}
+              loadingCreateSubDessert={loadingCreateSubDessert}
+              pId={pId}
+              removeOneItem={removeOneItem}
+              setCheck={setCheck}
+              setData={setData}
+              setTitle={setTitle}
+              title={title}
+            />,
+    2: <div style={{ flexDirection: 'column', display: 'flex' }}>
+              <Button
+                height='auto'
+                onClick={() => { return setOpenModalDessert(!openModalDessert) }}
+                primary={true}
+              >
+                Mostrar modal de subproductos
+              </Button>
+              <ExtrasProductsItems
+                dataExtra={dataExtra}
+                editing={true}
+                modal={openModalDessert}
+                pId={pId}
+                propsExtra={propsExtra}
+                setModal={() => { return setOpenModalDessert(false) }}
+              />
+            </div>,
+    3:         <div className='container_availability'>
+              <Text
+                color='primary'
+                fontSize='20px'
+                margin='10px 0'
+              >
+                Disponibilidad
+              </Text>
+              <br />
+              <br />
+              <Text size='sm'>
+                Aquí Puedes definir en que momentos los clientes pueden comprar este producto.
+              </Text>
+              <Checkbox
+                checked={check.availability}
+                id='checkboxAvailability'
+                label='Siempre disponible'
+                name='availability'
+                onChange={(e) => {
+                  handleCheck(e)
+                  if (check.noAvailability) {
+                    document.getElementById('checkbox-checkboxNoAvailability').click()
+                  }
+                }}
+              />
+              <Checkbox
+                checked={check.noAvailability}
+                id='checkboxNoAvailability'
+                label='Disponible en horarios específicos'
+                name='noAvailability'
+                onChange={(e) => {
+                  handleCheck(e)
+                  if (check.availability) {
+                    document.getElementById('checkbox-checkboxAvailability').click()
+                  }
+                }}
+              />
+              {check.noAvailability &&
+                <>
+                  <Text size='sm' >
+                    Dias de la semana
+                  </Text>
+                  <div className='container_days'>
+                    <DaySelector
+                      days={days}
+                      handleDaySelection={handleDaySelection}
+                      selectedDays={selectedDays}
+                    />
+                  </div>
+                </>
+              }
+            </div>
+  } 
   return (<>
     {loaAvailable && <Loading />}
     <Container>
@@ -534,177 +709,11 @@ export const FoodComponentMemo = ({
           </div>
         </AwesomeModal>
       </Portal>
-      <HeaderSteps active={active} />
+      <HeaderSteps active={active} steps={titleHeaders} />
       <div className='container_step'>
-        <ContainerAnimation active={active === 0}>
-          {active === 0 &&
-            <>
-              <Card bgColor={getGlobalStyle('--color-base-white')} state='30%'>
-                <FormProduct {...propsForm} />
-              </Card>
-              {false && <Card state='20%'>
-                <Text
-                  fontSize='sm'
-                  margin='10px 0'
-                  style={{
-                    '-webkitLine-clamp': 2,
-                    color: '#3e3e3e',
-                    fontSize: '1.125rem',
-                    lineHeight: '1.5rem',
-                    marginBottom: '9px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
-                  Tags
-                </Text>
-                {!!Array.isArray(dataTags) && dataTags?.map((tag) => {
-                  return (
-                    <Button
-                      border='none'
-                      borderRadius='0'
-                      key={tag.id}
-                      onClick={() => { return handleAddTag(tag.id, tag.tag) }}
-                      padding='0'
-                      style={{ display: 'flex', flexWrap: 'wrap' }}
-                    >
-                      <Tag label={tag.tag} />
-                    </Button>
-                  )
-                })}
-              </Card>
-              }
-              <Card state='30%'>
-                <Text
-                  fontSize='16px'
-                  margin='10px 0'
-                  style={{
-                    '-webkitLine-clamp': 2,
-                    color: getGlobalStyle('--color-text-gray-light'),
-                    fontSize: '.9rem',
-                    lineHeight: '1.5rem',
-                    marginBottom: '9px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
-                  Vista previa
-                </Text>
-                <Card bgColor={getGlobalStyle('--color-base-white')}>
-                  <MemoCardProductSimple
-                    {...values}
-                    alt={alt}
-                    fileInputRef={fileInputRef}
-                    height='100%'
-                    onFileInputChange={onFileInputChange}
-                    onTargetClick={onTargetClick}
-                    pName={names}
-                    src={src}
-                    tag={tags}
-                  />
-                </Card>
-              </Card>
-            </>
-          }
-        </ContainerAnimation>
-        <ContainerAnimation active={Boolean(active === 1)}>
-          {(active === 1 && food) &&
-            <OptionalExtraProducts
-              data={dataLines}
-              dataListIds={dataListIds}
-              handleAdd={handleAdd}
-              handleAddList={handleAddList}
-              handleChangeItems={handleChangeItems}
-              handleCheck={handleCheckDessert}
-              handleRemoveList={handleRemoveList}
-              isCustomSubOpExPid={true}
-              loadingCreateSubDessert={loadingCreateSubDessert}
-              pId={pId}
-              removeOneItem={removeOneItem}
-              setCheck={setCheck}
-              setData={setData}
-              setTitle={setTitle}
-              title={title}
-            />
-          }
-        </ContainerAnimation>
-        <ContainerAnimation active={Boolean(active === 2)}>
-          {active === 2 &&
-            <div style={{ flexDirection: 'column', display: 'flex' }}>
-              <Button
-                height='auto'
-                onClick={() => { return setOpenModalDessert(!openModalDessert) }}
-                primary={true}
-              >
-                Mostrar modal de subproductos
-              </Button>
-              <ExtrasProductsItems
-                dataExtra={dataExtra}
-                editing={true}
-                modal={openModalDessert}
-                pId={pId}
-                propsExtra={propsExtra}
-                setModal={() => { return setOpenModalDessert(false) }}
-              />
-            </div>
-          }
-        </ContainerAnimation>
-        <ContainerAnimation active={active === 3}>
-          {active === 3 &&
-            <div className='container_availability'>
-              <Text
-                color='primary'
-                fontSize='20px'
-                margin='10px 0'
-              >
-                Disponibilidad
-              </Text>
-              <br />
-              <br />
-              <Text size='sm'>
-                Aquí Puedes definir en que momentos los clientes pueden comprar este producto.
-              </Text>
-              <Checkbox
-                checked={check.availability}
-                id='checkboxAvailability'
-                label='Siempre disponible'
-                name='availability'
-                onChange={(e) => {
-                  handleCheck(e)
-                  if (check.noAvailability) {
-                    document.getElementById('checkbox-checkboxNoAvailability').click()
-                  }
-                }}
-              />
-              <Checkbox
-                checked={check.noAvailability}
-                id='checkboxNoAvailability'
-                label='Disponible en horarios específicos'
-                name='noAvailability'
-                onChange={(e) => {
-                  handleCheck(e)
-                  if (check.availability) {
-                    document.getElementById('checkbox-checkboxAvailability').click()
-                  }
-                }}
-              />
-              {check.noAvailability &&
-                <>
-                  <Text size='sm' >
-                    Dias de la semana
-                  </Text>
-                  <div className='container_days'>
-                    <DaySelector
-                      days={days}
-                      handleDaySelection={handleDaySelection}
-                      selectedDays={selectedDays}
-                    />
-                  </div>
-                </>
-              }
-            </div>
-          }
-        </ContainerAnimation>
+        <Column>
+          {components[active] && components[active]}
+        </Column>
       </div>
       <ActionStep>
         {(active !== 1 && active !== 0) &&

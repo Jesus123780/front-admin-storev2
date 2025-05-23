@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 
 export async function POST(req: Request) {
   try {
-    const ARRAY_COOKIES = ['merchant', String(process.env.SESSION_NAME)];
+    const ARRAY_COOKIES = ['merchant', String(process.env.NEXT_PUBLIC_SESSION_NAME)];
     const cookieStore = await cookies()
 
     for (const cookieName of ARRAY_COOKIES) {
