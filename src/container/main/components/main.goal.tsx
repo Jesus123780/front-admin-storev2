@@ -76,7 +76,7 @@ export const Goal = () => {
                     </Button>
                 </form>
             </AwesomeModal>
-           
+
             <Column className={styles.goal_chart_action}>
                 <button onClick={handleOpenEditgoal} className={styles.goal_chart_action_button}>
                     <Icon icon='IconDost' />

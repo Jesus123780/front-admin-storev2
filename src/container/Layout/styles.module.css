@@ -1,27 +1,31 @@
 .main {
-    display: grid;
-    width: 100%;
-    overflow: hidden;
-    height: 100vh;
-    grid-template-rows: 75px 2fr;
-    grid-template-columns: 210px 1fr;
-    grid-template-areas:
-      "aside head head head"
-      "aside main main right"
-      "aside main main right";
-    text-align: center;
-    grid-gap: 0.25rem;
+  display: grid;
+  width: 100%;
+  overflow: hidden;
+  height: 100vh;
+  grid-template-rows: 75px 2fr;
+  grid-template-columns: 210px 1fr;
+  grid-template-areas:
+    "aside head head head"
+    "aside main main right"
+    "aside main main right";
+  text-align: center;
+  grid-gap: 0.25rem;
+  transition: grid-template-columns 0.3s ease;
+}
+
+.collapsed_main {
+  grid-template-columns: 45px 1fr;
+}
+
+@media (max-width: 960px) {
+  .main {
+    grid-template-columns: 0% auto;
   }
-  
-  @media (max-width: 960px) {
-    .main {
-      grid-template-columns: auto auto;
-    }
-  }
-  
-  .noAside {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-  
+}
+
+.noAside {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}

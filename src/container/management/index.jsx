@@ -3,6 +3,7 @@
 import React, { useContext, useState } from 'react'
 import {
   AwesomeModal,
+  Button,
   Column,
   Divider,
   getGlobalStyle,
@@ -19,6 +20,7 @@ import { FormRoles } from './FormRoles'
 import { FormEmployee } from './FormEmployee'
 import { ListEmployee } from './ListEmployee'
 import { ListRoles } from './ListRoles'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const ContainerManagement = () => {
   const [currentPage, setCurrentPage] = useState(1)
@@ -101,7 +103,7 @@ export const ContainerManagement = () => {
 
   const steps = ['Crea un rol', 'Crea un empleado']
   const [openModalEmployee, setOpenModalEmployee] = useState(false)
-  
+
   const handleShowModalEmployee = () => {
     setOpenModalEmployee(!openModalEmployee)
     return null
@@ -136,12 +138,11 @@ export const ContainerManagement = () => {
           btnConfirm={false}
           footer={false}
           header={true}
-          height='100vh'
           onCancel={() => { return false }}
           onHide={() => { handleShowModal() }}
           question={false}
           show={openModal}
-          size='large'
+          size={MODAL_SIZES.medium}
           sizeIconClose='30px'
           title='Crea un rol'
           zIndex={getGlobalStyle('--z-index-99999')}
@@ -171,6 +172,18 @@ export const ContainerManagement = () => {
             flexWrap: 'wrap'
           }}
         >
+          <Button
+            styles={{
+              width: '25rem'
+            }}
+            primary
+            onClick={() => { handleShowModal() }}
+          >
+            Crear rol
+          </Button>
+          <Divider
+            marginBottom={getGlobalStyle('--spacing-2xl')}
+          />
         </Row>
         <Column
           style={{
@@ -190,9 +203,9 @@ export const ContainerManagement = () => {
       {active === 1 &&
         (
           <Column>
-            <FormEmployee 
-              handleShowModalEmployee={handleShowModalEmployee}  
-              openModalEmployee={openModalEmployee}  
+            <FormEmployee
+              handleShowModalEmployee={handleShowModalEmployee}
+              openModalEmployee={openModalEmployee}
               roles={data?.data ?? []}
             />
             <Divider marginTop={getGlobalStyle('--spacing-2xl')} />

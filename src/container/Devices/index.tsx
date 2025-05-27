@@ -33,7 +33,7 @@ export const Devices = () => {
   return (
     <DevicesComponents
       data={data || []}
-      deviceId={deviceId}
+      deviceId={deviceId ?? ''}
       loading={loading || dataLoading}
     />
   )

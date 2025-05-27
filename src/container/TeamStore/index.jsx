@@ -10,14 +10,14 @@ export const TeamStore = () => {
 
   return (
     <ContainerTeam>
-      {!data?.length && 
-      <Skeleton
-        className='loading'
-        height='69'
-        margin='5px 0'
-        numberObject={4} 
-        width='100%'
-      />
+      {!data?.length &&
+        <Skeleton
+          className='loading'
+          height='69'
+          margin='5px 0'
+          numberObject={4}
+          width='100%'
+        />
       }
       {data?.length ? data?.map(x => {
         const { color, bgColor, borderColor } = getCustomColors(x?.user?.name)
@@ -30,18 +30,15 @@ export const TeamStore = () => {
           displayText
         }
         return (
-        
-        <ProfileCard {...props} key={x.eId} />
-      )}) : <></>}
+
+          <ProfileCard {...props} key={x.eId} />
+        )
+      }) : <></>}
     </ContainerTeam>
   )
 }
 
 export const ContainerTeam = styled.div`
-  max-height: 320px;
-  min-height: 320px;
-  overflow-y: auto;
-
   .loading {
     margin-top: 10px;
   }
@@ -61,7 +58,8 @@ export const ContainerTeam = styled.div`
 `
 export const ItemInf = styled.div`
   padding: .75rem;
-  ${props => {return props.end && css`
+  ${props => {
+    return props.end && css`
   justify-content: flex-end;
     display: flex;
 

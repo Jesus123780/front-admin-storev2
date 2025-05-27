@@ -37,13 +37,13 @@ export const FormEmployee = ({
     setForcedError({ ...errorForm, email: false })
     setDataValue({
       idStore: null,
-      idRole:  null,
+      idRole: null,
       eEmail: null
     })
     handleShowModalEmployee()
   }
-  const [createEmployeeStoreAndUser, { loading }] = useCreateEmployeeStoreAndUser({ 
-    sendNotification, 
+  const [createEmployeeStoreAndUser, { loading }] = useCreateEmployeeStoreAndUser({
+    sendNotification,
     onCompleted,
     onError
   })
@@ -150,7 +150,6 @@ export const FormEmployee = ({
               width='100%'
             />
           </Column>
-
           <Button loading={loading} primary>
             Crear empleado
           </Button>

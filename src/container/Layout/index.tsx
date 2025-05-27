@@ -25,7 +25,8 @@ import {
   Plan,
   Divider,
   PaymentAlert,
-  Icon
+  Icon,
+  AlertInfo
 } from 'pkg-components'
 import {
   // useConnection,
@@ -106,7 +107,7 @@ export const MemoLayout = ({
     setStatus
   } = useContext(Context)
   const dataLocation = usePosition(watch, settings)
-   const { handleCleanQuery } = useManageQueryParams({ router: location, searchParams: searchParams })
+  const { handleCleanQuery } = useManageQueryParams({ router: location, searchParams: searchParams })
   const [dataUser] = useUser()
   const [modulesOrder, setModulesOrder] = useState<any[]>([])
   const [updateModulesOrder] = useUpdateModuleOrder()
@@ -121,7 +122,13 @@ export const MemoLayout = ({
   const [count, { loading: loadingCount }] = useTotalSales()
   const style = useScrollHook()
   const { scrollNav } = useScrollColor()
-  const { isMobile } = useMobile()
+  const [isColapsedMenu, setIsColapsedMenu] = useState(false)
+  const { isMobile } = useMobile({
+    callback: ({ isMobile }: { isMobile: boolean }) => {
+      return setIsColapsedMenu(isMobile ? false : isColapsedMenu)
+    }
+  })
+
   const [onClickLogout] = useLogout({})
   // const [play] = useSound('/sounds/notification.mp3')
 
@@ -208,7 +215,7 @@ export const MemoLayout = ({
     loading: loadingPush
   } = usePushNotifications()
 
-  const handleOpenMenu = ():null => {
+  const handleOpenMenu = (): null => {
     setCollapsed(!collapsed)
     setStatus(collapsed ? 'open' : 'close')
     return null
@@ -302,22 +309,22 @@ export const MemoLayout = ({
   }
   const customHeights = heightsByRoute[location?.route] ?? heights[showModalComponent]
 
-  
+
   const onDragEnd = async (result) => {
     const { destination, source } = result;
-  
+
     // Si no se ha movido el ítem (destino es null o es el mismo), no hacer nada
     if (!destination || destination.index === source.index) return;
-  
+
     // Reordenar los módulos
     const reorderedModules = Array.from(modulesOrder);
-  
+
     // Sacar el módulo que se está moviendo
     const [removed] = reorderedModules.splice(source.index, 1);
-    
+
     // Insertar el módulo en su nueva posición
     reorderedModules.splice(destination.index, 0, removed);
-  
+
     // Ajustar las prioridades
     const updatedModules = reorderedModules.map((module, index) => {
       return {
@@ -329,8 +336,11 @@ export const MemoLayout = ({
     // Actualizamos el estado con el nuevo orden y prioridades
     await updateModulesOrder(updatedModules)
   };
-  
 
+
+  const handleColapsedMenu = () => {
+    setIsColapsedMenu(!isColapsedMenu)
+  }
   return (
     <>
       <Head>
@@ -382,11 +392,11 @@ export const MemoLayout = ({
         isOpen={isOpenOrder}
         orders={orders}
       />
-      
-      {/* <AlertBox err={error} /> */}
 
-      {/* {showModal && !loading && <AlertInfo message= type='warning' />} */}
-      <main className={`${styles.main} ${!Boolean('/' !== pathname) ? styles.noAside : ''}`}>
+      <AlertBox err={error} />
+      <main
+        className={`${styles.main} ${!Boolean('/' !== pathname) ? styles.noAside : ''} ${Boolean(isColapsedMenu) ? styles.collapsed_main : ''}`}
+      >
         <Header
           count={count}
           countOrders={countOrders}
@@ -412,6 +422,8 @@ export const MemoLayout = ({
           collapsed={collapsed ? true : undefined}
           countOrders={countOrders as number}
           dataStore={dataStore}
+          isColapsedMenu={isColapsedMenu}
+          handleColapsedMenu={handleColapsedMenu}
           handleClick={handleClick}
           handleOpenDeliveryTime={handleOpenDeliveryTime}
           isElectron={isElectron}
@@ -427,7 +439,7 @@ export const MemoLayout = ({
           setSalesOpen={setSalesOpen}
           setShowComponentModal={setShowComponentModal}
           version={version}
-        /> 
+        />
         <div
           style={{
             backgroundColor: getGlobalStyle('--color-neutral-gray-white'),
@@ -450,12 +462,12 @@ export const MemoLayout = ({
               width: 'min-content'
             }}
           >
-              <Toast
-                autoDelete={true}
-                autoDeleteTime={7000}
-                position={'bottom-right'}
-                toastList={messagesToast}
-              />
+            <Toast
+              autoDelete={true}
+              autoDeleteTime={7000}
+              position={'bottom-right'}
+              toastList={messagesToast}
+            />
           </div>
         </div>
         <Footer />

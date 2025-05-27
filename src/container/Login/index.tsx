@@ -46,6 +46,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
   const [onClickLogout] = useLogout()
   const [handleSession] = useSetSession()
   const [loading, setLoading] = useState(false)
+
   const handleLogin = async (type: string) => {
     try {
       if (type === 'login-google') {
@@ -145,7 +146,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
     } catch (error) {
       // if (session) await signOut({ redirect: false })
       setAlertBox({
-        message: 'Lo sentimos ha ocurrido un error',
+        message: 'Error al iniciar sesión con Google',
         color: 'error'
       })
     } finally {
@@ -156,6 +157,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
 
   useEffect(() => {
     if (googleLoaded && window.google) {
+      handlelogOut()
       window.google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string,
         callback: async (response: { credential: string }) => {
@@ -199,7 +201,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
   }, [googleLoaded, router])
 
 
-  useLayoutEffect(() => {
+  const handlelogOut = async () => {
     const jwtSession = Cookies.get('session')
     if (jwtSession) {
       (async () => {
@@ -217,6 +219,9 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
         }
       })()
     }
+  }
+  useLayoutEffect(() => {
+    handlelogOut()
   }, [])
 
   useEffect(() => {
@@ -345,6 +350,25 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
             ¿Cómo deseas continuar?
           </Text>
           <Divider marginTop={getGlobalStyle('--spacing-xl')} />
+          <button className={styles.btn_close} type='button' onClick={() => {
+            const data = {
+              user: {
+                name: 'test',
+                username: 'test',
+                lastName: 'test',
+                email: 'test@gmail.com',
+                id: 'test',
+                image: 'test',
+                locationFormat: [],
+                useragent: window?.navigator?.userAgent ?? null,
+                imageUrl: 'test'
+              }
+            }
+            setLoading(true)
+            responseGoogle(data)
+          }}>
+            Login mock false
+          </button>
           {isElectron && <Button
             border='none'
             className={styles.btn_login}

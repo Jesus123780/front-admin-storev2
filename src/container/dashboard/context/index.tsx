@@ -8,8 +8,8 @@ import { Coordinates, DashboardComponent } from './types';
 
 const DEFAULT = {
   components: [],
-  setComponents: () => {},
-  handleAddComponent: () => {},
+  setComponents: () => { },
+  handleAddComponent: () => { },
 } as {
   components: ComponentInfo[]
   setComponents: React.Dispatch<React.SetStateAction<ComponentInfo[]>>
@@ -22,7 +22,7 @@ export const useComponents = () => useContext(ComponentsContext);
 
 export const ComponentsContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
-  
+
   const { data } = useDashboardComponents({
     callback: (data: DashboardComponent[]) => {
       const components = data.map((component) => {

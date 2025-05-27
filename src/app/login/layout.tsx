@@ -22,7 +22,7 @@ export default function EmptyLayout({ children }: { children: React.ReactNode })
                     <Toast
                         autoDelete={true}
                         autoDeleteTime={7000}
-                        position={'bottom-right'}
+                        position={'bottom-left'}
                         toastList={messagesToast}
                     />
                 </div>

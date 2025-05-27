@@ -1,5 +1,4 @@
 import { ClientJS } from 'clientjs';
-
 export const getDeviceId = async () => {
   const client = new ClientJS()
   const fingerprint = String(client.getFingerprint())

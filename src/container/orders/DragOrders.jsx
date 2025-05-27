@@ -228,13 +228,13 @@ export const DragOrders = ({
         }
       })
     } catch (error) {
-      sendNotification({ 
+      sendNotification({
         title: 'Error',
         description: error.message ?? 'Error al cambiar el estado de la orden',
         backgroundColor: 'error'
       })
     }
-   
+
   }
 
 
@@ -406,8 +406,9 @@ export const DragOrders = ({
   const options = Object.keys(statusOrder).slice(1).map((status, index) => {
     return {
       optionName: statusOrder[status],
-      action: () => {return handleChangeState(index + 1, dataOrder?.pCodeRef)}
-    }})
+      action: () => { return handleChangeState(index + 1, dataOrder?.pCodeRef) }
+    }
+  })
   return (
     <ContainerDrag>
       {showContextMenu && (
@@ -454,7 +455,7 @@ export const DragOrders = ({
               <Column key={grp.title}>
                 <Column>
                   <Text as='h2' className={styles.title} >
-                    {grp.title} {(Number(grp?.items?.length ?? 0) )}
+                    {grp.title} {(Number(grp?.items?.length ?? 0))}
                   </Text>
                 </Column>
                 {uniqueItems?.length > 0 && Array.from(new Set(uniqueItems?.map((item) => {
