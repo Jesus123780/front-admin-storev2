@@ -8,7 +8,6 @@ import React, {
   useRef,
   useState
 } from 'react'
-import styled, { css } from 'styled-components'
 import {
   MemoCardProductSimple,
   Text,
@@ -22,9 +21,7 @@ import {
   LoaderSubItem,
   BarCodes,
   Column,
-  ToggleSwitch,
-  BColor, 
-  BGColor
+  ToggleSwitch
 } from 'pkg-components'
 import {
   useFormTools,
@@ -38,47 +35,60 @@ import {
   useEditProduct
 } from 'npm-pkg-hook'
 // import { GET_ONE_PRODUCTS_FOOD } from '../queries'
-import { updateCache } from '../../../utils'
 import { Context } from '../../../context/Context'
 import { useRouter } from 'next/navigation'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import { Form } from './Form'
+import styles from './styles.module.css'
+import { parseFormattedFloat } from 'pkg-components/stories/molecules/Inputs/AmountInput/components/utils'
 
 export const Update = ({ id = '' } = { id: null }) => {
   // STATES
   const [modal, setModal] = useState(false)
   const [updateManageStock] = useUpdateManageStock()
   const [updateImageProducts] = useSetImageProducts()
+  const { setAlertBox, sendNotification } = useContext(Context)
 
-  const [handleChange, handleSubmit, setDataValue, { dataForm, errorForm }] =
-    useFormTools()
+  const [handleChange, handleSubmit, setDataValue, { dataForm, errorForm }] = useFormTools({
+    sendNotification
+  })
+  const router = useRouter()
   const initialState = {
     alt: '/images/placeholder-image.webp',
     src: '/images/placeholder-image.webp'
   }
   const [showDessert, setShowDessert] = useState(false)
-  const { setAlertBox, sendNotification } = useContext(Context)
   const [{ alt, src }, setPreviewImg] = useState(initialState)
   const [alertModal, setAlertModal] = useState(false)
 
   const [checkStock, setCheckStock] = useState(false)
-  
+
   /**
    * Updates stock management state
    * @param {boolean} newState - The new value of manageStock
    */
-  const updateStockState = useCallback(async (newState) => {
-    const response = await updateManageStock({ pId: id, manageStock: newState })
-    const notifyUpdateResult = (success, message) => {
-      sendNotification({
-        title: success ? 'Exitoso' : 'Error',
-        description: message,
-        backgroundColor: success ? 'success' : 'error'
-      })
-    }
-    notifyUpdateResult(response.success, response.message)
-  }, [id, updateManageStock, sendNotification])
-  
+  interface UpdateManageStockResponse {
+    success: boolean
+    message: string
+  }
+
+  type UpdateStockState = (newState: boolean) => Promise<void>
+
+  const updateStockState: UpdateStockState = useCallback(
+    async (newState: boolean) => {
+      const response: UpdateManageStockResponse = await updateManageStock({ pId: id, manageStock: newState })
+      const notifyUpdateResult = (success: boolean, message: string) => {
+        sendNotification({
+          title: success ? 'Exitoso' : 'Error',
+          description: message,
+          backgroundColor: success ? 'success' : 'error'
+        })
+      }
+      notifyUpdateResult(response.success, response.message)
+    },
+    [id]
+  )
+
   /**
    * Toggles checkStock and updates it
    */
@@ -89,8 +99,7 @@ export const Update = ({ id = '' } = { id: null }) => {
       return newState
     })
   }
-  
-  const router = useRouter()
+
   // QUERIES
   const [
     handleGetOneProduct,
@@ -124,9 +133,9 @@ export const Update = ({ id = '' } = { id: null }) => {
         forEdit: true,
         ...item
       }
-    })
+    }) || []
     setLine(
-      Array.isArray(dataExtra) && dataExtra.length > 0
+      Array.isArray(dataExtra) && dataExtra?.length > 0
         ? { Lines: linesData }
         : initialLineItems
     )
@@ -194,22 +203,38 @@ export const Update = ({ id = '' } = { id: null }) => {
   const { handleDelete, loading: loadingDeleteProduct } = useDeleteProductsFood(
     { sendNotification }
   )
-  const [editProductFoods] = useEditProduct()
+  const [editProductFoods] = useEditProduct({
+    sendNotification
+  })
   const {
     getStore,
     pState,
     ProBarCode
-  } = dataProduct || {}
+  } = dataProduct || {
+    getStore: {
+      pState: '',
+      ProBarCode: null
+    },
+    pState: '',
+    ProBarCode: null
+  }
 
   // HANDLESS
-  const onFileInputChange = (event) => {
+  interface OnFileInputChangeEvent extends React.ChangeEvent<HTMLInputElement> {}
+
+  interface FilePreview {
+    src: string
+    alt: string
+  }
+
+  const onFileInputChange = (event: OnFileInputChangeEvent) => {
     const { files } = event.target
     setPreviewImg(
-      files.length
+      files && files.length
         ? {
-          src: URL.createObjectURL(files[0]),
-          alt: files[0].name
-        }
+            src: URL.createObjectURL(files[0]),
+            alt: files[0].name
+          }
         : initialState
     )
   }
@@ -217,10 +242,44 @@ export const Update = ({ id = '' } = { id: null }) => {
     setShowDessert(false)
   }
 
-  const handleForm = (e) => {
+  interface DataForm {
+    pName?: string
+    ProPrice: number
+    ProDescuento?: string
+    ValueDelivery?: string
+    ProUniDisponibles?: number
+    ProDescription?: string
+    ProProtegido?: boolean
+    ProAssurance?: boolean
+    ProWidth?: number
+    ProHeight?: number
+    ProLength?: number
+    ProWeight?: number
+    ProQuantity?: number
+    ProOutstanding?: boolean
+    ProDelivery?: boolean
+    ProVoltaje?: string
+    pState?: string
+    sTateLogistic?: string
+  }
+
+  interface EditProductFoodsResponse {
+    data?: {
+      editProductFoods?: {
+        success?: boolean
+        message?: string
+      }
+    }
+  }
+
+  interface HandleFormEvent extends React.FormEvent<HTMLFormElement> {}
+
+  // HANDLES
+  const handleForm = (e: HandleFormEvent) => {
     e.preventDefault()
     return handleSubmit({
       event: e,
+
       action: () => {
         const {
           pName,
@@ -241,15 +300,16 @@ export const Update = ({ id = '' } = { id: null }) => {
           ProVoltaje,
           pState,
           sTateLogistic
-        } = dataForm || {}
+        } = dataForm as DataForm || {}
+
         return editProductFoods({
           variables: {
             input: {
               pId: id,
               pName,
-              ProPrice: parseFloat(ProPrice),
-              ProDescuento: parseFloat(ProDescuento),
-              ValueDelivery: parseFloat(ValueDelivery),
+              ProPrice: parseFormattedFloat(ProPrice ?? 0),
+              ProDescuento: parseFormattedFloat(ProDescuento ?? 0),
+              ValueDelivery: parseFormattedFloat(ValueDelivery ?? 0),
               ProUniDisponibles,
               ProDescription,
               ProProtegido,
@@ -275,7 +335,7 @@ export const Update = ({ id = '' } = { id: null }) => {
           //   })
           // }
         })
-          .then((response) => {
+          .then((response: EditProductFoodsResponse) => {
             if (response?.data?.editProductFoods?.success) {
               updateImageProducts({
                 pId: id,
@@ -289,7 +349,7 @@ export const Update = ({ id = '' } = { id: null }) => {
               })
             }
           })
-          .catch((response) => {
+          .catch((response: EditProductFoodsResponse) => {
             const { message, success } = response?.data?.editProductFoods || {}
             sendNotification({
               title: 'Exitoso',
@@ -304,11 +364,15 @@ export const Update = ({ id = '' } = { id: null }) => {
     click: () => {
       return
     }
-  })
-  const onTargetClick = (e) => {
+  }) as React.RefObject<HTMLInputElement>
+  interface OnTargetClickEvent extends React.MouseEvent<HTMLButtonElement, MouseEvent> { }
+
+  const onTargetClick = (e: OnTargetClickEvent) => {
     e.preventDefault()
 
-    fileInputRef.current.click()
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+    }
   }
   const handleClickDelete = async () => {
     await handleDelete({
@@ -326,7 +390,7 @@ export const Update = ({ id = '' } = { id: null }) => {
   }, [id, router, dataProduct])
 
   return (
-    <Container>
+    <div className={styles.container}>
       <AwesomeModal
         customHeight='30%'
         footer={false}
@@ -464,7 +528,7 @@ export const Update = ({ id = '' } = { id: null }) => {
           </div>
         </>
       </>
-    </Container>
+    </div>
   )
 }
 
@@ -472,64 +536,3 @@ Update.propTypes = {
   id: PropTypes.string.isRequired
 }
 
-export const ActionName = styled.span`
-  position: absolute;
-  height: 20px;
-  width: 100px;
-  right: 35px;
-  color: ${BColor};
-  opacity: 0;
-  font-family: PFont-Light;
-  transition: 0.1s ease-in-out;
-  z-index: -900;
-`
-export const ButtonCard = styled.button`
-  font-size: var(--font-size-base);
-  font-family: PFont-Light;
-  cursor: pointer;
-  word-break: break-word;
-  box-shadow: 0px 0px 6px 0px #16101028;
-  position: absolute;
-  right: -50px;
-  transition: 0.4s ease;
-  width: 50px;
-  height: 50px;
-  z-index: 999;
-  top: ${({ top }) => {
-    return top || '20px'
-  }};
-  transition-delay: ${({ delay }) => {
-    return delay || 'auto'
-  }};
-  max-height: 50px;
-  max-width: 50px;
-  border-radius: 50%;
-  align-items: center;
-  display: grid;
-  justify-content: center;
-  background-color: ${BGColor};
-  &:hover ${ActionName} {
-    opacity: 1;
-    z-index: 900;
-  }
-  ${(props) => {
-    return (
-      props.grid &&
-      css`
-        top: ${({ top }) => {
-        return top || '80px'
-      }};
-      `
-    )
-  }}
-`
-
-const Container = styled.div`
-  padding: 30px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  width: 90%;
-  grid-gap: 19px 12px;
-  margin: auto;
-  background-color: var(--color-base-white);
-`

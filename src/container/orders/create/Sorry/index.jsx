@@ -1,7 +1,7 @@
-import { Button, Column, EmptyData, IconSearch, PColor } from 'pkg-components'
-import React, { useContext } from 'react'
-import styles from './styles.module.css'
+import { Button, Column, EmptyData } from 'pkg-components'
+import { useContext } from 'react'
 import { Context } from '../../../context/Context'
+import styles from './styles.module.css'
 
 export const Sorry = () => {
   const { setShowComponentModal, handleClick } = useContext(Context)
@@ -24,7 +24,7 @@ export const Sorry = () => {
           primary
           style={{ margin: '50px 0' }}
         >
-            Agregar Productos
+          Agregar Productos
         </Button>
       </Column>
     </div>

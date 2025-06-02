@@ -358,7 +358,7 @@ export const Categories = ({ isDragDisabled = true }) => {
             name='catDescription'
             onChange={handleChange}
             title='Description'
-            typeTextarea
+            typeTextarea={true}
             value={dataForm?.catDescription}
             width='100%'
           />

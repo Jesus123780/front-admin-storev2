@@ -106,7 +106,6 @@ export const FormEmployee = ({
                 marginBottom={getGlobalStyle('--spacing-2xl')}
                 name='email'
                 onChange={handleChange}
-                onInvalid={() => { return }}
                 range={{
                   min: 0
                 }}
@@ -121,7 +120,6 @@ export const FormEmployee = ({
                 marginBottom={getGlobalStyle('--spacing-2xl')}
                 name='nameEmployee'
                 onChange={handleChange}
-                onInvalid={() => { return }}
                 range={{
                   min: 0
                 }}

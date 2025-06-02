@@ -53,7 +53,7 @@ export const Goal = () => {
                         label='Monto de meta diaria *'
                         name='dailyGoal'
                         placeholder={numberFormat(dataForm?.dailyGoal)}
-                        onChange={(value) => {
+                        onValueChange={(value) => {
                             handleChange({
                                 target: {
                                     name: 'dailyGoal',

@@ -1,0 +1,6 @@
+export const MENU_OPTIONS = {
+    HIDE_MODAL: 0,
+    SCHEDULES: 1,
+    CREATE_PRODUCTS: 3,
+    SHOW_DASHBOARD_MODAL: 4,
+}

@@ -8,6 +8,7 @@ import {
   useMemo,
   useState
 } from 'react'
+import { MENU_OPTIONS } from './helpers'
 
 const initialCompanyState = {
   idStore: undefined
@@ -34,7 +35,7 @@ const initialStateContext = {
   selectedStore: null,
   isOpenOrder: false,
   show: null,
-  showModalComponent: null,
+  showModalComponent: Object.values(MENU_OPTIONS)[0],
   status: 'close',
   handleClick: (number) => { return number },
   handleMenu: () => { return },
@@ -59,7 +60,7 @@ const initialStateContext = {
   setSalesOpen: (state) => { return state },
   setSelectedStore: () => { return },
   setSessionActive: () => { return },
-  setShowComponentModal: (boolean) => { return boolean },
+  setShowComponentModal: (key) => { return key },
   setStatus: (string) => { return string },
   setStoreChatActive: () => { return },
   useCompany: () => { return },
@@ -108,33 +109,33 @@ const Provider = ({ children }) => {
  * @param {number} index - The index of the selected menu option.
  * @returns {void}
  */
+
   const handleMenuLateral = (index) => {
-    const MENU_OPTIONS = {
-      HIDE_MODAL: 3,
-      SHOW_DASHBOARD_MODAL: 4
-    }
 
-    const isFood = !!food
+    // const isFood = !!food
 
-    // Check if the current menu option should hide the modal
-    const shouldHideModal = index === MENU_OPTIONS.HIDE_MODAL && pathname
+    // // Check if the current menu option should hide the modal
+    // const shouldHideModal = index === MENU_OPTIONS.HIDE_MODAL && pathname
 
-    // Check if food is selected, then redirect to remove the food parameter from the URL
-    const shouldRedirectFood = isFood
-    if (shouldRedirectFood) {
-      router?.push({ query: { ...router.query, food: '' } }, undefined, { shallow: true })
-      return
-    }
+    // // Check if food is selected, then redirect to remove the food parameter from the URL
+    // const shouldRedirectFood = isFood
+    // if (shouldRedirectFood) {
+    //   router?.push({ query: { ...router.query, food: '' } }, undefined, { shallow: true })
+    //   return
+    // }
 
-    let showComponentModal
-    if (shouldHideModal) {
-      showComponentModal = false
-    } else if (index === MENU_OPTIONS.SHOW_DASHBOARD_MODAL) {
-      showComponentModal = MENU_OPTIONS.SHOW_DASHBOARD_MODAL
-    } else {
-      showComponentModal = index
-    }
-    setShowComponentModal(showComponentModal)
+    // let showComponentModal
+    // if (shouldHideModal) {
+    //   showComponentModal = false
+    // } else if (index === MENU_OPTIONS.SHOW_DASHBOARD_MODAL) {
+    //   showComponentModal = MENU_OPTIONS.SHOW_DASHBOARD_MODAL
+    // } else {
+    //   showComponentModal = index
+    // }
+
+    setShowComponentModal((prev) => {
+      return prev === index ? false : index
+    })
   }
 
 
@@ -254,14 +255,14 @@ const Provider = ({ children }) => {
     setSelectedStore(sessionValue)
   }, [selectedStore, hidden])
 
-    const [isElectron, setIsElectron] = useState(false);
-    useEffect(() => {
-      if (typeof window !== "undefined" && /Electron/.test(navigator.userAgent)) {
-        setIsElectron(true);
-      } else {
-        setIsElectron(false);
-      }
-    }, []);
+  const [isElectron, setIsElectron] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined" && /Electron/.test(navigator.userAgent)) {
+      setIsElectron(true);
+    } else {
+      setIsElectron(false);
+    }
+  }, []);
 
   const value = useMemo(
     () => {

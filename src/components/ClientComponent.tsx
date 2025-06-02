@@ -24,7 +24,7 @@ export const CounterClientComponent = () => {
         backgroundColor: "#f0f8ff",
       }}
     >
-      
+
       <Text>
         Hola
       </Text>

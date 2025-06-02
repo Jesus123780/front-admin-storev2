@@ -15,7 +15,11 @@
 }
 
 .collapsed_main {
-  grid-template-columns: 45px 1fr;
+  grid-template-columns: 35px 1fr;
+}
+
+.button_lateral_close {
+  background-color: var(--color-base-transparent);
 }
 
 @media (max-width: 960px) {

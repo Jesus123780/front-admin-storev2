@@ -12,37 +12,37 @@ import {
 import { Context } from '../../../context/Context'
 
 type BannerProps = {
-    isMobile: boolean
-    store: {
-        Image: string
-        scheduleOpenAll: string
-        idStore: string
-        storeName: string
-    }
+  isMobile: boolean
+  store: {
+    Image: string
+    scheduleOpenAll: string
+    idStore: string
+    storeName: string
+  }
 }
 export const Banner = ({ isMobile, store }: BannerProps) => {
-    // HOOKS
-    const { sendNotification } = useContext(Context)
-    const {
-        altLogo,
-        fileInputRef,
-        fileInputRefLogo,
-        HandleDeleteBanner,
-        handleInputChangeLogo,
-        handleUpdateBanner,
-        onTargetClick,
-        onTargetClickLogo,
-        src,
-        srcLogo
-    } = useImageStore({ idStore: store?.idStore, sendNotification })
-    const [banner] = useBanner()
-    const [dataSchedules, { loading: lsc }] = useSchedules({ schDay: 1 })
-    const { path, bnImageFileName } = banner || {}
-    const { open, openNow } = useStatusOpenStore({ dataSchedules })
-    const isLoading = lsc
-    const isEmtySchedules = dataSchedules?.length === 0
-    const handleClose = () => {
-        return sendNotification({ title: 'Banner', description: 'Muy pronto' })
+  // HOOKS
+  const { sendNotification } = useContext(Context)
+  const {
+    altLogo,
+    fileInputRef,
+    fileInputRefLogo,
+    HandleDeleteBanner,
+    handleInputChangeLogo,
+    handleUpdateBanner,
+    onTargetClick,
+    onTargetClickLogo,
+    src,
+    srcLogo
+  } = useImageStore({ idStore: store?.idStore, sendNotification })
+  const [banner] = useBanner()
+  const [dataSchedules, { loading: lsc }] = useSchedules({ schDay: 1 })
+  const { path, bnImageFileName } = banner || {}
+  const { open, openNow } = useStatusOpenStore({ dataSchedules })
+  const isLoading = lsc
+  const isEmtySchedules = dataSchedules?.length === 0
+  const handleClose = () => {
+    return sendNotification({ title: 'Banner', description: 'Muy pronto' })
   }
   const props = {
     altLogo,
@@ -67,8 +67,6 @@ export const Banner = ({ isMobile, store }: BannerProps) => {
     srcLogo,
     store
   }
-  console.log("🚀 ~ Banner ~ props:", props)
-
   return (<BannerStore {...props} />)
 }
 

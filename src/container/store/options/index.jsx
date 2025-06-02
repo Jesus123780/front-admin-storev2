@@ -2,13 +2,14 @@
 
 import React, { useContext } from 'react'
 import PropTypes from 'prop-types'
-import { 
-  Button, 
-  getGlobalStyle, 
+import {
+  Button,
+  getGlobalStyle,
   Icon
 } from 'pkg-components'
 import { Context } from '../../../context/Context'
 import styles from './styles.module.css'
+import { MENU_OPTIONS } from '@/context/helpers'
 
 export const ButtonsAction = ({ handle = (number, name, bool) => { return { number, name, bool } } }) => {
   const { setShowComponentModal } = useContext(Context)
@@ -28,7 +29,7 @@ export const ButtonsAction = ({ handle = (number, name, bool) => { return { numb
 
       label: 'Organizar agenda',
       icon: 'time',
-      onClick: () => { return setShowComponentModal(1) }
+      onClick: () => { return setShowComponentModal(MENU_OPTIONS.SCHEDULES) }
     },
     {
 

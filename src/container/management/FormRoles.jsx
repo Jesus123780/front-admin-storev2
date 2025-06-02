@@ -154,7 +154,6 @@ export const FormRoles = ({
             marginBottom={getGlobalStyle('--spacing-2xl')}
             name='name'
             onChange={handleChange}
-            onInvalid={() => { return }}
             range={{
               max: 30,
               min: 0

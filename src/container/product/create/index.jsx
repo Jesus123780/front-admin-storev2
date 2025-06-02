@@ -35,7 +35,7 @@ import {
   useStore
 } from 'npm-pkg-hook'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
-import FormProduct from './Form'
+import { FormProduct } from './Form'
 import { ActionStep } from './styles'
 import { Categories } from '../../categories'
 import {
@@ -47,6 +47,7 @@ import { filterKeyObject } from '../../../utils'
 import styles from './styles.module.css'
 import { productSchema } from './schema/producSchema'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const FoodComponentMemo = ({
   alt,
@@ -98,18 +99,18 @@ export const FoodComponentMemo = ({
   ...props
 }) => {
   const router = useRouter()
-    const location = useRouter()
+  const location = useRouter()
   const searchParams = useSearchParams()
   const [onClickLogout] = useLogout({})
 
-   const { getQuery } = useManageQueryParams({ router: location, searchParams: searchParams })
+  const { getQuery } = useManageQueryParams({ router: location, searchParams: searchParams })
 
   const { setAlertBox, sendNotification } = useContext(Context)
 
   const [dataStore] = useStore()
-  
+
   const food = getQuery('product')
-  
+
   const {
     dataTags,
     handleAddTag,
@@ -164,8 +165,8 @@ export const FoodComponentMemo = ({
       router.replace(
         {
           query: {
-        ...router.query,
-        food: ''
+            ...router.query,
+            food: ''
           }
         },
         undefined,
@@ -285,7 +286,9 @@ export const FoodComponentMemo = ({
   }
   const handlerSteps = async () => {
     if (active === 0) {
+      console.log('active', active)
       const responseRegisterProduct = await handleRegister()
+      console.log("🚀 ~ handlerSteps ~ responseRegisterProduct:", responseRegisterProduct)
       if (responseRegisterProduct?.data.updateProductFoods.success) {
         sendNotification({
           backgroundColor: 'success',
@@ -389,7 +392,7 @@ export const FoodComponentMemo = ({
         title: 'Error',
         backgroundColor: 'error'
       })
-      
+
     }
   }
 
@@ -438,27 +441,6 @@ export const FoodComponentMemo = ({
  */
   const handleContinue = async () => {
     try {
-      if (active === 0) {
-        const {
-          ProPrice,
-          ProDescuento,
-          ValueDelivery
-        } = values ?? {
-          ProPrice: 0,
-          ProDescuento: 0,
-          ValueDelivery: 0
-        }
-        const formattedValues = [
-          ProPrice,
-          ProDescuento,
-          ValueDelivery
-        ]
-        const isBigintNumber = verifyPriceInRange({
-          values: formattedValues,
-          sendNotification
-        })
-        if (!isBigintNumber) return
-      }
       const input = createFormInput()
       if (asSaveAvailableProduct) {
         await handleRegisterAvailableProduct(input)
@@ -489,160 +471,160 @@ export const FoodComponentMemo = ({
   const titleHeaders = ['DETALLES', 'ADICIONALES', 'COMPLEMENTOS', 'DISPONIBILIDAD']
 
   const components = {
-    0:      <>
-              <Card bgColor={getGlobalStyle('--color-base-white')} state='30%'>
-                <FormProduct {...propsForm} />
-              </Card>
-              {false && <Card state='20%'>
-                <Text
-                  fontSize='sm'
-                  margin='10px 0'
-                  style={{
-                    '-webkitLine-clamp': 2,
-                    color: '#3e3e3e',
-                    fontSize: '1.125rem',
-                    lineHeight: '1.5rem',
-                    marginBottom: '9px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
-                  Tags
-                </Text>
-                {!!Array.isArray(dataTags) && dataTags?.map((tag) => {
-                  return (
-                    <Button
-                      border='none'
-                      borderRadius='0'
-                      key={tag.id}
-                      onClick={() => { return handleAddTag(tag.id, tag.tag) }}
-                      padding='0'
-                      style={{ display: 'flex', flexWrap: 'wrap' }}
-                    >
-                      <Tag label={tag.tag} />
-                    </Button>
-                  )
-                })}
-              </Card>
-              }
-              <Card state='30%'>
-                <Text
-                  fontSize='16px'
-                  margin='10px 0'
-                  style={{
-                    '-webkitLine-clamp': 2,
-                    color: getGlobalStyle('--color-text-gray-light'),
-                    fontSize: '.9rem',
-                    lineHeight: '1.5rem',
-                    marginBottom: '9px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
-                  Vista previa
-                </Text>
-                <Card bgColor={getGlobalStyle('--color-base-white')}>
-                  <MemoCardProductSimple
-                    {...values}
-                    alt={alt}
-                    fileInputRef={fileInputRef}
-                    height='100%'
-                    onFileInputChange={onFileInputChange}
-                    onTargetClick={onTargetClick}
-                    pName={names}
-                    src={src}
-                    tag={tags}
-                  />
-                </Card>
-              </Card>
-            </>,
+    0: <>
+      <Card bgColor={getGlobalStyle('--color-base-white')} state='30%'>
+        <FormProduct {...propsForm} />
+      </Card>
+      {false && <Card state='20%'>
+        <Text
+          fontSize='sm'
+          margin='10px 0'
+          style={{
+            '-webkitLine-clamp': 2,
+            color: '#3e3e3e',
+            fontSize: '1.125rem',
+            lineHeight: '1.5rem',
+            marginBottom: '9px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
+          Tags
+        </Text>
+        {!!Array.isArray(dataTags) && dataTags?.map((tag) => {
+          return (
+            <Button
+              border='none'
+              borderRadius='0'
+              key={tag.id}
+              onClick={() => { return handleAddTag(tag.id, tag.tag) }}
+              padding='0'
+              style={{ display: 'flex', flexWrap: 'wrap' }}
+            >
+              <Tag label={tag.tag} />
+            </Button>
+          )
+        })}
+      </Card>
+      }
+      <Card state='30%'>
+        <Text
+          fontSize='16px'
+          margin='10px 0'
+          style={{
+            '-webkitLine-clamp': 2,
+            color: getGlobalStyle('--color-text-gray-light'),
+            fontSize: '.9rem',
+            lineHeight: '1.5rem',
+            marginBottom: '9px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
+          Vista previa
+        </Text>
+        <Card bgColor={getGlobalStyle('--color-base-white')}>
+          <MemoCardProductSimple
+            {...values}
+            alt={alt}
+            fileInputRef={fileInputRef}
+            height='100%'
+            onFileInputChange={onFileInputChange}
+            onTargetClick={onTargetClick}
+            pName={names}
+            src={src}
+            tag={tags}
+          />
+        </Card>
+      </Card>
+    </>,
     1: <OptionalExtraProducts
-              data={dataLines}
-              dataListIds={dataListIds}
-              handleAdd={handleAdd}
-              handleAddList={handleAddList}
-              handleChangeItems={handleChangeItems}
-              handleCheck={handleCheckDessert}
-              handleRemoveList={handleRemoveList}
-              isCustomSubOpExPid={true}
-              loadingCreateSubDessert={loadingCreateSubDessert}
-              pId={pId}
-              removeOneItem={removeOneItem}
-              setCheck={setCheck}
-              setData={setData}
-              setTitle={setTitle}
-              title={title}
-            />,
+      data={dataLines}
+      dataListIds={dataListIds}
+      handleAdd={handleAdd}
+      handleAddList={handleAddList}
+      handleChangeItems={handleChangeItems}
+      handleCheck={handleCheckDessert}
+      handleRemoveList={handleRemoveList}
+      isCustomSubOpExPid={true}
+      loadingCreateSubDessert={loadingCreateSubDessert}
+      pId={pId}
+      removeOneItem={removeOneItem}
+      setCheck={setCheck}
+      setData={setData}
+      setTitle={setTitle}
+      title={title}
+    />,
     2: <div style={{ flexDirection: 'column', display: 'flex' }}>
-              <Button
-                height='auto'
-                onClick={() => { return setOpenModalDessert(!openModalDessert) }}
-                primary={true}
-              >
-                Mostrar modal de subproductos
-              </Button>
-              <ExtrasProductsItems
-                dataExtra={dataExtra}
-                editing={true}
-                modal={openModalDessert}
-                pId={pId}
-                propsExtra={propsExtra}
-                setModal={() => { return setOpenModalDessert(false) }}
-              />
-            </div>,
-    3:         <div className='container_availability'>
-              <Text
-                color='primary'
-                fontSize='20px'
-                margin='10px 0'
-              >
-                Disponibilidad
-              </Text>
-              <br />
-              <br />
-              <Text size='sm'>
-                Aquí Puedes definir en que momentos los clientes pueden comprar este producto.
-              </Text>
-              <Checkbox
-                checked={check.availability}
-                id='checkboxAvailability'
-                label='Siempre disponible'
-                name='availability'
-                onChange={(e) => {
-                  handleCheck(e)
-                  if (check.noAvailability) {
-                    document.getElementById('checkbox-checkboxNoAvailability').click()
-                  }
-                }}
-              />
-              <Checkbox
-                checked={check.noAvailability}
-                id='checkboxNoAvailability'
-                label='Disponible en horarios específicos'
-                name='noAvailability'
-                onChange={(e) => {
-                  handleCheck(e)
-                  if (check.availability) {
-                    document.getElementById('checkbox-checkboxAvailability').click()
-                  }
-                }}
-              />
-              {check.noAvailability &&
-                <>
-                  <Text size='sm' >
-                    Dias de la semana
-                  </Text>
-                  <div className='container_days'>
-                    <DaySelector
-                      days={days}
-                      handleDaySelection={handleDaySelection}
-                      selectedDays={selectedDays}
-                    />
-                  </div>
-                </>
-              }
-            </div>
-  } 
+      <Button
+        height='auto'
+        onClick={() => { return setOpenModalDessert(!openModalDessert) }}
+        primary={true}
+      >
+        Mostrar modal de subproductos
+      </Button>
+      <ExtrasProductsItems
+        dataExtra={dataExtra}
+        editing={true}
+        modal={openModalDessert}
+        pId={pId}
+        propsExtra={propsExtra}
+        setModal={() => { return setOpenModalDessert(false) }}
+      />
+    </div>,
+    3: <div className='container_availability'>
+      <Text
+        color='primary'
+        fontSize='20px'
+        margin='10px 0'
+      >
+        Disponibilidad
+      </Text>
+      <br />
+      <br />
+      <Text size='sm'>
+        Aquí Puedes definir en que momentos los clientes pueden comprar este producto.
+      </Text>
+      <Checkbox
+        checked={check.availability}
+        id='checkboxAvailability'
+        label='Siempre disponible'
+        name='availability'
+        onChange={(e) => {
+          handleCheck(e)
+          if (check.noAvailability) {
+            document.getElementById('checkbox-checkboxNoAvailability').click()
+          }
+        }}
+      />
+      <Checkbox
+        checked={check.noAvailability}
+        id='checkboxNoAvailability'
+        label='Disponible en horarios específicos'
+        name='noAvailability'
+        onChange={(e) => {
+          handleCheck(e)
+          if (check.availability) {
+            document.getElementById('checkbox-checkboxAvailability').click()
+          }
+        }}
+      />
+      {check.noAvailability &&
+        <>
+          <Text size='sm' >
+            Dias de la semana
+          </Text>
+          <div className='container_days'>
+            <DaySelector
+              days={days}
+              handleDaySelection={handleDaySelection}
+              selectedDays={selectedDays}
+            />
+          </div>
+        </>
+      }
+    </div>
+  }
   return (<>
     {loaAvailable && <Loading />}
     <Container>
@@ -665,7 +647,7 @@ export const FoodComponentMemo = ({
         <AwesomeModal
           btnCancel
           btnConfirm
-          customHeight={'calc(100vh - 300px)'}
+          customHeight='200px'
           footer={true}
           header={false}
           onCancel={() => { return }}
@@ -674,39 +656,16 @@ export const FoodComponentMemo = ({
           padding='20px'
           question={false}
           show={openAlertClose}
-          size='700px'
+          size={MODAL_SIZES.small}
           zIndex={getGlobalStyle('--z-index-high')}
         >
-          <div className={styles.wrap_alert} />
-          <div
-            style={{
-              position: 'absolute',
-              left: '0',
-              right: '0',
-              margin: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              top: '70px',
-              padding: '20px'
-            }}
+          <Text
+            size='3xl'
+            weight='extrabold'
           >
-            <Text
-              color='white'
-              size='6xl'
-              weight='extrabold'
-            >
-              Es posible que el producto no contenga todos los elementos necesarios.
-            </Text>
-            <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-            <Image
-              alt='Imagen de un producto'
-              height='auto'
-              src='/Images/items.png'
-              width='90%'
-            />
-          </div>
+            Es posible que el producto no contenga todos los elementos necesarios.
+          </Text>
+          <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
         </AwesomeModal>
       </Portal>
       <HeaderSteps active={active} steps={titleHeaders} />
@@ -725,7 +684,7 @@ export const FoodComponentMemo = ({
           {active === 1 ? 'Cerrar' : 'Cancelar'}
         </Button>}
         <Button
-          disabled={disabled[active]}
+          // disabled={disabled[active]}
           loading={loading}
           onClick={() => {
             return handleContinue()

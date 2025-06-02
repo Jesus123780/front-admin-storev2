@@ -2,8 +2,11 @@
 
 import PropTypes from 'prop-types'
 import Head from 'next/head'
-import dynamic from 'next/dynamic'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import {
+  useRouter,
+  usePathname,
+  useSearchParams
+} from 'next/navigation'
 import React, {
   useContext,
   useEffect,
@@ -17,13 +20,12 @@ import {
   Overline,
   Button,
   Toast,
-  Loading,
   Orders,
   DeliveryTime,
   getGlobalStyle,
   AwesomeModal,
+  LateralModal,
   Plan,
-  Divider,
   PaymentAlert,
   Icon,
   AlertInfo
@@ -54,31 +56,17 @@ import {
 } from 'npm-pkg-hook'
 
 import { Context } from '../../context/Context'
-// import { ScheduleTimings } from '../../container/Schedule'
-// import { LateralModal } from '../../container/dashboard/styled'
-// import { Clients } from '../../container/clients'
 import { Footer } from './Footer/index'
-// import { Categories } from '../../container/Categories'
-// import { Food } from '../../container/update/Products/food'
 // import useSound from 'use-sound'
 import { heights, widths } from './helpers'
 import { CreateSales } from '../orders/create'
 import packageJson from '../../../package.json'
+import { Clients } from '../clients'
+import { ScheduleTimings } from '../schedule'
+import { FoodComponent } from '../product/create'
+import { Product } from '../product'
+import { Categories } from '../categories'
 import styles from './styles.module.css'
-
-// const DynamicGenerateSales = dynamic(
-//   () => {
-//     return import('../../container/Sales').then((module) => {
-//       return module.GenerateSales
-//     })
-//   },
-//   {
-//     loading: () => {
-//       return <Loading />
-//     },
-//     ssr: false
-//   }
-// )
 
 export const MemoLayout = ({
   children,
@@ -193,18 +181,13 @@ export const MemoLayout = ({
    */
   const onCloseLateralMenu = () => {
     setShowComponentModal(false)
-
-    // If the value of `showModalComponent` is equal to 4, it cleans the categories query.
-    if (showModalComponent === 4) {
-      handleCleanQuery('categories')
-    }
   }
 
-  const components = {
-    // 1: <ScheduleTimings isChart={true} />,
-    // 2: <Clients />,
-    // 3: <Food />,
-    // 4: <Categories isDraggableItems={true} />
+  const components: Record<number, JSX.Element> = {
+    1: <ScheduleTimings isChart={true} />,
+    2: <Clients />,
+    3: <Product />,
+    4: <Categories isDragDisabled={true} />
   }
 
   const {
@@ -394,9 +377,7 @@ export const MemoLayout = ({
       />
 
       <AlertBox err={error} />
-      <main
-        className={`${styles.main} ${!Boolean('/' !== pathname) ? styles.noAside : ''} ${Boolean(isColapsedMenu) ? styles.collapsed_main : ''}`}
-      >
+      <main className={`${styles.main} ${!Boolean('/' !== pathname) ? styles.noAside : ''} ${Boolean(isColapsedMenu) ? styles.collapsed_main : ''}`}>
         <Header
           count={count}
           countOrders={countOrders}
@@ -465,7 +446,7 @@ export const MemoLayout = ({
             <Toast
               autoDelete={true}
               autoDeleteTime={7000}
-              position={'bottom-right'}
+              position='bottom-right'
               toastList={messagesToast}
             />
           </div>
@@ -473,33 +454,31 @@ export const MemoLayout = ({
         <Footer />
 
         <div style={{ gridArea: 'right' }}>
-          <Overline
-            onClick={() => {
-              return onCloseLateralMenu()
-            }}
-            show={showModalComponent}
-            zIndex='99990000'
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-          />
-          {/* <LateralModal
-            height={customHeights ? customHeights[[showModalComponent]] : heights[showModalComponent]}
-            open={showModalComponent}
-            style={{ width: widths[showModalComponent] }}
+          <LateralModal
+            handleClose={onCloseLateralMenu}
+            open={Boolean(showModalComponent)}
+            style={{
+              width:
+                widths[showModalComponent as keyof typeof widths],
+              height: customHeights ? customHeights[showModalComponent as keyof typeof customHeights] : heights[showModalComponent as keyof typeof heights]
+            } as React.CSSProperties}
+            direction='right'
           >
             <Button
+              border='none'
+              className={styles.button_lateral_close}
               onClick={() => {
                 return onCloseLateralMenu()
               }}
-              style={{
-                border: 'none',
-                boxShadow: 'none',
-                padding: 10
-              }}
             >
-              <Icon icon='IconCancel' size='25px' />
+              <Icon
+                icon='IconCancel'
+                size={30}
+                color={getGlobalStyle('--color-icons-primary')}
+              />
             </Button>
             {components[showModalComponent]}
-          </LateralModal> */}
+          </LateralModal>
 
         </div>
 

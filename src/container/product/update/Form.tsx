@@ -1,6 +1,5 @@
 'use client'
 
-import PropTypes from 'prop-types'
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -9,10 +8,47 @@ import {
   InputHooks,
   RippleButton
 } from 'pkg-components'
-import { generateStoreURL, useAmountInput } from 'npm-pkg-hook'
+import { generateStoreURL } from 'npm-pkg-hook'
 import styled from 'styled-components'
 
-export const Form = ({
+interface FormProps {
+  alt?: string
+  src?: string
+  loading?: boolean
+  errorForm?: {
+    ProDescription?: boolean
+    ProDescuento?: boolean
+    ProPrice?: boolean
+    ValueDelivery?: boolean
+    pName?: boolean
+  }
+  getStore?: {
+    city?: {
+      cName?: string
+    }
+    department?: {
+      dName?: string
+    }
+    idStore?: string
+    storeName?: string
+  }
+  fileInputRef: React.RefObject<HTMLInputElement>
+  dataForm?: {
+    ProDescription?: string
+    ProDescuento?: string
+    ProPrice?: string
+    ValueDelivery?: string
+    pName?: string
+  }
+  onFileInputChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
+  handleForm?: (event: React.FormEvent<HTMLFormElement>) => void
+  handleChange?: (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void
+  onTargetClick?: (event: React.MouseEvent<HTMLImageElement>) => void
+}
+
+export const FormMemo: React.FC<FormProps> = ({
   alt = '',
   src = '',
   loading = false,
@@ -61,7 +97,12 @@ export const Form = ({
     storeName: '',
     idStore: ''
   }
-  const urlStore = generateStoreURL({ city, department, storeName, idStore })
+  const urlStore = generateStoreURL({
+    city,
+    department,
+    storeName,
+    idStore
+  })
 
   return (
     <form onSubmit={(e) => { return handleForm(e) }}>
@@ -74,7 +115,8 @@ export const Form = ({
           src={src}
           width={400}
         />
-        <Inputdeker
+        <input
+          style={{ display: 'none' }}
           accept='.jpg, .png'
           id='iFile'
           onChange={(event) => { return onFileInputChange(event) }}
@@ -84,7 +126,7 @@ export const Form = ({
       </ContentImage>
       <InputHooks
         error={errorForm?.pName}
-        info='Nombre del producto que se mostrará en la tienda'
+        info='Nombre del producto que se mostrará en la tienda - Máximo 180 caracteres'
         name='pName'
         onChange={handleChange}
         required
@@ -100,18 +142,16 @@ export const Form = ({
         groupSeparator='.'
         label='Precio del producto*'
         name='ProPrice'
-        onChange={(value) => {
+        onValueChange={(value, name) => {
           handleChange({
             target: {
-              name: 'ProPrice',
-              value: value
+              name: name ?? '',
+              value: value ?? ''
             }
-          })
+          } as React.ChangeEvent<HTMLInputElement>)
         }}
         placeholder='$ 0.00'
         prefix='$'
-        useAmountInput={useAmountInput}
-        value={dataForm?.ProPrice}
       />
 
       <AmountInput
@@ -122,17 +162,16 @@ export const Form = ({
         disabled={false}
         label='Descuento'
         name='ProDescuento'
-        onChange={(value) => {
+        onValueChange={(value) => {
           handleChange({
             target: {
               name: 'ProDescuento',
-              value: value
+              value: value ?? ''
             }
-          })
+          } as React.ChangeEvent<HTMLInputElement>)
         }}
         placeholder='$ 0.00'
         prefix='$'
-        useAmountInput={useAmountInput}
         value={dataForm?.ProDescuento}
       />
       <AmountInput
@@ -143,17 +182,16 @@ export const Form = ({
         disabled={false}
         label='Costo de envío'
         name='ValueDelivery'
-        onChange={(value) => {
+        onValueChange={(value) => {
           handleChange({
             target: {
               name: 'ValueDelivery',
-              value: value
+              value: value ?? ''
             }
-          })
+          } as React.ChangeEvent<HTMLInputElement>)
         }}
         placeholder='$ 0.00'
         prefix='$'
-        useAmountInput={useAmountInput}
         value={dataForm?.ValueDelivery}
       />
       <InputHooks
@@ -169,9 +207,9 @@ export const Form = ({
       />
       {getStore &&
         // <DisRestaurant>
-          <Link href={urlStore} target='_blank'>
-            {getStore?.storeName}
-          </Link>
+        <Link href={urlStore} target='_blank'>
+          {getStore?.storeName}
+        </Link>
         // </DisRestaurant>
       }
       <RippleButton
@@ -185,51 +223,9 @@ export const Form = ({
     </form>
   )
 }
+export const Form = React.memo(FormMemo)
 
-Form.propTypes = {
-  alt: PropTypes.string,
-  loading: PropTypes.bool,
-  dataForm: PropTypes.shape({
-    ProDescription: PropTypes.any,
-    ProDescuento: PropTypes.any,
-    ProPrice: PropTypes.any,
-    ValueDelivery: PropTypes.any,
-    pName: PropTypes.any
-  }),
-  errorForm: PropTypes.shape({
-    ProDescription: PropTypes.any,
-    ProDescuento: PropTypes.any,
-    ProPrice: PropTypes.any,
-    ValueDelivery: PropTypes.any,
-    pName: PropTypes.string
-  }),
-  fileInputRef: PropTypes.any,
-  getStore: PropTypes.shape({
-    city: PropTypes.shape({
-      cName: PropTypes.shape({
-        toLocaleLowerCase: PropTypes.func
-      })
-    }),
-    department: PropTypes.shape({
-      dName: PropTypes.shape({
-        toLocaleLowerCase: PropTypes.func
-      })
-    }),
-    idStore: PropTypes.string,
-    storeName: PropTypes.string
-  }),
-  handleChange: PropTypes.func,
-  handleForm: PropTypes.func,
-  onFileInputChange: PropTypes.func,
-  onTargetClick: PropTypes.func,
-  src: PropTypes.string
-}
 
-const Inputdeker = styled.input`
-    padding: 30px;
-    border: 1px solid;
-    display: none;
-`
 export const ContentImage = styled.div`
     display: flex;
     width: 100%;
@@ -241,3 +237,4 @@ export const ContentImage = styled.div`
         width: 100%; 
     }
 `
+

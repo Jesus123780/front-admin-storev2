@@ -153,7 +153,6 @@ export const FormClients = ({
             marginBottom={getGlobalStyle('--spacing-2xl')}
             name='clientName'
             onChange={handleChange}
-            onInvalid={() => { return }}
             range={{
               max: 30,
               min: 0

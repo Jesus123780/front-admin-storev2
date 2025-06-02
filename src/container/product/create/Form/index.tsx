@@ -11,10 +11,9 @@ import {
   AlertInfo,
   ToggleSwitch
 } from 'pkg-components'
-import { useAmountInput } from 'npm-pkg-hook'
 import { CardInput, FormProducts } from '../styled'
 
-const FormProduct = ({
+export const FormProduct = ({
   check = {
     desc: false
   },
@@ -69,17 +68,15 @@ const FormProduct = ({
         groupSeparator='.'
         label='Precio del producto*'
         name='ProPrice'
-        onChange={(value) => {
+        onValueChange={(value, name) => {
           handleChange({
             target: {
-              name: 'ProPrice',
+              name: name,
               value: value
             }
           })
         }}
-        placeholder='$ 0.00'
         prefix='$'
-        useAmountInput={useAmountInput}
         value={values?.ProPrice}
       />
       <CardInput>
@@ -87,9 +84,11 @@ const FormProduct = ({
           allowDecimals={true}
           decimalSeparator=','
           decimalsLimit={2}
+          disabled={false}
+          groupSeparator='.'
           label='Precio del descuento'
           name='ProDescuento'
-          onChange={(value) => {
+          onValueChange={(value) => {
             handleChange({
               target: {
                 name: 'ProDescuento',
@@ -99,7 +98,6 @@ const FormProduct = ({
           }}
           placeholder='$ 0.00'
           prefix='$'
-          useAmountInput={useAmountInput}
           value={values?.ProDescuento}
 
         />
@@ -123,7 +121,7 @@ const FormProduct = ({
           groupSeparator='.'
           label='Precio del domicilio'
           name='ValueDelivery'
-          onChange={(value) => {
+          onValueChange={(value) => {
             handleChange({
               target: {
                 name: 'ValueDelivery',
@@ -133,7 +131,6 @@ const FormProduct = ({
           }}
           placeholder='$ 0.00'
           prefix='$'
-          useAmountInput={useAmountInput}
           value={values?.ValueDelivery}
         />
       </CardInput>
@@ -185,7 +182,6 @@ const FormProduct = ({
       <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
       <InputHooks
         error={errors.ProDescription}
-        height='200px'
         info='Descripción del producto que se mostrará en la tienda - Máximo 180 caracteres'
         name='ProDescription'
         onChange={handleChange}
@@ -229,5 +225,3 @@ FormProduct.propTypes = {
     carProId: PropTypes.string
   })
 }
-
-export default FormProduct
