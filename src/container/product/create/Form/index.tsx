@@ -50,7 +50,7 @@ export const FormProduct = ({
     <FormProducts className='form-horizontal'>
       <InputHooks
         error={errors.names}
-        info='Nombre del producto que se mostrará en la tienda - Máximo 180 caracteres'
+        info='Nombre del producto que se mostrará en la tienda'
         name='names'
         onChange={e => { return setName(e.target.value) }}
         range={{ min: 0, max: 180 }}

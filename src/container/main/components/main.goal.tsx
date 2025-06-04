@@ -77,11 +77,11 @@ export const Goal = () => {
                 </form>
             </AwesomeModal>
 
-            <Column className={styles.goal_chart_action}>
+            {/* <Column className={styles.goal_chart_action}>
                 <button onClick={handleOpenEditgoal} className={styles.goal_chart_action_button}>
                     <Icon icon='IconDost' />
                 </button>
-            </Column>
+            </Column> */}
             <KmhGoalChart
                 size={250}
                 current={loading ? 0 : data?.total} goal={loading ? 0 : dailyGoal}

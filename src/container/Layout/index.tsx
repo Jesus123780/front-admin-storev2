@@ -63,7 +63,6 @@ import { CreateSales } from '../orders/create'
 import packageJson from '../../../package.json'
 import { Clients } from '../clients'
 import { ScheduleTimings } from '../schedule'
-import { FoodComponent } from '../product/create'
 import { Product } from '../product'
 import { Categories } from '../categories'
 import styles from './styles.module.css'
@@ -288,10 +287,13 @@ export const MemoLayout = ({
   const showModal = false
 
   const heightsByRoute: Record<string, { [key: number]: string }> = {
-    '/dashboard/[...name]': { 4: 'calc(100vh - 50px)' }
+    '/dashboard/[...name]': { 4: heights[4] },
+    '/dashboard': { 3: heights[3] }
   }
-  const customHeights = heightsByRoute[location?.route] ?? heights[showModalComponent]
-
+  console.log('pathname', location)
+  const customHeights = heightsByRoute[pathname] ?? heights[showModalComponent as keyof typeof heights]
+  console.log('customHeights', showModalComponent)
+  console.log('customHeights', customHeights)
 
   const onDragEnd = async (result) => {
     const { destination, source } = result;

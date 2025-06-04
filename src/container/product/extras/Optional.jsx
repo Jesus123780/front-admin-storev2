@@ -36,6 +36,7 @@ export const Optional = ({
                 {!!x.numbersOptionalOnly && <p className='garnish-choices__title-desc'>Escoge hasta {x.numbersOptionalOnly} opciones.</p>}
               </div>
               <div className='garnish-choices'>
+                adfsd
                 <Icon icon='IconMiniCheck' color={NorthTexasGreen} size={15} />
                 {x.required ? <span className='marmita-minitag'>OBLIGATORIO</span> : <span className='marmita-minitag' style={{ backgroundColor: 'transparent', color: 'transparent', width: '8  0px', zIndex: '0' }}>OBLIGATORIO</span>}
               </div>

@@ -10,10 +10,13 @@ import {
   Loading,
   InputOTPHook,
   validateEmail,
-    BColor,
-    IconArrowLeft,
+  BColor,
+  IconArrowLeft,
   EColor,
-  PLColor
+  PLColor,
+  Button,
+  Text,
+  Column
 } from 'pkg-components'
 import {
   useFormTools,
@@ -21,16 +24,8 @@ import {
   fetchJson
 } from 'npm-pkg-hook'
 import { useMutation } from '@apollo/client'
-import {
-  Content,
-  Form,
-  Card,
-  Text,
-  GoBack
-} from './styled'
 import { EMAIL_SESSION } from './queries'
 import { Context } from './../../context/Context'
-// import { RegisterUser } from '../user'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { decodeToken } from '@/utils'
 import { getDeviceId } from '../../../apollo/getDeviceId'
@@ -48,8 +43,8 @@ export const Email = () => {
   const [step, setStep] = useState(0)
   const router = useRouter()
   const [registerEmailLogin] = useMutation(EMAIL_SESSION)
-    const { handleQuery } = useManageQueryParams({ router, searchParams })
-  
+  const { handleQuery } = useManageQueryParams({ router, searchParams })
+
   const { setAlertBox } = useContext(Context)
 
   const handleForm = async (e, show) => {
@@ -149,17 +144,17 @@ export const Email = () => {
   }, [])
   // if (otp === 0) return <RegisterUser />
   return (
-    <Content>
+    <div>
       {loading && <Loading />}
-      <Card>
-      </Card>
-      <Form
+      <div>
+      </div>
+      <Column as='form'
         onSubmit={(e) => {
           return handleForm(e, step)
         }
         }
       >
-        <GoBack
+        <Button
           onClick={() => {
             if (firtsStep) {
               handleQuery('otp', '')
@@ -172,7 +167,7 @@ export const Email = () => {
           }}
         >
           <IconArrowLeft color={`${PLColor}`} size='25px' />
-        </GoBack>
+        </Button>
         <Text size='20px'>
           {firtsStep ?
             'Ingrese el código de 6 dígitos que enviamos' :
@@ -232,7 +227,7 @@ export const Email = () => {
         >
           {firtsStep ? 'Ingresar' : 'Enviar'}
         </RippleButton>
-      </Form>
-    </Content>
+      </Column>
+    </div>
   )
 }

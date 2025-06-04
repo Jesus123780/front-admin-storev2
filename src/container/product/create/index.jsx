@@ -21,7 +21,8 @@ import {
   Image,
   Divider,
   HeaderSteps,
-  Column
+  Column,
+  Row
 } from 'pkg-components'
 import {
   useGetOneProductsFood,
@@ -264,8 +265,7 @@ export const FoodComponentMemo = ({
     handleFocusChange,
     setLine,
     LineItems,
-    handleCleanLines: CleanLines,
-    useAmountInput
+    handleCleanLines: CleanLines
   }
 
   const handlerCreateDessert = () => {
@@ -450,7 +450,7 @@ export const FoodComponentMemo = ({
     } catch (error) {
       console.log("🚀 ~ handleContinue ~ error:", error)
       sendNotification({
-        description: 'Ha ocurrido un error jejej',
+        description: 'Ha ocurrido un error',
         title: 'Error',
         backgroundColor: 'error'
       })
@@ -471,41 +471,42 @@ export const FoodComponentMemo = ({
   const titleHeaders = ['DETALLES', 'ADICIONALES', 'COMPLEMENTOS', 'DISPONIBILIDAD']
 
   const components = {
-    0: <>
+    0: <Row>
       <Card bgColor={getGlobalStyle('--color-base-white')} state='30%'>
         <FormProduct {...propsForm} />
       </Card>
-      {false && <Card state='20%'>
-        <Text
-          fontSize='sm'
-          margin='10px 0'
-          style={{
-            '-webkitLine-clamp': 2,
-            color: '#3e3e3e',
-            fontSize: '1.125rem',
-            lineHeight: '1.5rem',
-            marginBottom: '9px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}
-        >
-          Tags
-        </Text>
-        {!!Array.isArray(dataTags) && dataTags?.map((tag) => {
-          return (
-            <Button
-              border='none'
-              borderRadius='0'
-              key={tag.id}
-              onClick={() => { return handleAddTag(tag.id, tag.tag) }}
-              padding='0'
-              style={{ display: 'flex', flexWrap: 'wrap' }}
-            >
-              <Tag label={tag.tag} />
-            </Button>
-          )
-        })}
-      </Card>
+      {false &&
+        <Card state='20%'>
+          <Text
+            fontSize='sm'
+            margin='10px 0'
+            style={{
+              '-webkitLine-clamp': 2,
+              color: '#3e3e3e',
+              fontSize: '1.125rem',
+              lineHeight: '1.5rem',
+              marginBottom: '9px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            Tags
+          </Text>
+          {!!Array.isArray(dataTags) && dataTags?.map((tag) => {
+            return (
+              <Button
+                border='none'
+                borderRadius='0'
+                key={tag.id}
+                onClick={() => { return handleAddTag(tag.id, tag.tag) }}
+                padding='0'
+                style={{ display: 'flex', flexWrap: 'wrap' }}
+              >
+                <Tag label={tag.tag} />
+              </Button>
+            )
+          })}
+        </Card>
       }
       <Card state='30%'>
         <Text
@@ -537,7 +538,7 @@ export const FoodComponentMemo = ({
           />
         </Card>
       </Card>
-    </>,
+    </Row>,
     1: <OptionalExtraProducts
       data={dataLines}
       dataListIds={dataListIds}
@@ -670,9 +671,7 @@ export const FoodComponentMemo = ({
       </Portal>
       <HeaderSteps active={active} steps={titleHeaders} />
       <div className='container_step'>
-        <Column>
-          {components[active] && components[active]}
-        </Column>
+        {components[active] && components[active]}
       </div>
       <ActionStep>
         {(active !== 1 && active !== 0) &&
@@ -694,7 +693,6 @@ export const FoodComponentMemo = ({
           {asSaveAvailableProduct ? 'Guardar' : 'Continuar'}
         </Button>
       </ActionStep>
-
     </Container>
   </>
   )

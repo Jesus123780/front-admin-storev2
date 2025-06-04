@@ -48,6 +48,7 @@ import { Product } from '../product'
 import { Categories } from '../categories'
 import { TableSeating } from '../seating'
 import { ProductView } from '../product/view/product'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const Store = () => {
   // STATES
@@ -186,8 +187,7 @@ export const Store = () => {
     padding: 0,
     show: show,
     title: show ? titleModal[show] : '',
-    size: '100%',
-    sizeIconClose: '35px',
+    size:  MODAL_SIZES.large,
     zIndex: getGlobalStyle('--z-index-99999'),
     onCancel: () => { return show ? handleHidden(select[show]) : null },
     onHide: () => { return show ? handleHidden(select[show]) : null }

@@ -1,15 +1,13 @@
-import React from 'react'
 import PropTypes from 'prop-types'
-import { EColor } from '../../../public/colors'
-import { IconDelete } from '../../../public/icons'
 import {
   InputHooks,
   RippleButton,
   AwesomeModal,
-  OptionalExtraProducts
+  OptionalExtraProducts,
+  ChoicesHeader
 } from 'pkg-components'
 import { transformDataToDessert } from 'npm-pkg-hook'
-import { ContentModal, GarnishChoicesHeader } from './styled'
+import { ContentModal } from './styled'
 
 export const EditExtra = ({
   openModalCatExtra,
@@ -41,25 +39,13 @@ export const EditExtra = ({
         zIndex='99988'
       >
         <ContentModal>
-          <GarnishChoicesHeader>
-            <div>
-              <p className='garnish-choices__title'>{infoExtra.pDatCre}</p>z
-              <p className='garnish-choices__title'>{infoExtra.OptionalProName}</p>
-              <p className='garnish-choices__title-desc'>Escoge hasta {infoExtra.numbersOptionalOnly} opciones.</p>
-            </div>
-            {infoExtra.required === 1 ? <div className='garnish-choices'>
-              <span className='marmita-minitag'>OBLIGATORIO</span>
-            </div> : null}
-            <RippleButton
-              bgColor={'transparent'}
-              margin='0px'
-              onClick={() => { return handleDeleteCatOptional(infoExtra) }}
-              type='button'
-              widthButton='min-content'
-            >
-              <IconDelete color={EColor} size='25px' />
-            </RippleButton>
-          </GarnishChoicesHeader>
+          <ChoicesHeader
+            title={infoExtra.OptionalProName}
+            descrition={`Escoge hasta ${infoExtra.numbersOptionalOnly} opciones.`}
+            label={infoExtra.required === 1 ? 'OBLIGATORIO' : ''}
+            deleting={true}
+            handleDelete={() => { return handleDeleteCatOptional(infoExtra) }}
+          />
           <InputHooks
             name='OptionalProName'
             onChange={handleChange}

@@ -6,5 +6,8 @@ export const widths = {
 }
 
 export const heights = {
-  2: '100%'
+  1: '100%',
+  2: '100%',
+  3: 'calc(100vh - 80px)',
+  4: '100%'
 }

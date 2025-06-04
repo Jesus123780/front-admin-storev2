@@ -126,7 +126,7 @@ export const FormMemo: React.FC<FormProps> = ({
       </ContentImage>
       <InputHooks
         error={errorForm?.pName}
-        info='Nombre del producto que se mostrará en la tienda - Máximo 180 caracteres'
+        info='Nombre del producto que se mostrará en la tienda'
         name='pName'
         onChange={handleChange}
         required

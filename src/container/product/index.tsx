@@ -48,7 +48,6 @@ export const Product = () => {
     sendNotification,
     router
   })
-  console.log('searchFilter', values)
   const [productsFood, { loading, fetchMore }] = useProductsFood({
     search: search?.length >= 4 ? search : '',
     gender: searchFilter?.gender || [],
