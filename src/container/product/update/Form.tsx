@@ -5,6 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import {
   AmountInput,
+  Divider,
+  getGlobalStyle,
   InputHooks,
   RippleButton
 } from 'pkg-components'
@@ -133,6 +135,7 @@ export const FormMemo: React.FC<FormProps> = ({
         title='Nombre del Producto'
         value={dataForm?.pName}
       />
+      <Divider marginTop={getGlobalStyle('--spacing-3xl')} />
       <AmountInput
         allowDecimals={true}
         decimalSeparator=','
@@ -196,7 +199,7 @@ export const FormMemo: React.FC<FormProps> = ({
       />
       <InputHooks
         error={errorForm?.ProDescription}
-        info='Descripción del producto que se mostrará en la tienda - Máximo 700 caracteres'
+        info='Descripción del producto que se mostrará en la tienda'
         name='ProDescription'
         onChange={handleChange}
         range={{ min: 0, max: 180 }}
@@ -205,18 +208,16 @@ export const FormMemo: React.FC<FormProps> = ({
         value={dataForm?.ProDescription}
         width='100%'
       />
+      <Divider marginTop={getGlobalStyle('--spacing-3xl')} />
       {getStore &&
-        // <DisRestaurant>
         <Link href={urlStore} target='_blank'>
           {getStore?.storeName}
         </Link>
-        // </DisRestaurant>
       }
       <RippleButton
         disabled={loading}
         margin='20px auto'
         type='submit'
-        widthButton='100%'
       >
         Guardar
       </RippleButton>

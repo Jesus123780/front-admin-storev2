@@ -16,7 +16,8 @@ import {
   getGlobalStyle,
   Button,
   Column,
-  GoogleLogin
+  GoogleLogin,
+  ROUTES
 } from 'pkg-components'
 import {
   fetchJson,
@@ -136,12 +137,14 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
         await handleSession({ cookies: cookiesToSave })
         await handleRegisterDeviceUser({ deviceId: device })
         // Redirección con recarga completa
-        window.location.href = `${process.env.NEXT_PUBLIC_URL_BASE}/dashboard`
+        const baseUrl = window.location.origin
+
+        window.location.href = `${baseUrl}/dashboard`
         return
       }
-
+      const baseUrl = window.location.origin
       // Redirección sin recarga completa
-      window.location.href = `${process.env.NEXT_PUBLIC_URL_BASE}/merchant`
+      window.location.href = `${baseUrl}/merchant`
 
     } catch (error) {
       // if (session) await signOut({ redirect: false })
@@ -211,7 +214,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
           await onClickLogout({ redirect: false })
           await signOutAuth({
             redirect: true,
-            callbackUrl: '/',
+            callbackUrl: ROUTES.index,
             reload: false
           }).catch(() => {
             setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
@@ -233,7 +236,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
       onClickLogout({ redirect: false })
       signOutAuth({
         redirect: true,
-        callbackUrl: '/',
+        callbackUrl: ROUTES.index,
         reload: false
       }).catch(() => {
         setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
@@ -292,7 +295,13 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
     if (typeof window !== 'undefined' && window.electron) {
       const listener = (_event: any, data: any) => {
         const { user_info } = data || {}
-        const { name, email, sub: id, picture } = user_info || {}
+        const {
+          name,
+          email,
+          sub:
+          id,
+          picture
+        } = user_info || {}
         const session = {
           user: {
             name,
@@ -369,33 +378,35 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
           }}>
             Login mock false
           </button>
-          {isElectron && <Button
-            border='none'
-            className={styles.btn_login}
-            styles={{
-              borderRadius: getGlobalStyle('--border-radius-2xs'),
-              border: 'none',
-              padding: getGlobalStyle('--spacing-xl'),
-              boxShadow: getGlobalStyle('--box-shadow-sm'),
-            }}
-            onClick={async () => {
-              setLoading(true)
-              await onClickLogout({ redirect: false })
-              await signOutAuth({
-                redirect: true,
-                callbackUrl: '/',
-                reload: false
-              }).catch(() => {
-                setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
-              })
-              return handleLogin('login-google')
-            }}
-            type='button'
-          >
-            <Icon icon='IconGoogleFullColor' size={30} />
-            {loading ? <LoadingButton /> : 'Continuar con Google'}
-            <div style={{ width: 'min-content' }} />
-          </Button>}
+          {isElectron
+            && <Button
+              border='none'
+              className={styles.btn_login}
+              styles={{
+                borderRadius: getGlobalStyle('--border-radius-2xs'),
+                border: 'none',
+                padding: getGlobalStyle('--spacing-xl'),
+                boxShadow: getGlobalStyle('--box-shadow-sm'),
+              }}
+              onClick={async () => {
+                setLoading(true)
+                await onClickLogout({ redirect: false })
+                await signOutAuth({
+                  redirect: true,
+                  callbackUrl: ROUTES.index,
+                  reload: false
+                }).catch(() => {
+                  setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
+                })
+                return handleLogin('login-google')
+              }}
+              type='button'
+            >
+              <Icon icon='IconGoogleFullColor' size={30} />
+              {loading ? <LoadingButton /> : 'Continuar con Google'}
+              <div style={{ width: 'min-content' }} />
+            </Button>
+          }
           {!isElectron &&
             <GoogleLogin
               clientId={process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string}

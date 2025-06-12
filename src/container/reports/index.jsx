@@ -1,22 +1,16 @@
-import { Column } from 'pkg-components'
 import React from 'react'
+import { Column, getGlobalStyle } from 'pkg-components'
 import { ChatStatistic } from '../ChatStatistic'
-// import { LastedStatistic } from 'container/dashboard/LastedStatistic'
-// import { SalesWeek } from 'container/dashboard/SalesWeek'
-// import { ChatStatistic } from 'container/ChatStatistic'
-// import { Container } from './styled'
-// import { AboutUs } from '../dashboard/AboutUs'
-// import { ChartAllSales } from '../ChartSales'
+import { ReportDownloadsPanel } from '../ReportDownloadsPanel'
 
 export const Reports = () => {
-  console.log('Reports')
   return (
-    <Column>
+    <Column style={{
+      maxWidth: getGlobalStyle('--width-max-desktop'),
+      margin: '0 auto',
+    }}>
+      <ReportDownloadsPanel />
       <ChatStatistic />
-      {/* <SalesWeek /> */}
-      {/* <ChartAllSales /> */}
-      {/* <LastedStatistic /> */}
-      {/* <AboutUs /> */}
     </Column>
   )
 }

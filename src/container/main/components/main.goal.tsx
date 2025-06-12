@@ -1,8 +1,20 @@
 import React, { useContext, useState } from 'react'
-import { AmountInput, AwesomeModal, Button, Column, getGlobalStyle, Icon, KmhGoalChart, numberFormat, Text } from 'pkg-components'
-import { useStore, useGetSalesAmountToday, useFormTools, useAmountInput, useUpsertGoal } from 'npm-pkg-hook'
+import {
+    AmountInput,
+    AwesomeModal,
+    Button,
+    Column,
+    getGlobalStyle,
+    KmhGoalChart,
+    numberFormat
+} from 'pkg-components'
+import {
+    useStore,
+    useGetSalesAmountToday,
+    useFormTools,
+    useUpsertGoal
+} from 'npm-pkg-hook'
 import { Context } from '@/context/Context'
-import styles from '../styles.module.css'
 
 export const Goal = () => {
     const { sendNotification } = useContext(Context)
@@ -10,7 +22,7 @@ export const Goal = () => {
     const [dataStore] = useStore()
     const { dailyGoal } = dataStore || {}
     const [data, { loading }] = useGetSalesAmountToday()
-    const [upsertGoal, { data: dataGoal, loading: loadingGoal }] = useUpsertGoal({ sendNotification })
+    const [upsertGoal, { loading: loadingGoal }] = useUpsertGoal({ sendNotification })
 
     const [openModalGoal, setopenModalGoal] = useState(false)
 
@@ -62,7 +74,6 @@ export const Goal = () => {
                             })
                         }}
                         prefix='$'
-                        useAmountInput={useAmountInput}
                         value={dataForm?.dailyGoal}
                     />
                     <Button

@@ -110,7 +110,7 @@ export const MemoLayout = ({
   const style = useScrollHook()
   const { scrollNav } = useScrollColor()
   const [isColapsedMenu, setIsColapsedMenu] = useState(false)
-  const { isMobile } = useMobile({
+  const { isMobile, isTablet } = useMobile({
     callback: ({ isMobile }: { isMobile: boolean }) => {
       return setIsColapsedMenu(isMobile ? false : isColapsedMenu)
     }
@@ -290,10 +290,7 @@ export const MemoLayout = ({
     '/dashboard/[...name]': { 4: heights[4] },
     '/dashboard': { 3: heights[3] }
   }
-  console.log('pathname', location)
   const customHeights = heightsByRoute[pathname] ?? heights[showModalComponent as keyof typeof heights]
-  console.log('customHeights', showModalComponent)
-  console.log('customHeights', customHeights)
 
   const onDragEnd = async (result) => {
     const { destination, source } = result;
@@ -461,7 +458,7 @@ export const MemoLayout = ({
             open={Boolean(showModalComponent)}
             style={{
               width:
-                widths[showModalComponent as keyof typeof widths],
+                isTablet ? '100%' : widths[showModalComponent as keyof typeof widths],
               height: customHeights ? customHeights[showModalComponent as keyof typeof customHeights] : heights[showModalComponent as keyof typeof heights]
             } as React.CSSProperties}
             direction='right'

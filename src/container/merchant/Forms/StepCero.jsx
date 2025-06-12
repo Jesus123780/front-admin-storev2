@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import React from 'react'
 import { ContainerAnimation } from '..'
-import { InputHooks, PhoneInput } from 'pkg-components'
+import { Divider, getGlobalStyle, InputHooks, PhoneInput } from 'pkg-components'
 
 export const StepCero = ({
   dataForm = {
@@ -38,6 +38,7 @@ export const StepCero = ({
           value={dataForm?.storeName}
           width='100%'
         />
+        <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
         <InputHooks
           disabled={true}
           error={errorForm?.email}

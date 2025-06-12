@@ -1,5 +1,5 @@
 "use client"; 
-import { HomeMain } from 'pkg-components'
+import { HomeMain, ROUTES } from 'pkg-components'
 import {
   Container
 } from './styled'
@@ -13,10 +13,10 @@ export const Home = () => {
 
 
   const handleLogin = () => {
-    router.push('/login')
+    router.push(ROUTES.login)
   }
   const handleRegister = () => {
-    router.push('/register')
+    router.push(ROUTES.register)
   }
   const headerProps = {
     handleLogin,

@@ -266,7 +266,7 @@ export const GoBack = styled.div`
   margin-bottom: 40px;
   & > span {
     font-family: PFont-Light;
-    font-size: 14px;
+    font-size: 14px;          
     text-align: center;
     color: ${({ theme }) => {
     return `${theme.PColor}`

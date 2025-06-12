@@ -2,6 +2,7 @@
 import jwt, { decode } from 'jsonwebtoken'
 
 import { resolve } from 'path'
+import { ROUTES } from 'pkg-components'
 // import { useEffect } from 'react'
 
 // https://codesandbox.io/s/calculadora-de-salario-qi0ft?file=/src/index.js:293-298
@@ -10,7 +11,7 @@ export const REFRESH_TOKEN_COOKIE_OPTIONS = {
   // domain: process.env.ADMIN_URL.split('//')[1].split(':')[0],
   domain: 'localhost:3001/',
   httpOnly: true,
-  path: '/',
+  path: ROUTES.index,
   sameSite: true,
   // secure: !!process.env.ADMIN_URL.includes('https')
   secure: false
@@ -1383,3 +1384,5 @@ export const getUserFromToken = async (token) => {
     return { session: false, error: true, message: 'Internal error' }
   }
 }
+
+

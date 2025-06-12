@@ -103,8 +103,14 @@ export const Update = ({ id = '' } = { id: null }) => {
   // QUERIES
   const [
     handleGetOneProduct,
-    { loading, data: dataProduct, dataExtra, dataOptional }
+    {
+      loading,
+      data: dataProduct,
+      dataExtra,
+      dataOptional
+    }
   ] = useGetOneProductsFood()
+  console.log("🚀 ~ Update ~ dataProduct:", dataProduct)
 
   const {
     handleAdd: handleAddExtra,
@@ -121,7 +127,11 @@ export const Update = ({ id = '' } = { id: null }) => {
     LineItems,
     inputRefs,
     handleCleanLines: CleanLines
-  } = useDessertWithPrice({ sendNotification, setAlertBox, dataExtra })
+  } = useDessertWithPrice({
+    sendNotification,
+    setAlertBox,
+    dataExtra
+  })
 
   const handleOpenModal = () => {
     const linesData = dataExtra?.map((item) => {
@@ -220,7 +230,7 @@ export const Update = ({ id = '' } = { id: null }) => {
   }
 
   // HANDLESS
-  interface OnFileInputChangeEvent extends React.ChangeEvent<HTMLInputElement> {}
+  interface OnFileInputChangeEvent extends React.ChangeEvent<HTMLInputElement> { }
 
   interface FilePreview {
     src: string
@@ -232,9 +242,9 @@ export const Update = ({ id = '' } = { id: null }) => {
     setPreviewImg(
       files && files.length
         ? {
-            src: URL.createObjectURL(files[0]),
-            alt: files[0].name
-          }
+          src: URL.createObjectURL(files[0]),
+          alt: files[0].name
+        }
         : initialState
     )
   }
@@ -272,7 +282,7 @@ export const Update = ({ id = '' } = { id: null }) => {
     }
   }
 
-  interface HandleFormEvent extends React.FormEvent<HTMLFormElement> {}
+  interface HandleFormEvent extends React.FormEvent<HTMLFormElement> { }
 
   // HANDLES
   const handleForm = (e: HandleFormEvent) => {

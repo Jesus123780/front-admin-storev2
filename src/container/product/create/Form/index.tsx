@@ -9,9 +9,9 @@ import {
   AmountInput,
   QuantityButton,
   AlertInfo,
-  ToggleSwitch
+  ToggleSwitch,
+  Column
 } from 'pkg-components'
-import { CardInput, FormProducts } from '../styled'
 
 export const FormProduct = ({
   check = {
@@ -36,8 +36,8 @@ export const FormProduct = ({
   },
   stock = 1,
   checkStock = false,
-  handleChange = (e) => { return e },
-  setName = (name) => { return name },
+  handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { return e },
+  setName = (name: string) => { return name },
   handleCheckFreeShipping = () => { return },
   handleShowCategories = () => { return },
   handleDecreaseStock = () => { return },
@@ -47,7 +47,7 @@ export const FormProduct = ({
   const disableFree = check?.desc
 
   return (
-    <FormProducts className='form-horizontal'>
+    <Column as='form'>
       <InputHooks
         error={errors.names}
         info='Nombre del producto que se mostrará en la tienda'
@@ -71,7 +71,7 @@ export const FormProduct = ({
         onValueChange={(value, name) => {
           handleChange({
             target: {
-              name: name,
+              name: name ?? 'ProPrice',
               value: value
             }
           })
@@ -79,7 +79,6 @@ export const FormProduct = ({
         prefix='$'
         value={values?.ProPrice}
       />
-      <CardInput>
         <AmountInput
           allowDecimals={true}
           decimalSeparator=','
@@ -101,10 +100,7 @@ export const FormProduct = ({
           value={values?.ProDescuento}
 
         />
-      </CardInput>
 
-      <CardInput>
-        <CardInput onChange={handleCheckFreeShipping}>
           <Checkbox
             checked={disableFree}
             id='checkboxF'
@@ -112,7 +108,6 @@ export const FormProduct = ({
             name='desc'
             onChange={handleCheckFreeShipping}
           />
-        </CardInput>
         <AmountInput
           allowDecimals={true}
           decimalSeparator=','
@@ -133,11 +128,12 @@ export const FormProduct = ({
           prefix='$'
           value={values?.ValueDelivery}
         />
-      </CardInput>
       <>
         <ToggleSwitch
           checked={checkStock}
           id='stock'
+          name='stock'
+          disabled={false}
           label='Gestionado por stock'
           onChange={() => {
             return handleCheckStock()
@@ -162,7 +158,6 @@ export const FormProduct = ({
       </>
 
       <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-
       <NewSelect
         action={true}
         error={errors.carProId}
@@ -182,7 +177,7 @@ export const FormProduct = ({
       <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
       <InputHooks
         error={errors.ProDescription}
-        info='Descripción del producto que se mostrará en la tienda - Máximo 180 caracteres'
+        info='Descripción del producto que se mostrará en la tienda'
         name='ProDescription'
         onChange={handleChange}
         range={{ min: 0, max: 180 }}
@@ -191,7 +186,7 @@ export const FormProduct = ({
         typeTextarea={true}
         value={values?.ProDescription}
       />
-    </FormProducts>
+    </Column>
   )
 }
 

@@ -16,6 +16,7 @@ import {
   isTokenExpired,
   signOutAuth
 } from 'npm-pkg-hook'
+import { ROUTES } from 'pkg-components'
 
 export default function Auth({ children }) {
   // STATE
@@ -43,7 +44,7 @@ export default function Auth({ children }) {
         await onClickLogout({ redirect: true })
         await signOutAuth({
           redirect: true,
-          callbackUrl: '/',
+          callbackUrl: ROUTES.index,
           reload: true
         })
       }

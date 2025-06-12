@@ -23,8 +23,8 @@ import {
 } from 'pkg-components'
 import PropTypes from 'prop-types'
 import { generateStoreURL } from 'npm-pkg-hook'
-import styles from './styles.module.css'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
+import styles from './styles.module.css'
 
 export const ProductView = ({
   dataExtra = [],

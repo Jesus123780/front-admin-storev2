@@ -1,0 +1,6 @@
+.container_steps {
+    border-bottom: 0.5px solid var(--color-neutral-gray);
+    height: calc(90% - 20px);
+    overflow: hidden auto;
+    background: var(--color-neutral-gray);
+}

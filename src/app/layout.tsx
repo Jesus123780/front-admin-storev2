@@ -1,6 +1,5 @@
 'use client'
 
-import { Inter } from 'next/font/google'
 import ApolloClientProvider from './providers/ApolloProvider'
 import Context from '@/context/Context'
 import Script from 'next/script'
@@ -8,8 +7,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { MemoLayout } from '@/container/Layout'
 import StyledComponentsRegistry from '@/utils/registry'
-
-const inter = Inter({ subsets: ['latin'] })
+import { ProgressBar } from 'pkg-components'
 
 const ROUTES_WITHOUT_LAYOUT = new Set([
   '/',
@@ -25,7 +23,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [progress, setProgress] = useState<number>(0)
   const [hidden, setHidden] = useState(true)
   const pathname = usePathname()
+  // Rutas donde NO queremos mostrar componentes comunes
+  const hideComponentsOn = ['/not-found', '/404']
 
+  const shouldHideUI = hideComponentsOn.some((path) => pathname.startsWith(path))
+  console.log("🚀 ~ RootLayout ~ shouldHideUI:", shouldHideUI)
   useEffect(() => {
     setProgress(10)
     setHidden(false)
@@ -55,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     setIsMounted(true)
   }, [])
 
+
   return (
     <html lang='es'>
       <div id='portal' />
@@ -72,18 +75,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         strategy='afterInteractive'
       />
 
-      <body className={inter.className}>
-        {/* <ProgressBar progress={progress} hidden={hidden} /> */}
+      <body>
+        <ProgressBar progress={progress} hidden={hidden} />
         {isMounted && <Context>
           <StyledComponentsRegistry>
-              <ApolloClientProvider>
-                {ROUTES_WITHOUT_LAYOUT.has(pathname)
-                  ? children
-                  : <MemoLayout>
-                    {children}
-                  </MemoLayout>
-                }
-              </ApolloClientProvider>
+            <ApolloClientProvider>
+              {ROUTES_WITHOUT_LAYOUT.has(pathname)
+                ? children
+                : <MemoLayout>
+                  {children}
+                </MemoLayout>
+              }
+            </ApolloClientProvider>
           </StyledComponentsRegistry>
         </Context>
         }

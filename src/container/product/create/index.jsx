@@ -45,10 +45,12 @@ import {
 } from './styled'
 import { Context } from '../../../context/Context'
 import { filterKeyObject } from '../../../utils'
-import styles from './styles.module.css'
 import { productSchema } from './schema/producSchema'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
+import styles from './styles.module.css'
+
+const titleHeaders = ['DETALLES', 'ADICIONALES', 'COMPLEMENTOS', 'DISPONIBILIDAD']
 
 export const FoodComponentMemo = ({
   alt,
@@ -99,11 +101,12 @@ export const FoodComponentMemo = ({
   setCheck: setCheckAvailableDays,
   ...props
 }) => {
+
   const router = useRouter()
   const location = useRouter()
   const searchParams = useSearchParams()
   const [onClickLogout] = useLogout({})
-
+  const pathname = usePathname()
   const { getQuery } = useManageQueryParams({ router: location, searchParams: searchParams })
 
   const { setAlertBox, sendNotification } = useContext(Context)
@@ -288,7 +291,6 @@ export const FoodComponentMemo = ({
     if (active === 0) {
       console.log('active', active)
       const responseRegisterProduct = await handleRegister()
-      console.log("🚀 ~ handlerSteps ~ responseRegisterProduct:", responseRegisterProduct)
       if (responseRegisterProduct?.data.updateProductFoods.success) {
         sendNotification({
           backgroundColor: 'success',
@@ -332,8 +334,8 @@ export const FoodComponentMemo = ({
     })
     if (active === 1 && food && isCompleteRequired) {
       handlerCreateDessert()
-    }
 
+    }
     if (active === 2) {
       handlerCreateDessert()
     }
@@ -341,7 +343,7 @@ export const FoodComponentMemo = ({
       setShowComponentModal(false)
       handleClick(false)
     }
-    return null
+    setActive((prev) => { return prev + 1 })
   }
 
   /**
@@ -448,7 +450,6 @@ export const FoodComponentMemo = ({
         await handleNextSteps()
       }
     } catch (error) {
-      console.log("🚀 ~ handleContinue ~ error:", error)
       sendNotification({
         description: 'Ha ocurrido un error',
         title: 'Error',
@@ -468,13 +469,25 @@ export const FoodComponentMemo = ({
     3: check?.noAvailability ? Boolean(!selectedDays.length > 0) : false
   }
   const asSaveAvailableProduct = disabled && selectedDays?.length > 0
-  const titleHeaders = ['DETALLES', 'ADICIONALES', 'COMPLEMENTOS', 'DISPONIBILIDAD']
-
+  const accepts = '.jpg,.jpeg,.png,.webp'
   const components = {
-    0: <Row>
+    0: <Row style={{
+      height: 'calc(100vh - 220px)',
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      flexWrap: 'wrap',
+    }}>
       <Card bgColor={getGlobalStyle('--color-base-white')} state='30%'>
         <FormProduct {...propsForm} />
       </Card>
+      <input
+        accept={accepts}
+        id='iFile'
+        onChange={onFileInputChange}
+        ref={fileInputRef}
+        // style={{ display: 'none' }}
+        type='file'
+      />
       {false &&
         <Card state='20%'>
           <Text
@@ -508,36 +521,6 @@ export const FoodComponentMemo = ({
           })}
         </Card>
       }
-      <Card state='30%'>
-        <Text
-          fontSize='16px'
-          margin='10px 0'
-          style={{
-            '-webkitLine-clamp': 2,
-            color: getGlobalStyle('--color-text-gray-light'),
-            fontSize: '.9rem',
-            lineHeight: '1.5rem',
-            marginBottom: '9px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}
-        >
-          Vista previa
-        </Text>
-        <Card bgColor={getGlobalStyle('--color-base-white')}>
-          <MemoCardProductSimple
-            {...values}
-            alt={alt}
-            fileInputRef={fileInputRef}
-            height='100%'
-            onFileInputChange={onFileInputChange}
-            onTargetClick={onTargetClick}
-            pName={names}
-            src={src}
-            tag={tags}
-          />
-        </Card>
-      </Card>
     </Row>,
     1: <OptionalExtraProducts
       data={dataLines}
@@ -670,7 +653,7 @@ export const FoodComponentMemo = ({
         </AwesomeModal>
       </Portal>
       <HeaderSteps active={active} steps={titleHeaders} />
-      <div className='container_step'>
+      <div className={styles.container_steps}>
         {components[active] && components[active]}
       </div>
       <ActionStep>
@@ -679,81 +662,26 @@ export const FoodComponentMemo = ({
             Volver
           </Button>
         }
-        {router.pathname === '/products' ? <div></div> : <Button onClick={active === 1 ? handleOpenCloseAlert : cancelAll}>
-          {active === 1 ? 'Cerrar' : 'Cancelar'}
-        </Button>}
+        {pathname === '/products' ? <div></div> :
+          <Button onClick={active === 1 ? handleOpenCloseAlert : cancelAll}>
+            {active === 1 ? 'Cerrar' : 'Cancelar'}
+          </Button>
+        }
         <Button
-          // disabled={disabled[active]}
+          disabled={disabled[active]}
           loading={loading}
           onClick={() => {
+
             return handleContinue()
           }}
           primary
         >
           {asSaveAvailableProduct ? 'Guardar' : 'Continuar'}
-        </Button>
+        </Button>{console.log('disabled[active]', disabled[active])}
       </ActionStep>
     </Container>
   </>
   )
-}
-
-FoodComponentMemo.propTypes = {
-  active: PropTypes.number,
-  alt: PropTypes.any,
-  check: PropTypes.shape({
-    availability: PropTypes.any,
-    noAvailability: PropTypes.any
-  }),
-  data: PropTypes.any,
-  dataCategoriesProducts: PropTypes.any,
-  dataFree: PropTypes.any,
-  errors: PropTypes.shape({
-    map: PropTypes.func
-  }),
-  fetchMore: PropTypes.any,
-  fileInputRef: PropTypes.any,
-  stock: PropTypes.number,
-  handleChange: PropTypes.any,
-  handleChangeFilter: PropTypes.any,
-  handleCheck: PropTypes.func,
-  handleCheckFreeShipping: PropTypes.any,
-  handleClick: PropTypes.func,
-  handleDelete: PropTypes.any,
-  handleRegister: PropTypes.func,
-  image: PropTypes.any,
-  loading: PropTypes.any,
-  names: PropTypes.shape({
-    trim: PropTypes.func
-  }),
-  onClickClear: PropTypes.any,
-  onFileInputChange: PropTypes.any,
-  onTargetClick: PropTypes.any,
-  pId: PropTypes.any,
-  search: PropTypes.any,
-  sendNotification: PropTypes.func,
-  setActive: PropTypes.func,
-  setAlertBox: PropTypes.func,
-  checkStock: PropTypes.bool,
-  setCheck: PropTypes.func,
-  setErrors: PropTypes.func,
-  setName: PropTypes.any,
-  setShowComponentModal: PropTypes.func,
-  setShowMore: PropTypes.any,
-  handleCheckStock: PropTypes.func,
-  handleDecreaseStock: PropTypes.func,
-  handleIncreaseStock: PropTypes.func,
-  showMore: PropTypes.any,
-  src: PropTypes.any,
-  state: PropTypes.any,
-  tagsProps: PropTypes.shape({
-    dataTags: PropTypes.shape({
-      map: PropTypes.func
-    }),
-    handleAddTag: PropTypes.func,
-    tags: PropTypes.any
-  }),
-  values: PropTypes.object
 }
 
 export const FoodComponent = memo(FoodComponentMemo)

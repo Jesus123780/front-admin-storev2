@@ -40,8 +40,6 @@ export const Button = styled.button`
     position: absolute;
     z-index: 9999;
 `
-export const FormProducts = styled.form`
-`
 
 export const ContainerEditImage = styled.div`
   width: 100%;
