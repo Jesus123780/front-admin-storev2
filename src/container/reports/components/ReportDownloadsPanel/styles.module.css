@@ -45,7 +45,7 @@
 .downloadButton {
   margin-top: var(--spacing-sm);
   padding: 12px 24px;
-  background-color: var(--color-feedback-success-dark);
+  background-color: var(--color-background-success);
   color: var(--color-text-white);
   border: none;
   border-radius: 8px;

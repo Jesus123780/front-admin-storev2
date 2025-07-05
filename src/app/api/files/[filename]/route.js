@@ -15,14 +15,15 @@ const baseFilePath = path.join(os.homedir(), 'app_data')
  * @param {{ params: { filename: string } }} context - Params from route.
  * @returns {Promise<Response>}
  */
-export async function GET(request, { params }) {
-  const cookie = cookies()
+export async function GET(_, context) {
+  const cookie = await cookies()
   const session = cookie.get('session')
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized: Missing session token' }, { status: 401 })
   }
   try {
-    const filename = await params?.filename
+    const params = await context.params
+    const filename = params?.filename
     if (!filename) {
       return NextResponse.json({ error: 'Filename is required' }, { status: 400 })
     }

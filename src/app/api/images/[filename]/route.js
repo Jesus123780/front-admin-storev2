@@ -8,12 +8,10 @@ const stat = promisify(fs.stat)
 const baseImagePath = path.join(os.homedir(), 'app_data')
 
 // Manejo de GET
-export async function GET(request, { params }) {
+export async function GET(_, context) {
   try {
-    const { filename } = params ?? {
-      filename: ''
-    }
-    console.log("🚀 ~ GET ~ filename:", filename)
+    const params = context?.params ? await context.params : {};
+    const { filename } = params ?? { filename: '' };
 
     if (!filename) {
       return NextResponse.json({ error: 'Filename is required' }, { status: 400 })

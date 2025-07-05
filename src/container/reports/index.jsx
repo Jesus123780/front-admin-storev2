@@ -1,7 +1,7 @@
 import React from 'react'
 import { Column, getGlobalStyle } from 'pkg-components'
-import { ChatStatistic } from '../ChatStatistic'
-import { ReportDownloadsPanel } from '../ReportDownloadsPanel'
+import { ComponentAnalyticsContextProvider } from './context'
+import { ComponentsReports } from './components'
 
 export const Reports = () => {
   return (
@@ -9,8 +9,9 @@ export const Reports = () => {
       maxWidth: getGlobalStyle('--width-max-desktop'),
       margin: '0 auto',
     }}>
-      <ReportDownloadsPanel />
-      <ChatStatistic />
+      <ComponentAnalyticsContextProvider>
+        <ComponentsReports />
+      </ComponentAnalyticsContextProvider>
     </Column>
   )
 }

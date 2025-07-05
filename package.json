@@ -1,6 +1,6 @@
 {
   "name": "nextjs_approuter_electron",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "homepage": "https://github.com/Jesus123780/front-admin-storev2",
   "author": {
@@ -28,7 +28,9 @@
     "electron:dev": "cross-env NODE_ENV='development' electron .",
     "electron:watch": "cross-env NODE_ENV='development' nodemon",
     "link:pkgch": "npm link npm-pkg-hook pkg-components rm -rf .next",
-    "link:pkgche": "npm link npm-pkg-hook pkg-components eslint-config-next-front &&  rm -rf .next"
+    "link:pkgche": "npm link npm-pkg-hook pkg-components eslint-config-next-front &&  rm -rf .next",
+    "remove:ports:3000": "npx kill-port 3000",
+    "remove:ports:8080": "npx kill-port 8080"
   },
   "dependencies": {
     "@apollo/client": "^3.13.5",

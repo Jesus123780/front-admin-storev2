@@ -1,3 +1,5 @@
+'use client'
+
 /* eslint-disable consistent-return */
 import jwt, { decode } from 'jsonwebtoken'
 

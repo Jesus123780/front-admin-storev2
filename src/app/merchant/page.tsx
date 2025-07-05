@@ -1,19 +1,28 @@
-import React from 'react'
+// app/restaurant/page.tsx
 import { Restaurant } from '@/container/merchant/index'
 import { cookies } from 'next/headers'
-import { decodeToken } from '@/utils'
-import { redirect } from 'next/navigation'
+import jwt, { decode } from 'jsonwebtoken'
+import React from 'react'
 
-const RestaurantPage = async () => {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('session')
-  if (!token?.value) {
-    redirect('/login')
+/**
+ * Decodes a JWT token.
+ * @param {string} token - JWT token to decode.
+ * @returns {object} Decoded payload or an empty object.
+ */
+export function decodeToken(token: string): Record<string, any> {
+  try {
+    return decode(token) as Record<string, any> || {}
+  } catch (err) {
+    console.error('Invalid token:', err)
+    return {}
   }
-  const userToken = decodeToken(token.value)
-  return (
-    <Restaurant userToken={userToken} />
-  )
 }
 
-export default RestaurantPage
+export default function RestaurantPage() {
+  const cookieStore = cookies()
+  const session = cookieStore.get('session')
+
+  const userToken = session?.value ? decodeToken(session.value) : {}
+
+  return <Restaurant userToken={userToken} />
+}

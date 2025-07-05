@@ -101,14 +101,14 @@ export const FoodComponentMemo = ({
   setCheck: setCheckAvailableDays,
   ...props
 }) => {
-
+  // HOOKS
   const router = useRouter()
   const location = useRouter()
   const searchParams = useSearchParams()
   const [onClickLogout] = useLogout({})
   const pathname = usePathname()
   const { getQuery } = useManageQueryParams({ router: location, searchParams: searchParams })
-
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
   const { setAlertBox, sendNotification } = useContext(Context)
 
   const [dataStore] = useStore()
@@ -129,7 +129,6 @@ export const FoodComponentMemo = ({
     searchParams
   })
 
-  const [showCategoryModal, setShowCategoryModal] = useState(false)
   const {
     handleDaySelection,
     registerAvailableProduct,
@@ -161,6 +160,7 @@ export const FoodComponentMemo = ({
     sendNotification
   })
 
+  // HANDLERS
   const cancelAll = () => {
     setShowComponentModal(false)
     handleClick(false)
@@ -188,6 +188,7 @@ export const FoodComponentMemo = ({
       handleQuery('categories', 'true')
     }
   }
+  // PROPS
   const propsForm = {
     handleRegister,
     setName,
@@ -289,7 +290,6 @@ export const FoodComponentMemo = ({
   }
   const handlerSteps = async () => {
     if (active === 0) {
-      console.log('active', active)
       const responseRegisterProduct = await handleRegister()
       if (responseRegisterProduct?.data.updateProductFoods.success) {
         sendNotification({
@@ -299,20 +299,8 @@ export const FoodComponentMemo = ({
         })
         const product = responseRegisterProduct?.data.updateProductFoods.data || {}
         const { pId } = product || { pId: null }
-        if (typeof router.pathname === 'string') {
-          router.replace(
-            {
-              pathname: router.pathname,
-              query: {
-                ...router.query,
-                food: pId
-              }
-            },
-            undefined,
-            { shallow: true }
-          )
-        } else {
-          console.error('router.pathname is not a string:', router.pathname)
+        if (pId) {
+          handleQuery('food', pId)
         }
         setActive((prev) => { return prev + 1 })
       } else {
@@ -389,6 +377,7 @@ export const FoodComponentMemo = ({
         }
       }
     } catch (error) {
+      console.log("🚀 ~ handleRegisterAvailableProduct ~ error:", error)
       sendNotification({
         description: 'Ha ocurrido un error',
         title: 'Error',
@@ -451,13 +440,12 @@ export const FoodComponentMemo = ({
       }
     } catch (error) {
       sendNotification({
-        description: 'Ha ocurrido un error',
+        description: 'Ha ocurrido un error SDKJKDJF',
         title: 'Error',
         backgroundColor: 'error'
       })
     }
   }
-
 
   const valuesObj = filterKeyObject({ ...values, names }, ['ProWeight', 'carProId', 'ProHeight'])
   const { error } = productSchema.validate(valuesObj)
@@ -677,7 +665,7 @@ export const FoodComponentMemo = ({
           primary
         >
           {asSaveAvailableProduct ? 'Guardar' : 'Continuar'}
-        </Button>{console.log('disabled[active]', disabled[active])}
+        </Button>
       </ActionStep>
     </Container>
   </>

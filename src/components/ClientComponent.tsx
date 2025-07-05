@@ -12,7 +12,6 @@ export const CounterClientComponent = () => {
     return { fromDate: start, toDate: end }
   }
   const initialDates = getInitialDates()
-  console.log("🚀 ~ CounterClientComponent ~ initialDates:", initialDates)
 
   return (
     <div

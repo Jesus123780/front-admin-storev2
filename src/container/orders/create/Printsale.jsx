@@ -11,7 +11,8 @@ import {
   Loading,
   numberFormat,
   RippleButton,
-  Icon
+  Icon,
+  getGlobalStyle
 } from 'pkg-components'
 import Image from 'next/image'
 import {
@@ -99,12 +100,15 @@ export const Prints = ({
     <ContainerTicket>
       <div className='wrapper-action__footer'>
         <RippleButton
-          height='60px'
           onClick={() => {return handleSubmit()}}
           radius='100%'
           widthButton='60px'
+          style={{
+            width: '60px',
+            height: '60px',
+          }}
         >
-          <Icon icon='IconSales' />
+          <Icon icon='IconSales' color={getGlobalStyle('--color-icons-white')} />
         </RippleButton>
       </div>
       {isPrinting && <Loading />}

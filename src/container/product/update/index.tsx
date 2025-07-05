@@ -40,7 +40,6 @@ import { useRouter } from 'next/navigation'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import { Form } from './Form'
 import styles from './styles.module.css'
-import { parseFormattedFloat } from 'pkg-components/stories/molecules/Inputs/AmountInput/components/utils'
 
 export const Update = ({ id = '' } = { id: null }) => {
   // STATES
@@ -317,9 +316,9 @@ export const Update = ({ id = '' } = { id: null }) => {
             input: {
               pId: id,
               pName,
-              ProPrice: parseFormattedFloat(ProPrice ?? 0),
-              ProDescuento: parseFormattedFloat(ProDescuento ?? 0),
-              ValueDelivery: parseFormattedFloat(ValueDelivery ?? 0),
+              ProPrice: ProPrice ?? 0,
+              ProDescuento: ProDescuento ?? 0,
+              ValueDelivery: ValueDelivery ?? 0,
               ProUniDisponibles,
               ProDescription,
               ProProtegido,

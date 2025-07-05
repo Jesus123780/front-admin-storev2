@@ -23,11 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [progress, setProgress] = useState<number>(0)
   const [hidden, setHidden] = useState(true)
   const pathname = usePathname()
-  // Rutas donde NO queremos mostrar componentes comunes
-  const hideComponentsOn = ['/not-found', '/404']
 
-  const shouldHideUI = hideComponentsOn.some((path) => pathname.startsWith(path))
-  console.log("🚀 ~ RootLayout ~ shouldHideUI:", shouldHideUI)
   useEffect(() => {
     setProgress(10)
     setHidden(false)
