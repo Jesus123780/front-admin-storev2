@@ -132,7 +132,7 @@ export const FormMemo: React.FC<FormProps> = ({
         name='pName'
         onChange={handleChange}
         required
-        title='Nombre del Producto'
+        title='Nombre del Producto*'
         value={dataForm?.pName}
       />
       <Divider marginTop={getGlobalStyle('--spacing-3xl')} />
@@ -140,6 +140,7 @@ export const FormMemo: React.FC<FormProps> = ({
         allowDecimals={true}
         decimalSeparator=','
         decimalsLimit={2}
+        decimalScale={2}
         defaultValue={dataForm?.ProPrice}
         disabled={false}
         groupSeparator='.'

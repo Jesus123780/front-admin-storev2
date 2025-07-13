@@ -1,12 +1,13 @@
 import PropTypes from 'prop-types'
 import React from 'react'
 import { ContainerAnimation } from '..'
-import { 
-  NewSelect, 
-  InputHooks, 
-  Divider, 
-  getGlobalStyle, 
-  Text
+import {
+  NewSelect,
+  InputHooks,
+  Divider,
+  getGlobalStyle,
+  Text,
+  Column
 } from 'pkg-components'
 import { WrapDirection } from '../styled'
 import { CalcularDigitoVerificacion } from '@/utils'
@@ -33,7 +34,7 @@ export const StepOne = ({
     <ContainerAnimation active={1}>
       <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
       <Text color='primary' size='3xl'>
-          Información legal de la tienda
+        Información legal de la tienda
       </Text>
       <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
       <React.Fragment>
@@ -56,7 +57,7 @@ export const StepOne = ({
           value={dataForm?.documentIdentifier}
           width='100%'
         />
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent:'space-between' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <InputHooks
             error={errorForm?.NitStore}
             name='NitStore'
@@ -109,7 +110,11 @@ export const StepOne = ({
         </>
         }
         <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
-        <Text color='primary' size='3xl'>
+        <Text
+          as='h2'
+          color='primary'
+          size='3xl'
+        >
           Dirección de la tienda
         </Text>
         <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
@@ -139,7 +144,7 @@ export const StepOne = ({
             value={values?.countryId}
           />
           <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
-          {/* <NewSelect
+          <NewSelect
             error={errorForm?.code_dId}
             id='code_dId'
             loading={loadingDepartments}
@@ -150,9 +155,9 @@ export const StepOne = ({
             padding='10px 0'
             title='Departamento'
             value={values?.code_dId}
-          /> */}
+          />
           <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
-          {/* <NewSelect
+          <NewSelect
             error={errorForm?.ctId}
             id='ctId'
             loading={loadingCities}
@@ -163,7 +168,7 @@ export const StepOne = ({
             padding='10px 0'
             title='Ciudad'
             value={values?.ctId}
-          /> */}
+          />
           <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
           <NewSelect
             error={errorForm?.rId}
@@ -176,7 +181,7 @@ export const StepOne = ({
             title='Tipo de via'
             value={values?.rId}
           />
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent:'space-between', padding: getGlobalStyle('--spacing-xs') }}>
+          <Column style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', padding: getGlobalStyle('--spacing-xs') }}>
             <InputHooks
               error={errorForm?.neighborhoodStore}
               name='neighborhoodStore'
@@ -220,7 +225,7 @@ export const StepOne = ({
               value={dataForm?.ULocation}
               width='45%'
             />
-          </div>
+          </Column>
         </WrapDirection>
       </React.Fragment>
     </ContainerAnimation>
@@ -232,7 +237,6 @@ StepOne.propTypes = {
   cities: PropTypes.array,
   countries: PropTypes.array,
   dataForm: PropTypes.object,
-  dataUser: PropTypes.object,
   departments: PropTypes.array,
   errorForm: PropTypes.object,
   handleBlur: PropTypes.func,

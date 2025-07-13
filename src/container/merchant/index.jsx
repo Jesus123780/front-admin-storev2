@@ -34,7 +34,8 @@ import {
   Divider,
   Stepper,
   Toast,
-  EColor
+  EColor,
+  ROUTES
 } from 'pkg-components'
 import { Context } from '../../context/Context'
 import { CREATE_ONE_STORE } from './queries'
@@ -84,17 +85,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
   const catStore = dataCatStore?.getAllCatStore || []
   const departments = dataDepartments || []
   const countries = dataCountries || []
-  const cities = [
-    {
-      'ctId': '4c796d16-dc86-4fd0-89e3-f41bf34a4c3e',
-      'dId': 'ddd5a096-efc6-4541-a568-c91895bc219e',
-      'cName': 'pereira',
-      'cState': 1,
-      'cDatCre': 1738707103207,
-      'cDatMod': 1738707103207,
-      '__typename': 'City'
-    }
-  ]
+  const cities = dataCities
 
   const {
     values,
@@ -244,7 +235,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
         }
 
         if (message === 'No se encontró el usuario') {
-          window.location.href = '/entrar'
+          window.location.href = ROUTES.login
         } else {
           sendNotification(messages.defaultError)
         }
@@ -396,7 +387,6 @@ export const Restaurant = ({ userToken = {} } = {}) => {
   }
 
   const showStores = (dataUser && Array.isArray(dataUser?.associateStore))
-
   return (
     <Content>
       <div

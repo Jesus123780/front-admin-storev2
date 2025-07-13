@@ -16,7 +16,8 @@ import {
   PLColor,
   Button,
   Text,
-  Column
+  Column,
+  ROUTES
 } from 'pkg-components'
 import {
   useFormTools,
@@ -161,7 +162,7 @@ export const Email = () => {
               return setStep(0)
             }
             if (step === 0) {
-              return router.push('/entrar')
+              return router.push(ROUTES.login)
             }
             return router.back()
           }}

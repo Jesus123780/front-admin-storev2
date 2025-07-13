@@ -1,7 +1,7 @@
 // app/restaurant/page.tsx
 import { Restaurant } from '@/container/merchant/index'
 import { cookies } from 'next/headers'
-import jwt, { decode } from 'jsonwebtoken'
+import { decode } from 'jsonwebtoken'
 import React from 'react'
 
 /**
@@ -18,8 +18,8 @@ export function decodeToken(token: string): Record<string, any> {
   }
 }
 
-export default function RestaurantPage() {
-  const cookieStore = cookies()
+export default async function RestaurantPage() {
+  const cookieStore = await cookies()
   const session = cookieStore.get('session')
 
   const userToken = session?.value ? decodeToken(session.value) : {}

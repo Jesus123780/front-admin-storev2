@@ -79,55 +79,54 @@ export const FormProduct = ({
         prefix='$'
         value={values?.ProPrice}
       />
-        <AmountInput
-          allowDecimals={true}
-          decimalSeparator=','
-          decimalsLimit={2}
-          disabled={false}
-          groupSeparator='.'
-          label='Precio del descuento'
-          name='ProDescuento'
-          onValueChange={(value) => {
-            handleChange({
-              target: {
-                name: 'ProDescuento',
-                value: value
-              }
-            })
-          }}
-          placeholder='$ 0.00'
-          prefix='$'
-          value={values?.ProDescuento}
+      <AmountInput
+        allowDecimals={true}
+        decimalSeparator=','
+        decimalsLimit={2}
+        disabled={false}
+        groupSeparator='.'
+        label='Precio del descuento'
+        name='ProDescuento'
+        onValueChange={(value) => {
+          handleChange({
+            target: {
+              name: 'ProDescuento',
+              value: value
+            }
+          })
+        }}
+        placeholder='$ 0.00'
+        prefix='$'
+        value={values?.ProDescuento}
 
-        />
-
-          <Checkbox
-            checked={disableFree}
-            id='checkboxF'
-            label='Envío gratis'
-            name='desc'
-            onChange={handleCheckFreeShipping}
-          />
-        <AmountInput
-          allowDecimals={true}
-          decimalSeparator=','
-          decimalsLimit={2}
-          disabled={disableFree}
-          groupSeparator='.'
-          label='Precio del domicilio'
-          name='ValueDelivery'
-          onValueChange={(value) => {
-            handleChange({
-              target: {
-                name: 'ValueDelivery',
-                value: value
-              }
-            })
-          }}
-          placeholder='$ 0.00'
-          prefix='$'
-          value={values?.ValueDelivery}
-        />
+      />
+      <Checkbox
+        checked={disableFree}
+        id='checkboxF'
+        label='Envío gratis'
+        name='desc'
+        onChange={handleCheckFreeShipping}
+      />
+      <AmountInput
+        allowDecimals={true}
+        decimalSeparator=','
+        decimalsLimit={2}
+        disabled={disableFree}
+        groupSeparator='.'
+        label='Precio del domicilio'
+        name='ValueDelivery'
+        onValueChange={(value) => {
+          handleChange({
+            target: {
+              name: 'ValueDelivery',
+              value: value
+            }
+          })
+        }}
+        placeholder='$ 0.00'
+        prefix='$'
+        value={values?.ValueDelivery}
+      />
       <>
         <ToggleSwitch
           checked={checkStock}

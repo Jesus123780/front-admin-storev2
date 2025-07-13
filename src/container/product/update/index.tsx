@@ -14,6 +14,8 @@ import {
   Button,
   AwesomeModal,
   OptionalExtraProducts,
+  ImageQRCode,
+  Divider,
   getGlobalStyle,
   Row,
   RippleButton,
@@ -34,7 +36,6 @@ import {
   useDessert,
   useEditProduct
 } from 'npm-pkg-hook'
-// import { GET_ONE_PRODUCTS_FOOD } from '../queries'
 import { Context } from '../../../context/Context'
 import { useRouter } from 'next/navigation'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
@@ -399,144 +400,182 @@ export const Update = ({ id = '' } = { id: null }) => {
   }, [id, router, dataProduct])
 
   return (
-    <div className={styles.container}>
-      <AwesomeModal
-        customHeight='30%'
-        footer={false}
-        header={true}
-        onHide={() => {
-          return setAlertModal(false)
-        }}
-        padding={getGlobalStyle('--spacing-lg')}
-        show={alertModal}
-        size='40%'
-        title='¿Eliminar este producto?'
-        zIndex={getGlobalStyle('--z-index-99999')}
-      >
-        <AlertInfo
-          message='Si eliminas el producto no aparecerá en tus productos y en tu inventario.'
-          type='warning'
-        />
-        <Row justifyContent='space-between'>
-          <RippleButton
-            margin={getGlobalStyle('--spacing-md')}
+    <div className={styles.content}>
+      <div className={styles.container}>
+        <AwesomeModal
+          customHeight='30%'
+          footer={false}
+          header={true}
+          onHide={() => {
+            return setAlertModal(false)
+          }}
+          padding={getGlobalStyle('--spacing-lg')}
+          show={alertModal}
+          size='40%'
+          title='¿Eliminar este producto?'
+          zIndex={getGlobalStyle('--z-index-99999')}
+        >
+          <AlertInfo
+            message='Si eliminas el producto no aparecerá en tus productos y en tu inventario.'
+            type='warning'
+          />
+          <Row justifyContent='space-between'>
+            <RippleButton
+              margin={getGlobalStyle('--spacing-md')}
 
-            onClick={() => {
-              return setAlertModal(false)
-            }}
-            radius='5px'
-            widthButton='45%'
-          >
-            Cancelar
-          </RippleButton>
-          <RippleButton
-            loading={loadingDeleteProduct}
-            margin={getGlobalStyle('--spacing-md')}
-            onClick={() => {
-              return handleClickDelete()
-            }}
-            radius='5px'
-            widthButton='45%'
-          >
-            Confirmar
-          </RippleButton>
-        </Row>
-      </AwesomeModal>
-      <>
-        <Form
-          alt={alt}
-          dataForm={dataForm}
-          errorForm={errorForm}
-          fileInputRef={fileInputRef}
-          getStore={getStore || {}}
-          handleChange={handleChange}
-          handleForm={handleForm}
-          loading={loading}
-          onFileInputChange={onFileInputChange}
-          onTargetClick={onTargetClick}
-          src={src}
-        />
+              onClick={() => {
+                return setAlertModal(false)
+              }}
+              radius='5px'
+              widthButton='45%'
+            >
+              Cancelar
+            </RippleButton>
+            <RippleButton
+              loading={loadingDeleteProduct}
+              margin={getGlobalStyle('--spacing-md')}
+              onClick={() => {
+                return handleClickDelete()
+              }}
+              radius='5px'
+              widthButton='45%'
+            >
+              Confirmar
+            </RippleButton>
+          </Row>
+        </AwesomeModal>
         <>
-          <div>
-            <Text weight='bold'>
-              Vista previa
-            </Text>
-            <MemoCardProductSimple
-              del={true}
-              edit={false}
-              handleDelete={() => {
-                return setAlertModal(true)
-              }}
-              {...dataForm}
-              ProImage={src}
-
-            />
-            {ProBarCode !== null && <BarCodes value={ProBarCode} />}
-            <Column>
-              <ToggleSwitch
-                checked={checkStock}
-                id='stock'
-                label='Gestionado por stock'
-                onChange={() => {
-                  return handleCheckStock()
+          <Form
+            alt={alt}
+            dataForm={dataForm}
+            errorForm={errorForm}
+            fileInputRef={fileInputRef}
+            getStore={getStore || {}}
+            handleChange={handleChange}
+            handleForm={handleForm}
+            loading={loading}
+            onFileInputChange={onFileInputChange}
+            onTargetClick={onTargetClick}
+            src={src}
+          />
+          <>
+            <div>
+              <Text
+                as='h2'
+                size='3xl'
+                weight='bold'
+              >
+                Vista previa
+              </Text>
+              <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
+              <MemoCardProductSimple
+                del={true}
+                edit={false}
+                handleDelete={() => {
+                  return setAlertModal(true)
                 }}
-                style={{ marginBottom: getGlobalStyle('--spacing-2xl') }}
-                successColor='green'
-              />
-            </Column>
-          </div>
+                {...dataForm}
+                ProImage={src}
 
-          <div>
-            <Button
-              color='black'
-              onClick={() => {
-                return handleOpenModal()
-              }}
-              width='50%'
-            >
-              Adicionales
-            </Button>
-            <Button
-              color='black'
-              onClick={() => {
-                handleGetOneProduct({ pId: id })
-                return setShowDessert(!showDessert)
-              }}
-              width='50%'
-            >
-              Sobremesa
-            </Button>
-            {loading ? (
-              <LoaderSubItem />
-            ) : (
-              <ExtrasProductsItems
-                dataExtra={dataExtra || []}
-                dataOptional={dataOptional || []}
-                editing={true}
-                modal={modal}
-                pId={id}
-                propsExtra={propsExtra}
-                setModal={() => {
-                  return setModal(!modal)
-                }}
               />
-            )}
-            <AwesomeModal
-              customHeight='calc(100vh - 100px)'
-              footer={false}
-              header={true}
-              onHide={() => {
-                return onHideDessert()
-              }}
-              show={showDessert}
-              size='100vw'
-              zIndex='999999999'
-            >
-              <OptionalExtraProducts {...dissertProps} />
-            </AwesomeModal>
-          </div>
+              <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
+              {ProBarCode !== null && (
+                <Column>
+                  <Text
+                    as='h2'
+                    size='3xl'
+                    weight='bold'
+                  >
+                    Código de barras:
+                  </Text>
+                  <BarCodes value={ProBarCode ?? ''} />
+                </Column>
+              )}
+              <Column>
+                <ToggleSwitch
+                  checked={checkStock}
+                  id='stock'
+                  label={`Stock: ${checkStock ? 'Gestionado' : 'No gestionado'}`}
+                  onChange={() => {
+                    return handleCheckStock()
+                  }}
+                  style={{ marginBottom: getGlobalStyle('--spacing-2xl') }}
+                  successColor='green'
+                />
+              </Column>
+              <Column>
+                <Text
+                  as='h2'
+                  size='3xl'
+                  weight='bold'
+                >
+                  Código QR:
+                </Text>
+                <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
+                <ImageQRCode
+                  value={
+                    typeof window !== 'undefined' && window.location
+                      ? window.location.href
+                      : ''
+                  }
+                  size={256}
+                />
+              </Column>
+            </div>
+
+            <div>
+              <Button
+                color='black'
+                onClick={() => {
+                  return handleOpenModal()
+                }}
+                width='50%'
+              >
+                Adicionales
+              </Button>
+              <Button
+                color='black'
+                onClick={() => {
+                  handleGetOneProduct({ pId: id })
+                  return setShowDessert(!showDessert)
+                }}
+                width='50%'
+              >
+                Sobremesa
+              </Button>
+              {loading ? (
+                <LoaderSubItem />
+              ) : (
+                <ExtrasProductsItems
+                  dataExtra={dataExtra || []}
+                  dataOptional={dataOptional || []}
+                  editing={true}
+                  modal={modal}
+                  pId={id}
+                  propsExtra={propsExtra}
+                  setModal={() => {
+                    return setModal(!modal)
+                  }}
+                />
+              )}
+              <AwesomeModal
+                customHeight='calc(100vh - 100px)'
+                footer={false}
+                header={true}
+                onHide={() => {
+                  return onHideDessert()
+                }}
+                show={showDessert}
+                size='100vw'
+                zIndex='999999999'
+              >
+                <OptionalExtraProducts {...dissertProps} />
+              </AwesomeModal>
+            </div>
+          </>
         </>
-      </>
+        <Divider marginBottom={getGlobalStyle('--spacing-3xl')} />
+      </div>
     </div>
   )
 }
@@ -545,3 +584,8 @@ Update.propTypes = {
   id: PropTypes.string.isRequired
 }
 
+Update.displayName = 'UpdateProduct'
+
+Update.defaultProps = {
+  id: ''
+}

@@ -2,7 +2,14 @@
 
 import React from 'react'
 import PropTypes from 'prop-types'
-import { EColor, NorthTexasGreen, Checkbox, RippleButton, Icon } from 'pkg-components'
+import {
+  getGlobalStyle,
+  EColor,
+  NorthTexasGreen,
+  Checkbox,
+  Button,
+  Icon
+} from 'pkg-components'
 import { CardsComponent, GarnishChoicesHeader } from './styled'
 
 export const Optional = ({
@@ -15,11 +22,13 @@ export const Optional = ({
       exOptional,
       codeCategory,
       index
-    }) => { return {
-      exOptional,
-      codeCategory,
-      index
-    } }
+    }) => {
+      return {
+        exOptional,
+        codeCategory,
+        index
+      }
+    }
   },
   handleDeleteItemSubOptional = () => { return }
 }) => {
@@ -36,9 +45,12 @@ export const Optional = ({
                 {!!x.numbersOptionalOnly && <p className='garnish-choices__title-desc'>Escoge hasta {x.numbersOptionalOnly} opciones.</p>}
               </div>
               <div className='garnish-choices'>
-                adfsd
-                <Icon icon='IconMiniCheck' color={NorthTexasGreen} size={15} />
-                {x.required ? <span className='marmita-minitag'>OBLIGATORIO</span> : <span className='marmita-minitag' style={{ backgroundColor: 'transparent', color: 'transparent', width: '8  0px', zIndex: '0' }}>OBLIGATORIO</span>}
+                <Icon
+                  icon='IconMiniCheck'
+                  color={getGlobalStyle('--color-icons-success')}
+                  size={15}
+                />
+                {Boolean(x.required) && <Tag label='OBLIGATORIO' />}
               </div>
               {loading && '...Cargando'}
             </GarnishChoicesHeader>
@@ -51,15 +63,21 @@ export const Optional = ({
                       <h3 className='title_card'>Item: {index + 1}</h3>
                     </div>
                     {editing &&
-                    <RippleButton
-                      bgColor='transparent'
-                      margin='0px'
-                      onClick={() => { return handleDeleteItemSubOptional(z) }}
-                      type='button'
-                      widthButton='min-content'
-                    >
-                      <Icon icon='IconDelete' color={EColor} size={25} />
-                    </RippleButton>
+                      <Button
+                        onClick={() => { return handleDeleteItemSubOptional(z) }}
+                        type='button'
+                        style={{
+                          padding: getGlobalStyle('--spacing-xl'),
+                          border: 'none',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Icon
+                          color={getGlobalStyle('--color-icons-primary')}
+                          icon='IconDelete'
+                          size={25}
+                        />
+                      </Button>
                     }
                     {!editing &&
                       <Checkbox
@@ -67,9 +85,10 @@ export const Optional = ({
                         id={z.opSubExPid}
                         margin='10px 0'
                         name='opSubExPid'
-                        onChange={value => { return editing ?
-                          handleLineChange(i, 'exState', value) :
-                          handleAddOptional({ exOptional: z.opSubExPid, codeCategory: x?.code, index })
+                        onChange={value => {
+                          return editing ?
+                            handleLineChange(i, 'exState', value) :
+                            handleAddOptional({ exOptional: z.opSubExPid, codeCategory: x?.code, index })
                         }}
                         value={z.opSubExPid}
                       />

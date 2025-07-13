@@ -1,6 +1,20 @@
 .container_steps {
-    border-bottom: 0.5px solid var(--color-neutral-gray);
-    height: calc(90% - 20px);
-    overflow: hidden auto;
     background: var(--color-neutral-gray);
+    border-bottom: 0.5px solid var(--color-neutral-gray);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 85px);
+    justify-content: space-between;
+    overflow: hidden auto;
+}
+
+.container_steps_actions {
+    align-content: space-between;
+    align-items: center;
+    background-color: var(--color-base-white);
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    left: 0;
+    position: sticky;
 }

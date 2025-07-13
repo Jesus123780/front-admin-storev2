@@ -7,18 +7,20 @@ import { Button, Column, getGlobalStyle, Portal, ROUTES, Text } from 'pkg-compon
  * Not Found Page - renders when route is not matched.
  * @returns {JSX.Element}
  */
-const NotFound = () => {
+const NotFound = ({
+  redirectTo = null,
+}) => {
   const router = useRouter()
   const pathname = usePathname()
   const handleRedirect = () => {
-    try {
+    if (redirectTo) {
+      router.push(redirectTo)
+    } else {
       if (typeof window !== 'undefined' && window.history.length > 1) {
         router.back()
       } else {
         router.push(ROUTES.dashboard)
       }
-    } catch {
-      router.push(ROUTES.dashboard)
     }
   }
   return (
@@ -42,7 +44,7 @@ const NotFound = () => {
             marginRight: getGlobalStyle('--spacing-2xl'),
           }}>
             {pathname}
-          </Text> 
+          </Text>
           Page Not Found
         </Text>
         <Text as='p' size='xxl'>

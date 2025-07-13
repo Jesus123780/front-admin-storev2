@@ -29,6 +29,7 @@ export const StepCero = ({
           value={dataForm?.storeOwner}
           width='100%'
         />
+        <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
         <InputHooks
           error={errorForm?.storeName}
           name='storeName'

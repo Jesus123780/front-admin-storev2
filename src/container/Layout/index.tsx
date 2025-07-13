@@ -5,7 +5,8 @@ import Head from 'next/head'
 import {
   useRouter,
   usePathname,
-  useSearchParams
+  useSearchParams,
+  useParams
 } from 'next/navigation'
 import React, {
   useContext,
@@ -67,11 +68,17 @@ import { Product } from '../product'
 import { Categories } from '../categories'
 import styles from './styles.module.css'
 
-export const MemoLayout = ({
+interface MemoLayoutProps {
+  children: React.ReactNode
+  watch?: any
+  settings?: any
+}
+
+export const MemoLayout: React.FC<MemoLayoutProps> = ({
   children,
   watch,
   settings
-}) => {
+}: MemoLayoutProps) => {
   const location = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -286,13 +293,13 @@ export const MemoLayout = ({
   }
   const showModal = false
 
+  const params = useParams<{ name?: string[] }>()
   const heightsByRoute: Record<string, { [key: number]: string }> = {
     '/dashboard/[...name]': { 4: heights[4] },
     '/dashboard': { 3: heights[3] }
   }
-  const customHeights = heightsByRoute[pathname] ?? heights[showModalComponent as keyof typeof heights]
-
-  const onDragEnd = async (result) => {
+  const customHeights = heightsByRoute[pathname] || heights[showModalComponent as keyof typeof heights]
+ const onDragEnd = async (result) => {
     const { destination, source } = result;
 
     // Si no se ha movido el ítem (destino es null o es el mismo), no hacer nada
@@ -350,7 +357,8 @@ export const MemoLayout = ({
           paymentMethodCards={paymentMethodCards}
           storeImage='/images/3dstore.png'
         />}
-      </AwesomeModal>}
+      </AwesomeModal>
+      }
       <Overline
         bgColor='rgba(119, 119, 119, 0.306)'
         onClick={() => {
@@ -425,11 +433,13 @@ export const MemoLayout = ({
             backgroundColor: getGlobalStyle('--color-neutral-gray-white'),
             gridArea: 'main',
             overflowY: 'auto',
+            scrollbarColor: getGlobalStyle('--color-neutral-gray-light'),
             marginBottom: '35px'
           }}
         >
           <>
             {children}
+            <div className={styles.fade_main_button} />
             {false && !loading && <PaymentAlert text={daysRemaining > 0 ? `Disfruta de tu periodo de prueba, Quedan ${daysRemaining} día(s) de prueba gratuita.` : 'Tu período de prueba gratuita ha finalizado.'} />}
           </>
           <CreateSales setShow={setSalesOpen} show={salesOpen} />
@@ -452,14 +462,15 @@ export const MemoLayout = ({
         </div>
         <Footer />
 
-        <div style={{ gridArea: 'right' }}>
+        <div style={{ gridArea: 'right' }} className={styles.area_right_container}>
           <LateralModal
             handleClose={onCloseLateralMenu}
             open={Boolean(showModalComponent)}
             style={{
+              zIndex: getGlobalStyle('--z-index-modal'),
               width:
                 isTablet ? '100%' : widths[showModalComponent as keyof typeof widths],
-              height: customHeights ? customHeights[showModalComponent as keyof typeof customHeights] : heights[showModalComponent as keyof typeof heights]
+              height: heights[showModalComponent as keyof typeof heights]
             } as React.CSSProperties}
             direction='right'
           >
@@ -493,7 +504,11 @@ MemoLayout.propTypes = {
 }
 export const Layout = React.memo(MemoLayout)
 
-export const LayoutWithAlert = (page) => {
+interface LayoutWithAlertProps {
+  page: React.ReactNode
+}
+
+export const LayoutWithAlert: React.FC<LayoutWithAlertProps> = ({ page }) => {
   const { error } = useContext(Context)
   return (
     <>

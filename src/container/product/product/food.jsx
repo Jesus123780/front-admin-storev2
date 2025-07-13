@@ -33,7 +33,6 @@ import {
 import { ExtrasProductsItems } from '../../../container/producto/extras/ExtrasProductsItems'
 import FormProduct from './Form'
 import { HeaderSteps } from './Steps'
-import { ActionStep } from './styles'
 import { Categories } from '../../Categories'
 import {
   Card,
@@ -688,7 +687,7 @@ export const FoodComponentMemo = ({
           }
         </ContainerAnimation>
       </div>
-      <ActionStep>
+      <div>
         {(active !== 1 && active !== 0) &&
           <Button onClick={() => { return setActive((prev) => { return active === 1 ? 1 : prev - 1 }) }}>
             Volver
@@ -707,7 +706,7 @@ export const FoodComponentMemo = ({
         >
           {asSaveAvailableProduct ? 'Guardar' : 'Continuar'}
         </Button>
-      </ActionStep>
+      </div>
 
     </Container>
   </>
