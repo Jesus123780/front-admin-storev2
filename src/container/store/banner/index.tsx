@@ -79,6 +79,4 @@ Banner.propTypes = {
     storeName: PropTypes.any
   })
 }
-export const ManageBanner = memo(Banner, (currentProps, nextProps) => {
-  return currentProps.isMobile === nextProps.isMobile
-})
+export const ManageBanner = memo(Banner)

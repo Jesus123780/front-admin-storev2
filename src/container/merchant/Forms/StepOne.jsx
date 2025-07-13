@@ -6,8 +6,7 @@ import {
   InputHooks,
   Divider,
   getGlobalStyle,
-  Text,
-  Column
+  Text
 } from 'pkg-components'
 import { WrapDirection } from '../styled'
 import { CalcularDigitoVerificacion } from '@/utils'
@@ -181,7 +180,7 @@ export const StepOne = ({
             title='Tipo de via'
             value={values?.rId}
           />
-          <Column style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', padding: getGlobalStyle('--spacing-xs') }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', padding: getGlobalStyle('--spacing-xs') }}>
             <InputHooks
               error={errorForm?.neighborhoodStore}
               name='neighborhoodStore'
@@ -225,7 +224,7 @@ export const StepOne = ({
               value={dataForm?.ULocation}
               width='45%'
             />
-          </Column>
+          </div>
         </WrapDirection>
       </React.Fragment>
     </ContainerAnimation>
@@ -237,6 +236,7 @@ StepOne.propTypes = {
   cities: PropTypes.array,
   countries: PropTypes.array,
   dataForm: PropTypes.object,
+  dataUser: PropTypes.object,
   departments: PropTypes.array,
   errorForm: PropTypes.object,
   handleBlur: PropTypes.func,

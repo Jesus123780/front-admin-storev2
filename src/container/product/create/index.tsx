@@ -14,7 +14,6 @@ import {
     DaySelector,
     Loading,
     OptionalExtraProducts,
-    Portal,
     getGlobalStyle,
     Divider,
     HeaderSteps,
@@ -167,14 +166,11 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         handleCleanQuery('product')
     }
     const handleShowCategories = () => {
-        const pathname = router.pathname !== '/dashboard/[...name]'
-        if (pathname) {
-            setShowCategoryModal(!showCategoryModal)
-        }
-        if (!pathname) {
-            setShowComponentModal(4)
-            handleQuery('categories', 'true')
-        }
+        setShowCategoryModal(!showCategoryModal)
+        // if (!pathname) {
+        //     setShowComponentModal(4)
+        //     handleQuery('categories', 'true')
+        // }
     }
     // PROPS
     const propsForm = {
@@ -387,9 +383,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 if (message === 'Session expired') {
                     await onClickLogout({ redirect: true })
                     setAlertBox({
-                        description: 'La sesión ha expirado, por favor vuelve a iniciar sesión',
-                        title: 'Error',
-                        backgroundColor: 'error'
+                        message: 'La sesión ha expirado, por favor vuelve a iniciar sesión'
                     })
                 }
             }
@@ -594,46 +588,44 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     return (<>
         {loaAvailable && <Loading />}
         <Container>
-            <Portal selector='portal'>
-                <AwesomeModal
-                    customHeight='70vh'
-                    footer={false}
-                    header={false}
-                    onCancel={() => { return false }}
-                    onConfirm={() => { return setShowCategoryModal(false) }}
-                    onHide={() => { return setShowCategoryModal(false) }}
-                    padding='20px'
-                    question={false}
-                    show={showCategoryModal}
-                    size='50%'
-                    zIndex={getGlobalStyle('--z-index-high')}
+            <AwesomeModal
+                customHeight='70vh'
+                footer={false}
+                header={false}
+                onCancel={() => { return false }}
+                onConfirm={() => { return setShowCategoryModal(false) }}
+                onHide={() => { return setShowCategoryModal(false) }}
+                padding='20px'
+                question={false}
+                show={showCategoryModal}
+                size='50%'
+                zIndex={getGlobalStyle('--z-index-modal')}
+            >
+                <Categories />
+            </AwesomeModal>
+            <AwesomeModal
+                btnCancel
+                btnConfirm
+                customHeight='200px'
+                footer={true}
+                header={false}
+                onCancel={() => { return }}
+                onConfirm={cancelAll}
+                onHide={handleOpenCloseAlert}
+                padding='20px'
+                question={false}
+                show={openAlertClose}
+                size={MODAL_SIZES.small}
+                zIndex={getGlobalStyle('--z-index-high')}
+            >
+                <Text
+                    size='3xl'
+                    weight='extrabold'
                 >
-                    <Categories />
-                </AwesomeModal>
-                <AwesomeModal
-                    btnCancel
-                    btnConfirm
-                    customHeight='200px'
-                    footer={true}
-                    header={false}
-                    onCancel={() => { return }}
-                    onConfirm={cancelAll}
-                    onHide={handleOpenCloseAlert}
-                    padding='20px'
-                    question={false}
-                    show={openAlertClose}
-                    size={MODAL_SIZES.small}
-                    zIndex={getGlobalStyle('--z-index-high')}
-                >
-                    <Text
-                        size='3xl'
-                        weight='extrabold'
-                    >
-                        Es posible que el producto no contenga todos los elementos necesarios.
-                    </Text>
-                    <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-                </AwesomeModal>
-            </Portal>
+                    Es posible que el producto no contenga todos los elementos necesarios.
+                </Text>
+                <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+            </AwesomeModal>
             <HeaderSteps active={active} steps={titleHeaders} />
             <div className={styles.container_steps}>
                 {components[active]}

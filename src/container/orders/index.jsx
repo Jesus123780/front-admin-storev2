@@ -248,5 +248,4 @@ export const OrdersMemo = () => {
 }
 
 export const Orders = React.memo(OrdersMemo)
-
 OrdersMemo.displayName = 'OrdersMemo'
