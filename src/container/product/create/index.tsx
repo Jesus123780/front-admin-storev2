@@ -17,7 +17,8 @@ import {
     getGlobalStyle,
     Divider,
     HeaderSteps,
-    Row
+    Row,
+    ImageProductEdit
 } from 'pkg-components'
 import {
     useGetOneProductsFood,
@@ -67,7 +68,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     setErrors,
     names,
     onClickClear,
-    onFileInputChange,
     onTargetClick,
     search,
     tagsProps,
@@ -97,6 +97,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     },
     handleCheck,
     setCheck: setCheckAvailableDays,
+    propsImageEdit,
     ...props
 }) => {
     // HOOKS
@@ -451,23 +452,15 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             height: 'auto',
             overflowY: 'auto',
             overflowX: 'hidden',
-            flexWrap: 'wrap',
         }}>
             <Card bgColor={getGlobalStyle('--color-base-white')} state='30%'>
                 <FormProduct {...propsForm} />
             </Card>
-            <input
-                accept={accepts}
-                id='iFile'
-                onChange={onFileInputChange}
-                ref={fileInputRef}
-                // style={{ display: 'none' }}
-                type='file'
-            />
+            <ImageProductEdit {...propsImageEdit} />
             {false &&
                 <Card state='20%'>
                     <Text
-                        fontSize='sm'
+                        size='sm'
                         margin='10px 0'
                         style={{
                             '-webkitLine-clamp': 2,

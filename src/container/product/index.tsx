@@ -8,7 +8,8 @@ import {
   useProductsFood,
   useDeleteProductsFood,
   useCreateProduct,
-  useCategoriesProduct
+  useCategoriesProduct,
+  useImageUploaderProduct,
 } from 'npm-pkg-hook'
 import { FoodComponent } from './create'
 
@@ -20,7 +21,10 @@ export const Product = () => {
     setShowComponentModal
   } = useContext(Context)
   const router = useRouter()
-
+  const propsUploadProductImage = useImageUploaderProduct({
+    sendNotification
+  })
+  const { image } = propsUploadProductImage
   // STATES AND HOOKS
   const handleCloseCreateProduct = () => {
     handleClick(false)
@@ -43,10 +47,11 @@ export const Product = () => {
     values,
     ...propsCreateProduct
   } = useCreateProduct({
-    setAlertBox,
     handleCloseCreateProduct,
+    image,
+    router,
     sendNotification,
-    router
+    setAlertBox
   })
   const [productsFood, { loading, fetchMore }] = useProductsFood({
     search: search?.length >= 4 ? search : '',
@@ -67,6 +72,9 @@ export const Product = () => {
     tags
   }
 
+  const propsImageEdit = {
+    ...propsUploadProductImage
+  }
   const foodComponentProps = {
     ...propsCreateProduct,
     data: productsFood,
@@ -86,7 +94,8 @@ export const Product = () => {
     handleCheckStock,
     setShowComponentModal,
     setAlertBox,
-    valuesForm: values
+    valuesForm: values,
+    propsImageEdit: propsImageEdit
   }
 
   return (

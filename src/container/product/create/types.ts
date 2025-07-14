@@ -20,7 +20,6 @@ export interface FoodComponentMemoProps {
     setErrors: (errors: any) => void
     names: string
     onClickClear?: () => void
-    onFileInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
     onTargetClick?: (e: React.MouseEvent) => void
     search?: string
     tagsProps?: {
@@ -45,6 +44,7 @@ export interface FoodComponentMemoProps {
     setShowComponentModal: React.Dispatch<React.SetStateAction<boolean | number>>
     handleClick: (value: boolean) => void
     pId?: string
+    open: boolean
     values?: {
         ProDescription?: string
         ProDescuento?: string

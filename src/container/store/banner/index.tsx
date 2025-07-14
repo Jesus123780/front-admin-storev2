@@ -4,40 +4,55 @@ import PropTypes from 'prop-types'
 import React, { memo, useContext } from 'react'
 import { BannerStore } from 'pkg-components'
 import {
-  useBanner,
   useImageStore,
   useSchedules,
+  useStore,
   useStatusOpenStore
 } from 'npm-pkg-hook'
 import { Context } from '../../../context/Context'
+interface IStore {
+  Image: string
+  scheduleOpenAll: string
+  idStore: string
+  storeName: string
+  banner: string
+}
 
 type BannerProps = {
   isMobile: boolean
-  store: {
-    Image: string
-    scheduleOpenAll: string
-    idStore: string
-    storeName: string
-  }
+  isTablet: boolean
+  store: IStore
 }
-export const Banner = ({ isMobile, store }: BannerProps) => {
+export const Banner = ({
+  isMobile,
+  isTablet,
+  store,
+}: BannerProps) => {
   // HOOKS
   const { sendNotification } = useContext(Context)
   const {
     altLogo,
     fileInputRef,
     fileInputRefLogo,
+    setPreviewImg,
     HandleDeleteBanner,
     handleInputChangeLogo,
     handleUpdateBanner,
+    handleDeleteLogo,
     onTargetClick,
     onTargetClickLogo,
     src,
     srcLogo
   } = useImageStore({ idStore: store?.idStore, sendNotification })
-  const [banner] = useBanner()
+  useStore({
+    callback: (data: IStore) => {
+      setPreviewImg({
+        src: data?.banner ? `/api/images/${data.banner}` : src
+      })
+    }
+  });
+
   const [dataSchedules, { loading: lsc }] = useSchedules({ schDay: 1 })
-  const { path, bnImageFileName } = banner || {}
   const { open, openNow } = useStatusOpenStore({ dataSchedules })
   const isLoading = lsc
   const isEmtySchedules = dataSchedules?.length === 0
@@ -46,8 +61,6 @@ export const Banner = ({ isMobile, store }: BannerProps) => {
   }
   const props = {
     altLogo,
-    banner,
-    bnImageFileName,
     fileInputRef,
     fileInputRefLogo,
     HandleDeleteBanner,
@@ -62,9 +75,10 @@ export const Banner = ({ isMobile, store }: BannerProps) => {
     onTargetClickLogo,
     open: store?.scheduleOpenAll ? 'Abierto todos los días' : open,
     openNow: store?.scheduleOpenAll ? true : openNow,
-    path,
+    isTablet,
     src,
     srcLogo,
+    handleDeleteLogo,
     store
   }
   return (<BannerStore {...props} />)

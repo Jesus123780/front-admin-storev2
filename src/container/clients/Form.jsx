@@ -60,7 +60,7 @@ export const FormClients = ({
           
             cache.modify({
               fields: {
-                getAllClients(existingData = {}) {
+                getAllClients (existingData = {}) {
                   const existingClients = existingData.data || []
                   const newData = [newClient, ...existingClients] // Incluye el nuevo cliente en la lista
                   
