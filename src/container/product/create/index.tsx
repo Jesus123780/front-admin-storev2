@@ -18,7 +18,9 @@ import {
     Divider,
     HeaderSteps,
     Row,
-    ImageProductEdit
+    ImageProductEdit,
+    Column,
+    MemoCardProductSimple
 } from 'pkg-components'
 import {
     useGetOneProductsFood,
@@ -75,9 +77,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     setName,
     setShowMore,
     showMore,
-    handleDecreaseStock,
+    handleDecreaseStock = () => { },
     handleCheckStock,
-    handleIncreaseStock,
+    handleIncreaseStock = () => { },
     checkStock,
     stock,
     active,
@@ -121,7 +123,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     } = tagsProps ?? {
         dataTags: [],
         handleAddTag: () => { return false },
-        tags: []
+        tags: {
+            tag: ''
+        }
     }
     const { handleQuery, handleCleanQuery } = useManageQueryParams({
         router,
@@ -436,7 +440,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         await handlerSteps()
     }
 
-    const valuesObj = filterKeyObject({ ...values, names }, ['ProWeight', 'carProId', 'ProHeight'])
+    const valuesObj = filterKeyObject({ ...values, names }, ['ProWeight', 'carProId', 'ProHeight'], false)
     const { error } = productSchema.validate(valuesObj)
 
     const disabled = {
@@ -446,51 +450,93 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         3: check?.noAvailability ? Boolean(!selectedDays.length > 0) : false
     }
     const asSaveAvailableProduct = disabled && selectedDays?.length > 0
-    const accepts = '.jpg,.jpeg,.png,.webp'
+
+    console.log({ propsImageEdit })
+    const {
+        preview,
+        inputRef,
+        onFileChange,
+        validTypes,
+    } = propsImageEdit ?? {}
     const components = {
-        0: <Row style={{
-            height: 'auto',
-            overflowY: 'auto',
-            overflowX: 'hidden',
-        }}>
-            <Card bgColor={getGlobalStyle('--color-base-white')} state='30%'>
+        0: <div
+            style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: getGlobalStyle('--spacing-lg'),
+                padding: getGlobalStyle('--spacing-lg'),
+                backgroundColor: getGlobalStyle('--color-base-white'),
+                height: '100%'
+            }}
+        >
+            <div>
                 <FormProduct {...propsForm} />
-            </Card>
-            <ImageProductEdit {...propsImageEdit} />
-            {false &&
-                <Card state='20%'>
-                    <Text
-                        size='sm'
-                        margin='10px 0'
-                        style={{
-                            '-webkitLine-clamp': 2,
-                            color: '#3e3e3e',
-                            fontSize: '1.125rem',
-                            lineHeight: '1.5rem',
-                            marginBottom: '9px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                        }}
-                    >
-                        Tags
-                    </Text>
-                    {!!Array.isArray(dataTags) && dataTags?.map((tag) => {
-                        return (
+            </div>
+
+            <div>
+                <ImageProductEdit {...propsImageEdit} />
+            </div>
+            <div>
+                <Text
+                    size='3xl'
+                    styles={{
+                        '-webkitLine-clamp': 2,
+                        color: '#3e3e3e',
+                        lineHeight: '1.5rem',
+                        marginBottom: '9px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                    }}
+                >
+                    Tags
+                </Text>
+                <Row style={{
+                    flexWrap: 'wrap'
+                }}>
+                    {!!Array.isArray(dataTags) &&
+                        dataTags?.map((tag) => (
                             <Button
+                                key={tag.id}
+                                onClick={() => handleAddTag(tag.id, tag.tag)}
                                 border='none'
                                 borderRadius='0'
-                                key={tag.id}
-                                onClick={() => { return handleAddTag(tag.id, tag.tag) }}
                                 padding='0'
-                                style={{ display: 'flex', flexWrap: 'wrap' }}
+                                styles={{ display: 'flex', flexWrap: 'wrap' }}
                             >
                                 <Tag label={tag.tag} />
                             </Button>
-                        )
-                    })}
-                </Card>
-            }
-        </Row>,
+                        ))}
+                </Row>
+                <Text size='3xl'>Tag seleccionado</Text>
+                {Boolean(tags?.tag !== '') && <Tag label={tags.tag} />}
+            </div>
+            <div>
+                <MemoCardProductSimple
+                    del={false}
+                    edit={false}
+                    onTargetClick={() => inputRef?.current?.click()}
+                    onFileInputChange={onFileChange}
+                    fileInputRef={inputRef}
+                    accept={validTypes}
+                    sum={checkStock}
+                    handleDecrement={() => {
+                        return handleDecreaseStock()
+                    }}
+                    handleIncrement={() => {
+                        return handleIncreaseStock()
+                    }}
+                    ProQuantity={stock}
+                    pId=''
+                    tag={tags}
+                    ProImage={preview}
+                    pName={names}
+                    ProPrice={values.ProPrice}
+                    ProDescuento={values.ProDescuento}
+                    ProDescription={values.ProDescription}
+                />
+            </div>
+        </div>
+        ,
         1: <OptionalExtraProducts
             data={dataLines}
             dataListIds={dataListIds}
@@ -499,7 +545,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             handleChangeItems={handleChangeItems}
             handleCheck={handleCheckDessert}
             handleRemoveList={handleRemoveList}
-            isCustomSubOpExPid={true}
             loadingCreateSubDessert={loadingCreateSubDessert}
             pId={pId}
             removeOneItem={removeOneItem}
@@ -510,7 +555,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         />,
         2: <div style={{ flexDirection: 'column', display: 'flex' }}>
             <Button
-                height='auto'
                 onClick={() => { return setOpenModalDessert(!openModalDessert) }}
                 primary={true}
             >
@@ -526,11 +570,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             />
         </div>,
         3: <div className='container_availability'>
-            <Text
-                color='primary'
-                fontSize='20px'
-                margin='10px 0'
-            >
+            <Text color='primary'>
                 Disponibilidad
             </Text>
             <br />

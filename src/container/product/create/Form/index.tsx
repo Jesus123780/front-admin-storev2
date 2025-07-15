@@ -77,6 +77,7 @@ export const FormProduct = ({
           })
         }}
         prefix='$'
+        defaultValue={values?.ProPrice}
         value={values?.ProPrice}
       />
       <AmountInput
@@ -95,7 +96,7 @@ export const FormProduct = ({
             }
           })
         }}
-        placeholder='$ 0.00'
+        placeholder='$0,00'
         prefix='$'
         value={values?.ProDescuento}
 
@@ -123,7 +124,7 @@ export const FormProduct = ({
             }
           })
         }}
-        placeholder='$ 0.00'
+        placeholder='$0,00'
         prefix='$'
         value={values?.ValueDelivery}
       />

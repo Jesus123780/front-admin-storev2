@@ -25,7 +25,10 @@ export interface FoodComponentMemoProps {
     tagsProps?: {
         dataTags: { id: string; tag: string }[]
         handleAddTag: (id: string, tag: string) => void
-        tags: string[]
+        tags: {
+            tag: string
+            id: number
+        }
     }
     setActive: React.Dispatch<React.SetStateAction<number>>
     setName: (name: string) => void
