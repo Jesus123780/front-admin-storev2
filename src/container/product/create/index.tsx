@@ -20,7 +20,8 @@ import {
     Row,
     ImageProductEdit,
     Column,
-    MemoCardProductSimple
+    MemoCardProductSimple,
+    InputTags
 } from 'pkg-components'
 import {
     useGetOneProductsFood,
@@ -119,7 +120,11 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     const {
         dataTags,
         handleAddTag,
-        tags
+        setNewTags,
+        newTags,
+        loadingTags,
+        registerTags,
+        tags,
     } = tagsProps ?? {
         dataTags: [],
         handleAddTag: () => { return false },
@@ -286,7 +291,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         if (active === STEPS.PRODUCT) {
             const res = await handleRegister()
             const result = res?.data?.updateProductFoods
-
             if (result?.success) {
                 sendNotification({
                     backgroundColor: 'success',
@@ -305,7 +309,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 sendNotification({
                     backgroundColor: 'error',
                     title: 'Error',
-                    description: err.message
+                    description: err.messag
                 })
             )
 
@@ -451,7 +455,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     }
     const asSaveAvailableProduct = disabled && selectedDays?.length > 0
 
-    console.log({ propsImageEdit })
     const {
         preview,
         inputRef,
@@ -490,6 +493,20 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 >
                     Tags
                 </Text>
+                <InputTags
+                    disabled={false}
+                    update={true}
+                    repeatTag={false}
+                    setTags={setNewTags}
+                    loading={loadingTags}
+                    tags={newTags}
+                    registerTags={()=> {
+                        registerTags(newTags ?? [])
+                    }}
+                    sendNotification={sendNotification}
+                />
+                <Divider marginTop={getGlobalStyle('--spacing-sm')} />
+
                 <Row style={{
                     flexWrap: 'wrap'
                 }}>
@@ -507,7 +524,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                             </Button>
                         ))}
                 </Row>
-                <Text size='3xl'>Tag seleccionado</Text>
+                <Text size='3xl'>
+                    Tag seleccionado
+                </Text>
                 {Boolean(tags?.tag !== '') && <Tag label={tags.tag} />}
             </div>
             <div>
@@ -528,7 +547,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     ProQuantity={stock}
                     pId=''
                     tag={tags}
-                    ProImage={preview}
+                    ProImage={preview ?? '/images/dish-image-placeholder.png'}
                     pName={names}
                     ProPrice={values.ProPrice}
                     ProDescuento={values.ProDescuento}

@@ -1,13 +1,13 @@
 'use client'
 
-import React from 'react'
-import { useContext } from 'react'
+import React, { useContext } from 'react'
 import { useRouter } from 'next/navigation'
 import { Context } from '../../context/Context'
 import {
   useProductsFood,
   useDeleteProductsFood,
   useCreateProduct,
+  useRegisterMultipleTags,
   useCategoriesProduct,
   useImageUploaderProduct,
 } from 'npm-pkg-hook'
@@ -41,6 +41,8 @@ export const Product = () => {
     tags,
     handleDecreaseStock,
     checkStock,
+    setNewTags, 
+    newTags,
     handleIncreaseStock,
     handleCheckStock,
     stock,
@@ -53,6 +55,19 @@ export const Product = () => {
     sendNotification,
     setAlertBox
   })
+
+  const [registerTags, { loading: loadingTags }] = useRegisterMultipleTags({
+    callback: (data: any) => {
+      const { success } = data ?? {
+        success: false
+      }
+      if (success) {
+        setNewTags([])
+      }
+      
+    }
+  })
+
   const [productsFood, { loading, fetchMore }] = useProductsFood({
     search: search?.length >= 4 ? search : '',
     gender: searchFilter?.gender || [],
@@ -67,8 +82,12 @@ export const Product = () => {
 
   const tagsProps = {
     handleRegisterTags,
+    registerTags,
     handleAddTag,
+    loadingTags,
     dataTags: dataTags,
+    setNewTags, 
+    newTags,
     tags
   }
 

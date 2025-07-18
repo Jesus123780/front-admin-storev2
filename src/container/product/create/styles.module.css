@@ -1,5 +1,4 @@
 .container_steps {
-    background: var(--color-neutral-gray);
     border-bottom: 0.5px solid var(--color-neutral-gray);
     display: flex;
     flex-direction: column;
