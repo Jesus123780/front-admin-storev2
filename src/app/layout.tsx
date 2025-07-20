@@ -7,15 +7,16 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { MemoLayout } from '@/container/Layout'
 import StyledComponentsRegistry from '@/utils/registry'
-import { ProgressBar } from 'pkg-components'
+import { BarcodeScanner, ProgressBar, ROUTES } from 'pkg-components'
 
 const ROUTES_WITHOUT_LAYOUT = new Set([
   '/',
-  '/login',
-  '/merchant',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
+  ROUTES.login,
+  ROUTES.merchant,
+  ROUTES.register,
+  ROUTES['forgot-password'],
+  ROUTES['verify-email'],
+  ROUTES['reset-password'],
   '/verify-email'
 ])
 
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ProgressBar progress={progress} hidden={hidden} />
         {isMounted && <Context>
+          {/* <BarcodeScanner /> */}
           <StyledComponentsRegistry>
             <ApolloClientProvider>
               {ROUTES_WITHOUT_LAYOUT.has(pathname)

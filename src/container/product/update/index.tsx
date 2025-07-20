@@ -110,7 +110,6 @@ export const Update = ({ id = '' } = { id: null }) => {
       dataOptional
     }
   ] = useGetOneProductsFood()
-  console.log("🚀 ~ Update ~ dataProduct:", dataProduct)
 
   const {
     handleAdd: handleAddExtra,

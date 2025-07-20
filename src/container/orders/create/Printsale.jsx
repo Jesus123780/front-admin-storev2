@@ -77,7 +77,7 @@ export const Prints = ({
 
   const dataToPrint = {
     products: data,
-    urlLogo : src ? src : src ?? '/images/DEFAULTBANNER.png',
+    urlLogo: src ? src : src ?? '/images/DEFAULTBANNER.png',
     addressStore: addressStore ?? ULocation ?? ClientAddress,
     storePhone: storePhone ?? uPhoNum,
     date: customDate,
@@ -100,7 +100,7 @@ export const Prints = ({
     <ContainerTicket>
       <div className='wrapper-action__footer'>
         <RippleButton
-          onClick={() => {return handleSubmit()}}
+          onClick={() => { return handleSubmit() }}
           radius='100%'
           widthButton='60px'
           style={{
@@ -145,7 +145,9 @@ export const Prints = ({
           <div className='divider'>
             <div></div>
           </div>
-          <Text className='centrado' fontWeight='800'>TICKET DE VENTA</Text>
+          <Text fontWeight='800'>
+            TICKET DE VENTA
+          </Text>
           <Content>
             <Item>
               <th>Descripción</th>
@@ -194,7 +196,8 @@ export const Prints = ({
                     )
                   })}
                 </React.Fragment>
-              )})}
+              )
+            })}
           </Content>
           <div className='wrapper__sub-items'>
             <div className='sub-items'>
@@ -202,16 +205,16 @@ export const Prints = ({
               </div>
               <div className='sub-item__values'>
                 {change &&
-               <div className='item--values'>
-                 <Text fontWeight='bold'>CAMBIO &nbsp;</Text>
-                 <Text fontWeight='bold'>{numberFormat(change)}</Text>
-               </div>
+                  <div className='item--values'>
+                    <Text fontWeight='bold'>CAMBIO &nbsp;</Text>
+                    <Text fontWeight='bold'>{numberFormat(change)}</Text>
+                  </div>
                 }
                 {total &&
-               <div className='item--values'>
-                 <Text fontWeight='bold'>TOTAL &nbsp;</Text>
-                 <Text fontWeight='bold'>{numberFormat(total)}</Text>
-               </div>
+                  <div className='item--values'>
+                    <Text fontWeight='bold'>TOTAL &nbsp;</Text>
+                    <Text fontWeight='bold'>{numberFormat(total)}</Text>
+                  </div>
                 }
 
               </div>

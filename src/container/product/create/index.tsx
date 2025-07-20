@@ -19,9 +19,9 @@ import {
     HeaderSteps,
     Row,
     ImageProductEdit,
-    Column,
     MemoCardProductSimple,
-    InputTags
+    InputTags,
+    Icon
 } from 'pkg-components'
 import {
     useGetOneProductsFood,
@@ -35,10 +35,7 @@ import {
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import { FormProduct } from './Form'
 import { Categories } from '../../categories'
-import {
-    Card,
-    Container
-} from './styled'
+import { Container } from './styled'
 import { Context } from '../../../context/Context'
 import { filterKeyObject } from '../../../utils'
 import { productSchema } from './schema/producSchema'
@@ -48,59 +45,59 @@ import {
     useSearchParams
 } from 'next/navigation'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
-import styles from './styles.module.css'
 import { FoodComponentMemoProps } from './types'
+import styles from './styles.module.css'
 
 const titleHeaders = ['DETALLES', 'ADICIONALES', 'COMPLEMENTOS', 'DISPONIBILIDAD']
 
 export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
+    active,
     alt,
     check,
+    checkStock,
     data,
     dataCategoriesProducts,
     dataFree,
-    fetchMore,
+    errors,
     fileInputRef,
-    handleChange,
-    handleChangeFilter,
-    handleCheckFreeShipping,
-    handleRegister,
-    handleDelete,
     image,
     loading,
-    setErrors,
     names,
-    onClickClear,
-    onTargetClick,
-    search,
-    tagsProps,
-    setActive,
-    setName,
-    setShowMore,
-    showMore,
-    handleDecreaseStock = () => { },
-    handleCheckStock,
-    handleIncreaseStock = () => { },
-    checkStock,
-    stock,
-    active,
-    src,
-    errors,
-    STEPS,
-    state: grid,
-    setShowComponentModal,
-    handleClick,
     pId,
+    propsImageEdit,
+    search,
+    showMore,
+    src,
+    state: grid,
+    STEPS,
+    stock,
+    tagsProps,
     values = {
+        carProId: '',
         ProDescription: '',
         ProDescuento: '',
         ProPrice: 0,
-        ValueDelivery: '',
-        carProId: ''
+        ValueDelivery: ''
     },
+    fetchMore,
+    handleChange,
+    handleChangeFilter,
     handleCheck,
+    handleCheckFreeShipping,
+    handleCheckStock,
+    handleClick,
+    handleDecreaseStock = () => { },
+    handleDelete,
+    handleIncreaseStock = () => { },
+    handleRegister,
+    onClickClear,
+    onTargetClick,
+    setActive,
     setCheck: setCheckAvailableDays,
-    propsImageEdit,
+    setErrors,
+    setName,
+    setShowComponentModal,
+    setShowMore,
     ...props
 }) => {
     // HOOKS
@@ -120,6 +117,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     const {
         dataTags,
         handleAddTag,
+        handleRemoveTag,
         setNewTags,
         newTags,
         loadingTags,
@@ -500,34 +498,60 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     setTags={setNewTags}
                     loading={loadingTags}
                     tags={newTags}
-                    registerTags={()=> {
+                    registerTags={() => {
                         registerTags(newTags ?? [])
                     }}
                     sendNotification={sendNotification}
                 />
                 <Divider marginTop={getGlobalStyle('--spacing-sm')} />
-
                 <Row style={{
                     flexWrap: 'wrap'
                 }}>
                     {!!Array.isArray(dataTags) &&
                         dataTags?.map((tag) => (
-                            <Button
-                                key={tag.id}
-                                onClick={() => handleAddTag(tag.id, tag.tag)}
-                                border='none'
-                                borderRadius='0'
-                                padding='0'
-                                styles={{ display: 'flex', flexWrap: 'wrap' }}
+                            <Row key={tag.id}
+                                className={styles.contain_tag_list}
+                                style={{
+                                    width: 'min-content',
+                                    display: 'flex'
+                                }}
                             >
-                                <Tag label={tag.tag} />
-                            </Button>
+                                <Button
+                                    onClick={() => handleAddTag(tag.id, tag.tag)}
+                                    border='none'
+                                    borderRadius='0'
+                                    padding='0'
+
+                                >
+                                    <Tag label={tag.tag} />
+                                </Button>
+                                <Button
+                                    onClick={() => handleRemoveTag(tag)}
+                                    border='none'
+                                    styles={{
+                                        backgroundColor: getGlobalStyle('--color-primary-pink-light'),
+                                        opacity: getGlobalStyle('--opacity-75')
+                                    }}
+                                    borderRadius='5px'
+                                    padding='0'
+
+                                >
+                                    <Icon
+                                        color={getGlobalStyle('--color-icons-primary')}
+                                        icon='IconCancel'
+                                    />
+                                </Button>
+                            </Row>
+
                         ))}
                 </Row>
-                <Text size='3xl'>
-                    Tag seleccionado
-                </Text>
-                {Boolean(tags?.tag !== '') && <Tag label={tags.tag} />}
+                {Boolean(tags?.tag !== '') && <>
+                    <Text size='3xl'>
+                        Tag seleccionado
+                    </Text>
+                    <Tag label={tags.tag} />
+                </>
+                }
             </div>
             <div>
                 <MemoCardProductSimple

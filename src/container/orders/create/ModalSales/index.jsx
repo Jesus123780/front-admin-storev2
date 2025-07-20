@@ -33,7 +33,7 @@ export const ModalSales = ({
         onHide={() => { return setPrint(!print) }}
         show={print}
         size='100%'
-        zIndex={getGlobalStyle('--z-index-high')}
+        zIndex={getGlobalStyle('--z-index-modal')}
       >
         <Prints
           change={values?.change}

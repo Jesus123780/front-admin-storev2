@@ -17,3 +17,11 @@
     left: 0;
     position: sticky;
 }
+
+.contain_tag_list {
+  transition: transform 0.3s ease;
+}
+
+.contain_tag_list:hover {
+  transform: scale(1.05);
+}

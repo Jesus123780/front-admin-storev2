@@ -29,7 +29,8 @@ import {
   Plan,
   PaymentAlert,
   Icon,
-  AlertInfo
+  AlertInfo,
+  FloatingScanButtons
 } from 'pkg-components'
 import {
   // useConnection,
@@ -67,6 +68,7 @@ import { ScheduleTimings } from '../schedule'
 import { Product } from '../product'
 import { Categories } from '../categories'
 import styles from './styles.module.css'
+import { ModalScanner } from '../ModalScanner'
 
 interface MemoLayoutProps {
   children: React.ReactNode
@@ -97,6 +99,8 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setCollapsed,
     setIsOpenOrder,
     setSalesOpen,
+    toggleModal,
+    modalsLector,
     setShowComponentModal,
     setStatus
   } = useContext(Context)
@@ -299,7 +303,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     '/dashboard': { 3: heights[3] }
   }
   const customHeights = heightsByRoute[pathname] || heights[showModalComponent as keyof typeof heights]
- const onDragEnd = async (result) => {
+  const onDragEnd = async (result) => {
     const { destination, source } = result;
 
     // Si no se ha movido el ítem (destino es null o es el mismo), no hacer nada
@@ -330,6 +334,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   const handleColapsedMenu = () => {
     setIsColapsedMenu(!isColapsedMenu)
   }
+  console.log({ modalsLector })
   return (
     <>
       <Head>
@@ -410,6 +415,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           collapsed={collapsed ? true : undefined}
           countOrders={countOrders as number}
           dataStore={dataStore}
+          pathname={pathname}
           isColapsedMenu={isColapsedMenu}
           handleColapsedMenu={handleColapsedMenu}
           handleClick={handleClick}
@@ -418,7 +424,6 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           isMobile={isMobile}
           loading={false}
           loadingDeliveryTime={loadingDeliveryTime}
-          location={location}
           logicalVersion={logicalVersion}
           modules={modulesOrder}
           onDragEnd={onDragEnd}
@@ -437,11 +442,21 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
             marginBottom: '35px'
           }}
         >
-          <>
+          <React.Fragment>
             {children}
             <div className={styles.fade_main_button} />
-            {false && !loading && <PaymentAlert text={daysRemaining > 0 ? `Disfruta de tu periodo de prueba, Quedan ${daysRemaining} día(s) de prueba gratuita.` : 'Tu período de prueba gratuita ha finalizado.'} />}
-          </>
+            {/* {false && !loading && <PaymentAlert text={daysRemaining > 0 ? `Disfruta de tu periodo de prueba, Quedan ${daysRemaining} día(s) de prueba gratuita.` : 'Tu período de prueba gratuita ha finalizado.'} />} */}
+            <FloatingScanButtons
+              onOpenQRModal={() => toggleModal('barcode')}
+              onOpenBarcodeModal={() => toggleModal('qr')}
+            />
+            <ModalScanner
+              show={modalsLector}
+              onHide={() => {
+                toggleModal(false)
+              }}
+            />
+          </React.Fragment>
           <CreateSales setShow={setSalesOpen} show={salesOpen} />
           <div
             style={{
@@ -461,7 +476,6 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           </div>
         </div>
         <Footer />
-
         <div style={{ gridArea: 'right' }} className={styles.area_right_container}>
           <LateralModal
             handleClose={onCloseLateralMenu}

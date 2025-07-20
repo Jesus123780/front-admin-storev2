@@ -97,8 +97,28 @@ const Provider = ({ children }) => {
   const [show, setShow] = useState(null)
   const [showModalComponent, setShowComponentModal] = useState(false)
   const [status, setStatus] = useState('close')
-  const router = useRouter()
 
+  const router = useRouter()
+  /**
+ * Hook to manage modal states for QR and barcode scanner modals
+ * @typedef {Object} ModalStates
+ * @property {boolean} qr - Indicates if the QR modal is open
+ * @property {boolean} barcode - Indicates if the barcode modal is open
+ *
+ * @returns {[ModalStates, (modal: keyof ModalStates, value: boolean) => void]} 
+ * Returns modal state object and a setter function for individual modals
+ */
+  const [modalsLector, setModalsLector] = useState(false)
+
+/**
+ * Sets the open/close state of a specific modal.
+ * If opening one modal, closes the other automatically.
+ * @param {keyof ModalStates} modal - Modal key ('qr' or 'barcode')
+ * @param {boolean} value - Whether to open (true) or close (false) the modal
+ */
+const toggleModal = index => {
+  setModalsLector(prev => (prev === index ? false : index));
+};
   const setSessionActive = useCallback(sessionValue => { return setIsSession(sessionValue) }, [])
   // const pathname = router.pathname === '/dashboard/[...name]'
   const pathname = usePathname()
@@ -286,8 +306,10 @@ const Provider = ({ children }) => {
         show,
         showModalComponent,
         status,
+        modalsLector,
         handleClick,
         handleMenu,
+        toggleModal,
         sendNotification,
         setIsOpenOrder,
         setCollapsed,
@@ -324,6 +346,7 @@ const Provider = ({ children }) => {
       salesOpen,
       selectedStore,
       show,
+      modalsLector,
       showModalComponent,
       status,
       handleClick,
@@ -332,6 +355,7 @@ const Provider = ({ children }) => {
       setCompanyLink,
       setIsOpenOrder,
       setMessagesToast,
+      toggleModal,
       setSalesOpen,
       setSessionActive,
       setShowComponentModal,

@@ -4,11 +4,10 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import {
   getGlobalStyle,
-  EColor,
-  NorthTexasGreen,
   Checkbox,
   Button,
-  Icon
+  Icon,
+  Tag
 } from 'pkg-components'
 import { CardsComponent, GarnishChoicesHeader } from './styled'
 
