@@ -7,6 +7,7 @@ import {
   AmountInput,
   Divider,
   getGlobalStyle,
+  ImageProductEdit,
   InputHooks,
   RippleButton
 } from 'pkg-components'
@@ -54,6 +55,7 @@ export const FormMemo: React.FC<FormProps> = ({
   alt = '',
   src = '',
   loading = false,
+  propsImageEdit,
   errorForm = {
     ProDescription: false,
     ProDescuento: false,
@@ -126,6 +128,8 @@ export const FormMemo: React.FC<FormProps> = ({
           type='file'
         />
       </ContentImage>
+      <ImageProductEdit {...propsImageEdit} />
+
       <InputHooks
         error={errorForm?.pName}
         info='Nombre del producto que se mostrará en la tienda'

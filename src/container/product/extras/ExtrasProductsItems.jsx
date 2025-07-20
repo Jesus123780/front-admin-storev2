@@ -52,7 +52,6 @@ export const ExtrasProductsItems = ({
     handleRemove: (i, exPid) => { return { i, exPid } },
     onSubmitUpdate: (pId) => { return pId },
     setModal: () => { return },
-    useAmountInput: () => { return }
   },
   ...props
 }) => {
@@ -72,7 +71,6 @@ export const ExtrasProductsItems = ({
     handleDecrementExtra
   }
   const [_, handleRemoveSubProductOptional] = useDeleteSubProductOptional()
-
   return (
     <Column>
       {dataExtra?.length > 0 &&

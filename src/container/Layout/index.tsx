@@ -334,7 +334,6 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   const handleColapsedMenu = () => {
     setIsColapsedMenu(!isColapsedMenu)
   }
-  console.log({ modalsLector })
   return (
     <>
       <Head>
@@ -446,16 +445,20 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
             {children}
             <div className={styles.fade_main_button} />
             {/* {false && !loading && <PaymentAlert text={daysRemaining > 0 ? `Disfruta de tu periodo de prueba, Quedan ${daysRemaining} día(s) de prueba gratuita.` : 'Tu período de prueba gratuita ha finalizado.'} />} */}
-            <FloatingScanButtons
-              onOpenQRModal={() => toggleModal('barcode')}
-              onOpenBarcodeModal={() => toggleModal('qr')}
-            />
-            <ModalScanner
-              show={modalsLector}
-              onHide={() => {
-                toggleModal(false)
-              }}
-            />
+            {false &&
+              <>
+                <FloatingScanButtons
+                  onOpenQRModal={() => toggleModal('barcode')}
+                  onOpenBarcodeModal={() => toggleModal('qr')}
+                />
+                <ModalScanner
+                  show={modalsLector}
+                  onHide={() => {
+                    toggleModal(false)
+                  }}
+                />
+              </>
+            }
           </React.Fragment>
           <CreateSales setShow={setSalesOpen} show={salesOpen} />
           <div

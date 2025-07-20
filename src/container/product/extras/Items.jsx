@@ -31,7 +31,9 @@ const Items = ({
           <div key={extra.exPid}>
             <CardsComponent>
               <div>
-                <h3 className='title_card'>{extra?.extraName || ''}</h3>
+                <h3 className='title_card'>
+                  {extra?.extraName || ''}
+                </h3>
                 <div style={{ position: 'relative' }}>
                   {!!extra?.newExtraPrice && extra.quantity > 1 && (
                     <span className='price-neto' title='precio neto'>

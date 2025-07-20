@@ -17,6 +17,7 @@ import {
   Content
 } from './styled'
 import { ExtrasProductsItems } from '@/container/product/extras/ExtrasProductsItems'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const SubItems = ({
   dataExtra = [],
@@ -67,7 +68,7 @@ export const SubItems = ({
       btnConfirm={false}
       customHeight='60vh'
       footer={false}
-      header={false}
+      header={true}
       height='60vh'
       onCancel={() => {
         return false
@@ -78,13 +79,16 @@ export const SubItems = ({
       padding={0}
       question={false}
       show={modalItem}
-      size='600px'
+      size={MODAL_SIZES.medium}
       sizeIconClose='30px'
-      title=''
-      zIndex={getGlobalStyle('--z-index-99999')}
+      title='Listado de sub productos'
+      
+      zIndex={getGlobalStyle('--z-index-modal')}
     >
       <Content>
-        <div className='header'>{pName}</div>
+        <div className='header'>
+          {pName}
+        </div>
         <Container>
           {loading ? (
             <LoaderSubItem />

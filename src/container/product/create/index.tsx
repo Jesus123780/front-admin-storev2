@@ -224,7 +224,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     const handleOpenModalDessert = () => {
         setOpenModalDessert(!openModalDessert)
     }
-    const [handleGetOneProduct, { dataExtra }] = useGetOneProductsFood()
+    const [handleGetOneProduct, { dataExtra }] = useGetOneProductsFood({ fetchOnlyProduct: false })
 
     const handleOpenCloseAlert = () => {
         setOpenAlertClose(!openAlertClose)
@@ -244,6 +244,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         inputRefs,
         handleCleanLines: CleanLines
     } = useDessertWithPrice({ sendNotification, setAlertBox, dataExtra })
+        console.log("🚀 ~ LineItems:", LineItems)
 
     const propsExtra = {
         handleAdd: handleAddExtra,

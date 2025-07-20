@@ -32,6 +32,7 @@ import {
   useAmountInput,
   useSetImageProducts,
   useDeleteProductsFood,
+  useImageUploaderProduct,
   useUpdateManageStock,
   useDessert,
   useEditProduct
@@ -41,6 +42,7 @@ import { useRouter } from 'next/navigation'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import { Form } from './Form'
 import styles from './styles.module.css'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const Update = ({ id = '' } = { id: null }) => {
   // STATES
@@ -348,7 +350,7 @@ export const Update = ({ id = '' } = { id: null }) => {
             if (response?.data?.editProductFoods?.success) {
               updateImageProducts({
                 pId: id,
-                image: {}
+                image
               })
               const { message, success } = response?.data?.editProductFoods || {}
               sendNotification({
@@ -398,6 +400,11 @@ export const Update = ({ id = '' } = { id: null }) => {
     // eslint-disable-next-line
   }, [id, router, dataProduct])
 
+   const propsUploadProductImage = useImageUploaderProduct({
+    sendNotification
+  })
+  const { image } = propsUploadProductImage
+
   return (
     <div className={styles.content}>
       <div className={styles.container}>
@@ -410,7 +417,7 @@ export const Update = ({ id = '' } = { id: null }) => {
           }}
           padding={getGlobalStyle('--spacing-lg')}
           show={alertModal}
-          size='40%'
+          size={MODAL_SIZES.small}
           title='¿Eliminar este producto?'
           zIndex={getGlobalStyle('--z-index-99999')}
         >
@@ -419,28 +426,22 @@ export const Update = ({ id = '' } = { id: null }) => {
             type='warning'
           />
           <Row justifyContent='space-between'>
-            <RippleButton
-              margin={getGlobalStyle('--spacing-md')}
-
+            <Button
               onClick={() => {
                 return setAlertModal(false)
               }}
-              radius='5px'
-              widthButton='45%'
             >
               Cancelar
-            </RippleButton>
-            <RippleButton
+            </Button>
+            <Button
+              primary={true}
               loading={loadingDeleteProduct}
-              margin={getGlobalStyle('--spacing-md')}
               onClick={() => {
                 return handleClickDelete()
               }}
-              radius='5px'
-              widthButton='45%'
             >
               Confirmar
-            </RippleButton>
+            </Button>
           </Row>
         </AwesomeModal>
         <>
@@ -453,6 +454,7 @@ export const Update = ({ id = '' } = { id: null }) => {
             handleChange={handleChange}
             handleForm={handleForm}
             loading={loading}
+            propsImageEdit={propsUploadProductImage}
             onFileInputChange={onFileInputChange}
             onTargetClick={onTargetClick}
             src={src}

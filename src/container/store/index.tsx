@@ -12,8 +12,10 @@ import {
   useDessert,
   useManageQueryParams,
   onClickLogout,
+  useImageUploaderProduct,
   errorHandler,
   useDessertWithPrice,
+  useSetImageProducts,
   getCategoriesWithProduct,
   useSaveAvailableProduct,
   useStore
@@ -125,6 +127,7 @@ export const Store = () => {
     ProDescription,
     ProImage
   } = product || {}
+    console.log("🚀 ~ Store ~ ProImage:", ProImage)
 
   const { storeName } = getStore || {}
   const { storeName: nameStore } = store || {}
@@ -327,7 +330,8 @@ export const Store = () => {
     ? product?.getAllAvailableProduct?.map((day: AvailableProduct) => {
       return day?.dayAvailable;
     })
-    : [];
+    : []
+
   const { days } = useSaveAvailableProduct()
   const [alertModal, setAlertModal] = useState(false)
   const [checkStock, setCheckStock] = useState(false)
@@ -358,7 +362,26 @@ export const Store = () => {
       return newState
     })
   }
+  const propsUploadProductImage = useImageUploaderProduct({
+    sendNotification
+  })
+  const { image } = propsUploadProductImage
 
+  const [updateImageProducts] = useSetImageProducts()
+
+  const handleUpdateImageProduct = async () => {
+    const response = await updateImageProducts({
+      pId,
+      image
+    })
+
+    const { message, success } = response?.data?.editProductFoods || {}
+    sendNotification({
+      title: 'Exitoso',
+      description: message,
+      backgroundColor: success ? 'success' : 'warning'
+    })
+  }
   const productProps = {
     dataExtra,
     handleCheckStock,
@@ -377,12 +400,14 @@ export const Store = () => {
     pName: pName,
     ProDescription: ProDescription,
     ProDescuento: ProDescuento,
-    ProImage: ProImage,
+    ProImage,
     ProPrice: ProPrice,
     selectedDays,
     showDessert: showDessert,
     store: store,
-    storeName: storeName,
+    storeName,
+    propsUploadProductImage,
+    handleUpdateImageProduct,
     handleDelete: handleDeleteProduct,
     onHideDessert: () => { return setShowDessert(!showDessert) },
     setModal: handleOpenModalAdditional,

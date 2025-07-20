@@ -19,10 +19,11 @@ import {
   AlertInfo,
   BarCodes,
   getGlobalStyle,
-  ToggleSwitch
+  ToggleSwitch,
+  ImageProductEdit
 } from 'pkg-components'
 import PropTypes from 'prop-types'
-import { generateStoreURL } from 'npm-pkg-hook'
+import { generateStoreURL, useImageUploaderProduct } from 'npm-pkg-hook'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import styles from './styles.module.css'
 
@@ -53,6 +54,7 @@ export const ProductView = ({
   },
   storeName = '',
   showDessert,
+  propsUploadProductImage,
   setModal = () => {
     return
   },
@@ -71,6 +73,9 @@ export const ProductView = ({
   pId = null,
   ProBarCode = null,
   checkStock = false,
+  handleUpdateImageProduct = () => {
+    return
+  },
   handleCheckStock = () => {
     return
   },
@@ -84,15 +89,16 @@ export const ProductView = ({
     department,
     idStore
   } = store
-  const urlStore = generateStoreURL({ 
-    city, 
-    department, 
-    storeName, 
+  const urlStore = generateStoreURL({
+    city,
+    department,
+    storeName,
     idStore
   })
 
+
   return (
-    <div {...props} style={{ height: '100%', overflow: 'hidden' }}>
+    <div {...props} style={{ height: '100%' }}>
       <Row>
         <Button
           onClick={() => {
@@ -126,7 +132,14 @@ export const ProductView = ({
           Eliminar
         </Button>
       </Row>
-      <div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))',
+        gap: '1rem',
+        alignItems: 'start',
+        padding: '1rem',
+      }}
+      >
         <div>
           <Image
             alt={ProDescription || 'img'}
@@ -138,19 +151,25 @@ export const ProductView = ({
             src={ProImage?.startsWith('/images/placeholder-image.webp') ? '/images/placeholder-image.webp' : `/api/images/${ProImage}`}
             width={440}
           />
+          <ImageProductEdit {...propsUploadProductImage} />
+          <Button onClick={handleUpdateImageProduct} primary={true}>
+            Guardar imagen
+          </Button>
         </div>
         <div>
-          
+
           <Column>
             <Text size='5xl'>
               {pName}
             </Text>
           </Column>
-          <Divider marginTop='0.625rem' />
+          <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+
           <Text color='gray-dark' size='md'>
             {ProDescription}
           </Text>
-          <Divider marginTop='0.625rem' />
+          <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+
           <Row>
             <Text
               className={styles.text_prices}
@@ -159,12 +178,14 @@ export const ProductView = ({
             >
               {numberFormat(ProPrice)}
             </Text>
-            <Divider marginTop='0.625rem' />
+            <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+
             <Text className={[styles.text_prices, styles.text_prices__discount]} size='md'>
               {numberFormat(ProDescuento)}
             </Text>
           </Row>
-          <Divider marginTop='0.625rem' />
+          <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+
           <div>
             {store && !!nameStore && (
               <Link
@@ -196,6 +217,17 @@ export const ProductView = ({
               successColor='green'
             />
           </Column>
+          {tag?.nameTag !== null ? (
+            <div>
+              <Text color='gray-dark' size='sm'>
+                Tag descripción del producto
+              </Text>
+              <div>
+                {tag?.nameTag ? <Tag label={tag.nameTag} /> : null}
+              </div>
+            </div>
+          ) : null}
+          <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           {loading ? (
             <LoaderSubItem />
           ) : (
@@ -222,7 +254,8 @@ export const ProductView = ({
                   selectedDays={selectedDays}
                 />
               </div>
-              <Divider marginTop='0.625rem' />
+              <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+
               <AlertInfo message='Estos son los días de la semana en que el producto estará disponible' type='warning' />
             </Column>
           ) : (
@@ -233,14 +266,6 @@ export const ProductView = ({
             </div>
           )}
         </div>
-        {tag?.nameTag !== null ? (
-          <div>
-            <Text color='gray-dark' size='sm'>
-              Tag descripción del producto
-            </Text>
-            <div>{tag?.nameTag ? <Tag label={tag.nameTag} /> : null}</div>
-          </div>
-        ) : null}
       </div>
       <AwesomeModal
         customHeight='calc(100vh - 100px)'
