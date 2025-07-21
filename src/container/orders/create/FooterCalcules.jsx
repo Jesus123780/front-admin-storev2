@@ -1,4 +1,5 @@
-import React from 'react'
+'use client'
+
 import PropTypes from 'prop-types'
 import { BGColor, PColor } from 'public/colors'
 import { numberFormat } from '../../utils'
@@ -20,7 +21,7 @@ const FooterCalcules = ({
     <ContentCalcules>
       <Box display='flex' width='100%'>
         <Text as='h2' fontSize='1em'>
-          $ {numberFormat(totalProductPrice)}
+          {numberFormat(totalProductPrice)}
         </Text>
         &nbsp;
         &nbsp;

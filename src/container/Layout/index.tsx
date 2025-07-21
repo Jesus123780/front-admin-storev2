@@ -412,7 +412,6 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
 
         <Aside
           collapsed={collapsed ? true : undefined}
-          countOrders={countOrders as number}
           dataStore={dataStore}
           pathname={pathname}
           isColapsedMenu={isColapsedMenu}

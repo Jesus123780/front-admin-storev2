@@ -82,9 +82,9 @@ export const SuccessSaleModal = ({
       }}
       show={openCurrentSale}
       size='100%'
-      zIndex={getGlobalStyle('--z-index-high')}
+      zIndex={getGlobalStyle('--z-index-modal')}
     >
-      {loading && <Loading />}
+      {/* {loading && <Loading />} */}
       <div>
         <div className={styles['container__success-invoice']} >
           <Text size='xl' >Resumen de pedido ref: # <Text color='primary' size='xxl' >{code}</Text></Text>

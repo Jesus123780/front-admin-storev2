@@ -111,7 +111,7 @@ export const Prints = ({
           <Icon icon='IconSales' color={getGlobalStyle('--color-icons-white')} />
         </RippleButton>
       </div>
-      {isPrinting && <Loading />}
+      {/* {isPrinting && <Loading />} */}
       <TemplateTicket componentRef={componentRef} dataToPrint={dataToPrint} />
       <Ticket >
         <div

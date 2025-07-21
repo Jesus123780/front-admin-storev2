@@ -129,7 +129,6 @@ export const FormMemo: React.FC<FormProps> = ({
         />
       </ContentImage>
       <ImageProductEdit {...propsImageEdit} />
-
       <InputHooks
         error={errorForm?.pName}
         info='Nombre del producto que se mostrará en la tienda'

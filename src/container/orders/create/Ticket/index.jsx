@@ -37,7 +37,7 @@ export const Ticket = ({ componentRef, dataToPrint }) => {
     date
   }
   const urlStore = generateStoreURL({ city, department, storeName, idStore })
-
+  console.log({componentRef})
   return (
     <div ref={componentRef}>
       <Bill

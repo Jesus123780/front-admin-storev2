@@ -310,6 +310,7 @@ export const DragOrders = ({
     content: () => { return componentRef.current },
     onBeforeGetContent: () => {
       return new Promise((resolve) => {
+        console.log({promiseResolveRef})
         promiseResolveRef.current = resolve
         setIsPrinting(true)
       })

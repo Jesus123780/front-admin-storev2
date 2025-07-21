@@ -59,6 +59,7 @@ export const CreateSales = ({
   const date = new Date()
   const [fetchMoreLoader, setFetchMoreLoader] = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
+  console.log("🚀 ~ isPrinting:", isPrinting)
   const [prod, setProd] = useState(null)
   const componentRef = useRef()
   const promiseResolveRef = useRef(null)
@@ -228,6 +229,7 @@ export const CreateSales = ({
       setIsPrinting(false)
     }
   })
+        console.log("🚀 ~ returnnewPromise ~ promiseResolveRef:", promiseResolveRef)
 
   const { ClientAddress } = client || {
     clientName: '',
@@ -415,7 +417,7 @@ export const CreateSales = ({
 
   return (
     <>
-      {openCurrentSale && (
+      {/* {openCurrentSale && ( */}
         <SuccessSaleModal
           code={code}
           dispatch={dispatch}
@@ -430,10 +432,10 @@ export const CreateSales = ({
           router={router}
           setOpenCurrentSale={setOpenCurrentSale}
         />
-      )}
-      {data?.PRODUCT?.length > 0 ? (
+      {/* )} */}
+      {/* {data?.PRODUCT?.length > 0 ? ( */}
         <ModalSales {...restPropsSalesModal} />
-      ) : null}
+      {/* ) : null} */}
 
       <GenerateSalesPkg
         client={client}
