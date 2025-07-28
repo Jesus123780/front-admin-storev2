@@ -1,4 +1,4 @@
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, useContext, useMemo } from 'react';
 import type { ComponentInfo } from '../helpers';
 
 import { useDashboardComponents } from 'npm-pkg-hook';
@@ -8,12 +8,14 @@ import { Coordinates, DashboardComponent } from './types';
 
 const DEFAULT = {
   components: [],
+  loading: false,
   setComponents: () => { },
   handleAddComponent: () => { },
 } as {
   components: ComponentInfo[]
   setComponents: React.Dispatch<React.SetStateAction<ComponentInfo[]>>
   handleAddComponent: () => void;
+  loading: boolean
 };
 
 const ComponentsContext = createContext(DEFAULT);
@@ -23,7 +25,7 @@ export const useComponents = () => useContext(ComponentsContext);
 export const ComponentsContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 
-  const { data } = useDashboardComponents({
+  const { data, loading } = useDashboardComponents({
     callback: (data: DashboardComponent[]) => {
       const components = data.map((component) => {
         return {
@@ -52,13 +54,16 @@ export const ComponentsContextProvider: React.FC<{ children: React.ReactNode }> 
     };
     setComponents((prev) => [...prev, newComponent]);
   }
+  const memoizedValue = useMemo(() => ({
+    components,
+    loading,
+    setComponents,
+    handleAddComponent,
+  }), [components, loading]);
+
   return (
     <ComponentsContext.Provider
-      value={{
-        components: components,
-        setComponents,
-        handleAddComponent,
-      }}
+      value={memoizedValue}
     >
       {children}
     </ComponentsContext.Provider>

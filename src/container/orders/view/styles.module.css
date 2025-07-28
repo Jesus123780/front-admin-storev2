@@ -14,8 +14,6 @@
     gap: 20px;
     background-color: var(--color-neutral-gray-light);
     display: flex;
-    padding: var(--spacing-2xl);
-
 }
 .title {
     display: inline-block;

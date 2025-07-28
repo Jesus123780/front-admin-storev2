@@ -10,20 +10,28 @@
     width: 300px;
 }
 
+.column_list {
+    background-color: var(--color-base-white);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-xs);
+    height: 100%;
+}
+
 .row_sales {
     gap: 20px;
     background-color: var(--color-neutral-gray-light);
     display: flex;
     padding: var(--spacing-2xl);
-
+    border-radius: var(--border-radius-xs);
 }
+
 .title {
     display: inline-block;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     max-width: 100%;
-    font-size: var(--font-size-titles-3xs);
+    font-size: var(--font-size-titles-xs);
 }
 
 .card {

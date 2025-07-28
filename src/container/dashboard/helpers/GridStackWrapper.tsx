@@ -23,6 +23,7 @@ import { ChatStatistic } from '@/container/ChatStatistic'
 import { TeamStore } from '@/container/TeamStore'
 import { Context } from '@/context/Context'
 import { Devices } from '@/container/Devices'
+import { Loading } from '../components'
 
 
 export const COMPONENT_MAP = {
@@ -246,14 +247,16 @@ const ControlledStack = ({ items, setComponents }: ControlledStackProps) => {
                     return (
                         <div
                             {...attrs}
-                            key={item.id}
+
                         >
-                            <Column style={{
-                                position: 'absolute',
-                                top: -15,
-                                left: 10,
-                                width: '100%'
-                            }}>
+                            <Column
+                                key={item.id}
+                                style={{
+                                    position: 'absolute',
+                                    top: -15,
+                                    left: 10,
+                                    width: '100%'
+                                }}>
                                 <Text as='h2' size='2xl'>
                                     {item.title}
                                 </Text>
@@ -270,7 +273,8 @@ const ControlledStack = ({ items, setComponents }: ControlledStackProps) => {
 };
 
 export const GridStackWrapper = () => {
-    const { components: items, setComponents } = useComponents();
+    const { components: items, setComponents, loading } = useComponents();
+    if (loading) return <Loading />
     return (
         <div>
             <div>

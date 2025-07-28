@@ -120,10 +120,10 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   const [count, { loading: loadingCount }] = useTotalSales()
   const style = useScrollHook()
   const { scrollNav } = useScrollColor()
-  const [isColapsedMenu, setIsColapsedMenu] = useState(false)
+  const [isCollapsedMenu, setIsColapsedMenu] = useState(false)
   const { isMobile, isTablet } = useMobile({
     callback: ({ isMobile }: { isMobile: boolean }) => {
-      return setIsColapsedMenu(isMobile ? false : isColapsedMenu)
+      return setIsColapsedMenu(isMobile ? false : isCollapsedMenu)
     }
   })
 
@@ -331,8 +331,8 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   };
 
 
-  const handleColapsedMenu = () => {
-    setIsColapsedMenu(!isColapsedMenu)
+  const handleCollapsedMenu = () => {
+    setIsColapsedMenu(!isCollapsedMenu)
   }
   return (
     <>
@@ -388,7 +388,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       />
 
       <AlertBox err={error} />
-      <main className={`${styles.main} ${!Boolean('/' !== pathname) ? styles.noAside : ''} ${Boolean(isColapsedMenu) ? styles.collapsed_main : ''}`}>
+      <main className={`${styles.main} ${!Boolean('/' !== pathname) ? styles.noAside : ''} ${Boolean(isCollapsedMenu) ? styles.collapsed_main : ''}`}>
         <Header
           count={count}
           countOrders={countOrders}
@@ -414,8 +414,8 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           collapsed={collapsed ? true : undefined}
           dataStore={dataStore}
           pathname={pathname}
-          isColapsedMenu={isColapsedMenu}
-          handleColapsedMenu={handleColapsedMenu}
+          isCollapsedMenu={isCollapsedMenu}
+          handleCollapsedMenu={handleCollapsedMenu}
           handleClick={handleClick}
           handleOpenDeliveryTime={handleOpenDeliveryTime}
           isElectron={isElectron}
@@ -436,14 +436,12 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
             backgroundColor: getGlobalStyle('--color-neutral-gray-white'),
             gridArea: 'main',
             overflowY: 'auto',
-            scrollbarColor: getGlobalStyle('--color-neutral-gray-light'),
             marginBottom: '35px'
           }}
+          className={styles.main_app_content}
         >
           <React.Fragment>
             {children}
-            <div className={styles.fade_main_button} />
-            {/* {false && !loading && <PaymentAlert text={daysRemaining > 0 ? `Disfruta de tu periodo de prueba, Quedan ${daysRemaining} día(s) de prueba gratuita.` : 'Tu período de prueba gratuita ha finalizado.'} />} */}
             {false &&
               <>
                 <FloatingScanButtons

@@ -1,10 +1,10 @@
 import React from 'react'
-import { Orders } from '../../container/orders'
 import type { Metadata } from 'next'
+import { OrdersView } from '@/container/orders/view'
 
 const orders = () => {
   return (
-    <Orders />
+    <OrdersView />
   )
 }
 

@@ -1,15 +1,14 @@
 import { gql } from '@apollo/client'
 
-export const CHANGE_STATE_STORE_PEDIDO = gql`
-mutation changePPStatePPedido($pPStateP: Int, $pCodeRef: String, $pDatMod: String) {
-  changePPStatePPedido(pPStateP: $pPStateP, pCodeRef: $pCodeRef,  pDatMod: $pDatMod){
+export const CHANGE_STATE_STORE_ORDER = gql`
+mutation changePPStateOrder($pPStateP: Int, $pCodeRef: String, $pDatMod: String) {
+  changePPStateOrder(pPStateP: $pPStateP, pCodeRef: $pCodeRef,  pDatMod: $pDatMod){
     success
     message
   }
 }
-
 `
-export const GET_ALL_PEDIDOS = gql`
+export const GET_ALL_ORDER = gql`
 query getStoreOrdersFinal($idStore: ID, $search: String, $min: Int, $max: Int, $statusOrder: Int) {
   getStoreOrdersFinal(idStore: $idStore, search: $search, min: $min, max: $max, statusOrder: $statusOrder) {
     pdpId

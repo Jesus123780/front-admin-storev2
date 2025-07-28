@@ -14,37 +14,15 @@
   transition: grid-template-columns 0.3s ease;
 }
 
-.main::-webkit-scrollbar {
-  width: 6px;
-}
 
-.main::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.main::-webkit-scrollbar-thumb {
-  background-color: rgba(100, 100, 100, 0.1);
-  border-radius: 4px;
-}
-
-.fade_main_button {
-  position: fixed;
-  right: 0;
-  width: calc(100% - 210px);
-  bottom: 0;
-  z-index: var(--z-index-high);
-}
-
-
-.fade_main_button::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 150px;
+.main_app_content::after {
   background: linear-gradient(to top, var(--color-base-white) 0%, transparent 100%);
+  bottom: 0;
+  content: '';
+  height: 150px;
   pointer-events: none;
+  position: absolute;
+  width: calc(100% - 210px);
 }
 
 .collapsed_main {
@@ -58,7 +36,6 @@
 /* area_right_container */
 .area_right_container {
   background-color: var(--color-neutral-gray-white);
-  scrollbar-color: var(--color-neutral-gray-light) transparent;
 }
 
 @media (max-width: 960px) {
@@ -68,7 +45,7 @@
 }
 
 @media screen and (max-width: 960px) {
-  .fade_main_button {
+  .main_app_content {
     width: 100%;
   }
 }

@@ -7,10 +7,10 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { MemoLayout } from '@/container/Layout'
 import StyledComponentsRegistry from '@/utils/registry'
-import { BarcodeScanner, ProgressBar, ROUTES } from 'pkg-components'
+import { ProgressBar, ROUTES } from 'pkg-components'
 
 const ROUTES_WITHOUT_LAYOUT = new Set([
-  '/',
+  ROUTES.index,
   ROUTES.login,
   ROUTES.merchant,
   ROUTES.register,
