@@ -14,7 +14,10 @@ import {
   DragDropContext,
   Droppable,
   Draggable,
-  Option
+  Option,
+  Button,
+  Icon,
+  Row
 } from 'pkg-components'
 import { updateMultipleCache } from '../../../../utils'
 import { useApolloClient, useMutation } from '@apollo/client'
@@ -118,57 +121,6 @@ export const DragOrders: React.FC<IDragOrders> = ({
   //   change: 0,
   //   getStoreOrders: []
   // }
-
-  // const [changePPStateOrder, { loading: LoadingStatusOrder }] = useMutation(CHANGE_STATE_STORE_ORDER, {
-  //   onError: (res) => {
-  //     return sendNotification({
-  //       title: 'Exitoso',
-  //       description: res.changePPStateOrder.message,
-  //       backgroundColor: 'error'
-  //     })
-  //   },
-  //   onCompleted: (res) => {
-  //     if (!res || !res.changePPStateOrder) {
-  //       // No se recibió una respuesta válida o no hay datos en changePPStateOrder
-  //       return
-  //     }
-  //     const { success, message } = res?.changePPStateOrder || {}
-
-  //     if (success) {
-  //       const codeRef = pCodeRef
-  //       const pSState = stateSale
-
-  //       if (!codeRef || !pSState) {
-  //         // Verificar que codeRef y pSState tengan valores válidos
-  //         return
-  //       }
-  //       client.cache.modify({
-  //         fields: {
-  //           getAllOrdersFromStore(existingOrders = []) {
-  //             try {
-  //               return updateExistingOrders(existingOrders, codeRef, pSState)
-  //             } catch (e) {
-  //               return existingOrders
-  //             }
-  //           }
-  //         }
-  //       })
-  //       sendNotification({
-  //         title: 'Exitoso',
-  //         description: message,
-  //         backgroundColor: 'success'
-  //       })
-  //       setPCodeRef(null)
-  //     }
-  //     if (!success) {
-  //       sendNotification({
-  //         title: 'Exitoso',
-  //         description: message,
-  //         backgroundColor: 'error'
-  //       })
-  //     }
-  //   }
-  // })
 
   // const handleOpenActions = () => {
   //   setOpenAction(!openAction)
@@ -376,109 +328,118 @@ export const DragOrders: React.FC<IDragOrders> = ({
       } */}
       {/* <SubItems {...modalItems} /> */}
       {/* {false && <Ticket componentRef={componentRef} dataToPrint={dataToPrint} />} */}
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="columns" direction="horizontal" type="COLUMN">
-          {(provided) => (
-            <div
-              className={styles.row_sales}
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            >
-              {list.map((grp, index) => {
-                const { statusKey: title, items = [] } = grp ?? {}
-                const bg = grp?.getStatusOrderType?.backgroundColor
-                const color = grp?.getStatusOrderType?.color
+      <Row>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="columns" direction="horizontal" type="COLUMN">
+            {(provided) => (
+              <div
+                className={styles.row_sales}
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+              >
+                {list.map((grp, index) => {
+                  const { statusKey: title, items = [] } = grp ?? {}
+                  const bg = grp?.getStatusOrderType?.backgroundColor
+                  const color = grp?.getStatusOrderType?.color
 
-                return (
-                  <Draggable key={title} draggableId={title} index={index}>
-                    {(draggableProvided) => (
-                      <div
-                        ref={draggableProvided.innerRef}
-                        {...draggableProvided.draggableProps}
-                        {...draggableProvided.dragHandleProps}
-                      >
-                        <Column className={styles.column_list}>
-                          <Text
-                            as='h2'
-                            className={styles.title}
-                            font='light'
-                          >
-                            {title} ({items.length})
-                          </Text>
+                  return (
+                    <Draggable key={title} draggableId={title} index={index}>
+                      {(draggableProvided) => (
+                        <div
+                          ref={draggableProvided.innerRef}
+                          {...draggableProvided.draggableProps}
+                          {...draggableProvided.dragHandleProps}
+                          className={styles.container_items}
+                        >
+                          <Column className={styles.column_list}>
+                            <Text as="h2" className={styles.title} font="light">
+                              {title} ({items.length})
+                            </Text>
 
-                          {items.map((item) => {
-                            const isSelected = false // Replace with logic if needed
-                            const style = isSelected
-                              ? {
-                                backgroundColor: getGlobalStyle('--color-primary-pink-light'),
-                                color: getGlobalStyle('--color-text-white')
-                              }
-                              : {}
+                            <div className={styles.scrollable_content}>
+                              {items.map((item) => {
+                                const isSelected = false // Replace with logic if needed
+                                const style = isSelected
+                                  ? {
+                                    backgroundColor: getGlobalStyle('--color-primary-pink-light'),
+                                    color: getGlobalStyle('--color-text-white')
+                                  }
+                                  : {}
 
-                            return (
-                              <Column
-                                key={item?.pCodeRef}
-                                className={styles.card}
-                                style={style}
-                                // onClick={() => handleGetOneOrder(item)}
-                                onContextMenu={(e) => {
-                                  setDataOrder({
-                                    pCodeRef: item?.pCodeRef
-                                  })
-                                  handleShowContextMenu(e)
-                                }}
-                              >
-                                <Text as='h2' size='lg'>
-                                  {item?.pCodeRef}
-                                </Text>
-
-                                <Column>
-                                  <Text>
-                                    <Divider
-                                      marginBottom={getGlobalStyle('--spacing-md')}
-                                      marginTop={getGlobalStyle('--spacing-md')}
-                                    />
-                                    <Text
-                                      color={isSelected ? 'white' : 'default'}
-                                      size='sm'
-                                      as='h2'
-                                      weight='bold'
-                                    >
-                                      {numberFormat(item.totalProductsPrice)}
+                                return (
+                                  <Column
+                                    key={item?.pCodeRef}
+                                    className={styles.card}
+                                    style={style}
+                                    onContextMenu={(e) => {
+                                      setDataOrder({ pCodeRef: item?.pCodeRef })
+                                      handleShowContextMenu(e)
+                                    }}
+                                  >
+                                    <Text as="h2" size="lg">
+                                      {item?.pCodeRef}
                                     </Text>
+
+                                    <Column>
+                                      <Text>
+                                        <Divider
+                                          marginBottom={getGlobalStyle('--spacing-md')}
+                                          marginTop={getGlobalStyle('--spacing-md')}
+                                        />
+                                        <Text
+                                          color={isSelected ? 'white' : 'default'}
+                                          size="sm"
+                                          as="h2"
+                                          weight="bold"
+                                        >
+                                          {numberFormat(item.totalProductsPrice)}
+                                        </Text>
+                                        <Divider
+                                          marginBottom={getGlobalStyle('--spacing-md')}
+                                          marginTop={getGlobalStyle('--spacing-md')}
+                                        />
+                                        <Tag
+                                          label={title}
+                                          style={{
+                                            borderRadius: '6px',
+                                            padding: '15px',
+                                            backgroundColor: bg,
+                                            color
+                                          }}
+                                        />
+                                      </Text>
+                                    </Column>
                                     <Divider
                                       marginBottom={getGlobalStyle('--spacing-md')}
                                       marginTop={getGlobalStyle('--spacing-md')}
                                     />
-                                    <Tag
-                                      label={title}
-                                      style={{
-                                        borderRadius: '6px',
-                                        padding: '15px',
-                                        backgroundColor: bg,
-                                        color
-                                      }}
-                                    />
-                                  </Text>
-                                </Column>
-                                <Divider
-                                  marginBottom={getGlobalStyle('--spacing-md')}
-                                  marginTop={getGlobalStyle('--spacing-md')}
-                                />
-                              </Column>
-                            )
-                          })}
-                        </Column>
-                      </div>
-                    )}
-                  </Draggable>
-                )
-              })}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+                                  </Column>
+                                )
+                              })}
+                            </div>
+                          </Column>
+                        </div>
+                      )}
+                    </Draggable>
+
+                  )
+                })}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+        <Button
+          border='none'
+          padding={getGlobalStyle('--spacing-xs')}
+          styles={{
+            height: 'min-content'
+          }}
+          className={styles.button_create_order}
+        >
+          <Icon icon='IconPlus' color={getGlobalStyle('--color-icons-gray')} />
+        </Button>
+      </Row>
     </div>
   )
 }

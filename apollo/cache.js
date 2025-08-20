@@ -154,32 +154,32 @@ export const cache = new InMemoryCache({
             return merged
           }
         },
-        getAllOrdersFromStore: {
-          keyArgs: [
-            'idStore',
-            'cId',
-            'dId',
-            'ctId',
-            'search',
-            'min',
-            'fromDate',
-            'toDate',
-            'max',
-            'statusOrder'
-          ],
-          merge(existing, incoming, { args: { max = Infinity } }) {
-            const merged = {
-              ...incoming,
-              getAllOrdersFromStore: mergeArraysWithDuplicates(
-                existing?.getAllOrdersFromStore,
-                incoming?.getAllOrdersFromStore,
-                max,
-                'pCodeRef'
-              )
-            }
-            return merged
-          }
-        },
+        // getAllOrdersFromStore: {
+        //   keyArgs: [
+        //     'idStore',
+        //     'cId',
+        //     'dId',
+        //     'ctId',
+        //     'search',
+        //     'min',
+        //     'fromDate',
+        //     'toDate',
+        //     'max',
+        //     'statusOrder'
+        //   ],
+        //   merge(existing, incoming, { args: { max = Infinity } }) {
+        //     const merged = {
+        //       ...incoming,
+        //       getAllOrdersFromStore: mergeArraysWithDuplicates(
+        //         existing?.getAllOrdersFromStore,
+        //         incoming?.getAllOrdersFromStore,
+        //         max,
+        //         'pCodeRef'
+        //       )
+        //     }
+        //     return merged
+        //   }
+        // },
         getAllClients: {
           keyArgs: ['search', 'min', 'max', 'idStore'],
           merge(existing, incoming, { args: { max = Infinity } }) {

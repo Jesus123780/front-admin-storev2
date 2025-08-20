@@ -105,56 +105,72 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
           credentials: 'include'
         }
       )
-      if (!requestLogin.ok) {
-        throw new Error('Failed to fetch authentication.')
+
+      console.log("🚀 ~ responseGoogle ~ requestLogin:", requestLogin)
+
+      // Validación de respuesta
+      if (!requestLogin?.success) {
+        throw new Error(requestLogin?.message || 'Failed to fetch authentication.')
       }
-      const encryptedData = encryptSession(JSON.stringify(requestLogin))
+
+      const { user, token, store } = requestLogin.data
+      if (!user || !token) {
+        throw new Error('Invalid login response structure.')
+      }
+
+      // 🔒 Encriptar sesión
+      const encryptedData = encryptSession(JSON.stringify(requestLogin.data))
+
+      // ✅ Notificaciones UI
       setAlertBox({ message: requestLogin.message, color: 'success' })
       sendNotification({
         title: 'Success',
         description: 'Iniciaste sesión correctamente',
         backgroundColor: 'success'
       })
-      const { storeUserId, token } = requestLogin
-      const { idStore, id } = storeUserId || {}
-      const decode = decodeToken(token) ?? {
-        id: ''
-      }
+
+      // 🥠 Cookies base
       const cookiesDefault = [
-        { name: 'restaurant', value: idStore },
-        { name: 'usuario', value: decode?.id || id },
+        { name: 'restaurant', value: store?.idStore },
+        { name: 'usuario', value: user?.id },
         { name: 'session', value: token },
         { name: process.env.NEXT_PUBLIC_SESSION_NAME, value: encryptedData }
       ]
       await handleSession({ cookies: cookiesDefault })
 
-      if (storeUserId) {
+      // 🍪 Cookies adicionales si hay store
+      if (store?.idStore) {
         const cookiesToSave = [
-          { name: 'merchant', value: idStore },
-          { name: 'usuario', value: decode?.id || id },
+          { name: 'merchant', value: store.idStore },
+          { name: 'usuario', value: user?.id },
           { name: 'session', value: token }
         ]
         await handleSession({ cookies: cookiesToSave })
-        await handleRegisterDeviceUser({ deviceId: device })
-        // Redirección con recarga completa
-        const baseUrl = window.location.origin
 
-        window.location.href = `${baseUrl}/dashboard`
+        // 🔔 Registrar dispositivo
+        await handleRegisterDeviceUser({ deviceId: device })
+
+        // 🔀 Redirección con recarga completa
+        window.location.href = `${window.location.origin}/dashboard`
         return
       }
-      const baseUrl = window.location.origin
-      // Redirección sin recarga completa
-      window.location.href = `${baseUrl}/merchant`
+
+      // 🔀 Redirección sin recarga completa (cuando no hay store)
+      window.location.href = `${window.location.origin}/merchant`
 
     } catch (error) {
-      // if (session) await signOut({ redirect: false })
+      console.error("🚀 ~ responseGoogle ~ error:", error)
+
       setAlertBox({
-        message: 'Error al iniciar sesión con Google',
+        message: error instanceof Error ? error.message : 'Error al iniciar sesión',
         color: 'error'
       })
+
+      // if (session) await signOut({ redirect: false })
     } finally {
       setLoading(false)
     }
+
   }
 
 

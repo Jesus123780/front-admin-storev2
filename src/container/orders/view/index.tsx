@@ -56,21 +56,15 @@ export const OrdersView = () => {
     })
 
     const [handleChange, handleSubmit, setDataValue, { dataForm }] = useFormTools({
-        callback: () => {
-            setDataValue({
-                ...initialDates
-            })
-        }
+        initialValues: initialDates
     })
+    console.log("🚀 ~ OrdersView ~ dataForm:", dataForm)
 
     const [_data, { refetch }] = useOrdersFromStore({
         fromDate: dataForm.fromDate,
         toDate: dataForm.toDate,
         callback: (data: GetAllOrdersFromStoreResponse) => {
             const { getAllOrdersFromStore } = data ?? []
-            setDataValue({
-                ...initialDates
-            })
             setOrders(getAllOrdersFromStore ?? [] as OrderGroup[])
         }
     })
@@ -78,13 +72,10 @@ export const OrdersView = () => {
     // HANDLESS
     const handleClearFilters = async () => {
         setLoading(true)
-        setDataValue({
-            ...initialDates
-        })
         await refetch({
             fromDate: initialDates.fromDate,
             toDate: initialDates.toDate,
-            search: dataForm.search
+            search: ''
         })
         setLoading(false)
     }
@@ -156,15 +147,17 @@ export const OrdersView = () => {
                 />
                 <Divider marginTop={getGlobalStyle('--spacing-xl')} />
                 <div className={styles['quick-filters']}>
-                    {!inCludeRange && <ToggleSwitch
-                        checked={inCludeRange}
-                        id='include-range'
-                        label='Incluir rango de fechas en la busqueda'
-                        onChange={() => {
-                            setInCludeRange(!inCludeRange)
-                        }}
-                        successColor='green'
-                    />}
+                    {!inCludeRange &&
+                        <ToggleSwitch
+                            checked={inCludeRange}
+                            id='include-range'
+                            label='Incluir rango de fechas en la busqueda'
+                            onChange={() => {
+                                setInCludeRange(!inCludeRange)
+                            }}
+                            successColor='green'
+                        />
+                    }
                     <div className={styles.container_query}>
                         <InputQuery
                             className={styles.input_query}
@@ -188,8 +181,8 @@ export const OrdersView = () => {
                         date={dataForm.fromDate}
                         label='Desde'
                         disabled={!inCludeRange}
-                        name='fromDate'
                         onChange={(value) => {
+                            console.log("🚀 ~ value:", value)
                             handleChange({
                                 target: {
                                     name: 'fromDate',
@@ -203,7 +196,6 @@ export const OrdersView = () => {
                         disabled={!inCludeRange}
                         date={dataForm.toDate}
                         label='Hasta'
-                        name='toDate'
                         onChange={(value) => {
                             handleChange({
                                 target: {
@@ -254,10 +246,9 @@ export const OrdersView = () => {
                     </Button>
                 </div>
                 <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-
                 <DateRange
-                    endDate={dataForm.toDate}
-                    startDate={dataForm.fromDate}
+                    endDate={dataForm.toDate ?? initialDates.toDate}
+                    startDate={dataForm.fromDate ?? initialDates.fromDate}
                 />
                 <Divider marginTop={getGlobalStyle('--spacing-xl')} />
                 <div className='form-container-orders'></div>
