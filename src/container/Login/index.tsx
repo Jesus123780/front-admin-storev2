@@ -113,7 +113,12 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
         throw new Error(requestLogin?.message || 'Failed to fetch authentication.')
       }
 
-      const { user, token, store } = requestLogin.data
+      const {
+        user,
+        token,
+        store,
+        refreshToken
+      } = requestLogin.data
       if (!user || !token) {
         throw new Error('Invalid login response structure.')
       }
@@ -143,7 +148,8 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
         const cookiesToSave = [
           { name: 'merchant', value: store.idStore },
           { name: 'usuario', value: user?.id },
-          { name: 'session', value: token }
+          { name: 'session', value: token },
+          { name: 'refreshToken', value: refreshToken }
         ]
         await handleSession({ cookies: cookiesToSave })
 
