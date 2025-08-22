@@ -1,287 +1,236 @@
-'use client'
+'use client';
 
-import React, {
-    useEffect,
-    createRef,
-    useRef,
-    useState,
-    useContext
-} from 'react'
-import {
-    Column,
-    GridStack,
-    Text,
-    ToggleSwitch
-} from 'pkg-components'
-import { useUpdateDashboardComponent } from 'npm-pkg-hook'
-import { useComponents } from '../context'
-import { DishStore } from '@/container/main/components/main.dishStore'
-import { SalesDay } from '@/container/main/components/main.salesDay'
-import { Goal } from '@/container/main/components/main.goal'
-import { QrCode } from '@/container/main/components/main.qr'
-import { ChatStatistic } from '@/container/ChatStatistic'
-import { TeamStore } from '@/container/TeamStore'
-import { Context } from '@/context/Context'
-import { Devices } from '@/container/Devices'
-import { Loading } from '../components'
+import React, { useState, useEffect, useContext, FunctionComponent } from 'react';
+import { Column, Text, ToggleSwitch, Responsive, WidthProvider, Layout, Layouts } from 'pkg-components';
+import { useUpdateDashboardComponent } from 'npm-pkg-hook';
+import { useComponents } from '../context';
+import { DishStore } from '@/container/main/components/main.dishStore';
+import { SalesDay } from '@/container/main/components/main.salesDay';
+import { Goal } from '@/container/main/components/main.goal';
+import { QrCode } from '@/container/main/components/main.qr';
+import { ChatStatistic } from '@/container/ChatStatistic';
+import { TeamStore } from '@/container/TeamStore';
+import { Devices } from '@/container/Devices';
+import { Context } from '@/context/Context';
+import { Loading } from '../components';
+import styles from './styles.module.css';
 
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
-export const COMPONENT_MAP = {
-    1: DishStore,
-    2: Goal,
-    3: QrCode,
-    4: SalesDay,
-    5: ChatStatistic,
-    6: TeamStore,
-    7: Devices,
+/**
+ * Map of available dashboard components
+ * Key is now the same as component name
+ */
+export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
+    DishStore,
+    Goal,
+    QrCode,
+    SalesDay,
+    ChatStatistic,
+    TeamStore,
+    Devices,
 };
 
-const Item = ({ id, component }: { id: string; component: React.ReactNode }) => {
-    const view = COMPONENT_MAP[Number(id) as keyof typeof COMPONENT_MAP];
-    const componentProps = typeof component === 'object' && !Array.isArray(component) && component !== null
-        ? { ...component }
-        : {};
+interface ItemProps {
+    id: string;
+    component?: Record<string, any>;
+}
+
+const Item: FunctionComponent<ItemProps> = ({ id, component }) => {
+    const View = COMPONENT_MAP[id];
+    if (!View) return null;
 
     return (
-        <div style={{ width: '100%' }}>
-            {view ? React.createElement(view, componentProps) : null}
+        <div style={{ width: '100%', height: '100%' }}>
+            <View {...(component || {})} />
         </div>
     );
 };
 
-interface ControlledStackProps {
-    items: any[]
-    setComponents: React.Dispatch<React.SetStateAction<any[]>>
+interface ControlledGridProps {
+    items: any[];
+    setComponents: React.Dispatch<React.SetStateAction<any[]>>;
 }
-
-const ControlledStack = ({ items, setComponents }: ControlledStackProps) => {
-    const refs = useRef<{ [key: string]: React.RefObject<HTMLDivElement> }>({})
-    const { updateComponent, loading, error, data } = useUpdateDashboardComponent()
-    const { sendNotification } = useContext(Context)
-
-    const gridRef = useRef<GridStack | undefined>()
-    const gridContainerRef = useRef(null)
-    const [editMode, setEditMode] = useState(false)
-    refs.current = {}
-
-    if (Object.keys(refs.current).length !== items.length) {
-        items.forEach(({ id }) => {
-            refs.current[id] = refs.current[id] || createRef();
-        });
-    }
-
-    // Breakpoints para diseño responsivo
-    const BREAKPOINTS = [
-        { c: 1, w: 700 },
-        { c: 2, w: 850 },
-        { c: 3, w: 950 },
-        { c: 6, w: 1100 },
-    ];
-
-    useEffect(() => {
-        if (!gridRef.current) {
-            if (!gridContainerRef.current) return;
-            gridRef.current = GridStack.init(
-                {
-                    float: false,
-                    animate: true,
-                    alwaysShowResizeHandle: true,
-                    acceptWidgets: true,
-                    column: 12,
-                    minRow: 12,
-                    cellHeight: 'auto',
-                    cellHeightThrottle: 100,
-                    cellHeightUnit: '%',
-                    columnOpts: {
-                        breakpointForWindow: true,
-                        breakpoints: BREAKPOINTS,
-                        columnMax: 6,
-                    },
-                },
-                gridContainerRef.current
-            );
-
-            gridRef.current.setStatic(!editMode);
-
-            // 📌 Agregar listener para detectar cambios
-            gridRef.current.on('dragstop', (_e, itemsChanged) => {
-                const node = itemsChanged.gridstackNode
-                console.log("🚀 ~ gridRef.current.on ~ node:", node)
-                console.log({
-                    info: `you just dragged node #${node.id} to ${node.x},${node.y} – good job!`,
-                });
-                setComponents((prev) => {
-                    const newItems = [...prev];
-                    const index = newItems.findIndex((item) => item.id === node.id);
-                    if (index !== -1) {
-                        newItems[index] = {
-                            ...newItems[index],
-                            x: node.x,
-                            y: node.y,
-                            w: node.w,
-                            h: node.h,
-                        };
-                    }
-                    return newItems;
-                })
-                updateComponent({
-                    id: node.id,
-                    coordinates: {
-                        x: node.x,
-                        y: node.y,
-                        w: node.w,
-                        h: node.h,
-                    },
-                });
-            })
-            gridRef.current.on('resizestop', (_e, itemsChanged) => {
-                const node = itemsChanged.gridstackNode
-                console.log("🚀 ~ gridRef.current.on ~ node:", node)
-                console.log({
-                    info: `you just resized node #${node.id} to ${node.x},${node.y} – good job!`,
-                });
-                setComponents((prev) => {
-                    const newItems = [...prev];
-                    const index = newItems.findIndex((item) => item.id === node.id);
-                    if (index !== -1) {
-                        newItems[index] = {
-                            ...newItems[index],
-                            x: node.x,
-                            y: node.y,
-                            w: node.w,
-                            h: node.h,
-                        };
-                    }
-                    return newItems;
-                })
-                updateComponent({
-                    id: node.id,
-                    coordinates: {
-                        x: node.x,
-                        y: node.y,
-                        w: node.w,
-                        h: node.h,
-                    },
-                });
-            })
-        } else {
-            const grid = gridRef.current;
-            const layout = items
-                .slice()
-                .sort((a, b) => a.y - b.y || a.x - b.x) // orden vertical primero
-                .map(a =>
-                    refs.current[a.id].current?.gridstackNode || {
-                        ...a,
-                        el: refs.current[a.id].current ?? undefined,
-                    }
-                );
-
-            grid.load(layout);
-
+const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ setComponents }) => {
+    // Default dashboard items configuration
+    const defaultItems = [
+        {
+            'w': 3,
+            'h': 2.6,
+            'x': 0,
+            'y': 0,
+            'id': 'DishStore',
+            'moved': false,
+            'static': true,
+            title: '',
+        },
+        {
+            'w': 3,
+            'h': 8,
+            'x': 3,
+            'y': 0,
+            'id': 'Goal',
+            'moved': false,
+            'static': false,
+            title: 'Meta del día',
+        },
+        {
+            'w': 3,
+            'h': 8,
+            'x': 6,
+            'y': 0,
+            'id': 'QrCode',
+            'moved': false,
+            'static': false,
+            title: 'Código QR',
+        },
+        {
+            'w': 3,
+            'h': 3,
+            'x': 0,
+            'y': 2.6,
+            'id': 'SalesDay',
+            'moved': false,
+            'static': false,
+            title: 'Ventas del día',
+        },
+        {
+            'w': 3,
+            'h': 5,
+            'x': 9,
+            'y': 0,
+            'id': 'TeamStore',
+            'moved': false,
+            'static': false,
+            title: 'Equipo del comercio',
+        },
+        {
+            'w': 3,
+            'h': 8,
+            'x': 0,
+            'y': 5.6,
+            'id': 'Devices',
+            'moved': false,
+            'static': false,
+            title: 'Dispositivos conectados',
+        },
+        {
+            'w': 9,
+            'h': 7,
+            'x': 3,
+            'y': 8,
+            'id': 'ChatStatistic',
+            'moved': false,
+            'static': false,
+            title: 'Estadísticas',
         }
-    }, [items]);
+    ]
 
+    const items = defaultItems;
+    const { updateComponent } = useUpdateDashboardComponent();
+    const { sendNotification } = useContext(Context);
+    const [editMode, setEditMode] = useState(false);
+    const [layouts, setLayouts] = useState<Layouts>({ lg: [] });
+
+    // Convertimos los items en layout para RGL
+    useEffect(() => {
+        const newLayout: Layout[] = items.map((item) => ({
+            i: item.id, // ahora el id ya es el nombre del componente
+            x: item.x ?? 0,
+            y: item.y ?? 0,
+            w: item.w ?? 3,
+            h: item.h ?? 4,
+            static: !!item.noMove,
+        }));
+        setLayouts({ lg: newLayout });
+    }, []);
+
+    /**
+     * Handle changes in layout (drag / resize)
+     */
+    const handleLayoutChange = (layout: Layout[], allLayouts: Layouts) => {
+        setLayouts(allLayouts);
+
+        setComponents((prev) =>
+            prev.map((comp) => {
+                const newLayout = layout.find((l) => l.i === comp.id);
+                return newLayout
+                    ? { ...comp, x: newLayout.x, y: newLayout.y, w: newLayout.w, h: newLayout.h }
+                    : comp;
+            })
+        );
+
+        layout.forEach((node) => {
+            updateComponent({
+                id: node.i,
+                coordinates: { x: node.x, y: node.y, w: node.w, h: node.h },
+            });
+        });
+    };
 
     const handleEditMode = () => {
-        setEditMode(prev => {
-            const newMode = !prev
-            if (newMode !== true) {
+        setEditMode((prev) => {
+            const newMode = !prev;
+            if (!newMode) {
                 sendNotification({
-                    title: 'Tus cambios han sido guardados',
-                    description: 'Los cambios han sido guardados correctamente',
+                    title: 'Changes saved',
+                    description: 'Your dashboard changes were saved successfully',
                     backgroundColor: 'success',
-                })
+                });
             }
-            if (gridRef.current) {
-                gridRef.current.setStatic(!newMode)
-            }
-            return newMode
-        })
-    }
-
+            return newMode;
+        });
+    };
+    console.log('Layouts:', layouts);
     return (
         <div style={{ width: '100%', marginRight: '10px' }}>
             <ToggleSwitch
                 checked={editMode}
                 id='edit_mode'
-                label='Modo Edición'
-                onChange={() => {
-                    return handleEditMode()
-                }}
+                label='Edit Mode'
+                onChange={handleEditMode}
                 successColor='green'
             />
-            <div className='grid-stack' ref={gridContainerRef}>
-                {items.map((item, i) => {
-                    const attrs: React.HTMLAttributes<HTMLDivElement> & {
-                        ref: React.RefObject<HTMLDivElement>
-                        'gs-id': string
-                        'gs-w': number
-                        'gs-h': number
-                        'gs-x': number
-                        'gs-y': number
-                        'gs-no-move': string
-                        'gs-auto-position': string
-                        'gs-locked'?: string
-                        'gs-no-resize'?: string
-                    } = {
-                        ref: refs.current[item.id],
-                        className: 'grid-stack-item',
-                        'gs-id': item.id,
-                        'gs-w': item.w,
-                        'gs-auto-position': 'false',
-                        'gs-no-resize': 'false',
-                        'gs-locked': 'false',
-                        'gs-no-move': 'false',
-                        'gs-h': item.h,
-                        'gs-x': item.x,
-                        'gs-y': item.y
-                    };
 
-                    if (item.noMove) {
-                        attrs['gs-no-move'] = 'true';
-                        attrs['gs-locked'] = 'true';
-                        attrs['gs-no-resize'] = 'true';
-                    }
-
-
-                    return (
-                        <div
-                            {...attrs}
-
-                        >
-                            <Column
-                                key={item.id}
-                                style={{
-                                    position: 'absolute',
-                                    top: -15,
-                                    left: 10,
-                                    width: '100%'
-                                }}>
-                                <Text as='h2' size='2xl'>
-                                    {item.title}
-                                </Text>
-                            </Column>
-                            <div className='grid-stack-item-content'>
-                                <Item {...item} />
-                            </div>
+            <ResponsiveGridLayout
+                className='layout'
+                layouts={layouts}
+                breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+                rowHeight={30}
+                isDraggable={editMode}
+                isResizable={editMode}
+                onLayoutChange={handleLayoutChange}
+            >
+                {items.map((item) => {
+                    return (<div key={item.id} className={styles.gridItems} style={{ background: '#fff' }}>
+                        <Column className={styles['grid-stack-item-header']} style={{
+                            position: 'absolute',
+                            top: -20,
+                            left: 10,
+                            width: '100%',
+                        }}>
+                            <Text as='h2' size='2xl'>
+                                {item.title}
+                            </Text>
+                        </Column>
+                        <div className={styles['grid-stack-item-content']}>
+                            <Item {...item} />
                         </div>
-                    );
+                    </div>);
                 })}
-            </div>
+            </ResponsiveGridLayout>
         </div>
     );
 };
 
-export const GridStackWrapper = () => {
+export const GridStackWrapper: FunctionComponent = () => {
     const { components: items, setComponents, loading } = useComponents();
-    if (loading) return <Loading />
+    if (loading) return <Loading />;
+
     return (
-        <div>
-            <div>
-                <div style={{ display: 'flex' }}>
-                    <ControlledStack items={items} setComponents={setComponents} />
-                </div>
-            </div>
+        <div style={{ display: 'flex' }}>
+            <ControlledGrid items={items} setComponents={setComponents} />
         </div>
     );
 };

@@ -14,7 +14,7 @@ export const QrCode = () => {
   return (
     <Row style={{ width: '100%', height: '100%' }}>
       <div className={styles.main}>
-        <Column style={{ width: '100%', height: '100%', alignItems: 'center' }}>
+        <Column style={{ width: 'fit-content', height: '100%', alignItems: 'center' }}>
           <div className={styles.qrCard}>
             <ImageQRCode value={urlBackend} size={256} />
           </div>

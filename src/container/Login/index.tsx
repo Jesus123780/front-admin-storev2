@@ -178,7 +178,84 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
     }
 
   }
+  const responseGoogleLegacy = async (response: GoogleUserBody) => {
+    setLoading(true)
+    const { user } = response || {}
+    const { name, email, id, image } = user || {}
+    const device = await getDeviceId()
+    const body = {
+      name: name,
+      username: name,
+      lastName: name,
+      email,
+      password: id,
+      locationFormat: [],
+      useragent: window?.navigator?.userAgent ?? null,
+      deviceid: device,
+      imageUrl: image
+    }
 
+    try {
+      const requestLogin = await fetchJson(
+        `${process.env.NEXT_PUBLIC_URL_BACK_SERVER}/api/auth`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          credentials: 'include'
+        }
+      )
+      if (!requestLogin.ok) {
+        throw new Error('Failed to fetch authentication.')
+      }
+      const encryptedData = encryptSession(JSON.stringify(requestLogin))
+      setAlertBox({ message: requestLogin.message, color: 'success' })
+      sendNotification({
+        title: 'Success',
+        description: 'Iniciaste sesión correctamente',
+        backgroundColor: 'success'
+      })
+      const { storeUserId, token } = requestLogin
+      const { idStore, id } = storeUserId || {}
+      const decode = decodeToken(token) ?? {
+        id: ''
+      }
+      const cookiesDefault = [
+        { name: 'restaurant', value: idStore },
+        { name: 'usuario', value: decode?.id || id },
+        { name: 'session', value: token },
+        { name: process.env.NEXT_PUBLIC_SESSION_NAME, value: encryptedData }
+      ]
+      await handleSession({ cookies: cookiesDefault })
+
+      if (storeUserId) {
+        const cookiesToSave = [
+          { name: 'merchant', value: idStore },
+          { name: 'usuario', value: decode?.id || id },
+          { name: 'session', value: token }
+        ]
+        await handleSession({ cookies: cookiesToSave })
+        await handleRegisterDeviceUser({ deviceId: device })
+        // Redirección con recarga completa
+        const baseUrl = window.location.origin
+
+        window.location.href = `${baseUrl}/dashboard`
+        return
+      }
+      const baseUrl = window.location.origin
+      // Redirección sin recarga completa
+      window.location.href = `${baseUrl}/merchant`
+
+    } catch (error) {
+      // if (session) await signOut({ redirect: false })
+      setAlertBox({
+        message: 'Error al iniciar sesión con Google',
+        color: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (googleLoaded && window.google) {
@@ -399,6 +476,25 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
             responseGoogle(data)
           }}>
             Login mock false
+          </button>
+          <button className={styles.btn_close} type='button' onClick={() => {
+            const data = {
+              user: {
+                name: 'test',
+                username: 'test',
+                lastName: 'test',
+                email: 'test@gmail.com',
+                id: 'test',
+                image: 'test',
+                locationFormat: [],
+                useragent: window?.navigator?.userAgent ?? null,
+                imageUrl: 'test'
+              }
+            }
+            setLoading(true)
+            responseGoogleLegacy(data)
+          }}>
+            Login mock false (legacy)
           </button>
           {isElectron
             && <Button
