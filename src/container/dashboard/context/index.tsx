@@ -7,8 +7,8 @@ import { Coordinates, DashboardComponent } from './types';
 const DEFAULT = {
   components: [],
   loading: false,
-  setComponents: () => {},
-  handleAddComponent: () => {},
+  setComponents: () => { },
+  handleAddComponent: () => { },
 } as {
   components: ComponentInfo[];
   setComponents: React.Dispatch<React.SetStateAction<ComponentInfo[]>>;
@@ -23,20 +23,28 @@ export const useComponents = () => useContext(ComponentsContext);
 export const ComponentsContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { data, loading } = useDashboardComponents({
     callback: (data: DashboardComponent[]) => {
-      const components = data.map((component) => ({
-        id: component.id,
-        x: component.coordinates?.x ?? 0,
-        y: component.coordinates?.y ?? 0,
-        w: component.coordinates?.w ?? 3,
-        h: component.coordinates?.h ?? 4,
-      }));
+      const components = data.map((component) => {
+        return {
+          id: component.coordinates.id,
+          title: component.coordinates.title ?? '',
+          moved: component.coordinates.moved,
+          static: component.coordinates.static ?? false,
+          x: component.coordinates?.x ?? 0,
+          y: component.coordinates?.y ?? 0,
+          w: component.coordinates?.w ?? 3,
+          h: component.coordinates?.h ?? 4,
+        }
+      });
       setComponents(components);
     },
   });
 
   const DEFAULT_COMPONENTS: ComponentInfo[] = data.map(
     (component: { id: keyof typeof COMPONENT_MAP; coordinates?: Coordinates }) => ({
-      id: component.id.toString(),
+      id: component.coordinates?.id ?? '',
+      title: component.coordinates?.title ?? '',
+      moved: component.coordinates?.moved,
+      static: component.coordinates?.static ?? false,
       x: component.coordinates?.x ?? 0,
       y: component.coordinates?.y ?? 0,
       w: component.coordinates?.w ?? 3,

@@ -4,9 +4,12 @@ export type Coordinates = {
     y: number;
     w: number;
     h?: number; // h puede ser opcional dependiendo de si es parte de las coordenadas
-    noMove?: boolean;
+    static?: boolean;
     noResize?: boolean;
-    noDrag?: boolean;
+    moved?: boolean;
+    name: string;
+    id: string;
+    title: string;
   }
   
   // Tipo para el componente individual

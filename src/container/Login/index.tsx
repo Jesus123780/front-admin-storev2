@@ -106,8 +106,6 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
         }
       )
 
-      console.log("🚀 ~ responseGoogle ~ requestLogin:", requestLogin)
-
       // Validación de respuesta
       if (!requestLogin?.success) {
         throw new Error(requestLogin?.message || 'Failed to fetch authentication.')

@@ -79,3 +79,5 @@ export const ChatStatisticMemo = () => {
 }
 
 export const ChatStatistic = memo(ChatStatisticMemo)
+
+ChatStatistic.displayName = 'ChatStatistic'
