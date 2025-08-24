@@ -52,7 +52,7 @@ interface ControlledGridProps {
 }
 const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComponents }) => {
     const { isMobile } = useMobile()
-
+    const [skipUpdate, setSkipUpdate] = useState(false)
     const { updateComponent } = useUpdateDashboardComponent()
     const { sendNotification } = useContext(Context)
     const [editMode, setEditMode] = useState(false)
@@ -79,8 +79,8 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
      * Handle changes in layout (drag / resize)
      */
     const handleLayoutChange = (layout: Layout[], allLayouts: Layouts) => {
+        if (!editMode || skipUpdate) return
         setLayouts(allLayouts)
-
         setComponents((prev) =>
             prev.map((comp) => {
                 const newLayout = layout.find((l) => l.i === comp.id)
@@ -90,12 +90,26 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
             })
         )
 
-        updateComponent([
-            ...layout.map((node) => ({
-                id: node.i,
-                coordinates: { x: node.x, y: node.y, w: node.w, h: node.h },
-            }))
-        ])
+        // Verifica si algún dato ha cambiado en coordinates
+        const hasChanged = layout.some((node) => {
+            const prevComp = items.find((comp) => comp.id === node.i)
+            return (
+                prevComp &&
+                (prevComp.x !== node.x ||
+                    prevComp.y !== node.y ||
+                    prevComp.w !== node.w ||
+                    prevComp.h !== node.h)
+            )
+        })
+
+        if (hasChanged) {
+            updateComponent([
+                ...layout.map((node) => ({
+                    id: node.i,
+                    coordinates: { x: node.x, y: node.y, w: node.w, h: node.h },
+                }))
+            ])
+        }
     }
 
     const handleEditMode = () => {
@@ -110,6 +124,13 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
             }
             return newMode
         })
+    }
+
+    const handleBreakpointChange = () => {
+        // 👇 activamos un flag para evitar que handleLayoutChange dispare updateComponent
+        setSkipUpdate(true)
+        // lo reseteamos en el siguiente ciclo
+        setTimeout(() => setSkipUpdate(false), 0)
     }
     return (
         <div style={{ width: '100%', marginRight: '10px' }}>
@@ -127,11 +148,13 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
                 breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                 cols={{ lg: 12, md: 8, sm: 6, xs: 2, xxs: 1 }}
                 rowHeight={30}
-                margin={[20, 20]} // 👈 separación horizontal y vertical entre items
+                margin={[20, 20]}
                 isDraggable={editMode}
                 isResizable={editMode}
                 preventCollision={!editMode}
                 onLayoutChange={handleLayoutChange}
+                onBreakpointChange={handleBreakpointChange}
+                useCSSTransforms={true}
             >
                 {items
                     .filter((item) => !(isMobile && item.mobile === false))
