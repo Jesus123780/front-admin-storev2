@@ -170,7 +170,6 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
         color: 'error'
       })
 
-      // if (session) await signOut({ redirect: false })
     } finally {
       setLoading(false)
     }

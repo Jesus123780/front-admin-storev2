@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useContext, FunctionComponent } from 'react'
-import { Column, Text, ToggleSwitch, Responsive, WidthProvider, Layout, Layouts } from 'pkg-components'
+import { Column, Text, ToggleSwitch, Responsive, WidthProvider, Layout, Layouts, getGlobalStyle } from 'pkg-components'
 import { useUpdateDashboardComponent, useMobile } from 'npm-pkg-hook'
 import { useComponents } from '../context'
 import { DishStore } from '@/container/main/components/main.dishStore'
@@ -196,9 +196,12 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
 export const GridStackWrapper: FunctionComponent = () => {
     const { components: items, setComponents, loading } = useComponents()
     if (loading) return <Loading />
-
     return (
-        <div style={{ display: 'flex' }}>
+        <div style={{
+            maxWidth: getGlobalStyle('--width-max-desktop'),
+            margin: 'auto',
+            display: 'flex'
+        }}>
             <ControlledGrid items={items} setComponents={setComponents} />
         </div>
     )
