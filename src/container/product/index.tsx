@@ -79,6 +79,7 @@ export const Product = () => {
   })
 
   const [dataCategoriesProducts] = useCategoriesProduct()
+  console.log("🚀 ~ Product ~ dataCategoriesProducts:", dataCategoriesProducts)
   const { handleDelete } = useDeleteProductsFood()
 
   const tagsProps = {

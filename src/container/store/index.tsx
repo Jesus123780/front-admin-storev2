@@ -127,7 +127,6 @@ export const Store = () => {
     ProDescription,
     ProImage
   } = product || {}
-    console.log("🚀 ~ Store ~ ProImage:", ProImage)
 
   const { storeName } = getStore || {}
   const { storeName: nameStore } = store || {}
