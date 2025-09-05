@@ -35,6 +35,7 @@ import {
   Text
 } from 'pkg-components'
 import { autocompleteStoreSchedules } from './helpers'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const ScheduleTimings = ({ isChart = false }) => {
   // STATES
@@ -286,7 +287,7 @@ export const ScheduleTimings = ({ isChart = false }) => {
         }}
         padding='25px'
         show={showModalTiming}
-        size='500px'
+        size={MODAL_SIZES.small}
         title={days[showTiming]}
         zIndex={getGlobalStyle('--z-index-99999')}
       >
