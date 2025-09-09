@@ -1,7 +1,16 @@
 'use client'
 
 import React, { useState, useEffect, useContext, FunctionComponent } from 'react'
-import { Column, Text, ToggleSwitch, Responsive, WidthProvider, Layout, Layouts, getGlobalStyle } from 'pkg-components'
+import { 
+    Column, 
+    Text, 
+    ToggleSwitch, 
+    Responsive, 
+    WidthProvider, 
+    Layout, 
+    Layouts, 
+    getGlobalStyle
+} from 'pkg-components'
 import { useUpdateDashboardComponent, useMobile } from 'npm-pkg-hook'
 import { useComponents } from '../context'
 import { DishStore } from '@/container/main/components/main.dishStore'
