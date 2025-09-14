@@ -3,7 +3,8 @@
 import React, {
     useState,
     memo,
-    useContext
+    useContext,
+    useEffect
 } from 'react'
 import {
     Button,
@@ -139,6 +140,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         handleDaySelection,
         registerAvailableProduct,
         selectedDays,
+        setSelectedDays,
         handleCleanSelectedDays,
         loading: loaAvailable,
         days
@@ -244,7 +246,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         inputRefs,
         handleCleanLines: CleanLines
     } = useDessertWithPrice({ sendNotification, setAlertBox, dataExtra })
-        console.log("🚀 ~ LineItems:", LineItems)
 
     const propsExtra = {
         handleAdd: handleAddExtra,
@@ -282,6 +283,23 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         return handleGetOneProduct({ pId: pId ?? food })
     }
 
+    const timeSuggestions = [
+        '00:00', '00:30', '01:00', '01:30', '02:00', '02:30', '03:00', '03:30',
+        '04:00', '04:30', '05:00', '05:30', '06:00', '06:30', '07:00', '07:30',
+        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+        '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+        '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30',
+        '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30'
+    ]
+    const [dayConfigs, setDayConfigs] = useState<Record<number, { startTime: string; endTime: string }>>({})
+    
+    const handleChangeAvailability = (day: number, field: 'startTime' | 'endTime', value: string) => {
+        setDayConfigs((prev) => ({
+            ...prev,
+            [day]: { ...prev[day], [field]: value }
+        }))
+    }
+    console.log({ dayConfigs })
     /**
      * Handles the step-by-step process for product creation.
      */
@@ -360,11 +378,13 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
    * @returns {Array} - Un array de objetos con la información del producto y el día disponible.
    */
     const createFormInput = () => {
-        return selectedDays.map(day => {
+        return selectedDays.map((day: number) => {
             return {
                 idStore: idStore,
                 pId: pId || food,
-                dayAvailable: day
+                dayAvailable: day,
+                startDate: dayConfigs[day]?.startTime,
+                endDate: dayConfigs[day]?.endTime
             }
         })
     }
@@ -377,8 +397,14 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         try {
             const response = await registerAvailableProduct({ variables: { input } })
             const success = response?.data?.registerAvailableProduct?.success
+            const message = response?.data?.registerAvailableProduct?.message
             if (success) {
                 sendSuccessNotification()
+                sendNotification({
+                    description: message,
+                    title: 'Success',
+                    backgroundColor: 'success'
+                })
             } else {
                 const { message } = response?.data.registerAvailableProduct ?? {
                     message: 'Ha ocurrido un error al guardar los días disponibles'
@@ -411,11 +437,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     const sendSuccessNotification = () => {
         setShowComponentModal(false)
         handleClick(false)
-        sendNotification({
-            description: 'Se han registrado todos los campos del producto',
-            title: 'Success',
-            backgroundColor: 'success'
-        })
         setActive(0)
         handleCleanSelectedDays()
         setCheckAvailableDays({
@@ -453,6 +474,13 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         3: check?.noAvailability ? Boolean(!selectedDays.length > 0) : false
     }
     const asSaveAvailableProduct = disabled && selectedDays?.length > 0
+
+    useEffect(() => {
+        if (active === STEPS.COMPLEMENTS) {
+            handleGetOneProduct({ pId: pId ?? food })
+        }
+
+    }, [active])
 
     const {
         preview,
@@ -602,7 +630,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 onClick={() => { return setOpenModalDessert(!openModalDessert) }}
                 primary={true}
             >
-                Mostrar modal de subproductos
+                Mostrar subproductos
             </Button>
             <ExtrasProductsItems
                 dataExtra={dataExtra}
@@ -654,6 +682,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     <div className='container_days'>
                         <DaySelector
                             days={days}
+                            handleChange={handleChangeAvailability}
+                            dayConfigs={dayConfigs}
+                            timeSuggestions={timeSuggestions}
                             handleDaySelection={handleDaySelection}
                             selectedDays={selectedDays}
                         />
@@ -662,6 +693,8 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             }
         </div>
     }
+
+
     return (<>
         {loaAvailable && <Loading />}
         <Container>
