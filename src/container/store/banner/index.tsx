@@ -32,6 +32,7 @@ export const Banner = ({
   const { sendNotification } = useContext(Context)
   const {
     altLogo,
+    srcLogo,
     fileInputRef,
     fileInputRefLogo,
     setPreviewImg,
@@ -41,8 +42,7 @@ export const Banner = ({
     handleDeleteLogo,
     onTargetClick,
     onTargetClickLogo,
-    src,
-    srcLogo
+    src
   } = useImageStore({ idStore: store?.idStore, sendNotification })
   useStore({
     callback: (data: IStore) => {
@@ -79,11 +79,10 @@ export const Banner = ({
     src,
     srcLogo,
     handleDeleteLogo,
-    store
+    store: ({ ...store, Image: src } as any)
   }
   return (<BannerStore {...props} />)
 }
-
 Banner.propTypes = {
   isMobile: PropTypes.any,
   store: PropTypes.shape({

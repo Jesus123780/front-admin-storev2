@@ -132,7 +132,7 @@ export const Prints = ({
           </div>
 
           <div className='ticket-image'>
-            <Image
+            {/* <Image
               alt={''}
               blurDataURL='/images/DEFAULTBANNER.png'
               className='store_image'
@@ -140,7 +140,7 @@ export const Prints = ({
               objectFit='scale-down'
               src={src ? src : src ?? '/images/DEFAULTBANNER.png'}
               width={200}
-            />
+            /> */}
           </div>
           <div className='divider'>
             <div></div>
