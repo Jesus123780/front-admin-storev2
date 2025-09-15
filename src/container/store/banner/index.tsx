@@ -36,6 +36,7 @@ export const Banner = ({
     fileInputRef,
     fileInputRefLogo,
     setPreviewImg,
+    setPreviewImgLogo,
     HandleDeleteBanner,
     handleInputChangeLogo,
     handleUpdateBanner,
@@ -46,6 +47,10 @@ export const Banner = ({
   } = useImageStore({ idStore: store?.idStore, sendNotification })
   useStore({
     callback: (data: IStore) => {
+      setPreviewImgLogo({
+        altLogo: altLogo ?? '',
+        srcLogo: data?.Image ? `/api/images/${data.Image}` : srcLogo
+      })
       setPreviewImg({
         src: data?.banner ? `/api/images/${data.banner}` : src
       })
