@@ -117,7 +117,6 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     }
   })
   const [dataStore] = useStore()
-  console.log("🚀 ~ MemoLayout ~ dataStore:", dataStore)
   const [count, { loading: loadingCount }] = useTotalSales()
   const style = useScrollHook()
   const { scrollNav } = useScrollColor()

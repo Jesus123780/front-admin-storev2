@@ -51,7 +51,6 @@ export const ReportDownloadsPanel = () => {
     const startDate = formatToLocalDateYMD(sevenDaysAgo.setDate(now.getDate() - days))
     const endDate = formatToLocalDateYMD(now)
     const result = await getReport(startDate, endDate)
-    console.log("🚀 ~ handleDownload ~ result:", result)
 
     if (result?.success) {
       sendNotification({

@@ -27,7 +27,6 @@ export const FormEmployee = ({
 
   const { sendNotification } = useContext(Context)
   const [handleChange, handleSubmit, setDataValue, { dataForm, errorForm, setForcedError }] = useFormTools({ sendNotification })
-  console.log("🚀 ~ errorForm:", errorForm)
 
   const onError = () => {
     // setForcedError({ ...errorForm, email: true })

@@ -58,7 +58,6 @@ export const OrdersView = () => {
     const [handleChange, handleSubmit, setDataValue, { dataForm }] = useFormTools({
         initialValues: initialDates
     })
-    console.log("🚀 ~ OrdersView ~ dataForm:", dataForm)
 
     const [_data, { refetch }] = useOrdersFromStore({
         fromDate: dataForm.fromDate,
@@ -182,7 +181,6 @@ export const OrdersView = () => {
                         label='Desde'
                         disabled={!inCludeRange}
                         onChange={(value) => {
-                            console.log("🚀 ~ value:", value)
                             handleChange({
                                 target: {
                                     name: 'fromDate',
