@@ -19,11 +19,11 @@ import {
     Divider,
     HeaderSteps,
     Row,
-    timeSuggestions,
     ImageProductEdit,
     MemoCardProductSimple,
     InputTags,
-    Icon
+    Icon,
+    Column
 } from 'pkg-components'
 import {
     useGetOneProductsFood,
@@ -32,6 +32,7 @@ import {
     useLogout,
     useDessertWithPrice,
     useDessert,
+    timeSuggestions,
     useStore
 } from 'npm-pkg-hook'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
@@ -668,10 +669,10 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             />
             {check.noAvailability &&
                 <>
-                    <Text size='sm' >
+                    <Text size='sm' weight='hairline'>
                         Dias de la semana
                     </Text>
-                    <div className='container_days'>
+                    <Column>
                         <DaySelector
                             days={days}
                             handleChange={handleChangeAvailability}
@@ -680,7 +681,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                             handleDaySelection={handleDaySelection}
                             selectedDays={selectedDays}
                         />
-                    </div>
+                    </Column>
                 </>
             }
         </div>

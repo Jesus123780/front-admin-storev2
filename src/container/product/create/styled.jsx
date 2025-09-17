@@ -117,10 +117,6 @@ export const Container = styled.div`
     .container_availability {
         margin: 20px;
     }
-    .container_days {
-        background-color: #cccccc24;
-        display: flex;
-    }
 
 `
 export const Card = styled.div`
