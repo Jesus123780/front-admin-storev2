@@ -218,6 +218,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setIsOpenOrder(false)
     location.push(`/pedidos?saleId=${encodeURIComponent(pCodeRef)}`)
   }
+  
   const [openDeliveryTime, setOpenDeliveryTime] = useState(false)
   const handleOpenDeliveryTime = () => {
     setOpenDeliveryTime((prev) => !prev)
