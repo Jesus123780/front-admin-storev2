@@ -22,12 +22,48 @@ import {
   ToggleSwitch,
   ImageProductEdit
 } from 'pkg-components'
-import PropTypes from 'prop-types'
 import { generateStoreURL, useImageUploaderProduct } from 'npm-pkg-hook'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import styles from './styles.module.css'
 
-export const ProductView = ({
+interface IProductViewProps {
+  dataExtra?: Array<any>
+  dataOptional?: Array<any>
+  days?: Array<any>
+  selectedDays?: Array<any>
+  modal?: boolean
+  loading?: boolean
+  nameStore?: string
+  pName?: string
+  ProDescription?: string
+  ProDescuento?: string
+  ProPrice?: string
+  ProImage?: string
+  store?: {
+    city: {
+      cName: string
+    }
+  }
+  tag?: {
+    nameTag: string | null
+  }
+  storeName?: string
+  showDessert?: boolean
+  propsUploadProductImage?: ReturnType<typeof useImageUploaderProduct>
+  setModal?: (boolean?: boolean) => void
+  onHideDessert?: () => void
+  setShowDessert?: (boolean: boolean) => void
+  handleDaySelection?: (day: string) => void
+  setAlertModal?: (boolean: boolean) => void
+  pId?: number | null
+  ProBarCode?: string | null
+  checkStock?: boolean
+  handleUpdateImageProduct?: () => void
+  handleCheckStock?: () => void
+  dissertProps?: Parameters<typeof OptionalExtraProducts>[0]
+  propsExtra?: Record<string, unknown>
+}
+export const ProductView: React.FC<IProductViewProps> = ({
   dataExtra = [],
   dataOptional = [],
   days = [],
@@ -285,52 +321,4 @@ export const ProductView = ({
       </AwesomeModal>
     </div>
   )
-}
-
-ProductView.propTypes = {
-  ProDescription: PropTypes.string,
-  ProDescuento: PropTypes.string,
-  ProImage: PropTypes.string,
-  ProPrice: PropTypes.string,
-  dataExtra: PropTypes.shape({
-    ExtProductFoodsAll: PropTypes.array
-  }),
-  dataOptional: PropTypes.shape({
-    ExtProductFoodsOptionalAll: PropTypes.array
-  }),
-  days: PropTypes.array,
-  dissertProps: PropTypes.object,
-  handleDaySelection: PropTypes.func,
-  handleCheckStock: PropTypes.func,
-  checkStock: PropTypes.bool,
-  handleDelete: PropTypes.func,
-  modal: PropTypes.bool,
-  loading: PropTypes.bool,
-  nameStore: PropTypes.shape({
-    replace: PropTypes.func
-  }),
-  onHideDessert: PropTypes.func,
-  pId: PropTypes.any,
-  pName: PropTypes.string,
-  propsExtra: PropTypes.object,
-  selectedDays: PropTypes.array,
-  setAlertModal: PropTypes.func,
-  setModal: PropTypes.func,
-  setShowDessert: PropTypes.func,
-  showDessert: PropTypes.func,
-  store: PropTypes.shape({
-    city: PropTypes.shape({
-      cName: PropTypes.shape({
-        toLocaleLowerCase: PropTypes.func
-      })
-    }),
-    department: PropTypes.shape({
-      dName: PropTypes.shape({
-        toLocaleLowerCase: PropTypes.func
-      })
-    }),
-    idStore: PropTypes.any
-  }),
-  storeName: PropTypes.string,
-  tag: PropTypes.object
 }

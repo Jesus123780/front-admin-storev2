@@ -1,6 +1,5 @@
 'use client'
 
-import PropTypes from 'prop-types'
 import React, { 
   useContext, 
   useEffect, 
@@ -224,8 +223,4 @@ export const TableSeating = () => {
       }
     </>
   )
-}
-
-TableSeating.propTypes = {
-  numSeats: PropTypes.number.isRequired
 }

@@ -37,15 +37,10 @@ import {
   getGlobalStyle
 } from 'pkg-components'
 import { ButtonsAction } from './options/index'
-// import { Food } from '../update/Products/food'
-// import { Categories } from '../Categories'
-// import { Product } from './Product'
-// import { ButtonsAction } from './Options/index'
 import { StickyBoundaryCategories } from './StickyBoundaryCategories'
 import { Banner } from './banner'
 import { UploadFilesProducts } from '../../container/product/create/uploadFilesProducts'
 import styles from './styles.module.css'
-import { FoodComponent } from '../product/create'
 import { Product } from '../product'
 import { Categories } from '../categories'
 import { TableSeating } from '../seating'
@@ -156,8 +151,8 @@ export const Store = () => {
   }
 
   useEffect(() => {
-    const stateMap: Record<string, number> = Object.keys(select).reduce((acc, key) => {
-      acc[select[key]] = Number(key)
+    const stateMap = Object.keys(select).reduce<Record<string, number>>((acc, key) => {
+      acc[select[key as unknown as keyof typeof select]] = Number(key)
       return acc
     }, {})
 
@@ -179,39 +174,45 @@ export const Store = () => {
    * @param {number} number - Action key from `select` (e.g. 1).
    * @param {string | boolean} [value=true] - Value to set in query param if not present.
    */
-  const handleActionClick = (number, value = true) => {
-    const currentParam = select[number]
+  type HandleActionClickProps = (number: number, value?: string | boolean) => void;
+
+  interface SelectMap {
+    [key: number]: string;
+  }
+
+  const handleActionClick: HandleActionClickProps = (number, value = true) => {
+    const currentParam = (select as SelectMap)[number];
     if (!currentParam) {
       sendNotification({
         description: 'Acción no válida',
         title: 'Error',
         backgroundColor: 'error'
-      })
-      return
+      });
+      return;
     }
 
-    handleClick(number)
+    handleClick(number);
 
     // Add query if missing
-    const isQueryPresent = getQuery(currentParam)
+    const isQueryPresent = getQuery(currentParam);
     if (!isQueryPresent) {
-      handleQuery(currentParam, value)
+      handleQuery(currentParam, value);
     }
 
     // Clean all other query params
     Object.entries(select).forEach(([key, param]) => {
-      const isSame = Number(key) === number
-      const exists = getQuery(param)
+      const isSame = Number(key) === number;
+      const exists = getQuery(param);
       if (!isSame && exists) {
-        handleCleanQuery(param)
+        handleCleanQuery(param);
       }
-    })
+    });
   }
 
   const titleModal = {
     1: 'Ver productos',
     2: 'Categorías',
-    3: 'Productos',
+    3: `Producto: ${product?.pName || ''}`,
     4: 'Crear multiples productos',
     5: 'Crear mesas'
   }
@@ -460,20 +461,25 @@ export const Store = () => {
           })
         }
       } catch (error) {
+        interface ErrorType {
+          graphQLErrors?: any[];
+          message?: string;
+        }
+        const err = error as ErrorType
         const errors = {
-          errors: error?.graphQLErrors || []
+          errors: err?.graphQLErrors || []
         }
 
         const responseError = errorHandler(errors)
 
-        if (error.message === 'Token expired' || responseError) {
+        if (err?.message === 'Token expired' || responseError) {
           onClickLogout()
         }
       }
     }
   })
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value)
   }
 
