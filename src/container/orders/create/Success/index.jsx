@@ -140,7 +140,7 @@ export const SuccessSaleModal = ({
           })}
         </div>
         <Divider marginBottom='0.9375rem' />
-        <AlertInfo message={`Mira y gestiona tus pedidos realizados en tienda ${process.env.BUSINESS_TITLE}`} type='warning' />
+        <AlertInfo message={`Mira y gestiona tus pedidos realizados en tienda ${process.env.NEXT_PUBLIC_BUSINESS_TITLE}`} type='warning' />
       </div>
 
     </AwesomeModal>
