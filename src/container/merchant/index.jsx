@@ -221,24 +221,24 @@ export const Restaurant = ({ userToken = {} } = {}) => {
           }
         }
 
-        if (success) {
-          setDataValue({})
-          setValues({})
-          if (nextStep === 3) {
-            sendNotification(messages.success)
-            setTimeout(() => {
-              handleSignOut()
-              sendNotification(messages.session)
-            }, 3000)
-            return
-          }
-        }
+        // if (success) {
+        //   setDataValue({})
+        //   setValues({})
+        //   if (nextStep === 3) {
+        //     sendNotification(messages.success)
+        //     setTimeout(() => {
+        //       handleSignOut()
+        //       sendNotification(messages.session)
+        //     }, 3000)
+        //     return
+        //   }
+        // }
 
-        if (message === 'No se encontró el usuario') {
-          window.location.href = ROUTES.login
-        } else {
-          sendNotification(messages.defaultError)
-        }
+        // if (message === 'No se encontró el usuario') {
+        //   window.location.href = ROUTES.login
+        // } else {
+        //   sendNotification(messages.defaultError)
+        // }
         setAlertBox({ message })
       }
     } catch (error) {

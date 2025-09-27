@@ -25,12 +25,10 @@ export const SuccessSaleModal = ({
 }) => {
 
   const formatter = new Intl.ListFormat('es', { style: 'long', type: 'conjunction' })
-  const ListFormat = products.map(product => {
-    return product?.pName
-  }).slice(0, 3)
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const finalListFormat = formatter?.format(ListFormat) || ''
+  const ListFormat = products
+    .map(product => product?.pName)
+    .filter(Boolean) // Remove null/undefined/empty values
+    .slice(0, 3)
 
   const arrayOptions = [
     {

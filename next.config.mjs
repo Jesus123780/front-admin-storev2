@@ -7,6 +7,7 @@ const nextConfig = {
     NEXT_PUBLIC_BUSINESS_TITLE: process.env.NEXT_PUBLIC_BUSINESS_TITLE,
     URL_ADMIN_SERVER: process.env.URL_ADMIN_SERVER,
     NEXT_PUBLIC_URL_BASE: process.env.NEXT_PUBLIC_URL_BASE,
+    NEXT_PUBLIC_URL_ADMIN_SERVER_SOCKET: process.env.NEXT_PUBLIC_URL_ADMIN_SERVER_SOCKET,
   },
   eslint: {
     ignoreDuringBuilds: true, // 🔹 Ignorar errores de ESLint en la build
