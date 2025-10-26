@@ -1,5 +1,5 @@
 // app/api/port/route.ts
-import getPort from 'get-port-please'
+import { getPort } from 'get-port-please'
 
 export async function GET() {
     const port = await getPort()

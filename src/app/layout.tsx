@@ -57,7 +57,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang='es'>
-      <div id='portal' />
       <Script
         dangerouslySetInnerHTML={{
           __html: `
@@ -73,6 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       />
 
       <body>
+        <div id='portal' />
         <ProgressBar progress={progress} hidden={hidden} />
         {isMounted && <Context>
           {/* <BarcodeScanner /> */}
