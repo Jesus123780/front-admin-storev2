@@ -9,7 +9,8 @@ import {
   Loading,
   PhoneInput,
   RippleButton,
-  Row} from 'pkg-components'
+  Row
+} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React, { useContext,useState } from 'react'
 

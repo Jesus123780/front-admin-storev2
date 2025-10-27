@@ -1,13 +1,13 @@
-import js from "@eslint/js";
-import globals from "globals";
-import tseslint from "typescript-eslint";
-import pluginReact from "eslint-plugin-react";
-import nextPlugin from "@next/eslint-plugin-next";
-import importPlugin from "eslint-plugin-import";
-import simpleImportSort from "eslint-plugin-simple-import-sort";
-import unusedImports from "eslint-plugin-unused-imports";
-import boundaries from "eslint-plugin-boundaries";
-
+import js from "@eslint/js"
+import globals from "globals"
+import tseslint from "typescript-eslint"
+import pluginReact from "eslint-plugin-react"
+import nextPlugin from "@next/eslint-plugin-next"
+import importPlugin from "eslint-plugin-import"
+import simpleImportSort from "eslint-plugin-simple-import-sort"
+import unusedImports from "eslint-plugin-unused-imports"
+import boundaries from "eslint-plugin-boundaries"
+import reactHooks from "eslint-plugin-react-hooks"
 export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -41,6 +41,7 @@ export default [
 
     plugins: {
       "@typescript-eslint": tseslint.plugin,
+      "react-hooks": reactHooks,
       react: pluginReact,
       import: importPlugin,
       "simple-import-sort": simpleImportSort,
@@ -58,6 +59,21 @@ export default [
       "eqeqeq": ["error", "always"],
       "curly": ["error", "all"],
       "quotes": ["error", "single", { avoidEscape: true }],
+
+      "react-hooks/rules-of-hooks": "error", // ✅ Verifica el uso correcto de hooks
+      "react-hooks/exhaustive-deps": "warn", // ⚠️ Advierte deps faltantes en useEffect
+
+
+      /* 🧱 Formato estricto de imports con saltos de línea */
+      "object-curly-newline": [
+        "error",
+        {
+          "ImportDeclaration": { "multiline": true, "minProperties": 3 },
+          "ExportDeclaration": { "multiline": true, "minProperties": 3 },
+        },
+      ],
+
+      "object-curly-spacing": ["error", "always"],
 
       // 🧹 Limpieza de imports
       "unused-imports/no-unused-imports": "error",
@@ -88,4 +104,4 @@ export default [
       "boundaries/ignore": ["**/*.test.*", "**/*.spec.*"],
     },
   },
-];
+]
