@@ -1,10 +1,10 @@
-import styled from 'styled-components'
 import {
   BColor,
   BGColor,
   NorthTexasGreen,
   PColor
 } from 'pkg-components'
+import styled from 'styled-components'
 
 export const Div = styled.div`
     width: 30%;
@@ -167,7 +167,7 @@ export const ContentLinesItems = styled.div`
     justify-content: center;
     height: min-content;
     border-bottom: 1px solid #ccc;
-    ${props => { return props.noBorder && `border-bottom: none` }}
+    ${props => { return props.noBorder && 'border-bottom: none' }}
 `
 export const ContentCheckbox = styled.div`
     transition: all .1s;

@@ -1,5 +1,6 @@
-import { Dashboard } from '@/container/dashboard'
 import React from 'react'
+
+import { Dashboard } from '@/container/dashboard'
 
 const dashboardPage = () => {
   return (

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import styled, { css } from 'styled-components'
 import {
   BGColor,
   DarkSilver,
@@ -7,6 +6,7 @@ import {
   PColor,
   SECColor
 } from 'pkg-components'
+import styled, { css } from 'styled-components'
 
 export const Content = styled.div`
   width: 100%;

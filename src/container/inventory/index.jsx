@@ -2,12 +2,11 @@
 
 import {
   useStockMovements,
-  useWeeklyStockMovement,
+  useTotalAllSales,
+  useTotalProductsInStock,
   useTotalProductsSold as useTotalSalesSold,
   useTotalProductsSolded,
-  useTotalProductsInStock,
-  useTotalAllSales
-} from 'npm-pkg-hook'
+  useWeeklyStockMovement} from 'npm-pkg-hook'
 import { 
   Column, 
   getGlobalStyle, 
@@ -17,8 +16,9 @@ import {
   StockMovementsChart, 
   Text
 } from 'pkg-components'
-import { ReportGrid } from './ReportGrid'
 import { useEffect, useState } from 'react'
+
+import { ReportGrid } from './ReportGrid'
 import styles from './styles.module.css'
 
 export const InventoryC = () => {
@@ -103,7 +103,7 @@ export const InventoryC = () => {
             const isPositive = parseFloat(percentage) > 0
             const isNA = percentage === 'N/A'
             const isNotDate = item.weekStart === null
-            if (isNotDate) return null
+            if (isNotDate) {return null}
 
             const weekStartDate = new Date(item.weekStart)
             const weekEndDate = new Date(weekStartDate)

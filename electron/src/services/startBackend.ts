@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process'
 import { join } from 'node:path'
+
 import { is } from '@electron-toolkit/utils'
 
 /**
@@ -7,7 +8,7 @@ import { is } from '@electron-toolkit/utils'
  * Does nothing in dev mode.
  */
 export const startBackendServer = (): void => {
-  if (is.dev) return
+  if (is.dev) {return}
 
   const backendPath = join(process.resourcesPath, 'front-back-server.exe')
   const backendProcess = spawn(backendPath, [], { stdio: 'ignore' })

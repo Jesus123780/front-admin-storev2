@@ -1,20 +1,17 @@
 'use client'
 
-import PropTypes from 'prop-types'
-import React, { useEffect, useState } from 'react'
 import {
-  useStore,
-  useFormatDate
-} from 'npm-pkg-hook'
+  useFormatDate,
+  useStore} from 'npm-pkg-hook'
 import {
-  Text,
-  Loading,
+  getGlobalStyle,
+  Icon,
   numberFormat,
   RippleButton,
-  Icon,
-  getGlobalStyle
-} from 'pkg-components'
-import Image from 'next/image'
+  Text} from 'pkg-components'
+import PropTypes from 'prop-types'
+import React, { useEffect, useState } from 'react'
+
 import {
   ContainerTicket,
   Content,
@@ -71,7 +68,7 @@ export const Prints = ({
     if (isPrinting && promiseResolveRef.current) {
       promiseResolveRef.current()
     }
-    // eslint-disable-next-line
+     
   }, [isPrinting])
   const customDate = `${yearMonthDay} ${longDayName}`
 

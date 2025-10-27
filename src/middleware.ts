@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
   // Si no tiene sesión y está en /dashboard, redirigir a login
   if (!merchant && pathname.startsWith('/dashboard')) {
     const loginUrl = new URL('/login', request.url)
-    if (hadSession) loginUrl.searchParams.set('session', 'expired') // Indicar que la sesión expiró
+    if (hadSession) {loginUrl.searchParams.set('session', 'expired')} // Indicar que la sesión expiró
     return NextResponse.redirect(loginUrl)
   }
 

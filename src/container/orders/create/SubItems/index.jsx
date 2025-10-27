@@ -1,23 +1,24 @@
 'use client'
 
-import PropTypes from 'prop-types'
-import React from 'react'
 import {
   AwesomeModal,
-  RippleButton,
-  Skeleton,
-  QuantityButton,
-  LoaderSubItem,
   getGlobalStyle,
+  LoaderSubItem,
   numberFormat,
-  Row
-} from 'pkg-components'
+  QuantityButton,
+  RippleButton,
+  Row,
+  Skeleton} from 'pkg-components'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
+import PropTypes from 'prop-types'
+import React from 'react'
+
+import { ExtrasProductsItems } from '@/container/product/extras/ExtrasProductsItems'
+
 import { 
   Container, 
   Content
 } from './styled'
-import { ExtrasProductsItems } from '@/container/product/extras/ExtrasProductsItems'
-import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const SubItems = ({
   dataExtra = [],

@@ -1,14 +1,15 @@
 'use client'
 
-import React from 'react'
-import PropTypes from 'prop-types'
 import {
-  getGlobalStyle,
-  Checkbox,
   Button,
+  Checkbox,
+  getGlobalStyle,
   Icon,
   Tag
 } from 'pkg-components'
+import PropTypes from 'prop-types'
+import React from 'react'
+
 import { CardsComponent, GarnishChoicesHeader } from './styled'
 
 export const Optional = ({

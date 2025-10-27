@@ -1,11 +1,12 @@
-"use client"; 
+'use client'; 
+import { useRouter } from 'next/navigation'
+import { useMobile } from 'npm-pkg-hook'
 import { HomeMain, ROUTES } from 'pkg-components'
+import React from 'react'
+
 import {
   Container
 } from './styled'
-import { useRouter } from 'next/navigation'
-import { useMobile } from 'npm-pkg-hook'
-import React from 'react'
 
 export const Home = () => {
   const router = useRouter()

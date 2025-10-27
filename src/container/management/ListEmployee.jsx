@@ -1,6 +1,6 @@
 'use client'
 
-import PropTypes from 'prop-types'
+import { useCheckboxState,useEmployee } from 'npm-pkg-hook'
 import {
   CheckboxCube,
   Column,
@@ -16,8 +16,8 @@ import {
   Table,
   Tag
 } from 'pkg-components'
-import React, { useEffect, useState } from 'react'
-import { useEmployee, useCheckboxState } from 'npm-pkg-hook'
+import PropTypes from 'prop-types'
+import React, { useState } from 'react'
 
 export const ListEmployee = ({
   handlePageChange = () => { return null }
@@ -35,7 +35,7 @@ export const ListEmployee = ({
   } = useCheckboxState(roleIds, [])
 
   const handleOnDragEnd = (result) => {
-    if (!result.destination) return
+    if (!result.destination) {return}
 
     // Crear una copia de la lista de roles
     const reorderedItems = Array.from(employee)

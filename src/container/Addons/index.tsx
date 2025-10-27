@@ -1,10 +1,11 @@
 'use client'
 
+import { Text } from 'pkg-components'
 import React from 'react'
+
 import { Devices } from '../../container/Devices'
 import { TeamStore } from '../TeamStore'
 import { ContentAddonsGrid } from './styled'
-import { Text } from 'pkg-components'
 
 export const Addons = () => {
   const style = {

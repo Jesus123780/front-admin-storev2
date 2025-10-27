@@ -1,6 +1,9 @@
 'use client'
 
-import React, { useContext, useState } from 'react'
+import {
+  convertDateFormat,
+  useFormTools,
+  useGetRoles} from 'npm-pkg-hook'
 import {
   AwesomeModal,
   Button,
@@ -10,17 +13,14 @@ import {
   Row,
   Stepper
 } from 'pkg-components'
-import {
-  useGetRoles,
-  convertDateFormat,
-  useFormTools
-} from 'npm-pkg-hook'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
+import React, { useContext, useState } from 'react'
+
 import { Context } from '../../context/Context'
-import { FormRoles } from './FormRoles'
 import { FormEmployee } from './FormEmployee'
+import { FormRoles } from './FormRoles'
 import { ListEmployee } from './ListEmployee'
 import { ListRoles } from './ListRoles'
-import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const ContainerManagement = () => {
   const [currentPage, setCurrentPage] = useState(1)

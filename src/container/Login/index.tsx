@@ -1,38 +1,37 @@
-"use client"
+'use client'
 
+import { useRouter } from 'next/navigation'
+import {
+  Cookies,
+  encryptSession,
+  fetchJson,
+  isTokenExpired,
+  signOutAuth,
+  useLogout,
+  useRegisterDeviceUser,
+  useSetSession} from 'npm-pkg-hook'
+import {
+  Button,
+  Column,
+  Divider,
+  getGlobalStyle,
+  GoogleLogin,
+  Icon,
+  LoadingButton,
+  ROUTES,
+  Text} from 'pkg-components'
 import React, {
   useContext,
   useEffect,
   useLayoutEffect,
   useState
 } from 'react'
+
 import { getDeviceId } from '../../../apollo/getDeviceId'
 import { Context } from '../../context/Context'
-import {
-  LoadingButton,
-  Icon,
-  Text,
-  Divider,
-  getGlobalStyle,
-  Button,
-  Column,
-  GoogleLogin,
-  ROUTES
-} from 'pkg-components'
-import {
-  fetchJson,
-  signOutAuth,
-  encryptSession,
-  useLogout,
-  useSetSession,
-  isTokenExpired,
-  useRegisterDeviceUser,
-  Cookies
-} from 'npm-pkg-hook'
-import { getUserFromToken, decodeToken } from '../../utils'
-import { useRouter } from 'next/navigation'
-import { GoogleUserBody } from './types'
+import { decodeToken,getUserFromToken } from '../../utils'
 import styles from './styles.module.css'
+import { GoogleUserBody } from './types'
 
 const EXPIRED_MESSAGE = 'Session expired, refresh needed'
 
@@ -163,7 +162,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
       window.location.href = `${window.location.origin}/merchant`
 
     } catch (error) {
-      console.error("🚀 ~ responseGoogle ~ error:", error)
+      console.error('🚀 ~ responseGoogle ~ error:', error)
 
       setAlertBox({
         message: error instanceof Error ? error.message : 'Error al iniciar sesión',
@@ -338,7 +337,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
         setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
       })
     }
-    if (ironSession) return
+    if (ironSession) {return}
     // if (session && status === 'authenticated' && !ironSession && !expired) {
     //   (async () => {
     //     setLoading(true)

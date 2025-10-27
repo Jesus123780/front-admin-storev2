@@ -1,9 +1,9 @@
 'use client'
 
+import { generateStoreURL,numberFormat } from 'npm-pkg-hook'
+import { Bill } from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
-import { numberFormat, generateStoreURL } from 'npm-pkg-hook'
-import { Bill } from 'pkg-components'
 
 export const Ticket = ({ componentRef, dataToPrint }) => {
   const {

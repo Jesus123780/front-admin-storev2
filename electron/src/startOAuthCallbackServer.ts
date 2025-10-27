@@ -1,6 +1,7 @@
-import express from 'express'
 import { Server } from 'node:http'
 import { URL } from 'node:url'
+
+import express from 'express'
 
 export const startOAuthCallbackServer = (
     port: number,

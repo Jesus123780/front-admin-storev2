@@ -1,31 +1,31 @@
 'use client'
 
+import { 
+  RandomCode, 
+  useFormTools, 
+  useStoreTableCreate, 
+  useStoreTables
+} from 'npm-pkg-hook'
+import { 
+  AlertInfo, 
+  Carousel, 
+  Column, 
+  Divider, 
+  getGlobalStyle, 
+  HeaderSteps,
+  Icon, 
+  InputHooks, 
+  RippleButton, 
+  Row, 
+  Text} from 'pkg-components'
 import React, { 
   useContext, 
   useEffect, 
   useState
 } from 'react'
-import styles from './style.module.css'
+
 import { Context } from '../../context/Context'
-import { 
-  useFormTools, 
-  useStoreTableCreate, 
-  RandomCode, 
-  useStoreTables
-} from 'npm-pkg-hook'
-import { 
-  Carousel, 
-  AlertInfo, 
-  Column, 
-  Divider, 
-  getGlobalStyle, 
-  Icon, 
-  InputHooks, 
-  RippleButton, 
-  Row, 
-  Text, 
-  HeaderSteps
-} from 'pkg-components'
+import styles from './style.module.css'
 import { TableSetting } from './TableSetting'
 
 export const TableSeating = () => {

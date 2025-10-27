@@ -1,25 +1,25 @@
 import {
+  useDownloadReportByDay,
+  useFormatDate,
+  useGetReportByDateRange,
+  UtilDateRange} from 'npm-pkg-hook'
+import {
+  ButtonSuccess,
   Column,
   HeaderSteps,
   Icon,
-  Text,
-  ButtonSuccess
-} from 'pkg-components'
-import {
-  useDownloadReportByDay,
-  useGetReportByDateRange,
-  UtilDateRange,
-  useFormatDate
-} from 'npm-pkg-hook'
+  Text} from 'pkg-components'
 import { useContext, useState } from 'react'
+
 import { Context } from '@/context/Context'
+
 import styles from './styles.module.css'
 
 const titleHeaders = ['DIARIO', 'POR SEMANA', 'ULTIMO MES']
 const descriptionHeaders = [
   'Descarga el reporte de ventas del día.',
   'Descarga el reporte de ventas de la semana. actualmente en curso.',
-  `Descarga el reporte de ventas del último mes (30 días).`
+  'Descarga el reporte de ventas del último mes (30 días).'
 ]
 
 export const ReportDownloadsPanel = () => {

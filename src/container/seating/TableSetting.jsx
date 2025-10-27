@@ -1,8 +1,9 @@
 'use client'
 
+import { Text } from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
-import { Text } from 'pkg-components'
+
 import styles from './style.module.css'
 
 export const TableSetting = ({
@@ -34,8 +35,8 @@ export const TableSetting = ({
     
     const seatStyle =
         side % 2 === 0
-          ? { width: `${80 / seatsPerSide}%`, height: '15%', margin: `0 5%` }
-          : { width: '8%', height: `${80 / seatsPerSide}%`, margin: `5% 0` }
+          ? { width: `${80 / seatsPerSide}%`, height: '15%', margin: '0 5%' }
+          : { width: '8%', height: `${80 / seatsPerSide}%`, margin: '5% 0' }
     
     const positionStyle = (() => {
       switch (side) {
@@ -88,19 +89,15 @@ export const TableSetting = ({
         {seats.map((seat, index) => {
           const seatsPerSide = Math.ceil(limitedSeats / 4)
           const side = Math.floor(index / seatsPerSide) % 4
+
+          const sideLabels = ['top', 'right', 'bottom', 'left']
+          const dataSide = sideLabels[side] || 'left'
+
           return (
             <div
               className={styles.seat}
-              data-side={
-                side === 0 
-                  ? 'top' 
-                  : side === 1 
-                    ? 'right' 
-                    : side === 2 
-                      ? 'bottom' 
-                      : 'left'
-              }
-              key={index}
+              data-side={dataSide}
+              key={seat}
               style={getSeatPosition(index)}
             >
               {seat}

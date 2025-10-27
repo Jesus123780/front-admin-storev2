@@ -1,5 +1,3 @@
-import React from 'react'
-import { useComponentAnalytics } from '../context'
 import {
     Column,
     Divider,
@@ -7,9 +5,12 @@ import {
     HeaderSteps,
     Text
 } from 'pkg-components'
+import React from 'react'
+
 import { ChatStatistic } from '@/container/ChatStatistic'
 import { ReportDownloadsPanel } from '@/container/reports/components/ReportDownloadsPanel'
-import { CustomReportsManager } from './CustomReportsManager'
+
+import { useComponentAnalytics } from '../context'
 
 export const ComponentsReports = () => {
     const {

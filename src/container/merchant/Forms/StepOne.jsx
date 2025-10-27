@@ -1,15 +1,17 @@
-import PropTypes from 'prop-types'
-import React from 'react'
-import { ContainerAnimation } from '..'
 import {
-  NewSelect,
-  InputHooks,
   Divider,
   getGlobalStyle,
+  InputHooks,
+  NewSelect,
   Text
 } from 'pkg-components'
-import { WrapDirection } from '../styled'
+import PropTypes from 'prop-types'
+import React from 'react'
+
 import { CalcularDigitoVerificacion } from '@/utils'
+
+import { ContainerAnimation } from '..'
+import { WrapDirection } from '../styled'
 
 export const StepOne = ({
   catStore = [],

@@ -1,12 +1,12 @@
 'use client'
 
-import { memo, ChangeEvent } from 'react'
-import {
-  Skeleton,
-  BarChat,
-  HorizontalBarChart
-} from 'pkg-components'
 import { useChartData, useMobile } from 'npm-pkg-hook'
+import {
+  BarChat,
+  HorizontalBarChart,
+  Skeleton} from 'pkg-components'
+import { ChangeEvent,memo } from 'react'
+
 import styles from './styles.module.css'
 
 export const ChatStatisticMemo = () => {

@@ -1,36 +1,36 @@
 'use client'
 
-import PropTypes from 'prop-types'
-import React, {
-  useEffect,
-  useRef,
-  useContext,
-  useState
-} from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  useGetClients,
-  useSales,
-  useAmountInput,
-  useStore,
-  useStoreTables,
-  useFormatDate,
   generateStoreURL,
-  useReactToPrint
-} from 'npm-pkg-hook'
+  useAmountInput,
+  useFormatDate,
+  useGetClients,
+  useReactToPrint,
+  useSales,
+  useStore,
+  useStoreTables} from 'npm-pkg-hook'
 import {
-  numberFormat,
-  GenerateSales as GenerateSalesPkg,
-  generatePdfDocumentInvoice,
-  CardProductSimple,
   AwesomeModal,
-  RippleButton,
+  CardProductSimple,
+  Column,
+  Divider,
+  generatePdfDocumentInvoice,
+  GenerateSales as GenerateSalesPkg,
   getGlobalStyle,
   InputHooks,
-  Divider,
-  Column,
+  numberFormat,
+  RippleButton,
   Row
 } from 'pkg-components'
+import PropTypes from 'prop-types'
+import React, {
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
+
 import { Context } from '../../../context/Context'
 import { ModalSales } from './ModalSales'
 import { SubItems } from './SubItems'
@@ -212,7 +212,7 @@ export const CreateSales = ({
 
   const handlePrint = useReactToPrint({
     documentTitle: '',
-    pageStyle: `padding: 0px`,
+    pageStyle: 'padding: 0px',
     content: () => {
       return componentRef.current
     },
@@ -341,7 +341,7 @@ export const CreateSales = ({
     }
 
     setInitialValues()
-    // eslint-disable-next-line
+     
   }, [values?.cliId]);
 
   const isLoading = loadingRegisterSale || loading || isPrinting
@@ -387,18 +387,18 @@ export const CreateSales = ({
   }
 
   const selectProduct = (product) => {
-    if (!product) return
+    if (!product) {return}
     handleProduct(product)
     setModalItem(!modalItem)
   }
 
   const handleToggleFree = (producto) => {
     if (!producto)
-      return sendNotification({
+      {return sendNotification({
         message: 'No se ha seleccionado un producto',
         title: 'Error',
         backgroundColor: 'error'
-      })
+      })}
     return dispatch({ type: 'TOGGLE_FREE_PRODUCT', payload: producto })
   }
   const [openAside, setOpenAside] = useState(false)

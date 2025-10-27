@@ -1,18 +1,18 @@
 'use client'
 
-import PropTypes from 'prop-types'
-import React, { useState, useContext } from 'react'
-import {
-  Column,
-  RippleButton,
-  Checkbox,
-  Loading,
-  InputHooks,
-  PhoneInput,
-  Row,
-  getGlobalStyle
-} from 'pkg-components'
 import { useCreateClient } from 'npm-pkg-hook'
+import {
+  Checkbox,
+  Column,
+  getGlobalStyle,
+  InputHooks,
+  Loading,
+  PhoneInput,
+  RippleButton,
+  Row} from 'pkg-components'
+import PropTypes from 'prop-types'
+import React, { useContext,useState } from 'react'
+
 import { Context } from '../../context/Context'
 import styles from './styles.module.css'
 

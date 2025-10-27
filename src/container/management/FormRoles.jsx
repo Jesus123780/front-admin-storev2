@@ -1,21 +1,21 @@
+import { useCreateRole } from 'npm-pkg-hook'
+import {
+  AlertInfo,
+  Checkbox,
+  Column,
+  Divider,
+  getGlobalStyle,
+  InputHooks,
+  Loading,
+  Paragraph,
+  RippleButton,
+  Text} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React, { useContext } from 'react'
-import {
-  Column,
-  RippleButton,
-  Checkbox,
-  Loading,
-  InputHooks,
-  getGlobalStyle,
-  Text,
-  Paragraph,
-  Divider,
-  AlertInfo
-} from 'pkg-components'
-import { useCreateRole } from 'npm-pkg-hook'
+
 import { Context } from '../../context/Context'
-import { permissions } from './helpers'
 import { filterKeyObject } from '../../utils'
+import { permissions } from './helpers'
 import styles from './styles.module.css'
 
 export const FormRoles = ({
@@ -42,11 +42,11 @@ export const FormRoles = ({
       event: e,
       action: () => {
         setLoading(true)
-        if (selectedPermissions?.length <= 0) return sendNotification({
+        if (selectedPermissions?.length <= 0) {return sendNotification({
           title: 'Error',
           description: 'Debes elegir por lo menos un permiso al rol',
           backgroundColor: 'error'
-        })
+        })}
         const values = filterKeyObject({ ...dataForm }, ['toDate', 'fromDate'])
         return createRoleMutation({
           variables: {

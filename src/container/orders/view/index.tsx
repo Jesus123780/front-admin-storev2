@@ -1,35 +1,35 @@
 'use client'
 
-import React, {
-    useState,
-    useMemo,
-    useContext
-} from 'react'
 import {
-    Button,
-    InputQuery,
-    DateRange,
+    useChangeStateOrder,
+    useFormTools,
+    useOrdersFromStore,
+    useOrderStatusTypes,
+    useUpdateOrderStatusPriorities,
+    UtilDateRange,
+} from 'npm-pkg-hook'
+import {
     AlertInfo,
+    Button,
+    Column,
+    DateRange,
+    Divider,
+    DropResult,
     EmptyData,
     getGlobalStyle,
     InputDate,
-    Divider,
-    ToggleSwitch,
-    Column,
-    DropResult
-} from 'pkg-components'
-import {
-    useFormTools,
-    useOrdersFromStore,
-    UtilDateRange,
-    useOrderStatusTypes,
-    useChangeStateOrder,
-    useUpdateOrderStatusPriorities,
-} from 'npm-pkg-hook'
+    InputQuery,
+    ToggleSwitch} from 'pkg-components'
+import React, {
+    useContext,
+    useMemo,
+    useState} from 'react'
+
 import { Context } from '@/context/Context'
+
+import { GetAllOrdersFromStoreResponse, OrderGroup } from '../types'
 import { DragOrders } from './components/DragOrders'
 import styles from './styles.module.css'
-import { GetAllOrdersFromStoreResponse, OrderGroup } from '../types'
 
 export const OrdersView = () => {
 
@@ -86,14 +86,14 @@ export const OrdersView = () => {
     const onDragEnd = async (result: DropResult) => {
         const { source, destination } = result
 
-        if (!destination) return
+        if (!destination) {return}
 
         if (
             source.droppableId === destination.droppableId &&
             source.index === destination.index
-        ) return
+        ) {return}
 
-        if (!Array.isArray(orders) || orders.length === 0) return
+        if (!Array.isArray(orders) || orders.length === 0) {return}
 
         const updatedOrders = [...orders]
 
@@ -102,7 +102,7 @@ export const OrdersView = () => {
             source.index >= updatedOrders.length ||
             destination.index < 0 ||
             destination.index > updatedOrders.length
-        ) return
+        ) {return}
 
         const [movedOrder] = updatedOrders.splice(source.index, 1)
         updatedOrders.splice(destination.index, 0, movedOrder)
@@ -164,7 +164,7 @@ export const OrdersView = () => {
                             handleChange={(e) => {
                                 handleChange(e)
                                 // Espera a que termine de escribir antes de llamar a refetch
-                                if (window.searchTimeout) clearTimeout(window.searchTimeout)
+                                if (window.searchTimeout) {clearTimeout(window.searchTimeout)}
                                 window.searchTimeout = setTimeout(() => {
                                     refetch({
                                         fromDate: dataForm.fromDate,

@@ -1,6 +1,9 @@
 'use client'
 
-import PropTypes from 'prop-types'
+import {
+  GenerateReport,
+  useUpdateMultipleProducts,
+  useUploadProducts} from 'npm-pkg-hook'
 import {
   Button,
   Divider,
@@ -10,17 +13,14 @@ import {
   Row,
   Text
 } from 'pkg-components'
+import PropTypes from 'prop-types'
 import React, { useContext } from 'react'
-import {
-  useUploadProducts,
-  useUpdateMultipleProducts,
-  GenerateReport
-} from 'npm-pkg-hook'
-import { ListData } from './ListData'
+
 import { Context } from '../../../../context/Context'
-import { TemplateDownloader } from './TemplateDownloader'
 import { excelData, generateBarcode } from './helpers'
+import { ListData } from './ListData'
 import styles from './styles.module.css'
+import { TemplateDownloader } from './TemplateDownloader'
 
 export const UploadFilesProducts = ({
   handleClick = () => { return }
@@ -97,7 +97,7 @@ export const UploadFilesProducts = ({
         sendNotification({
           description: successfullyUploadedLength > 0
             ? `Se subieron ${successfullyUploadedLength} productos correctamente.`
-            : `No se subieron productos correctamente, verifica y vuelve a intentarlo.`,
+            : 'No se subieron productos correctamente, verifica y vuelve a intentarlo.',
           title: successfullyUploadedLength > 0 ? 'Success' : 'No se subieron productos',
           backgroundColor: successfullyUploadedLength > 0 ? 'success' : 'error'
         })

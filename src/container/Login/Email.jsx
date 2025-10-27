@@ -1,34 +1,33 @@
-import React, {
-  useState,
-  useEffect,
-  useContext
-} from 'react'
-import {
-  InputHooks,
-  RippleButton,
-  Loading,
-  InputOTPHook,
-  validateEmail,
-  BColor,
-  IconArrowLeft,
-  EColor,
-  PLColor,
-  Button,
-  Text,
-  Column,
-  ROUTES
-} from 'pkg-components'
-import {
-  useFormTools,
-  useManageQueryParams,
-  fetchJson
-} from 'npm-pkg-hook'
 import { useMutation } from '@apollo/client'
-import { EMAIL_SESSION } from './queries'
-import { Context } from './../../context/Context'
 import { useRouter, useSearchParams } from 'next/navigation'
+import {
+  fetchJson,
+  useFormTools,
+  useManageQueryParams} from 'npm-pkg-hook'
+import {
+  BColor,
+  Button,
+  Column,
+  EColor,
+  IconArrowLeft,
+  InputHooks,
+  InputOTPHook,
+  Loading,
+  PLColor,
+  RippleButton,
+  ROUTES,
+  Text,
+  validateEmail} from 'pkg-components'
+import React, {
+  useContext,
+  useEffect,
+  useState} from 'react'
+
 import { decodeToken } from '@/utils'
+
 import { getDeviceId } from '../../../apollo/getDeviceId'
+import { Context } from './../../context/Context'
+import { EMAIL_SESSION } from './queries'
 
 export const Email = () => {
   const [handleChange, handleSubmit, setDataValue, {
@@ -101,7 +100,7 @@ export const Email = () => {
         localStorage.setItem('restaurant', idStore)
         localStorage.setItem('usuario', id)
         localStorage.setItem('session', token)
-        if (idStore) router.push('/dashboard')
+        if (idStore) {router.push('/dashboard')}
       } else {
         router.push('/restaurante')
       }

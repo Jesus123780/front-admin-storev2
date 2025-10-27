@@ -1,4 +1,4 @@
-import { GetAllShoppingCard } from "pkg-components/stories/organisms/ModalDetailOrder/type"
+import { GetAllShoppingCard } from 'pkg-components/stories/organisms/ModalDetailOrder/type'
 
 export interface OrderStatusType {
   idStatus: string

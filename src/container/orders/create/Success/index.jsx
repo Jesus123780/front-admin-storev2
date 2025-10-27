@@ -1,14 +1,13 @@
+import {
+  AlertInfo,
+  AwesomeModal,
+  Divider,
+  getGlobalStyle,
+  Icon,
+  Text} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
-import {
-  AwesomeModal,
-  Text,
-  Loading,
-  Icon,
-  getGlobalStyle,
-  Divider,
-  AlertInfo
-} from 'pkg-components'
+
 import styles from './styles.module.css'
 
 export const SuccessSaleModal = ({

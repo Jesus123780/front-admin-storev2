@@ -1,43 +1,47 @@
 'use client'
 
-import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/client'
+import Joi from 'joi'
 import {
-  useFormTools,
-  useLogout,
-  useSetSession,
-  useCountries,
-  useRoads,
   useCategoryStore,
-  useLocationManager,
   useCities,
-  useDepartments,
+  useCountries,
   useCreateStorePendingToRegister,
-  useMobile,
+  useDepartments,
+  useFormTools,
   useGetCookies,
+  useLocationManager,
   useLoginEmployeeInStore,
+  useLogout,
+  useMobile,
+  useRoads,
+  useSetSession,
   useUser
 } from 'npm-pkg-hook'
-import React, { useContext, useEffect, useState } from 'react'
-import styled, { css, keyframes } from 'styled-components'
 import {
-  Row,
   AwesomeModal,
-  RippleButton,
-  motion,
-  Loading,
-  Text,
   Column,
-  StepsComponent,
+  Divider,
+  EColor,
   getGlobalStyle,
   Icon,
-  Divider,
+  Loading,
+  motion,
+  RippleButton,
+  Row,
   Stepper,
-  Toast,
-  EColor,
-  ROUTES
-} from 'pkg-components'
+  StepsComponent,
+  Text,
+  Toast} from 'pkg-components'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
+import PropTypes from 'prop-types'
+import React, { useContext, useEffect, useState } from 'react'
+import styled, { css, keyframes } from 'styled-components'
+
 import { Context } from '../../context/Context'
+import { StepCero } from './Forms/StepCero'
+import { StepOne } from './Forms/StepOne'
+import { StepTow } from './Forms/StepTow'
 import { CREATE_ONE_STORE } from './queries'
 import {
   Card,
@@ -45,12 +49,7 @@ import {
   Form,
   GoBack
 } from './styled'
-import { StepTow } from './Forms/StepTow'
-import { StepOne } from './Forms/StepOne'
-import { StepCero } from './Forms/StepCero'
-import Joi from 'joi'
 import styles from './styles.module.css'
-import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const Restaurant = ({ userToken = {} } = {}) => {
   // STATES
@@ -336,7 +335,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
   const { createStorePendingToRegister } = useCreateStorePendingToRegister()
 
   const handleSave = async () => {
-    if (!id) return
+    if (!id) {return}
     const input = {
       UserId: id,
       UserEmail: email || dataUser?.email || '',

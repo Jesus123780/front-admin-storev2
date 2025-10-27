@@ -1,15 +1,16 @@
-import PropTypes from 'prop-types'
-import React from 'react'
+import { useDeleteSubProductOptional } from 'npm-pkg-hook'
 import { 
   Column, 
   CreateExtra, 
   getGlobalStyle, 
   Icon
 } from 'pkg-components'
-import { useDeleteSubProductOptional } from 'npm-pkg-hook'
+import PropTypes from 'prop-types'
+import React from 'react'
+
+import Items from './Items'
 import { Optional } from './Optional'
 import { GarnishChoicesHeader } from './styled'
-import Items from './Items'
 
 /**
  * Component to render extra products and their options.

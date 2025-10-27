@@ -1,27 +1,28 @@
 'use client'
 
-import React, { useState, useEffect, useContext, FunctionComponent } from 'react'
+import { useMobile,useUpdateDashboardComponent } from 'npm-pkg-hook'
 import { 
     Column, 
-    Text, 
-    ToggleSwitch, 
-    Responsive, 
-    WidthProvider, 
+    getGlobalStyle,
     Layout, 
     Layouts, 
-    getGlobalStyle
-} from 'pkg-components'
-import { useUpdateDashboardComponent, useMobile } from 'npm-pkg-hook'
-import { useComponents } from '../context'
+    Responsive, 
+    Text, 
+    ToggleSwitch, 
+    WidthProvider} from 'pkg-components'
+import React, { FunctionComponent,useContext, useEffect, useState } from 'react'
+
+import { ChatStatistic } from '@/container/ChatStatistic'
+import { Devices } from '@/container/Devices'
 import { DishStore } from '@/container/main/components/main.dishStore'
-import { SalesDay } from '@/container/main/components/main.salesDay'
 import { Goal } from '@/container/main/components/main.goal'
 import { QrCode } from '@/container/main/components/main.qr'
-import { ChatStatistic } from '@/container/ChatStatistic'
+import { SalesDay } from '@/container/main/components/main.salesDay'
 import { TeamStore } from '@/container/TeamStore'
-import { Devices } from '@/container/Devices'
 import { Context } from '@/context/Context'
+
 import { Loading } from '../components'
+import { useComponents } from '../context'
 import styles from './styles.module.css'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
@@ -46,7 +47,7 @@ interface ItemProps {
 
 const Item: FunctionComponent<ItemProps> = ({ id, component }) => {
     const View = COMPONENT_MAP[id]
-    if (!View) return null
+    if (!View) {return null}
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
@@ -88,7 +89,7 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
      * Handle changes in layout (drag / resize)
      */
     const handleLayoutChange = (layout: Layout[], allLayouts: Layouts) => {
-        if (!editMode || skipUpdate) return
+        if (!editMode || skipUpdate) {return}
         setLayouts(allLayouts)
         setComponents((prev) =>
             prev.map((comp) => {
@@ -204,7 +205,7 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
 
 export const GridStackWrapper: FunctionComponent = () => {
     const { components: items, setComponents, loading } = useComponents()
-    if (loading) return <Loading />
+    if (loading) {return <Loading />}
     return (
         <div style={{
             maxWidth: getGlobalStyle('--width-max-desktop'),

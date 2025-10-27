@@ -1,6 +1,12 @@
-import { createContext, useState, useContext, useMemo } from 'react';
-import type { ComponentInfo } from '../helpers';
 import { useDashboardComponents } from 'npm-pkg-hook';
+import { 
+  createContext, 
+  useContext, 
+  useMemo, 
+  useState
+} from 'react';
+
+import type { ComponentInfo } from '../helpers';
 import { COMPONENT_MAP } from '../helpers/GridStackWrapper';
 import { Coordinates, DashboardComponent } from './types';
 

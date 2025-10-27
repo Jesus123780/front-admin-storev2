@@ -1,11 +1,13 @@
 'use client'
 
-import React from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
+import { ROUTES } from 'pkg-components'
+import React from 'react'
+
 import { Product } from '@/container/product'
 import { Update } from '@/container/product/update'
+
 import NotFound from '../../not-found'
-import { ROUTES } from 'pkg-components'
 
 const ProductsPage = () => {
   const { slug } = useParams  ()

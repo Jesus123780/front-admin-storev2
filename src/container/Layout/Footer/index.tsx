@@ -1,6 +1,6 @@
 import React from 'react'
+
 import styles from './styles.module.css'
-import { ActiveLink, Text, Icon } from 'pkg-components'
 
 const navLinks = [
   { href: '/dashboard', icon: 'IconHome', label: 'Home' },

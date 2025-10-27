@@ -1,9 +1,8 @@
 import {
-  BGColor,
   APColor,
-  SECBGColor,
+  BGColor,
   DarkSilver,
-  PColor,
+  SECBGColor,
   SFVColor
 } from 'pkg-components'
 import styled, { css } from 'styled-components'

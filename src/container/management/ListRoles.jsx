@@ -1,24 +1,23 @@
-import PropTypes from 'prop-types'
-import React, { useContext, useEffect, useMemo, useState } from 'react'
 import {
-  DragDropContext,
-  Droppable,
-  Draggable,
+  useCheckboxState,
+  useRemoveRoles,
+  useUpdateRolesPriority} from 'npm-pkg-hook'
+import {
   Button,
+  CheckboxCube,
+  Divider,
+  DragDropContext,
+  Draggable,
+  Droppable,
   getGlobalStyle,
   Icon,
   Pagination,
-  Section,
-  Table,
-  CheckboxCube,
   Row,
-  Divider
-} from 'pkg-components'
-import {
-  useUpdateRolesPriority,
-  useRemoveRoles,
-  useCheckboxState
-} from 'npm-pkg-hook'
+  Section,
+  Table} from 'pkg-components'
+import PropTypes from 'prop-types'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
+
 import { Context } from '../../context/Context'
 
 export function ListRoles({
@@ -43,7 +42,7 @@ export function ListRoles({
   } = useCheckboxState(roleIds, [])
   // HANDLES
   const handleOnDragEnd = (result) => {
-    if (!result.destination) return
+    if (!result.destination) {return}
 
     // Crear una copia de la lista de roles
     const reorderedItems = Array.from(roleList)
@@ -79,7 +78,7 @@ export function ListRoles({
     }
   }
   const handleRemoveRoles = () => {
-    if (checkedItems.size === 0) return
+    if (checkedItems.size === 0) {return}
     const checkedItemsArray = [...checkedItems]
     removeRoles({ roleIds: checkedItemsArray })
     setRoleList(prevState => { return prevState.filter(role => { return !checkedItemsArray.includes(role.idRole) }) })

@@ -1,8 +1,10 @@
+import { normalize } from 'node:path'
+
 import { jest } from '@jest/globals'
-import { startNextJSServer } from './startNextServer'
 import { getPort } from 'get-port-please'
 import { startServer } from 'next/dist/server/lib/start-server'
-import { normalize } from 'node:path'
+
+import { startNextJSServer } from './startNextServer'
 
 jest.mock('get-port-please')
 jest.mock('next/dist/server/lib/start-server')

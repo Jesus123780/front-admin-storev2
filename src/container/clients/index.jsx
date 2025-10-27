@@ -1,31 +1,30 @@
 'use client'
 
 import {
-  RippleButton,
-  InputHooks,
-  Table,
-  AwesomeModal,
-  Loading,
-  Section,
-  getGlobalStyle,
-  Text,
-  InputDate,
-  Pagination,
-  Divider,
-  choices
-} from 'pkg-components'
-import { FormClients } from './Form'
-import { useContext, useState } from 'react'
-import {
-  useDeleteClients,
-  filterKeyObject,
   convertDateFormat,
-  useFormTools,
-  useGetOneClient,
+  filterKeyObject,
+  useDeleteClients,
   useEditClient,
-  useGetClients
-} from 'npm-pkg-hook'
+  useFormTools,
+  useGetClients,
+  useGetOneClient} from 'npm-pkg-hook'
+import {
+  AwesomeModal,
+  choices,
+  Divider,
+  getGlobalStyle,
+  InputDate,
+  InputHooks,
+  Loading,
+  Pagination,
+  RippleButton,
+  Section,
+  Table,
+  Text} from 'pkg-components'
+import { useContext, useState } from 'react'
+
 import { Context } from '../../context/Context'
+import { FormClients } from './Form'
 import styles from './styles.module.css'
 
 export const Clients = () => {

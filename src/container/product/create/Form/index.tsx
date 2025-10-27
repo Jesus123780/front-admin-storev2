@@ -1,17 +1,16 @@
-import React from 'react'
-import PropTypes from 'prop-types'
 import {
+  AlertInfo,
+  AmountInput,
   Checkbox,
+  Column,
   Divider,
+  getGlobalStyle,
   InputHooks,
   NewSelect,
-  getGlobalStyle,
-  AmountInput,
   QuantityButton,
-  AlertInfo,
-  ToggleSwitch,
-  Column
-} from 'pkg-components'
+  ToggleSwitch} from 'pkg-components'
+import PropTypes from 'prop-types'
+import React from 'react'
 
 export const FormProduct = ({
   check = {

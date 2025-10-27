@@ -1,5 +1,34 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import {
+  useAmountInput,
+  useDeleteProductsFood,
+  useDessert,
+  useDessertWithPrice,
+  useEditProduct,
+  useFormTools,
+  useGetOneProductsFood,
+  useImageUploaderProduct,
+  useSetImageProducts,
+  useUpdateManageStock} from 'npm-pkg-hook'
+import {
+  AlertInfo,
+  AwesomeModal,
+  BarCodes,
+  Button,
+  Column,
+  Divider,
+  getGlobalStyle,
+  ImageQRCode,
+  LoaderSubItem,
+  MemoCardProductSimple,
+  OptionalExtraProducts,
+  Row,
+  Text,
+  ToggleSwitch
+} from 'pkg-components'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import PropTypes from 'prop-types'
 import React, {
   useCallback,
@@ -8,41 +37,11 @@ import React, {
   useRef,
   useState
 } from 'react'
-import {
-  MemoCardProductSimple,
-  Text,
-  Button,
-  AwesomeModal,
-  OptionalExtraProducts,
-  ImageQRCode,
-  Divider,
-  getGlobalStyle,
-  Row,
-  RippleButton,
-  AlertInfo,
-  LoaderSubItem,
-  BarCodes,
-  Column,
-  ToggleSwitch
-} from 'pkg-components'
-import {
-  useFormTools,
-  useDessertWithPrice,
-  useGetOneProductsFood,
-  useAmountInput,
-  useSetImageProducts,
-  useDeleteProductsFood,
-  useImageUploaderProduct,
-  useUpdateManageStock,
-  useDessert,
-  useEditProduct
-} from 'npm-pkg-hook'
+
 import { Context } from '../../../context/Context'
-import { useRouter } from 'next/navigation'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import { Form } from './Form'
 import styles from './styles.module.css'
-import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const Update = ({ id = '' } = { id: null }) => {
   // STATES
@@ -397,7 +396,7 @@ export const Update = ({ id = '' } = { id: null }) => {
     handleGetOneProduct({ pId: id })
     setDataValue(dataProduct || {})
     setCheckStock(dataProduct?.manageStock)
-    // eslint-disable-next-line
+     
   }, [id, router, dataProduct])
 
    const propsUploadProductImage = useImageUploaderProduct({

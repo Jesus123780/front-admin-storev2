@@ -1,74 +1,69 @@
 'use client'
 
-import PropTypes from 'prop-types'
+import { useApolloClient } from '@apollo/client'
 import Head from 'next/head'
 import {
-  useRouter,
+  useParams,
   usePathname,
-  useSearchParams,
-  useParams
-} from 'next/navigation'
+  useRouter,
+  useSearchParams} from 'next/navigation'
+import {
+  Cookies,
+  newMessageSubscription,
+  newStoreOrderSubscription,
+  paymentMethodCards,
+  useCreateDeliveryTime,
+  useDeliveryTime,
+  useLogout,
+  useManageNewOrder,
+  // useConnection,
+  useManageQueryParams,
+  useMobile,
+  useModules,
+  usePosition,
+  usePushNotifications,
+  useScrollColor,
+  useScrollHook,
+  useStore,
+  useSubscriptionValidation,
+  useTotalSales,
+  useUpdateModuleOrder,
+  useUser,
+  version as logicalVersion} from 'npm-pkg-hook'
+import {
+  AlertBox,
+  Aside,
+  AwesomeModal,
+  Button,
+  DeliveryTime,
+  FloatingScanButtons,
+  getGlobalStyle,
+  Header,
+  Icon,
+  LateralModal,
+  Orders,
+  Overline,
+  Plan,
+  Toast} from 'pkg-components'
+import PropTypes from 'prop-types'
 import React, {
   useContext,
   useEffect,
   useState
 } from 'react'
-import { useApolloClient } from '@apollo/client'
-import {
-  Aside,
-  Header,
-  AlertBox,
-  Overline,
-  Button,
-  Toast,
-  Orders,
-  DeliveryTime,
-  getGlobalStyle,
-  AwesomeModal,
-  LateralModal,
-  Plan,
-  PaymentAlert,
-  Icon,
-  AlertInfo,
-  FloatingScanButtons
-} from 'pkg-components'
-import {
-  // useConnection,
-  useManageQueryParams,
-  useTotalSales,
-  useMobile,
-  useStore,
-  useScrollHook,
-  useLogout,
-  useScrollColor,
-  useCreateDeliveryTime,
-  useManageNewOrder,
-  useModules,
-  paymentMethodCards,
-  usePosition,
-  newMessageSubscription,
-  newStoreOrderSubscription,
-  useDeliveryTime,
-  useUser,
-  useSubscriptionValidation,
-  useUpdateModuleOrder,
-  version as logicalVersion,
-  Cookies,
-  usePushNotifications
-} from 'npm-pkg-hook'
 
+import packageJson from '../../../package.json'
 import { Context } from '../../context/Context'
+import { Categories } from '../categories'
+import { Clients } from '../clients'
+import { ModalScanner } from '../ModalScanner'
+import { CreateSales } from '../orders/create'
+import { Product } from '../product'
+import { ScheduleTimings } from '../schedule'
 import { Footer } from './Footer/index'
 // import useSound from 'use-sound'
 import { heights, widths } from './helpers'
-import { CreateSales } from '../orders/create'
-import packageJson from '../../../package.json'
-import { Clients } from '../clients'
-import { ScheduleTimings } from '../schedule'
-import { Product } from '../product'
-import { Categories } from '../categories'
 import styles from './styles.module.css'
-import { ModalScanner } from '../ModalScanner'
 
 interface MemoLayoutProps {
   children: React.ReactNode
@@ -138,7 +133,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       window.localStorage.setItem('location', JSON.stringify(dataLocation))
     }
     setAlertBox({ message: '', color: 'success' })
-    // eslint-disable-next-line
+     
   }, []);
 
   const playNotificationSound = () => {
@@ -171,7 +166,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   // useConnection({ setConnectionStatus })
 
   useEffect(() => {
-    if (connectionStatus === 'initial') return
+    if (connectionStatus === 'initial') {return}
     if (connectionStatus) {
       setTimeout(() => {
         setConnectionStatus('initial')
@@ -308,7 +303,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     const { destination, source } = result;
 
     // Si no se ha movido el ítem (destino es null o es el mismo), no hacer nada
-    if (!destination || destination.index === source.index) return;
+    if (!destination || destination.index === source.index) {return;}
 
     // Reordenar los módulos
     const reorderedModules = Array.from(modulesOrder);
@@ -389,7 +384,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       />
 
       <AlertBox err={error} />
-      <main className={`${styles.main} ${!Boolean('/' !== pathname) ? styles.noAside : ''} ${Boolean(isCollapsedMenu) ? styles.collapsed_main : ''}`}>
+      <main className={`${styles.main} ${!('/' !== pathname) ? styles.noAside : ''} ${isCollapsedMenu ? styles.collapsed_main : ''}`}>
         <Header
           count={count}
           countOrders={countOrders}

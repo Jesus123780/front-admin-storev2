@@ -1,12 +1,13 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { ContainerAnimation } from '..'
 import { 
   Divider, 
   InputHooks, 
   PhoneInput, 
   Text
 } from 'pkg-components'
+import PropTypes from 'prop-types'
+import React from 'react'
+
+import { ContainerAnimation } from '..'
 
 export const StepTow = ({
   errorForm = {

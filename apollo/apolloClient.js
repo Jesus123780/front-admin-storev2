@@ -1,24 +1,25 @@
-"use client"
+'use client'
 
-import { useMemo } from "react"
-import { getMainDefinition } from "@apollo/client/utilities"
 import {
   ApolloClient,
   ApolloLink,
   split
-} from "@apollo/client"
-import { GraphQLWsLink } from "@apollo/client/link/subscriptions"
-import { createClient } from "graphql-ws"
-import { createUploadLink } from "apollo-upload-client"
-import merge from "deepmerge"
-import isEqual from "lodash/isEqual"
-import { URL_ADMIN } from "./urls"
-import { typeDefs } from "./schema"
-import { cache } from "./cache"
-import { Cookies, SERVICES } from "npm-pkg-hook"
-import { removeDoubleQuotes } from "./helpers"
+} from '@apollo/client'
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
+import { getMainDefinition } from '@apollo/client/utilities'
+import { createUploadLink } from 'apollo-upload-client'
+import merge from 'deepmerge'
+import { createClient } from 'graphql-ws'
+import isEqual from 'lodash/isEqual'
+import { Cookies, SERVICES } from 'npm-pkg-hook'
+import { useMemo } from 'react'
 
-export const APOLLO_STATE_PROP_NAME = "__APOLLO_STATE__"
+import { cache } from './cache'
+import { removeDoubleQuotes } from './helpers'
+import { typeDefs } from './schema'
+import { URL_ADMIN } from './urls'
+
+export const APOLLO_STATE_PROP_NAME = '__APOLLO_STATE__'
 
 let apolloClient
 
@@ -27,18 +28,18 @@ let apolloClient
  */
 const buildAuthHeaders = () => {
   try {
-    if (typeof window !== "undefined") {
-      const token = Cookies.get("session")
-      const restaurant = removeDoubleQuotes(Cookies.get("restaurant"))
+    if (typeof window !== 'undefined') {
+      const token = Cookies.get('session')
+      const restaurant = removeDoubleQuotes(Cookies.get('restaurant'))
       return {
-        authorization: token ? `Bearer ${token}` : "Bearer",
-        restaurant: restaurant ?? "",
-        deviceid: "",
+        authorization: token ? `Bearer ${token}` : 'Bearer',
+        restaurant: restaurant ?? '',
+        deviceid: '',
       }
     }
-    return { authorization: "Bearer", restaurant: "", deviceid: "" }
+    return { authorization: 'Bearer', restaurant: '', deviceid: '' }
   } catch {
-    return { authorization: "Bearer", restaurant: "", deviceid: "" }
+    return { authorization: 'Bearer', restaurant: '', deviceid: '' }
   }
 }
 
@@ -48,15 +49,15 @@ const buildAuthHeaders = () => {
 function createHttpLink(service) {
   let uri = `${process.env.NEXT_PUBLIC_URL_BACK_SERVER}/graphql`
 
-  if (service === SERVICES.ADMIN_STORE) uri = `${URL_ADMIN}graphql`
+  if (service === SERVICES.ADMIN_STORE) {uri = `${URL_ADMIN}graphql`}
   if (service === SERVICES.WEB_SOCKET_CHAT)
-    uri = `${process.env.NEXT_PUBLIC_URL_ADMIN_SERVER_SOCKET}/graphql`
+    {uri = `${process.env.NEXT_PUBLIC_URL_ADMIN_SERVER_SOCKET}/graphql`}
   if (service === SERVICES.ADMIN_SERVER)
-    uri = `${process.env.NEXT_PUBLIC_URL_ADMIN_SERVER_HTTPS}`
+    {uri = `${process.env.NEXT_PUBLIC_URL_ADMIN_SERVER_HTTPS}`}
 
   return createUploadLink({
     uri,
-    credentials: "include",
+    credentials: 'include',
     headers: buildAuthHeaders(),
   })
 }
@@ -65,11 +66,11 @@ function createHttpLink(service) {
  * 🔌 GraphQL over WS (subscriptions)
  */
 function createWsLink() {
-  if (typeof window === "undefined") return null
+  if (typeof window === 'undefined') {return null}
 
   const url = process.env.NEXT_PUBLIC_URL_ADMIN_SERVER_SOCKET
 
-  if (!url) return null
+  if (!url) {return null}
 
   return new GraphQLWsLink(
     createClient({
@@ -78,17 +79,17 @@ function createWsLink() {
       retryAttempts: 5,
       shouldRetry: () => true,
       on: {
-        connected: () => console.log("✅ WS connected"),
-        closed: (e) => console.log("❌ WS closed", e),
+        connected: () => console.log('✅ WS connected'),
+        closed: (e) => console.log('❌ WS closed', e),
 
-        error: (err) => console.error("⚠️ WS error:", err),
+        error: (err) => console.error('⚠️ WS error:', err),
       },
     })
   )
 }
 
 function createApolloClient() {
-  const ssrMode = typeof window === "undefined"
+  const ssrMode = typeof window === 'undefined'
   const wsLink = createWsLink()
 
   const httpLink = new ApolloLink((operation, forward) => {
@@ -103,8 +104,8 @@ function createApolloClient() {
         ({ query }) => {
           const def = getMainDefinition(query)
           return (
-            def.kind === "OperationDefinition" &&
-            def.operation === "subscription"
+            def.kind === 'OperationDefinition' &&
+            def.operation === 'subscription'
           )
         },
         wsLink,
@@ -120,15 +121,15 @@ function createApolloClient() {
     typeDefs,
     defaultOptions: {
       watchQuery: {
-        errorPolicy: "all",
-        fetchPolicy: "cache-first",
+        errorPolicy: 'all',
+        fetchPolicy: 'cache-first',
       },
       query: {
-        errorPolicy: "all",
-        fetchPolicy: "cache-first",
+        errorPolicy: 'all',
+        fetchPolicy: 'cache-first',
       },
       mutate: {
-        errorPolicy: "all",
+        errorPolicy: 'all',
       },
     },
   })
@@ -148,8 +149,8 @@ export function initializeApollo(initialState = null) {
     _apolloClient.cache.restore(data)
   }
 
-  if (typeof window === "undefined") return _apolloClient
-  if (!apolloClient) apolloClient = _apolloClient
+  if (typeof window === 'undefined') {return _apolloClient}
+  if (!apolloClient) {apolloClient = _apolloClient}
   return _apolloClient
 }
 

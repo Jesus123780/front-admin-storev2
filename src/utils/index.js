@@ -1,6 +1,6 @@
 'use client'
 
-/* eslint-disable consistent-return */
+ 
 import jwt, { decode } from 'jsonwebtoken'
 import { resolve } from 'path'
 import { ROUTES } from 'pkg-components'
@@ -320,9 +320,9 @@ export const validationFormTwo = (inputs, error) => {
         parentNode.parentNode.firstChild.nextSibling.nextSibling.style.opacity = 1
         parentNode.parentNode.firstChild.nextSibling.nextSibling.innerHTML = 'Campo Requerido.'
         parentNode.parentNode.lastChild.style.opacity = 1
-      } else if (dataset.ignore === 'false') errorForm = validationsTF(inputs[i], nextSibling, nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true)
-      else if (dataset.ignore === undefined) errorForm = validationsTF(parentNode, parentNode.firstChild.nextSibling, parentNode.firstChild.nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true)
-    } else error[inputs[i].name] && (errorForm = true)
+      } else if (dataset.ignore === 'false') {errorForm = validationsTF(inputs[i], nextSibling, nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true)}
+      else if (dataset.ignore === undefined) {errorForm = validationsTF(parentNode, parentNode.firstChild.nextSibling, parentNode.firstChild.nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true)}
+    } else {error[inputs[i].name] && (errorForm = true)}
   }
   return errorForm
 }
@@ -368,9 +368,9 @@ export const filterKeyObjectOLD = (data, filters) => {
   let values = {}
   for (const elem in data) {
     let coincidence = false
-    for (let i = 0; i < filters.length; i++) if (elem === filters[i]) coincidence = true
+    for (let i = 0; i < filters.length; i++) {if (elem === filters[i]) {coincidence = true}}
 
-    if (!coincidence) values = { ...values, [elem]: data[elem] }
+    if (!coincidence) {values = { ...values, [elem]: data[elem] }}
   }
 
   return values
@@ -387,8 +387,8 @@ export const validationSubmitHooks = elements => {
     if (element.name) {
       if (element.type === 'text' || element.type === 'password' || element.type === 'email' || element.type === 'number' || element.type === 'hidden') {
         if (element.dataset.required === 'true') {
-          if (!element.value) errorForm = { ...errorForm, [element.name]: !element.value }
-          else errorForm = { ...errorForm, [element.name]: !element.value }
+          if (!element.value) {errorForm = { ...errorForm, [element.name]: !element.value }}
+          else {errorForm = { ...errorForm, [element.name]: !element.value }}
         } else {
           errorForm = { ...errorForm, [element.name]: false }
         }
@@ -409,15 +409,15 @@ export const filterKeyObject = (data, filters, dataFilter) => {
   for (const elem in data) {
     let coincidence = false
     for (let i = 0; i < filters.length; i++) {
-      if (elem === filters[i]) coincidence = true
-      else valuesFilter = filters[i]
+      if (elem === filters[i]) {coincidence = true}
+      else {valuesFilter = filters[i]}
     }
 
-    if (!coincidence) values = { ...values, [elem]: data[elem] }
-    else valuesFilter = { ...valuesFilter, [elem]: data[elem] }
+    if (!coincidence) {values = { ...values, [elem]: data[elem] }}
+    else {valuesFilter = { ...valuesFilter, [elem]: data[elem] }}
   }
-  if (!dataFilter) return values
-  if (dataFilter) return { values, valuesFilter }
+  if (!dataFilter) {return values}
+  if (dataFilter) {return { values, valuesFilter }}
 }
 
 /**
@@ -482,9 +482,9 @@ export const updateCacheMod = async ({ cache, query, nameFun, dataNew, type, id 
   return cache.modify({
     fields: {
       [nameFun](dataOld = []) {
-        if (type === 1) return cache.writeQuery({ query, data: [...(dataOld || []), { ...(dataNew || {}) }] })
-        if (type === 2) return cache.writeQuery({ query, data: { ...(dataOld || {}), ...(dataNew || {}) } })
-        if (type === 3) return cache.writeQuery({ query, data: dataOld.filter(x => { return x === id }) })
+        if (type === 1) {return cache.writeQuery({ query, data: [...(dataOld || []), { ...(dataNew || {}) }] })}
+        if (type === 2) {return cache.writeQuery({ query, data: { ...(dataOld || {}), ...(dataNew || {}) } })}
+        if (type === 3) {return cache.writeQuery({ query, data: dataOld.filter(x => { return x === id }) })}
       }
     }
   })
@@ -495,8 +495,8 @@ export const updateCacheMod = async ({ cache, query, nameFun, dataNew, type, id 
  */
 const TOKEN = 'sma.sv1'
 export function setToken(token) {
-  if (token === null) return false
-  else if (token !== null) return JSON.parse
+  if (token === null) {return false}
+  else if (token !== null) {return JSON.parse}
 }
 /**
  * obtiene el token del usuario
@@ -572,7 +572,7 @@ export const calculateCheckDigit = value => {
   nit = nit.replace(/-/g, '') // Guiones
 
   // Se valida el nit
-  if (isNaN(nit)) return ''
+  if (isNaN(nit)) {return ''}
 
   // Procedimiento
   let x = 0
@@ -611,22 +611,22 @@ export const validationsOld = (e, typeNull, typeLetters, typeNumeric, typeRange,
   const { nextSibling, parentNode } = e.target
 
   /** verifica si es formato de número */
-  if (typeFormat) value = value.replace(/\./g, '')
+  if (typeFormat) {value = value.replace(/\./g, '')}
   /** verifica que campos seran y si se encuentra la condicion o no */
   if (typeNull) {
-    if (isNull(value)) return validationsTF(parentNode, nextSibling, 'Campo requerido.', true)
+    if (isNull(value)) {return validationsTF(parentNode, nextSibling, 'Campo requerido.', true)}
   }
   if (typeNumeric) {
-    if (isNumeric(value)) return validationsTF(parentNode, nextSibling, 'Solo puede contener números.', true)
+    if (isNumeric(value)) {return validationsTF(parentNode, nextSibling, 'Solo puede contener números.', true)}
   }
   if (typeRange) {
-    if (rangeLength(value, minRange, maxRange)) return validationsTF(parentNode, nextSibling, `El rango de caracteres es de ${minRange} a ${maxRange}.`, true)
+    if (rangeLength(value, minRange, maxRange)) {return validationsTF(parentNode, nextSibling, `El rango de caracteres es de ${minRange} a ${maxRange}.`, true)}
   }
   if (typeLetters) {
-    if (onlyLetters(value)) return validationsTF(parentNode, nextSibling, 'Solo puede contener letras.', true)
+    if (onlyLetters(value)) {return validationsTF(parentNode, nextSibling, 'Solo puede contener letras.', true)}
   }
   if (typeEmail) {
-    if (isEmail(value)) return validationsTF(parentNode, nextSibling, 'No es un formato de email valido.', true)
+    if (isEmail(value)) {return validationsTF(parentNode, nextSibling, 'No es un formato de email valido.', true)}
   }
   return validationsTF(parentNode, nextSibling, false, false)
 }
@@ -701,7 +701,7 @@ const Unidades = value => {
  * @return {string} concatena al cantidad
  */
 const DecenasY = (strSin, numUnit) => {
-  if (numUnit > 0) return `${strSin} Y ${Unidades(numUnit)}`
+  if (numUnit > 0) {return `${strSin} Y ${Unidades(numUnit)}`}
   return strSin
 }
 
@@ -754,7 +754,7 @@ const Centenas = value => {
 
   switch (hundreds) {
     case 1:
-      if (tens > 0) return `CIENTO${Decenas(tens)}`
+      if (tens > 0) {return `CIENTO${Decenas(tens)}`}
       return 'CIEN'
     case 2: return `DOSCIENTOS${Decenas(tens)}`
     case 3: return `TRESCIENTOS${Decenas(tens)}`
@@ -783,11 +783,11 @@ const Seccion = (value, divider, strSingular, strPlural) => {
   let letters = ''
 
   if (hundreds > 0) {
-    if (hundreds > 1) letters = `${Centenas(hundreds)} ${strPlural}`
-    else letters = strSingular
+    if (hundreds > 1) {letters = `${Centenas(hundreds)} ${strPlural}`}
+    else {letters = strSingular}
   }
 
-  if (rest > 0) letters += ''
+  if (rest > 0) {letters += ''}
 
   return letters
 }
@@ -804,7 +804,7 @@ const Miles = value => {
   const strThousands = Seccion(value, divider, 'UN MIL', 'MIL')
   const strhundreds = Centenas(rest)
 
-  if (strThousands === '') return strhundreds
+  if (strThousands === '') {return strhundreds}
 
   return `${strThousands} ${strhundreds}`
 }
@@ -822,7 +822,7 @@ const Millones = value => {
   const strMillions = Seccion(value, divider, 'UN MILLON DE', 'MILLONES DE')
   const strThousands = Miles(rest)
 
-  if (strMillions === '') return strThousands
+  if (strMillions === '') {return strThousands}
 
   return `${strMillions} ${strThousands}`
 }
@@ -847,14 +847,14 @@ export const NumeroALetras = (value, format = false) => {
 
   if (data.pennies > 0) {
     data.letterPennies = `CON ${(function () {
-      if (data.pennies === 1) return `${Millones(data.pennies)} ${data.letterCoinPennieSingular}`
+      if (data.pennies === 1) {return `${Millones(data.pennies)} ${data.letterCoinPennieSingular}`}
       return `${Millones(data.pennies)} ${data.letterCoinPenniesPlural}`
     })()
     }`
   }
 
-  if (data.integers === 0) return `CERO ${data.letterCoinPlural} ${data.letterPennies}`
-  if (data.integers === 1) return `${Millones(data.integers)} ${data.letterCoinSingular} ${data.letterPennies}`
+  if (data.integers === 0) {return `CERO ${data.letterCoinPlural} ${data.letterPennies}`}
+  if (data.integers === 1) {return `${Millones(data.integers)} ${data.letterCoinSingular} ${data.letterPennies}`}
   return `${Millones(data.integers)} ${data.letterCoinPlural} ${data.letterPennies}`
 }
 
@@ -948,7 +948,7 @@ export const numberFormatM = param => {
 /* Método para eliminar el primer carácter */
 // const str = '*plátano_'
 // const newStr = str.slice(1, -1)
-// eslint-disable-next-line
+ 
 /* Método para eliminar el primer carácter */
 // const string = '*plátano_'
 // const newString = string.substring(1, str.length - 1)
@@ -1028,8 +1028,8 @@ export const roundToTwo = (num) => {
 }
 export function RandomCode(length) {
   let result = ''
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let charactersLength = characters.length
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const charactersLength = characters.length
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() *
       charactersLength))
@@ -1039,7 +1039,7 @@ export function RandomCode(length) {
 
 export const NewDateFormat = (date) => {
   try {
-    if (!date) return
+    if (!date) {return}
     const dateString = date => { return new Date(date).toString() !== 'Invalid Date' }
     const newDate = dateString instanceof Date && !isNaN(dateString)
     return newDate
@@ -1154,7 +1154,7 @@ export const toKebabCase = (string) => {
 
 export const getCardType = (cardNum) => {
   let payCardType = ''
-  let regexMap = [
+  const regexMap = [
     { regEx: /^4[0-9]{5}/gi, cardType: 'VISA' },
     { regEx: /^5[1-5][0-9]{4}/gi, cardType: 'MASTERCARD' },
     { regEx: /^3[47][0-9]{3}/gi, cardType: 'AMEX' },
@@ -1173,11 +1173,11 @@ export const getCardType = (cardNum) => {
     cardNum.indexOf('60') === 0 ||
     cardNum.indexOf('65') === 0
   ) {
-    let g = '508500-508999|606985-607984|608001-608500|652150-653149'
-    let i = g.split('|')
+    const g = '508500-508999|606985-607984|608001-608500|652150-653149'
+    const i = g.split('|')
     for (const element of i) {
-      let c = parseInt(element.split('-')[0], 10)
-      let f = parseInt(element.split('-')[1], 10)
+      const c = parseInt(element.split('-')[0], 10)
+      const f = parseInt(element.split('-')[1], 10)
       if (
         cardNum.substr(0, 6) >= c &&
         cardNum.substr(0, 6) <= f &&
@@ -1222,10 +1222,10 @@ export const SPANISH_MONTHS = {
 
 
 export function months(config) {
-  let cfg = config || {}
-  let count = cfg.count || 12
-  let section = cfg.section
-  let values = []
+  const cfg = config || {}
+  const count = cfg.count || 12
+  const section = cfg.section
+  const values = []
   let i; let value
 
   for (i = 0; i < count; ++i) {
@@ -1241,14 +1241,14 @@ function rand(min, max) {
 }
 
 export const numbers = () => {
-  let min = 1
-  let max = 2
-  let from = 4
-  let count = 5
-  let decimals = 6
-  let continuity = 9
-  let dfactor = Math.pow(10, decimals) || 0
-  let data = []
+  const min = 1
+  const max = 2
+  const from = 4
+  const count = 5
+  const decimals = 6
+  const continuity = 9
+  const dfactor = Math.pow(10, decimals) || 0
+  const data = []
   let i; let value
 
   for (i = 0; i < count; ++i) {
@@ -1341,8 +1341,8 @@ export const organizeArray = (arrayP, arrayS, priorityP, priorityS) => {
     const valueB = b[priorityP] || b[priorityS]
 
     // comparacion
-    if ((valueA) > valueB) return 1
-    if (valueA < valueB) return -1
+    if ((valueA) > valueB) {return 1}
+    if (valueA < valueB) {return -1}
     return 0
   })
 }

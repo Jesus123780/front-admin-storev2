@@ -1,28 +1,28 @@
 'use client'
 
-import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { generateStoreURL, useImageUploaderProduct } from 'npm-pkg-hook'
 import {
+  AlertInfo,
+  AwesomeModal,
+  BarCodes,
+  Button,
   Column,
   DaySelector,
-  Button,
+  Divider,
+  getGlobalStyle,
+  ImageProductEdit,
+  LoaderSubItem,
+  numberFormat,
   OptionalExtraProducts,
-  AwesomeModal,
+  Row,
   Tag,
   Text,
-  Divider,
-  Row,
-  numberFormat,
-  LoaderSubItem,
-  AlertInfo,
-  BarCodes,
-  getGlobalStyle,
-  ToggleSwitch,
-  ImageProductEdit
-} from 'pkg-components'
-import { generateStoreURL, useImageUploaderProduct } from 'npm-pkg-hook'
+  ToggleSwitch} from 'pkg-components'
+import React from 'react'
+
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import styles from './styles.module.css'
 
@@ -154,7 +154,7 @@ export const ProductView: React.FC<IProductViewProps> = ({
         </Button>
         <Button
           onClick={() => {
-            if (pId) return router.push(`/products/edit?pId=${pId}`)
+            if (pId) {return router.push(`/products/edit?pId=${pId}`)}
             return null
           }}
         >

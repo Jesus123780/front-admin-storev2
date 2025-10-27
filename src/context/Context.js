@@ -1,5 +1,5 @@
+import { usePathname,useRouter } from 'next/navigation'
 import PropTypes from 'prop-types'
-import { useRouter, usePathname } from 'next/navigation'
 import {
   createContext,
   useCallback,
@@ -8,6 +8,7 @@ import {
   useMemo,
   useState
 } from 'react'
+
 import { MENU_OPTIONS } from './helpers'
 
 const initialCompanyState = {
@@ -216,7 +217,7 @@ const toggleModal = index => {
       ...router.query,
       saleOpen: !salesOpen
     }
-    if (typeof router.push !== "function") return
+    if (typeof router.push !== 'function') {return}
     router.push(pathname, {
       query: newQuery,
     })
@@ -277,7 +278,7 @@ const toggleModal = index => {
 
   const [isElectron, setIsElectron] = useState(false);
   useEffect(() => {
-    if (typeof window !== "undefined" && /Electron/.test(navigator.userAgent)) {
+    if (typeof window !== 'undefined' && /Electron/.test(navigator.userAgent)) {
       setIsElectron(true);
     } else {
       setIsElectron(false);

@@ -1,15 +1,16 @@
-import PropTypes from 'prop-types'
+import { useRouter } from 'next/navigation'
 import {
   Column,
-  Text,
+  Divider,
+  getGlobalStyle,
+  Image,
   Portal,
   RippleButton,
   Row,
-  getGlobalStyle,
-  Divider,
-  Image,
+  Text,
 } from 'pkg-components'
-import { useRouter } from 'next/navigation'
+import PropTypes from 'prop-types'
+
 import styles from './styles.module.css'
 
 const NotFount = ({

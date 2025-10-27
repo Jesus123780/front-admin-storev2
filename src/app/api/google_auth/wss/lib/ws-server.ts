@@ -1,10 +1,10 @@
 // lib/ws-server.ts
-import { createServer, IncomingMessage } from 'http';
-import path from 'path';
-import { WebSocketServer, WebSocket } from 'ws';
-import os from 'os'
 import fs from 'fs'
 import { getPort } from 'get-port-please';
+import { createServer, IncomingMessage } from 'http';
+import os from 'os'
+import path from 'path';
+import { WebSocket,WebSocketServer } from 'ws';
 
 export const getServerPortWss = async () => {
     const basePath = path.join(os.homedir(), 'app_data')
@@ -34,7 +34,7 @@ export async function getWSServer() {
   const wss = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (req: IncomingMessage, socket, head: Buffer) => {
-    if (!!req.headers['BadAuth']) {
+    if (req.headers['BadAuth']) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       socket.destroy();
       return;

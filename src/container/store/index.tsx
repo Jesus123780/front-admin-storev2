@@ -1,25 +1,31 @@
 'use client'
 
-import { Context } from '../../context/Context'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  useMobile,
+  errorHandler,
+  getCategoriesWithProduct,
+  onClickLogout,
   useCatWithProduct,
-  useGetOneProductsFood,
-  useUpdateManageStock,
-  useIntersectionObserver,
   useDeleteProductsFood,
   useDessert,
-  useManageQueryParams,
-  onClickLogout,
-  useImageUploaderProduct,
-  errorHandler,
   useDessertWithPrice,
-  useSetImageProducts,
-  getCategoriesWithProduct,
+  useGetOneProductsFood,
+  useImageUploaderProduct,
+  useIntersectionObserver,
+  useManageQueryParams,
+  useMobile,
   useSaveAvailableProduct,
-  useStore
-} from 'npm-pkg-hook'
+  useSetImageProducts,
+  useStore,
+  useUpdateManageStock} from 'npm-pkg-hook'
+import {
+  AlertInfo,
+  AwesomeModal,
+  getGlobalStyle,
+  RippleButton,
+  Row,
+  SearchBar} from 'pkg-components'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import React, {
   useCallback,
   useContext,
@@ -28,24 +34,17 @@ import React, {
   useRef,
   useState
 } from 'react'
-import {
-  AlertInfo,
-  AwesomeModal,
-  RippleButton,
-  Row,
-  SearchBar,
-  getGlobalStyle
-} from 'pkg-components'
+
+import { UploadFilesProducts } from '../../container/product/create/uploadFilesProducts'
+import { Context } from '../../context/Context'
+import { Categories } from '../categories'
+import { Product } from '../product'
+import { ProductView } from '../product/view/product'
+import { TableSeating } from '../seating'
+import { Banner } from './banner'
 import { ButtonsAction } from './options/index'
 import { StickyBoundaryCategories } from './StickyBoundaryCategories'
-import { Banner } from './banner'
-import { UploadFilesProducts } from '../../container/product/create/uploadFilesProducts'
 import styles from './styles.module.css'
-import { Product } from '../product'
-import { Categories } from '../categories'
-import { TableSeating } from '../seating'
-import { ProductView } from '../product/view/product'
-import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const Store = () => {
   // STATES
@@ -450,7 +449,7 @@ export const Store = () => {
                 return prevResult
               }
               const validateArray = Array.isArray(fetchMoreResult.getCatProductsWithProduct.catProductsWithProduct)
-              if (!fetchMoreResult && !validateArray) return prevResult
+              if (!fetchMoreResult && !validateArray) {return prevResult}
               return {
                 getCatProductsWithProduct: {
                   getCatProductsWithProduct: [...fetchMoreResult.getCatProductsWithProduct.catProductsWithProduct],
@@ -505,8 +504,8 @@ export const Store = () => {
   const center = Boolean(isMobile)
   return (
     <div
-      className={`${styles.wrapper} ${center ? styles.center : ""}`}
-      style={{ justifyContent: justifyContent || "normal" }}
+      className={`${styles.wrapper} ${center ? styles.center : ''}`}
+      style={{ justifyContent: justifyContent || 'normal' }}
     >
       <AwesomeModal
         customHeight='30%'

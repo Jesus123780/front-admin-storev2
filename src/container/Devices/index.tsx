@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { Devices as DevicesComponents } from 'pkg-components'
 import { useDevices } from 'npm-pkg-hook'
+import { Devices as DevicesComponents } from 'pkg-components'
+import React, { useEffect, useState } from 'react'
+
 import { getDeviceId } from '../../../apollo/getDeviceId'
 
 export const Devices = () => {

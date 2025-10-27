@@ -1,8 +1,8 @@
 'use client'
 
-import styled, { css } from 'styled-components'
+import { useColorByLetters,useEmployee } from 'npm-pkg-hook'
 import { ProfileCard, Skeleton } from 'pkg-components'
-import { useEmployee, useColorByLetters } from 'npm-pkg-hook'
+import styled, { css } from 'styled-components'
 
 export const TeamStore = () => {
   const [data] = useEmployee()

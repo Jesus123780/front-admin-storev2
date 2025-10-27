@@ -2,7 +2,7 @@
 
 import '@testing-library/jest-dom';
 
-import { TextEncoder, TextDecoder } from 'util';
+import { TextDecoder,TextEncoder } from 'util';
 
 // Fix for JSDOM environment
 (global as any).TextEncoder = TextEncoder;

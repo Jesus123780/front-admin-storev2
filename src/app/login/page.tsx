@@ -1,8 +1,9 @@
-"use client"
+'use client'
 
-import React, { useState } from 'react'
-import { Column } from 'pkg-components'
 import Script from 'next/script'
+import { Column } from 'pkg-components'
+import React, { useState } from 'react'
+
 import { Login } from '@/container/login/index'
 
 export default function Entrar() {

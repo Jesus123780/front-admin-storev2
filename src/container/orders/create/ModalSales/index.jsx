@@ -1,8 +1,9 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { Input } from '../styled'
-import { Prints } from '../Printsale'
 import { AwesomeModal, getGlobalStyle, Loading } from 'pkg-components'
+import PropTypes from 'prop-types'
+import React from 'react'
+
+import { Prints } from '../Printsale'
+import { Input } from '../styled'
 
 export const ModalSales = ({
   print,

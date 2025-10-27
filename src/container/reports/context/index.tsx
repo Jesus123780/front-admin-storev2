@@ -1,8 +1,7 @@
 import {
     createContext,
-    useState,
-    useContext
-} from 'react'
+    useContext,
+    useState} from 'react'
 
 const DEFAULT = {
     handleAddComponent: () => { },

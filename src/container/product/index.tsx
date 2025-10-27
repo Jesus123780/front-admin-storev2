@@ -1,16 +1,17 @@
 'use client'
 
-import React, { useContext } from 'react'
 import { useRouter } from 'next/navigation'
-import { Context } from '../../context/Context'
 import {
-  useProductsFood,
-  useDeleteProductsFood,
-  useCreateProduct,
-  useRegisterMultipleTags,
   useCategoriesProduct,
+  useCreateProduct,
+  useDeleteProductsFood,
   useImageUploaderProduct,
+  useProductsFood,
+  useRegisterMultipleTags,
 } from 'npm-pkg-hook'
+import React, { useContext } from 'react'
+
+import { Context } from '../../context/Context'
 import { FoodComponent } from './create'
 
 export const Product = () => {

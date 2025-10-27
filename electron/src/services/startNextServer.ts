@@ -1,7 +1,8 @@
+import { join } from 'node:path'
+
+import { app } from 'electron'
 import { getPort } from 'get-port-please'
 import { startServer } from 'next/dist/server/lib/start-server'
-import { join } from 'node:path'
-import { app } from 'electron'
 
 /**
  * Starts Next.js compiled server and returns the port.

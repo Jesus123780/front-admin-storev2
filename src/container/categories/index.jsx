@@ -1,33 +1,32 @@
 'use client'
 
+import { gql, useMutation } from '@apollo/client'
+import {
+  REGISTER_CAT_OF_PRODUCTS,
+  useCategoryInStore,
+  useFormTools} from 'npm-pkg-hook'
+import {
+  AwesomeModal,
+  Button,
+  DragDropContext,
+  Draggable,
+  Droppable,
+  getGlobalStyle,
+  Icon,
+  InputHooks,
+  Loading,
+  PColor, 
+  RippleButton,
+  Section,
+  Table 
+} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React, { 
   useContext, 
   useEffect, 
   useState
 } from 'react'
-import { gql, useMutation } from '@apollo/client'
-import {
-  RippleButton,
-  AwesomeModal,
-  Section,
-  InputHooks,
-  Table,
-  Loading,
-  getGlobalStyle,
-  Button,
-  Icon,
-  DragDropContext,
-  Droppable,
-  Draggable,
-  PColor, 
-  WColor 
-} from 'pkg-components'
-import {
-  useCategoryInStore,
-  useFormTools,
-  REGISTER_CAT_OF_PRODUCTS
-} from 'npm-pkg-hook'
+
 import { Context } from '../../context/Context'
 // import {
 //   DELETE_ONE_CAT_PRODUCTS_FINAL,
@@ -83,7 +82,7 @@ export const Categories = ({ isDragDisabled = true }) => {
   const handleForm = (e) => {
     return handleSubmit({
       event: e,
-      // eslint-disable-next-line consistent-return
+       
       action: async () => {
         const {
           catName,
@@ -116,9 +115,9 @@ export const Categories = ({ isDragDisabled = true }) => {
                     try {
                       const { catProductsWithProduct } = dataOld || {}
                       // Find the index of the specific product based on carProId
-                      if (!Array.isArray(catProductsWithProduct)) return dataOld
+                      if (!Array.isArray(catProductsWithProduct)) {return dataOld}
                       const targetProductIndex = catProductsWithProduct.findIndex((catProduct) => { return catProduct?.carProId === carProId })
-                      if (targetProductIndex === -1) return dataOld
+                      if (targetProductIndex === -1) {return dataOld}
                       // Create a new array with the updated pName
                       const updatedCatProductsWithProduct = catProductsWithProduct.map((catProduct, index) => {
                         // If it's the target product and editCate has the new pName, update pName
@@ -204,7 +203,7 @@ export const Categories = ({ isDragDisabled = true }) => {
   }, [datCat])
   
   const handleOnDragEnd = (result) => {
-    if (!result.destination) return // No se ha soltado en una posición válida
+    if (!result.destination) {return} // No se ha soltado en una posición válida
 
     const startIndex = result.source.index
     const endIndex = result.destination.index

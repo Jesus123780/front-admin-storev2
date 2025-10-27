@@ -1,7 +1,8 @@
+import { Divider, getGlobalStyle, InputHooks, PhoneInput } from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
+
 import { ContainerAnimation } from '..'
-import { Divider, getGlobalStyle, InputHooks, PhoneInput } from 'pkg-components'
 
 export const StepCero = ({
   dataForm = {

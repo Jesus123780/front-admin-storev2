@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
-import { ApolloProvider } from "@apollo/client";
+import { ApolloProvider } from '@apollo/client';
+
 import { useApollo } from '../../../apollo/apolloClient'
 
 interface ApolloClientProviderProps {

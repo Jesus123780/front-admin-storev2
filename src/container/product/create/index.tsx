@@ -1,55 +1,54 @@
 'use client'
 
-import React, {
-    useState,
-    memo,
-    useContext,
-    useEffect
-} from 'react'
-import {
-    Button,
-    Tag,
-    Text,
-    AwesomeModal,
-    Checkbox,
-    DaySelector,
-    Loading,
-    OptionalExtraProducts,
-    getGlobalStyle,
-    Divider,
-    HeaderSteps,
-    Row,
-    ImageProductEdit,
-    MemoCardProductSimple,
-    InputTags,
-    Icon,
-    Column
-} from 'pkg-components'
-import {
-    useGetOneProductsFood,
-    useSaveAvailableProduct,
-    useManageQueryParams,
-    useLogout,
-    useDessertWithPrice,
-    useDessert,
-    timeSuggestions,
-    useStore
-} from 'npm-pkg-hook'
-import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
-import { FormProduct } from './Form'
-import { Categories } from '../../categories'
-import { Container } from './styled'
-import { Context } from '../../../context/Context'
-import { filterKeyObject } from '../../../utils'
-import { productSchema } from './schema/producSchema'
 import {
     usePathname,
     useRouter,
     useSearchParams
 } from 'next/navigation'
+import {
+    timeSuggestions,
+    useDessert,
+    useDessertWithPrice,
+    useGetOneProductsFood,
+    useLogout,
+    useManageQueryParams,
+    useSaveAvailableProduct,
+    useStore
+} from 'npm-pkg-hook'
+import {
+    AwesomeModal,
+    Button,
+    Checkbox,
+    Column,
+    DaySelector,
+    Divider,
+    getGlobalStyle,
+    HeaderSteps,
+    Icon,
+    ImageProductEdit,
+    InputTags,
+    Loading,
+    MemoCardProductSimple,
+    OptionalExtraProducts,
+    Row,
+    Tag,
+    Text} from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
-import { FoodComponentMemoProps } from './types'
+import React, {
+    memo,
+    useContext,
+    useEffect,
+    useState} from 'react'
+
+import { Context } from '../../../context/Context'
+import { filterKeyObject } from '../../../utils'
+import { Categories } from '../../categories'
+import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
+import { FormProduct } from './Form'
+import { productSchema } from './schema/producSchema'
+import { Container } from './styled'
 import styles from './styles.module.css'
+import { FoodComponentMemoProps } from './types'
 
 const titleHeaders = ['DETALLES', 'ADICIONALES', 'COMPLEMENTOS', 'DISPONIBILIDAD']
 
@@ -309,7 +308,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 })
 
                 const pId = result?.data?.pId
-                if (pId) handleQuery('food', pId)
+                if (pId) {handleQuery('food', pId)}
 
                 setActive(STEPS.DESSERTS)
                 return

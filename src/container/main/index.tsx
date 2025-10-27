@@ -1,7 +1,8 @@
 'use client'
 
-import PropTypes from 'prop-types'
 import { Column } from 'pkg-components'
+import PropTypes from 'prop-types'
+
 import { ChatStatistic } from '../ChatStatistic'
 
 interface User {

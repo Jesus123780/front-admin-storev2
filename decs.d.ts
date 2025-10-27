@@ -1,4 +1,3 @@
-import { decl } from 'postcss';
 
 // declare styled-components
 declare module 'styled-components' {

@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { InMemoryCache, makeVar } from '@apollo/client'
 import { concatPagination } from '@apollo/client/utilities'
@@ -37,8 +37,8 @@ export const cache = new InMemoryCache({
         getStoreOrderById: {
           keyArgs: ['pCodeRef'],
           merge(existing, incoming) {
-            if (!incoming) return existing
-            if (!existing) return incoming
+            if (!incoming) {return existing}
+            if (!existing) {return incoming}
 
             // Creamos una copia de los resultados existentes y entrantes
             const merged = {

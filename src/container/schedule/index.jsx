@@ -1,41 +1,41 @@
 'use client'
 
-import PropTypes from 'prop-types'
 import {
-  useSchedules,
+  convertToMilitaryTime,
+  GET_ONE_SCHEDULE_STORE,
+  GET_SCHEDULE_STORE,
+  timeSuggestions,
+  useCreateSchedules,
+  useFormatDate,
+  useLogout,
   useMobile,
   useScheduleData,
-  GET_ONE_SCHEDULE_STORE,
-  useCreateSchedules,
-  GET_SCHEDULE_STORE,
+  useSchedules,
   useSetScheduleOpenAll,
-  timeSuggestions,
-  useLogout,
-  useStore,
-  convertToMilitaryTime,
-  useFormatDate
-} from 'npm-pkg-hook'
+  useStore} from 'npm-pkg-hook'
+import {
+  AlertInfo,
+  AwesomeModal,
+  Checkbox,
+  Column,
+  getGlobalStyle,
+  HeaderSteps,
+  InputTimeHours,
+  RippleButton,
+  Row,
+  ScheduleLinearWeekly,
+  Text
+} from 'pkg-components'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
+import PropTypes from 'prop-types'
 import React, {
   useContext,
   useEffect,
   useState
 } from 'react'
+
 import { Context } from '../../context/Context'
-import {
-  RippleButton,
-  AwesomeModal,
-  Checkbox,
-  AlertInfo,
-  HeaderSteps,
-  ScheduleLinearWeekly,
-  getGlobalStyle,
-  InputTimeHours,
-  Row,
-  Column,
-  Text
-} from 'pkg-components'
 import { autocompleteStoreSchedules } from './helpers'
-import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 export const ScheduleTimings = ({ isChart = false }) => {
   // STATES
@@ -60,7 +60,7 @@ export const ScheduleTimings = ({ isChart = false }) => {
   }, [dataStore, loadingStore])
 
   const handleSetStoreScheduleEveryDay = () => {
-    if (loadingStore || loadingSchEday) return
+    if (loadingStore || loadingSchEday) {return}
     setOpenStoreEveryDay(!openStoreEveryDay)
     handleSetStoreSchedule(!openStoreEveryDay)
   }
@@ -132,25 +132,25 @@ export const ScheduleTimings = ({ isChart = false }) => {
   }
   const handleForm = (e) => {
     e.preventDefault()
-    if (loading || lsc) return
+    if (loading || lsc) {return}
 
-    // eslint-disable-next-line consistent-return
-    if (!startTime || !endTime) return setAlertBox({ message: 'Llena todos los campos' })
+     
+    if (!startTime || !endTime) {return setAlertBox({ message: 'Llena todos los campos' })}
 
     const startHour = convertToMilitaryTime(startTime)
     const endHour = convertToMilitaryTime(endTime)
     // Comparar solo las horas y minutos
     if (startHour === endHour) {
-      // eslint-disable-next-line consistent-return
+       
       return setAlertBox({ message: 'Error, la hora de salida no debe ser igual a la hora final' })
 
     }
     if (startHour > endHour) {
-      // eslint-disable-next-line consistent-return
+       
       return setAlertBox({ message: 'Error, la hora de salida debe ser mayor que la de entrada' })
     }
     if (isLessThanOneHour(startTime, endTime)) {
-      // eslint-disable-next-line consistent-return
+       
       return setAlertBox({ message: 'Error, el horario debe ser mayor a una hora' })
     }
     setStoreSchedule({

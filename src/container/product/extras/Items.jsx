@@ -1,12 +1,10 @@
+import { EColor, Icon , 
+  numberFormat, 
+  QuantityButton,
+  RippleButton} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
-import { EColor, Icon } from 'pkg-components'
 
-import { 
-  numberFormat, 
-  RippleButton, 
-  QuantityButton
-} from 'pkg-components'
 import { CardsComponent } from './styled'
 
 const Items = ({

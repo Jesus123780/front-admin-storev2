@@ -1,12 +1,13 @@
 'use client'
 
-import { Context } from '@/context/Context'
 import {
     AlertBox,
     Portal,
     Toast
 } from 'pkg-components'
 import { useContext } from 'react'
+
+import { Context } from '@/context/Context'
 
 export default function EmptyLayout({ children }: { children: React.ReactNode }) {
     const { messagesToast, error } = useContext(Context)

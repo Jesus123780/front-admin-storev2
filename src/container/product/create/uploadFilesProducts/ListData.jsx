@@ -1,10 +1,11 @@
-import PropTypes from 'prop-types'
 import { 
   getGlobalStyle, 
   MiniCardProduct, 
   numberFormat
 } from 'pkg-components'
+import PropTypes from 'prop-types'
 import React from 'react'
+
 import styles from './styles.module.css'
 
 export const ListData = ({

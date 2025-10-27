@@ -1,11 +1,11 @@
-import React from 'react'
+import { useGetSalesAmountToday } from 'npm-pkg-hook'
 import {
     Column,
     CounterAnimation,
     getGlobalStyle,
     Text
 } from 'pkg-components'
-import { useGetSalesAmountToday } from 'npm-pkg-hook'
+import React from 'react'
 
 export const SalesDay = () => {
     const [data, { loading }] = useGetSalesAmountToday()

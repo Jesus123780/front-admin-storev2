@@ -1,7 +1,8 @@
-import React from 'react'
 import { Column, getGlobalStyle } from 'pkg-components'
-import { ComponentAnalyticsContextProvider } from './context'
+import React from 'react'
+
 import { ComponentsReports } from './components'
+import { ComponentAnalyticsContextProvider } from './context'
 
 export const Reports = () => {
   return (

@@ -1,12 +1,13 @@
 'use client'
 
+import { useLocalBackendIp } from 'npm-pkg-hook'
 import {
   Column,
   ImageQRCode,
   Row
 } from 'pkg-components'
 import React from 'react'
-import { useLocalBackendIp } from 'npm-pkg-hook'
+
 import styles from '../styles.module.css'
 
 export const QrCode = () => {

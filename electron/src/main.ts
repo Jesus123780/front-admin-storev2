@@ -1,11 +1,11 @@
-import { is } from '@electron-toolkit/utils'
-import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'node:path'
-import { startBackendServer, startNextJSServer } from './services/index'
 
-
+import { is } from '@electron-toolkit/utils'
 // 👉 CARGAS LAS VARIABLES .env AQUÍ
 import dotenv from 'dotenv'
+import { app, BrowserWindow, ipcMain } from 'electron'
+
+import { startBackendServer, startNextJSServer } from './services/index'
 dotenv.config();
 
 import { startGoogleAuth } from './auth'
@@ -61,7 +61,7 @@ if (process.env.NODE_ENV !== 'test') {
       })
 
       app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
+        if (BrowserWindow.getAllWindows().length === 0) {createWindow()}
       })
     } catch (error) {
       console.error('Error starting backend server:', error)
@@ -76,7 +76,7 @@ if (process.env.NODE_ENV !== 'test') {
     }
   })
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
+    if (process.platform !== 'darwin') {app.quit()}
   })
 
 }

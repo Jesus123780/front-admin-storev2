@@ -1,8 +1,9 @@
 // app/restaurant/page.tsx
-import { Restaurant } from '@/container/merchant/index'
-import { cookies } from 'next/headers'
 import { decode } from 'jsonwebtoken'
+import { cookies } from 'next/headers'
 import React from 'react'
+
+import { Restaurant } from '@/container/merchant/index'
 
 /**
  * Decodes a JWT token.

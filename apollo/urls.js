@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 export const URL_BASE = `${process.env.URL_BACK_SERVER}/api/`
 export const URL_BASE_WS = '/api/'

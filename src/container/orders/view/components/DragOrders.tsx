@@ -1,42 +1,26 @@
+
+import {
+  Button,
+  Column,
+  Divider,
+  DragDropContext,
+  Draggable,
+  DropdownMenu,
+  Droppable,
+  getGlobalStyle,
+  Icon,
+  numberFormat,
+  Row,
+  Tag,
+  Text} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React, {
   useState
 } from 'react'
-import {
-  Column,
-  ModalDetailOrder,
-  Tag,
-  Text,
-  getGlobalStyle,
-  DropdownMenu,
-  numberFormat,
-  Divider,
-  DragDropContext,
-  Droppable,
-  Draggable,
-  Option,
-  Button,
-  Icon,
-  Row
-} from 'pkg-components'
-import { updateMultipleCache } from '../../../../utils'
-import { useApolloClient, useMutation } from '@apollo/client'
-import { CHANGE_STATE_STORE_ORDER, GET_ALL_ORDER } from '../../queries'
-import {
-  useGetSale,
-  useStore,
-  updateExistingOrders,
-  useGetClients,
-  statusOrder,
-  GET_ALL_COUNT_SALES,
-  useReactToPrint,
-  useFormatDate
-} from 'npm-pkg-hook'
-import { useRouter, useSearchParams } from 'next/navigation'
+
 // import { SubItems } from '../Sales/SubItems'
 // import { Ticket } from '../Sales/Ticket'
-import { dataToPrintProduct } from '../../helpers'
-import { OrderStatusType, type OrderGroup } from '../../types'
+import { type OrderGroup,OrderStatusType } from '../../types'
 import styles from './styles.module.css'
 
 interface IDragOrders {

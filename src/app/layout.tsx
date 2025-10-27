@@ -1,13 +1,15 @@
 'use client'
 
-import ApolloClientProvider from './providers/ApolloProvider'
-import Context from '@/context/Context'
-import Script from 'next/script'
-import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { MemoLayout } from '@/container/Layout'
-import StyledComponentsRegistry from '@/utils/registry'
+import Script from 'next/script'
 import { ProgressBar, ROUTES } from 'pkg-components'
+import { useEffect, useState } from 'react'
+
+import { MemoLayout } from '@/container/Layout'
+import Context from '@/context/Context'
+import StyledComponentsRegistry from '@/utils/registry'
+
+import ApolloClientProvider from './providers/ApolloProvider'
 
 const ROUTES_WITHOUT_LAYOUT = new Set([
   ROUTES.index,

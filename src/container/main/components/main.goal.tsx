@@ -1,4 +1,9 @@
-import React, { useContext, useState } from 'react'
+import {
+    useFormTools,
+    useGetSalesAmountToday,
+    useStore,
+    useUpsertGoal
+} from 'npm-pkg-hook'
 import {
     AmountInput,
     AwesomeModal,
@@ -8,12 +13,8 @@ import {
     KmhGoalChart,
     numberFormat
 } from 'pkg-components'
-import {
-    useStore,
-    useGetSalesAmountToday,
-    useFormTools,
-    useUpsertGoal
-} from 'npm-pkg-hook'
+import React, { useContext, useState } from 'react'
+
 import { Context } from '@/context/Context'
 
 export const Goal = () => {

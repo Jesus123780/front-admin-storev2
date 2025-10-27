@@ -1,15 +1,17 @@
 'use client'
 
-import React, { useContext } from 'react'
-import PropTypes from 'prop-types'
 import {
   Button,
   getGlobalStyle,
   Icon
 } from 'pkg-components'
+import PropTypes from 'prop-types'
+import React, { useContext } from 'react'
+
+import { MENU_OPTIONS } from '@/context/helpers'
+
 import { Context } from '../../../context/Context'
 import styles from './styles.module.css'
-import { MENU_OPTIONS } from '@/context/helpers'
 
 export const ButtonsAction = ({ handle = (number, name, bool) => { return { number, name, bool } } }) => {
   const { setShowComponentModal } = useContext(Context)

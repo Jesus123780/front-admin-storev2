@@ -1,6 +1,5 @@
 import { OAuth2Client } from 'google-auth-library'
 import { NextResponse } from 'next/server'
-import { WebSocketServer } from 'ws'
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE
 const CLIENT_SECRET = process.env.NEXT_PUBLIC_SECRET_CLIENT_ID_LOGIN_GOOGLE

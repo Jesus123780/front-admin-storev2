@@ -1,17 +1,18 @@
 'use client'
 
-import PropTypes from 'prop-types'
-import React, { useMemo, useState } from 'react'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useDeleteProductsFood, useUpdateCartCookie } from 'npm-pkg-hook'
 import {
-  CardProducts,
-  Skeleton,
   BGColor,
+  CardProducts,
   Loading,
+  Skeleton,
   Text
 } from 'pkg-components'
-import { useRouter } from 'next/navigation'
-import Image from 'next/image'
-import { useDeleteProductsFood, useUpdateCartCookie } from 'npm-pkg-hook'
+import PropTypes from 'prop-types'
+import React, { useMemo, useState } from 'react'
+
 import styles from './styles.module.css'
 
 export const ProductCategories = ({
@@ -45,11 +46,11 @@ export const ProductCategories = ({
     setIsLoadingProduct({ loading: false, id: null })
   }
 
-  if (loadingCatProd) return (
+  if (loadingCatProd) {return (
     <div>
       <Skeleton height={200} numberObject={6} />
     </div>
-  )
+  )}
 
   return (
     <>
@@ -96,11 +97,11 @@ export const ProductCategories = ({
                         loading={isLoadingProduct.loading && isLoadingProduct.id === food.pId}
                         onClick={() => { return handleGetOneProduct(food) }}
                         redirect={() => {
-                          if (!food.pId) return sendNotification({
+                          if (!food.pId) {return sendNotification({
                             description: 'Lo sentimos, no encontramos tu producto.',
                             title: 'Error',
                             backgroundColor: 'error'
-                          })
+                          })}
                           return router.push(`products/create/${food.pId}`)
                         }}
                       />

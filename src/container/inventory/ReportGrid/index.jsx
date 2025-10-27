@@ -6,6 +6,7 @@ import {
   Paragraph, 
   Text
 } from 'pkg-components'
+
 import styles from './styles.module.css'
 
 export const ReportGrid = ({ data }) => {

@@ -1,11 +1,8 @@
-import PropTypes from 'prop-types'
-import React, { useContext } from 'react'
 import {
   Cookies,
   useCreateEmployeeStoreAndUser,
   useFormTools
 } from 'npm-pkg-hook'
-import { Context } from '../../context/Context'
 import {
   AlertInfo,
   AwesomeModal,
@@ -17,6 +14,10 @@ import {
   NewSelect,
   Row
 } from 'pkg-components'
+import PropTypes from 'prop-types'
+import React, { useContext } from 'react'
+
+import { Context } from '../../context/Context'
 // import { removeDoubleQuotes } from '../../apollo/helpers'
 
 export const FormEmployee = ({
