@@ -1,4 +1,5 @@
-'use client'; 
+'use client'
+
 import { useRouter } from 'next/navigation'
 import { useMobile } from 'npm-pkg-hook'
 import { HomeMain, ROUTES } from 'pkg-components'

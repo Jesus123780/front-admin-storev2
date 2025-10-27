@@ -2,13 +2,17 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { Button, Column, getGlobalStyle, Portal, ROUTES, Text } from 'pkg-components'
+import React from 'react'
 
+interface NotFoundProps {
+  redirectTo?: string
+}
 /**
  * Not Found Page - renders when route is not matched.
  * @returns {JSX.Element}
  */
-const NotFound = ({
-  redirectTo = null,
+const NotFound: React.FC<NotFoundProps> = ({
+  redirectTo = '/',
 }) => {
   const router = useRouter()
   const pathname = usePathname()
