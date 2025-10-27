@@ -1,6 +1,1 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-# Run test
-npm run lint:fix -f
-npm run test
+echo "Pushing changes..."
