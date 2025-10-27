@@ -9,6 +9,9 @@ const config: Config = {
   testMatch: [
     '<rootDir>/**/*.(test|spec).ts'
   ],
+  transformIgnorePatterns: [
+    '/node_modules/(?!(@electron-toolkit|some-esm-lib)/)', // permite que se transformen libs ESM
+  ],
 
   transform: {
     '^.+\\.ts$': [

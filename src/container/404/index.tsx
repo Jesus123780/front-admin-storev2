@@ -1,4 +1,3 @@
-import React from 'react'
 import PropTypes from 'prop-types'
 import {
   Column,
@@ -8,10 +7,9 @@ import {
   Row,
   getGlobalStyle,
   Divider,
-  Image
+  Image,
 } from 'pkg-components'
 import { useRouter } from 'next/navigation'
-import { BGColor, SECColor } from 'public/colors'
 import styles from './styles.module.css'
 
 const NotFount = ({
@@ -40,7 +38,7 @@ const NotFount = ({
           </Text>
           <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           <Text
-            color={SECColor}
+            // color={SECColor}
             size='2xl'
 
           >
@@ -48,12 +46,11 @@ const NotFount = ({
           </Text>
           <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           <RippleButton
-            color={BGColor}
+            // color={BGColor}
             onClick={() => {
               return router.push(redirect)
             }}
             radius={getGlobalStyle('--border-radius-2xs')}
-            widthButton='14rem'
           >
             {labelButton}
           </RippleButton>

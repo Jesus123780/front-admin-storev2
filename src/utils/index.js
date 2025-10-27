@@ -2,7 +2,6 @@
 
 /* eslint-disable consistent-return */
 import jwt, { decode } from 'jsonwebtoken'
-
 import { resolve } from 'path'
 import { ROUTES } from 'pkg-components'
 // import { useEffect } from 'react'

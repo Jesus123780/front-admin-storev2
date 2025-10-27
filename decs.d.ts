@@ -1,9 +1,15 @@
-declare module "npm-pkg-hook" {
+import { decl } from 'postcss';
+
+// declare styled-components
+declare module 'styled-components' {
+  export { }
+}
+declare module 'npm-pkg-hook' {
   // Puedes exportar tipos o valores específicos del paquete aquí si los conoces
-  export {};
+  export { };
 }
 
-export {};
+export { };
 
 declare global {
   interface Window {

@@ -19,7 +19,7 @@ const initOAuthClient = () => {
 const getOAuthCodeByInteraction = async (authPageURL, port, mainWindow) => {
     shell.openExternal(authPageURL)
     mainWindow.webContents.send('auth-started', 'Authentication started. Please check your browser.')
-    const code = await startOAuthCallbackServer(port, mainWindow)
+    await startOAuthCallbackServer(port, mainWindow)
 }
 
 export const startGoogleAuth = async (mainWindow, port) => {
@@ -33,7 +33,7 @@ export const startGoogleAuth = async (mainWindow, port) => {
             ],
         })
 
-        const code = await getOAuthCodeByInteraction(url, PORT_REDIRECT, mainWindow)
+        await getOAuthCodeByInteraction(url, PORT_REDIRECT, mainWindow)
 
     } catch (error) {
         mainWindow.webContents.send('auth-error', error.toString())
