@@ -4,7 +4,8 @@ import { gql, useMutation } from '@apollo/client'
 import {
   REGISTER_CAT_OF_PRODUCTS,
   useCategoryInStore,
-  useFormTools} from 'npm-pkg-hook'
+  useFormTools
+} from 'npm-pkg-hook'
 import {
   AwesomeModal,
   Button,
@@ -15,24 +16,19 @@ import {
   Icon,
   InputHooks,
   Loading,
-  PColor, 
+  PColor,
   RippleButton,
   Section,
-  Table 
+  Table
 } from 'pkg-components'
 import PropTypes from 'prop-types'
-import React, { 
-  useContext, 
-  useEffect, 
+import React, {
+  useContext,
+  useEffect,
   useState
 } from 'react'
 
 import { Context } from '../../context/Context'
-// import {
-//   DELETE_ONE_CAT_PRODUCTS_FINAL,
-//   GET_ALL_CATEGORIES_WITH_PRODUCT,
-//   GET_ULTIMATE_CATEGORY_PRODUCTS
-// } from '../dashboard/queries'
 import styles from './styles.module.css'
 
 export const Categories = ({ isDragDisabled = true }) => {
@@ -49,23 +45,6 @@ export const Categories = ({ isDragDisabled = true }) => {
       })
     }
   })
-  // const [deleteCatFinalOfProducts] = useMutation(DELETE_ONE_CAT_PRODUCTS_FINAL, {
-  //   onError: (e) => {
-  //     setAlertBox({
-  //       message: e.graphQLErrors[0].message,
-  //       color: WColor
-  //     })
-  //   },
-  //   update(cache) {
-  //     cache.modify({
-  //       fields: {
-  //         catProductsAll(dataOld = []) {
-  //           return cache.writeQuery({ query: GET_ULTIMATE_CATEGORY_PRODUCTS, data: dataOld })
-  //         }
-  //       }
-  //     })
-  //   }
-  // })
   const deleteCatFinalOfProducts = () => {
 
   }
@@ -82,7 +61,7 @@ export const Categories = ({ isDragDisabled = true }) => {
   const handleForm = (e) => {
     return handleSubmit({
       event: e,
-       
+
       action: async () => {
         const {
           catName,
@@ -115,9 +94,9 @@ export const Categories = ({ isDragDisabled = true }) => {
                     try {
                       const { catProductsWithProduct } = dataOld || {}
                       // Find the index of the specific product based on carProId
-                      if (!Array.isArray(catProductsWithProduct)) {return dataOld}
+                      if (!Array.isArray(catProductsWithProduct)) { return dataOld }
                       const targetProductIndex = catProductsWithProduct.findIndex((catProduct) => { return catProduct?.carProId === carProId })
-                      if (targetProductIndex === -1) {return dataOld}
+                      if (targetProductIndex === -1) { return dataOld }
                       // Create a new array with the updated pName
                       const updatedCatProductsWithProduct = catProductsWithProduct.map((catProduct, index) => {
                         // If it's the target product and editCate has the new pName, update pName
@@ -201,9 +180,9 @@ export const Categories = ({ isDragDisabled = true }) => {
   useEffect(() => {
     setItems(datCat)
   }, [datCat])
-  
+
   const handleOnDragEnd = (result) => {
-    if (!result.destination) {return} // No se ha soltado en una posición válida
+    if (!result.destination) { return } // No se ha soltado en una posición válida
 
     const startIndex = result.source.index
     const endIndex = result.destination.index

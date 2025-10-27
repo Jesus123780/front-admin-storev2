@@ -1,7 +1,7 @@
-import path from 'path'
-import fs from 'fs'
-import { promisify } from 'util'
-import os from 'os'
+import path from 'node:path'
+import fs from 'node:fs'
+import { promisify } from 'node:util'
+import os from 'node:os'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
@@ -15,7 +15,17 @@ const baseFilePath = path.join(os.homedir(), 'app_data')
  * @param {{ params: { filename: string } }} context - Params from route.
  * @returns {Promise<Response>}
  */
-export async function GET(_, context) {
+interface RouteParams {
+  filename: string
+}
+
+interface RouteContext {
+  params: RouteParams
+}
+
+type MimeTypesMap = Record<string, string>
+
+export async function GET(_: Request, context: RouteContext): Promise<Response> {
   const cookie = await cookies()
   const session = cookie.get('session')
   if (!session) {
@@ -34,7 +44,7 @@ export async function GET(_, context) {
     await stat(filePath)
 
     const ext = path.extname(filename).toLowerCase()
-    const mimeTypes = {
+    const mimeTypes: MimeTypesMap = {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
       '.png': 'image/png',
@@ -57,7 +67,7 @@ export async function GET(_, context) {
     unlink(filePath).catch(err => {
       console.warn(`Failed to delete file ${filename}:`, err)
     })
-
+    // @ts-ignore
     return new Response(fileBuffer, {
       status: 200,
       headers: {

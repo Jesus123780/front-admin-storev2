@@ -1,9 +1,9 @@
 // lib/ws-server.ts
-import fs from 'fs'
+import fs from 'node:fs'
 import { getPort } from 'get-port-please';
-import { createServer, IncomingMessage } from 'http';
-import os from 'os'
-import path from 'path';
+import { createServer, IncomingMessage } from 'node:http';
+import os from 'node:os'
+import path from 'node:path';
 import { WebSocket,WebSocketServer } from 'ws';
 
 export const getServerPortWss = async () => {

@@ -11,7 +11,7 @@ export const CounterClientComponent = () => {
 
     return { fromDate: start, toDate: end }
   }
-  const initialDates = getInitialDates()
+  getInitialDates()
 
   return (
     <div
