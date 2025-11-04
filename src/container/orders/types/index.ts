@@ -43,13 +43,11 @@ export interface OrderItem {
 }
 
 export interface OrderGroup {
-  statusKey: string
-  priority: number
-  state: number
-  getStatusOrderType: OrderStatusType
-  items: OrderItem[]
+  createdAt: string
+  pCodeRef: string
+  totalProductsPrice: string
 }
 
 export interface GetAllOrdersFromStoreResponse {
-  getAllOrdersFromStore: OrderGroup[]
+  getAllSalesStore: OrderGroup[]
 }

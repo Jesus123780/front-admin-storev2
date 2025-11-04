@@ -83,31 +83,31 @@ export const cache = new InMemoryCache({
             return { ...existing, ...incoming }
           }
         },
-        getAllSalesStore: {
-          keyArgs: ['idStore', 'search', 'max', 'fromDate', 'toDate'],
-          merge(existing, incoming, { args: { max = Infinity } }) {
-            try {
-              // Verificar que el objeto exista y tenga la propiedad getAllSalesStore
-              const existingResults = existing?.getAllSalesStore ?? []
-              const incomingResults = incoming?.getAllSalesStore ?? []
-              // Concatenamos los resultados entrantes con los existentes
-              const merged = [...existingResults]
-              for (let i = 0; i < incomingResults.length && merged.length < max; ++i) {
-                const incomingResult = incomingResults[i]
-                // Verificar que el objeto exista y tenga la propiedad pCodeRef
-                if (incomingResult?.pCodeRef && !merged.some(existingResult => {return existingResult.pCodeRef === incomingResult.pCodeRef})) {
-                  merged.push(incomingResult)
-                }
-              }
-              return {
-                ...incoming,
-                getAllSalesStore: merged
-              }
-            } catch (error) {
-              return existing
-            }
-          }
-        },
+        // getAllSalesStore: {
+        //   keyArgs: ['idStore', 'search', 'max', 'fromDate', 'toDate'],
+        //   merge(existing, incoming, { args: { max = Infinity } }) {
+        //     try {
+        //       // Verificar que el objeto exista y tenga la propiedad getAllSalesStore
+        //       const existingResults = existing?.getAllSalesStore ?? []
+        //       const incomingResults = incoming?.getAllSalesStore ?? []
+        //       // Concatenamos los resultados entrantes con los existentes
+        //       const merged = [...existingResults]
+        //       for (let i = 0; i < incomingResults.length && merged.length < max; ++i) {
+        //         const incomingResult = incomingResults[i]
+        //         // Verificar que el objeto exista y tenga la propiedad pCodeRef
+        //         if (incomingResult?.pCodeRef && !merged.some(existingResult => {return existingResult.pCodeRef === incomingResult.pCodeRef})) {
+        //           merged.push(incomingResult)
+        //         }
+        //       }
+        //       return {
+        //         ...incoming,
+        //         getAllSalesStore: merged
+        //       }
+        //     } catch (error) {
+        //       return existing
+        //     }
+        //   }
+        // },
         // productFoodsAll: {
         //   keyArgs: ['categories', 'desc', 'fromDate', 'gender', 'pState', 'search', 'toDate'],
         //   merge(existing, incoming, { args: { max = Infinity } }) {
@@ -154,32 +154,6 @@ export const cache = new InMemoryCache({
             return merged
           }
         },
-        // getAllOrdersFromStore: {
-        //   keyArgs: [
-        //     'idStore',
-        //     'cId',
-        //     'dId',
-        //     'ctId',
-        //     'search',
-        //     'min',
-        //     'fromDate',
-        //     'toDate',
-        //     'max',
-        //     'statusOrder'
-        //   ],
-        //   merge(existing, incoming, { args: { max = Infinity } }) {
-        //     const merged = {
-        //       ...incoming,
-        //       getAllOrdersFromStore: mergeArraysWithDuplicates(
-        //         existing?.getAllOrdersFromStore,
-        //         incoming?.getAllOrdersFromStore,
-        //         max,
-        //         'pCodeRef'
-        //       )
-        //     }
-        //     return merged
-        //   }
-        // },
         getAllClients: {
           keyArgs: ['search', 'min', 'max', 'idStore'],
           merge(existing, incoming, { args: { max = Infinity } }) {

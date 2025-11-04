@@ -9,7 +9,8 @@ import {
   useReactToPrint,
   useSales,
   useStore,
-  useStoreTables} from 'npm-pkg-hook'
+  useStoreTables
+} from 'npm-pkg-hook'
 import {
   AwesomeModal,
   CardProductSimple,
@@ -494,7 +495,7 @@ export const CreateSales = ({
         show={openCommentModal}
         size='small'
         title='Dejar un comentario'
-        zIndex={getGlobalStyle('--z-index-99999')}
+        zIndex={getGlobalStyle('--z-index-modal')}
       >
         <Column style={{ justifyContent: 'space-between', height: '100%' }}>
           <CardProductSimple

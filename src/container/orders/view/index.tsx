@@ -1,5 +1,5 @@
 'use client'
-
+import groupBy from 'lodash/groupBy'
 import {
     useChangeStateOrder,
     useFormTools,
@@ -10,35 +10,37 @@ import {
 } from 'npm-pkg-hook'
 import {
     AlertInfo,
-    Button,
     Column,
     DateRange,
     Divider,
-    DropResult,
-    EmptyData,
     getGlobalStyle,
     InputDate,
     InputQuery,
-    ToggleSwitch} from 'pkg-components'
+    ToggleSwitch
+} from 'pkg-components'
 import React, {
     useContext,
+    useEffect,
     useMemo,
-    useState} from 'react'
+    useState
+} from 'react'
 
 import { Context } from '@/context/Context'
 
 import { GetAllOrdersFromStoreResponse, OrderGroup } from '../types'
 import { DragOrders } from './components/DragOrders'
+import { ModalStatusTypes } from './components/ModalStatusTypes'
+import { StepperOrderStatus } from './components/Stepper'
 import styles from './styles.module.css'
 
 export const OrdersView = () => {
 
     // STATES
     const [inCludeRange, setInCludeRange] = useState(true)
-    const [loading, setLoading] = useState(false)
-    const [orders, setOrders] = useState<OrderGroup[]>([])
+    const [openModalStatusTypes, setModalStatusTypes] = useState(false)
+    const [orders, setOrders] = useState<Record<string, OrderGroup[]>>({})
     const { sendNotification } = useContext(Context)
-
+const [activeStep, setActiveStep] = useState(0)
     const initialDates = useMemo(() => {
         const todayRange = new UtilDateRange()
         const { start, end } = todayRange.getRange()
@@ -47,7 +49,7 @@ export const OrdersView = () => {
 
 
     // HOOKS
-    const { statusTypes } = useOrderStatusTypes()
+    const { data: statusTypes } = useOrderStatusTypes()
     const [changeStateOrder] = useChangeStateOrder({
         sendNotification
     })
@@ -59,71 +61,34 @@ export const OrdersView = () => {
         initialValues: initialDates
     })
 
+    interface StatusType {
+        name: string
+    }
+
     const [_data, { refetch }] = useOrdersFromStore({
         fromDate: dataForm.fromDate,
         toDate: dataForm.toDate,
         callback: (data: GetAllOrdersFromStoreResponse) => {
-            const { getAllOrdersFromStore } = data ?? []
-            setOrders(getAllOrdersFromStore ?? [] as OrderGroup[])
+            const key = 'status'
+            const grouped = groupBy(data?.getAllSalesStore ?? [], key)
+            // 🔹 Asegura que todos los statusTypes existan aunque no haya órdenes
+
+
+            type GroupedOrdersByStatus = Record<string, OrderGroup[]>
+
+            const fillGroupedByStatusTypes = statusTypes?.reduce<GroupedOrdersByStatus>(
+                (acc: GroupedOrdersByStatus, statusType: StatusType) => {
+                    acc[statusType.name] = (grouped as GroupedOrdersByStatus)[statusType.name] ?? []
+                    return acc
+                },
+                {} as GroupedOrdersByStatus
+            )
+            if (statusTypes) {
+                return setOrders(fillGroupedByStatusTypes)
+            }
+            return setOrders(grouped)
         }
     })
-
-    // HANDLESS
-    const handleClearFilters = async () => {
-        setLoading(true)
-        await refetch({
-            fromDate: initialDates.fromDate,
-            toDate: initialDates.toDate,
-            search: ''
-        })
-        setLoading(false)
-    }
-
-    /**
-     * Handles drag end for reordering orders and updates priority in DB.
-     * @param {import('react-beautiful-dnd').DropResult} result - DnD result object
-     */
-    const onDragEnd = async (result: DropResult) => {
-        const { source, destination } = result
-
-        if (!destination) {return}
-
-        if (
-            source.droppableId === destination.droppableId &&
-            source.index === destination.index
-        ) {return}
-
-        if (!Array.isArray(orders) || orders.length === 0) {return}
-
-        const updatedOrders = [...orders]
-
-        if (
-            source.index < 0 ||
-            source.index >= updatedOrders.length ||
-            destination.index < 0 ||
-            destination.index > updatedOrders.length
-        ) {return}
-
-        const [movedOrder] = updatedOrders.splice(source.index, 1)
-        updatedOrders.splice(destination.index, 0, movedOrder)
-
-        const reordered = updatedOrders.map((order, index) => ({
-            ...order,
-            getStatusOrderType: {
-                ...order.getStatusOrderType,
-                priority: index + 1,
-            },
-        }))
-
-        setOrders(reordered)
-
-        const payload = reordered.map((order) => ({
-            idStatus: order.getStatusOrderType?.idStatus,
-            priority: order.getStatusOrderType?.priority,
-        }))
-
-        await updatePriorities(payload)
-    }
 
     const handleChangeState = async (idStatus: string, pCodeRef: string) => {
         await changeStateOrder({
@@ -133,10 +98,24 @@ export const OrdersView = () => {
         })
     }
 
+    useEffect(() => {
+        type GroupedOrdersByStatus = Record<string, OrderGroup[]>
+
+        const fillGroupedByStatusTypes = statusTypes?.reduce<GroupedOrdersByStatus>(
+            (acc: GroupedOrdersByStatus, statusType: StatusType) => {
+                acc[statusType.name] = (orders as GroupedOrdersByStatus)[statusType.name] ?? []
+                return acc
+            },
+            {} as GroupedOrdersByStatus
+        )
+        if (statusTypes) {
+            return setOrders(fillGroupedByStatusTypes)
+        }
+    }, [])
 
 
     return (
-        <div style={{ padding: getGlobalStyle('--spacing-xl') }}>
+        <div style={{ padding: getGlobalStyle('--spacing-xl') }} className={styles.container}>
             <Column>
                 <AlertInfo
                     message='Permite actualizar y gestionar el estado actual de los pedidos en el sistema, 
@@ -163,17 +142,13 @@ export const OrdersView = () => {
                             dataForm={dataForm}
                             handleChange={(e) => {
                                 handleChange(e)
-                                // Espera a que termine de escribir antes de llamar a refetch
-                                if (window.searchTimeout) {clearTimeout(window.searchTimeout)}
-                                window.searchTimeout = setTimeout(() => {
-                                    refetch({
-                                        fromDate: dataForm.fromDate,
-                                        toDate: dataForm.toDate,
-                                        search: e.target.value
-                                    })
-                                }, 500)
+                                refetch({
+                                    fromDate: dataForm.fromDate,
+                                    toDate: dataForm.toDate,
+                                    search: e.target.value
+                                })
                             }}
-                            placeholder='busca por ref de orden'
+                            placeholder='buscar por ref de orden'
                         />
                     </div>
                     <InputDate
@@ -204,44 +179,6 @@ export const OrdersView = () => {
                         }}
                         value={dataForm.toDate}
                     />
-                    <Button
-                        borderRadius='5px'
-                        onClick={handleClearFilters}
-                        padding='0 10px'
-                        loading={loading}
-                        primary
-                        styles={{
-                            height: '3.75rem'
-                        }}
-                    >
-                        Quitar filtros
-                    </Button>
-                    <Button
-                        type='submit'
-                        borderRadius='5px'
-                        onClick={(e) => {
-                            handleSubmit({
-                                event: e,
-                                action: () => {
-                                    setLoading(true)
-                                    refetch({
-                                        fromDate: dataForm.fromDate,
-                                        toDate: dataForm.toDate,
-                                        search: dataForm.search
-                                    })
-                                    setLoading(false)
-                                }
-                            })
-
-                        }}
-                        padding='0 10px'
-                        primary
-                        styles={{
-                            height: '3.75rem'
-                        }}
-                    >
-                        Realizar busqueda
-                    </Button>
                 </div>
                 <Divider marginTop={getGlobalStyle('--spacing-xl')} />
                 <DateRange
@@ -249,17 +186,24 @@ export const OrdersView = () => {
                     startDate={dataForm.fromDate ?? initialDates.fromDate}
                 />
                 <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-                <div className='form-container-orders'></div>
-                {!Array.isArray(orders) ? (
-                    <EmptyData />
-                ) : (
-                    <DragOrders
-                        list={orders}
-                        statusTypes={statusTypes ?? []}
-                        onDragEnd={onDragEnd}
-                        handleChangeState={handleChangeState}
-                    />
-                )}
+                <StepperOrderStatus
+                    callBack={() => {
+                        setModalStatusTypes(!openModalStatusTypes)
+                    }}
+                    active={activeStep}
+                    steps={statusTypes?.map((status: StatusType) => status.name) ?? []}
+                    setActive={async (step: number) => {
+                        setActiveStep(step)
+                    }}
+                />
+                <DragOrders
+                    orders={orders}
+                    statusTypes={statusTypes ?? []}
+                />
+                <ModalStatusTypes
+                    openModalStatusTypes={openModalStatusTypes}
+                    setModalStatusTypes={setModalStatusTypes}
+                />
             </Column>
         </div>
     )

@@ -1,3 +1,11 @@
+.container {
+    padding: 0 30px;
+    width: 100%;
+    max-width: 1366px;
+    margin: auto;
+    position: relative;
+}
+
 .quick-filters {
     align-items: center;
     display: flex;
@@ -15,6 +23,7 @@
     background-color: var(--color-neutral-gray-light);
     display: flex;
 }
+
 .title {
     display: inline-block;
     overflow: hidden;
