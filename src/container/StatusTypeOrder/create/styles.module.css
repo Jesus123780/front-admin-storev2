@@ -1,0 +1,5 @@
+.form-container {
+    gap: 16px;
+    justify-content: space-between;
+    height: 100%;
+}

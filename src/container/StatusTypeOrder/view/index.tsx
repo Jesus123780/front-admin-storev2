@@ -1,302 +1,52 @@
 'use client'
 
-import { gql, useMutation } from '@apollo/client'
+import { useOrderStatusTypes } from 'npm-pkg-hook'
 import {
-  REGISTER_CAT_OF_PRODUCTS,
-  useCategoryInStore,
-  useFormTools
-} from 'npm-pkg-hook'
-import {
-  Button,
-  DragDropContext,
-  Draggable,
-  Droppable,
-  getGlobalStyle,
-  Icon,
-  Loading,
-  PColor,
-  Section,
-  Table
+ AwesomeModal, 
+ Button, 
+ getGlobalStyle 
 } from 'pkg-components'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import React, {
   useContext,
-  useEffect,
   useState
 } from 'react'
 
 import { Context } from '../../../context/Context'
+import { StatusTypeOrderCreate } from '../create'
 
-export const StatusTypeOrderView = ({ isDragDisabled = true }) => {
-  const { data: datCat } = useCategoryInStore({})
-  const { setAlertBox, sendNotification } = useContext(Context)
-  const [handleChange, handleSubmit, handleForcedData, { dataForm, errorForm }] = useFormTools()
-  const [showCategories, setShowCategories] = useState(false)
-  // QUERIES
-  const [createCategoryProduct, { loading }] = useMutation(REGISTER_CAT_OF_PRODUCTS, {
-    onError: (e) => {
-      setAlertBox({
-        type: 'error',
-        message: e.message.replace('GraphQL error: Ocurrió un error', '')
-      })
+export const StatusTypeOrderView = () => {
+  const [data, setData] = useState<unknown>([])
+  const { sendNotification } = useContext(Context)
+  useOrderStatusTypes({
+    callback: (data: unknown) => {
+      return setData(data)
     }
   })
-  const deleteCatFinalOfProducts = () => {
 
-  }
-  const EDIT_CATEGORY_PRODUCT = gql`
-  mutation EditOneCategoryProduct($pName: String!, $ProDescription: String, $carProId: ID!) {
-    editOneCategoryProduct(pName: $pName, ProDescription: $ProDescription, carProId: $carProId) {
-      success
-      message
-    }
-  }
-`
-  const [editCategoryProduct, { loading: loadingCategory }] = useMutation(EDIT_CATEGORY_PRODUCT)
-  // HANDLES
-  const handleForm = (e) => {
-    return handleSubmit({
-      event: e,
+  const [ShowStatusTypes, setShowStatusTypes] = useState(false)
 
-      action: async () => {
-        const {
-          catName,
-          catDescription,
-          carProId
-        } = dataForm
-        if (carProId) {
-          const editCate = {
-            pName: catName,
-            ProDescription: catDescription,
-            carProId
-          }
-          const { data } = await editCategoryProduct({
-            variables: {
-              ...editCate
-            }, update(cache) {
-              cache.modify({
-                fields: {
-                  catProductsAll(dataOld = []) {
-                    const newDataCat = dataOld.map((cate) => {
-                      if (cate.carProId === carProId) {
-                        return { ...editCate }
-                      }
-                      return cate
-
-                    })
-                    return newDataCat
-                  },
-                  getCatProductsWithProduct(dataOld = {}) {
-                    try {
-                      const { catProductsWithProduct } = dataOld || {}
-                      // Find the index of the specific product based on carProId
-                      if (!Array.isArray(catProductsWithProduct)) { return dataOld }
-                      const targetProductIndex = catProductsWithProduct.findIndex((catProduct) => { return catProduct?.carProId === carProId })
-                      if (targetProductIndex === -1) { return dataOld }
-                      // Create a new array with the updated pName
-                      const updatedCatProductsWithProduct = catProductsWithProduct.map((catProduct, index) => {
-                        // If it's the target product and editCate has the new pName, update pName
-                        if (index === targetProductIndex && editCate?.pName) {
-                          return {
-                            ...catProduct,
-                            pName: editCate.pName
-                          }
-                        }
-                        return catProduct // Otherwise, return the product unchanged
-                      })
-                      return {
-                        catProductsWithProduct: updatedCatProductsWithProduct,
-                        totalCount: dataOld.totalCount
-                      }
-                    } catch (error) {
-                      setShowCategories(false)
-                      return dataOld
-                    }
-                  }
-                }
-              })
-            }
-          })
-          if (!data.editOneCategoryProduct.success) {
-            return sendNotification({
-              description: 'Ocurrió un error',
-              title: 'Error',
-              backgroundColor: 'error'
-            })
-          }
-          if (data.editOneCategoryProduct.success) {
-            setShowCategories(false)
-            return sendNotification({
-              description: 'Categoría actualizada exitosamente',
-              title: 'Editada',
-              backgroundColor: 'success'
-            })
-          }
-        } else {
-          return createCategoryProduct({
-            variables: {
-              input: {
-                pName: catName,
-                ProDescription: catDescription
-              }
-            },
-            update(cache) {
-              cache.modify({
-                fields: {
-                  // catProductsAll(dataOld = []) {
-                  //   return cache.writeQuery({
-                  //     query: GET_ULTIMATE_CATEGORY_PRODUCTS,
-                  //     data: dataOld
-                  //   })
-                  // }
-                }
-              })
-              cache.modify({
-                fields: {
-                  // getCatProductsWithProduct(dataOld = []) {
-                  //   return cache.writeQuery({
-                  //     query: GET_ALL_CATEGORIES_WITH_PRODUCT,
-                  //     data: dataOld
-                  //   })
-                  // }
-                }
-              })
-            }
-          })
-        }
-      },
-      actionAfterSuccess: () => {
-        handleForcedData({})
-        setShowCategories(!showCategories)
-      }
-    })
-  }
-
-  const [items, setItems] = useState(datCat)
-  useEffect(() => {
-    setItems(datCat)
-  }, [datCat])
-
-  const handleOnDragEnd = (result) => {
-    if (!result.destination) { return } // No se ha soltado en una posición válida
-
-    const startIndex = result.source.index
-    const endIndex = result.destination.index
-
-    const reorderedItems = Array.from(items)
-    const [movedItem] = reorderedItems.splice(startIndex, 1) // Remueve el elemento movido de la posición inicial
-    reorderedItems.splice(endIndex, 0, movedItem) // Inserta el elemento movido en la posición final
-    setItems(reorderedItems)
-  }
 
   return (
     <>
-      {loading && <Loading />}
-      <DragDropContext onDragEnd={handleOnDragEnd}>
-        <Droppable droppableId='droppable-table' isCombineEnabled={false} ignoreContainerClipping={false}>
-          {(provided) => {
-            return (
-              <div ref={provided.innerRef} {...provided.droppableProps}>
-                <Table
-                  data={items}
-                  labelBtn='Product'
-                  renderBody={(dataB, titles) => {
-                    return dataB?.map((x, i) => {
-                      return (
-                        <Draggable
-                          draggableId={x.carProId.toString()}
-                          index={i}
-                          isDragDisabled={Boolean(isDragDisabled)}
-                          key={x.carProId}
-                        >
-                          {(provided) => {
-                            return (
-                              <Section
-                                columnWidth={titles}
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                odd
-                                padding='10px 0'
-                              >
-                                <div {...provided.dragHandleProps} style={{ cursor: 'grab', padding: '20px', backgroundColor: getGlobalStyle('--color-base-transparent') }}>
-                                  <Icon
-                                    color={getGlobalStyle('--color-icons-gray')}
-                                    icon='IconDragHandle'
-                                    size={20}
-                                  />
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                  <span>{x.pName}</span>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                  <span> {x.ProDescription}</span>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                  <button
-                                    onClick={() => {
-                                      return deleteCatFinalOfProducts({
-                                        variables: { idPc: x.carProId }, update(cache) {
-                                          cache.modify({
-                                            fields: {
-                                              catProductsAll(dataOld = []) {
-                                                // return cache.writeQuery({
-                                                //   query: GET_ULTIMATE_CATEGORY_PRODUCTS,
-                                                //   data: dataOld
-                                                // })
-                                              }
-                                            }
-                                          })
-                                        }
-                                      })
-                                    }}
-                                    style={{ backgroundColor: getGlobalStyle('--color-base-transparent'), cursor: 'pointer' }}
-                                  >
-                                    <Icon icon='IconDelete' color={PColor} size={20} />
-                                  </button>
-                                </div>
-                                <Button
-                                  onClick={() => {
-                                    setShowCategories(!showCategories)
-                                    return handleForcedData({
-                                      catName: x.pName,
-                                      catDescription: x.ProDescription,
-                                      carProId: x.carProId
-                                    })
-                                  }}
-                                  styles={{
-                                    border: 'none',
-                                    backgroundColor: 'transparent'
-                                  }}
-                                >
-                                  Editar
-                                  <Icon
-                                    color={getGlobalStyle('--color-icons-primary')}
-                                    icon='IconEdit'
-                                    size={15}
-                                  />
-                                </Button>
-                              </Section>
-                            )
-                          }}
-                        </Draggable>
-                      )
-                    })
-                  }}
-                  titles={[
-                    { name: '', key: '', justify: 'flex-start', width: '10%' },
-                    { name: 'Nombre', key: '', justify: 'flex-start', width: '1fr' },
-                    { name: 'Descripción', justify: 'flex-center', width: '1fr' },
-                    { name: 'Borrar', justify: 'flex-center', width: '1fr' },
-                    { name: 'Acciones', justify: 'flex-center', width: '1fr' }
-                  ]}
-                />
-                {provided.placeholder}
-              </div>
-            )
-          }}
-        </Droppable>
-      </DragDropContext>
-      <Button onClick={() => { return setShowCategories(!showCategories) }}>
-        Adicionar Categorías
+      <AwesomeModal
+        footer={false}
+        header={true}
+        size={MODAL_SIZES.medium}
+        onCancel={() => {
+          return false
+        }}
+        onHide={() => setShowStatusTypes(false)}
+        padding={20}
+        title='Crear nuevo estado de orden'
+        show={ShowStatusTypes}
+        customHeight='auto'
+        zIndex={getGlobalStyle('--z-index-99999')}
+      >
+        <StatusTypeOrderCreate />
+      </AwesomeModal>
+      <Button onClick={() => { return setShowStatusTypes(!ShowStatusTypes) }}>
+        Crear
       </Button>
     </>
   )

@@ -1,32 +1,32 @@
 import { AwesomeModal, getGlobalStyle } from 'pkg-components'
 
-import { StatusTypeOrderView } from '@/container/StatusTypeOrder'
+import OrderTypesContextProviders from '@/container/StatusTypeOrder/providers'
 
 interface IModalStatusTypes {
     openModalStatusTypes: boolean
-    setModalStatusTypes: (open: boolean) => void
+    setOpenModalStatusTypes: (open: boolean) => void
 }
 export const ModalStatusTypes: React.FC<IModalStatusTypes> = ({
     openModalStatusTypes,
-    setModalStatusTypes
+    setOpenModalStatusTypes
 }: IModalStatusTypes) => {
     return (
         <div>
             <AwesomeModal
                 customHeight='70vh'
                 footer={false}
-                header={false}
+                header={true}
                 onCancel={() => { return false }}
-                onConfirm={() => { return setModalStatusTypes(false) }}
-                onHide={() => { return setModalStatusTypes(false) }}
+                onConfirm={() => { return setOpenModalStatusTypes(false) }}
+                onHide={() => { return setOpenModalStatusTypes(false) }}
                 padding='20px'
-                title=''
+                title='Tipos de estado de orden'
                 question={false}
                 show={openModalStatusTypes}
                 size='medium'
                 zIndex={getGlobalStyle('--z-index-high')}
             >
-                <StatusTypeOrderView />
+                <OrderTypesContextProviders />
             </AwesomeModal>
         </div>
     )

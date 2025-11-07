@@ -9,7 +9,6 @@ import {
     UtilDateRange,
 } from 'npm-pkg-hook'
 import {
-    AlertInfo,
     Column,
     DateRange,
     Divider,
@@ -37,10 +36,10 @@ export const OrdersView = () => {
 
     // STATES
     const [inCludeRange, setInCludeRange] = useState(true)
-    const [openModalStatusTypes, setModalStatusTypes] = useState(false)
+    const [openModalStatusTypes, setOpenModalStatusTypes] = useState(false)
     const [orders, setOrders] = useState<Record<string, OrderGroup[]>>({})
     const { sendNotification } = useContext(Context)
-const [activeStep, setActiveStep] = useState(0)
+    const [activeStep, setActiveStep] = useState(0)
     const initialDates = useMemo(() => {
         const todayRange = new UtilDateRange()
         const { start, end } = todayRange.getRange()
@@ -117,12 +116,6 @@ const [activeStep, setActiveStep] = useState(0)
     return (
         <div style={{ padding: getGlobalStyle('--spacing-xl') }} className={styles.container}>
             <Column>
-                <AlertInfo
-                    message='Permite actualizar y gestionar el estado actual de los pedidos en el sistema, 
-                    proporcionando control sobre su flujo operativo y asegurando trazabilidad mediante un 
-                    identificador de referencia y fecha de modificación.'
-                    type='warning'
-                />
                 <Divider marginTop={getGlobalStyle('--spacing-xl')} />
                 <div className={styles['quick-filters']}>
                     {!inCludeRange &&
@@ -188,7 +181,7 @@ const [activeStep, setActiveStep] = useState(0)
                 <Divider marginTop={getGlobalStyle('--spacing-xl')} />
                 <StepperOrderStatus
                     callBack={() => {
-                        setModalStatusTypes(!openModalStatusTypes)
+                        setOpenModalStatusTypes(!openModalStatusTypes)
                     }}
                     active={activeStep}
                     steps={statusTypes?.map((status: StatusType) => status.name) ?? []}
@@ -202,7 +195,7 @@ const [activeStep, setActiveStep] = useState(0)
                 />
                 <ModalStatusTypes
                     openModalStatusTypes={openModalStatusTypes}
-                    setModalStatusTypes={setModalStatusTypes}
+                    setOpenModalStatusTypes={setOpenModalStatusTypes}
                 />
             </Column>
         </div>

@@ -25,7 +25,7 @@ export const StepperOrderStatus: React.FC<IStepperOrderStatus> = ({
         </Button>
     ] as IStepperOrderStatus['steps']
     return (
-        <div style={{ width: '50%' }}>
+        <div>
             <Stepper
                 mode='simple'
                 active={active}
