@@ -46,7 +46,6 @@ export const startOAuthCallbackServer = (
                 })
                     .then((response: Response) => response.json())
                     .then((data: GoogleAuthResponse) => {
-                        console.log('User info:', data)
                         mainWindow.webContents.send('google-auth-success', data)
                         res.send(`
                     <html>

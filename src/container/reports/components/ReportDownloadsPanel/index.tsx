@@ -39,7 +39,6 @@ export const ReportDownloadsPanel = () => {
   }] = useGetReportByDateRange({
     sendNotification
   })
-  console.log({ loading: loadingReportRange })
   const [active, setActive] = useState(0)
 
   const handleDownload = async ({
