@@ -61,7 +61,6 @@ export const ProductCategories = ({
             <div key={x.carProId}>
               <div key={key}>
                 <div
-                  as='h3'
                   id={key}
                   name={x?.pName}
                 >

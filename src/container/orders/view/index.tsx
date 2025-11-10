@@ -3,16 +3,18 @@ import groupBy from 'lodash/groupBy'
 import {
     useChangeStateOrder,
     useFormTools,
+    useMobile,
     useOrdersFromStore,
     useOrderStatusTypes,
     useUpdateOrderStatusPriorities,
-    UtilDateRange,
+    UtilDateRange
 } from 'npm-pkg-hook'
 import {
     Column,
     DateRange,
     Divider,
     getGlobalStyle,
+    HorizontalScrollWrapper,
     InputDate,
     InputQuery,
     ToggleSwitch
@@ -30,6 +32,7 @@ import { GetAllOrdersFromStoreResponse, OrderGroup } from '../types'
 import { DragOrders } from './components/DragOrders'
 import { ModalStatusTypes } from './components/ModalStatusTypes'
 import { StepperOrderStatus } from './components/Stepper'
+import { HORIZONTAL_SCROLL_WRAPPER } from './constants'
 import styles from './styles.module.css'
 
 export const OrdersView = () => {
@@ -37,6 +40,7 @@ export const OrdersView = () => {
     // STATES
     const [inCludeRange, setInCludeRange] = useState(true)
     const [openModalStatusTypes, setOpenModalStatusTypes] = useState(false)
+    const [showStepper] = useState<boolean>(false)
     const [orders, setOrders] = useState<Record<string, OrderGroup[]>>({})
     const { sendNotification } = useContext(Context)
     const [activeStep, setActiveStep] = useState(0)
@@ -49,6 +53,8 @@ export const OrdersView = () => {
 
     // HOOKS
     const { data: statusTypes } = useOrderStatusTypes()
+    const { isTablet } = useMobile()
+
     const [changeStateOrder] = useChangeStateOrder({
         sendNotification
     })
@@ -115,6 +121,9 @@ export const OrdersView = () => {
 
     return (
         <div style={{ padding: getGlobalStyle('--spacing-xl') }} className={styles.container}>
+            <div>
+
+            </div>
             <Column>
                 <Divider marginTop={getGlobalStyle('--spacing-xl')} />
                 <div className={styles['quick-filters']}>
@@ -179,20 +188,38 @@ export const OrdersView = () => {
                     startDate={dataForm.fromDate ?? initialDates.fromDate}
                 />
                 <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-                <StepperOrderStatus
-                    callBack={() => {
-                        setOpenModalStatusTypes(!openModalStatusTypes)
-                    }}
-                    active={activeStep}
-                    steps={statusTypes?.map((status: StatusType) => status.name) ?? []}
-                    setActive={async (step: number) => {
-                        setActiveStep(step)
-                    }}
+                {showStepper &&
+                    <StepperOrderStatus
+                        callBack={() => {
+                            setOpenModalStatusTypes(!openModalStatusTypes)
+                        }}
+                        active={activeStep}
+                        steps={statusTypes?.map((status: StatusType) => status.name) ?? []}
+                        setActive={async (step: number) => {
+                            setActiveStep(step)
+                        }}
+                    />
+                }
+                <HorizontalScrollWrapper
+                    targetId={HORIZONTAL_SCROLL_WRAPPER}
+                    columns={statusTypes?.length ?? 1}
+                    className={styles['horizontal-scroll-wrapper']}
+                    style={isTablet ? { bottom: getGlobalStyle('--spacing-6xl') } : {}}
                 />
-                <DragOrders
-                    orders={orders}
-                    statusTypes={statusTypes ?? []}
-                />
+                <div
+                    id={HORIZONTAL_SCROLL_WRAPPER}
+                    style={{
+                        overflowX: 'auto',
+                        overflowY: 'hidden',
+                        whiteSpace: 'nowrap',
+                        display: 'flex',
+                        gap: '1rem',
+                        padding: '1rem'
+                    }}
+                >
+                    <DragOrders orders={orders} statusTypes={statusTypes} />
+                </div>
+
                 <ModalStatusTypes
                     openModalStatusTypes={openModalStatusTypes}
                     setOpenModalStatusTypes={setOpenModalStatusTypes}

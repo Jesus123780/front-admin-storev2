@@ -48,7 +48,7 @@ export const StatusTypeOrderCreate = () => {
           name='name'
           onChange={handleChange}
           required
-          title='Nombre de la categoría'
+          title='Nombre del estado de la orden'
           value={dataForm?.name}
           width='100%'
         />
@@ -56,7 +56,7 @@ export const StatusTypeOrderCreate = () => {
           error={errorForm?.description}
           name='description'
           onChange={handleChange}
-          title='Descripción de la categoría'
+          title='Descripción del estado de la orden'
           value={dataForm?.description}
           width='100%'
         />
@@ -70,7 +70,7 @@ export const StatusTypeOrderCreate = () => {
               }
             } as React.ChangeEvent<HTMLInputElement>)
           }}
-          label='Color de la categoría'
+          label='Color del estado de la orden'
           value={dataForm?.color}
         />
         <RippleButton loading={loading} type='submit'>

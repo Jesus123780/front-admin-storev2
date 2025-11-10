@@ -17,14 +17,16 @@ import {
   useSaveAvailableProduct,
   useSetImageProducts,
   useStore,
-  useUpdateManageStock} from 'npm-pkg-hook'
+  useUpdateManageStock
+} from 'npm-pkg-hook'
 import {
   AlertInfo,
   AwesomeModal,
   getGlobalStyle,
   RippleButton,
   Row,
-  SearchBar} from 'pkg-components'
+  SearchBar
+} from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import React, {
   useCallback,

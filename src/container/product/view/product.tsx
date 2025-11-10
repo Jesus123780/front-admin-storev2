@@ -20,7 +20,8 @@ import {
   Row,
   Tag,
   Text,
-  ToggleSwitch} from 'pkg-components'
+  ToggleSwitch
+} from 'pkg-components'
 import React from 'react'
 
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'

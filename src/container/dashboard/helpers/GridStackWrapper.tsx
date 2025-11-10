@@ -9,8 +9,11 @@ import {
     Responsive, 
     Text, 
     ToggleSwitch, 
-    WidthProvider} from 'pkg-components'
-import React, { FunctionComponent,useContext, useEffect, useState } from 'react'
+    WidthProvider
+} from 'pkg-components'
+import React, {
+ FunctionComponent,useContext, useEffect, useState 
+} from 'react'
 
 import { ChatStatistic } from '@/container/ChatStatistic'
 import { Devices } from '@/container/Devices'

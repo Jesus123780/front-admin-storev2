@@ -6,7 +6,8 @@ import {
   useParams,
   usePathname,
   useRouter,
-  useSearchParams} from 'next/navigation'
+  useSearchParams
+} from 'next/navigation'
 import {
   Cookies,
   newMessageSubscription,
@@ -29,7 +30,8 @@ import {
   useTotalSales,
   useUpdateModuleOrder,
   useUser,
-  version as logicalVersion} from 'npm-pkg-hook'
+  version as logicalVersion
+} from 'npm-pkg-hook'
 import {
   AlertBox,
   Aside,
@@ -44,7 +46,8 @@ import {
   Orders,
   Overline,
   Plan,
-  Toast} from 'pkg-components'
+  Toast
+} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React, {
   useContext,
@@ -58,6 +61,7 @@ import { Categories } from '../categories'
 import { Clients } from '../clients'
 import { ModalScanner } from '../ModalScanner'
 import { CreateSales } from '../orders/create'
+import { useDevServerStatus } from '../orders/view/hooks'
 import { Product } from '../product'
 import { ScheduleTimings } from '../schedule'
 import { Footer } from './Footer/index'
@@ -133,7 +137,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       window.localStorage.setItem('location', JSON.stringify(dataLocation))
     }
     setAlertBox({ message: '', color: 'success' })
-     
+
   }, []);
 
   const playNotificationSound = () => {
@@ -166,7 +170,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   // useConnection({ setConnectionStatus })
 
   useEffect(() => {
-    if (connectionStatus === 'initial') {return}
+    if (connectionStatus === 'initial') { return }
     if (connectionStatus) {
       setTimeout(() => {
         setConnectionStatus('initial')
@@ -213,10 +217,10 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setIsOpenOrder(false)
     location.push(`/pedidos?saleId=${encodeURIComponent(pCodeRef)}`)
   }
-  
+
   const [openDeliveryTime, setOpenDeliveryTime] = useState(false)
   const handleOpenDeliveryTime = () => {
-    setOpenDeliveryTime((prev) => !prev)
+    setOpenDeliveryTime(!openDeliveryTime)
   }
   const deliveryTimeMinutes = dataStore?.deliveryTimeMinutes
   const { deliveryTime, handleDeliveryTimeChange } = useDeliveryTime({
@@ -303,7 +307,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     const { destination, source } = result;
 
     // Si no se ha movido el ítem (destino es null o es el mismo), no hacer nada
-    if (!destination || destination.index === source.index) {return;}
+    if (!destination || destination.index === source.index) { return; }
 
     // Reordenar los módulos
     const reorderedModules = Array.from(modulesOrder);
@@ -330,6 +334,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   const handleCollapsedMenu = () => {
     setIsColapsedMenu(!isCollapsedMenu)
   }
+  const { connected } = useDevServerStatus()
   return (
     <>
       <Head>
@@ -415,6 +420,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           handleClick={handleClick}
           handleOpenDeliveryTime={handleOpenDeliveryTime}
           isElectron={isElectron}
+          connected={connected}
           isMobile={isMobile}
           loading={false}
           loadingDeliveryTime={loadingDeliveryTime}

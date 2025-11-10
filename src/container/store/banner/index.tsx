@@ -4,7 +4,8 @@ import {
   useImageStore,
   useSchedules,
   useStatusOpenStore,
-  useStore} from 'npm-pkg-hook'
+  useStore
+} from 'npm-pkg-hook'
 import { BannerStore } from 'pkg-components'
 import PropTypes from 'prop-types'
 import React, { memo, useContext } from 'react'

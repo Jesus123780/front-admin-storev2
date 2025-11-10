@@ -1,17 +1,18 @@
 'use client'
 
-import { 
-  createContext, 
-  useContext, 
-  useMemo, 
-  useState 
+import { OrderStatusTypesQueryResult, useOrderStatusTypes } from 'npm-pkg-hook'
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState
 } from 'react'
-
 /* ------------------------------------------
    Types
 ------------------------------------------- */
 interface OrderTypesContextProps {
   loading: boolean
+  data: OrderStatusTypesQueryResult[]
   setLoading: (value: boolean) => void
 }
 
@@ -20,7 +21,8 @@ interface OrderTypesContextProps {
 ------------------------------------------- */
 const DEFAULT_ORDER_TYPES_CONTEXT: OrderTypesContextProps = {
   loading: false,
-  setLoading: () => {}
+  data: [],
+  setLoading: () => { }
 }
 
 /* ------------------------------------------
@@ -41,14 +43,21 @@ export const useOrderTypes = () => useContext(OrderTypesContext)
 export const OrderTypesProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
+  useOrderStatusTypes({
+    callback: (data: OrderStatusTypesQueryResult) => {
+      return setData(data as OrderStatusTypesQueryResult[])
+    }
+  })
+  const [data, setData] = useState<OrderStatusTypesQueryResult[]>([])
   const [loading, setLoading] = useState(false)
 
   const memoizedValue = useMemo(
     () => ({
       loading,
-      setLoading
+      setLoading,
+      data
     }),
-    [loading]
+    [loading, data]
   )
 
   return (

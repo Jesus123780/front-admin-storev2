@@ -11,7 +11,8 @@ import {
   useGetOneProductsFood,
   useImageUploaderProduct,
   useSetImageProducts,
-  useUpdateManageStock} from 'npm-pkg-hook'
+  useUpdateManageStock
+} from 'npm-pkg-hook'
 import {
   AlertInfo,
   AwesomeModal,

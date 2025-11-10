@@ -12,7 +12,8 @@ import {
   useScheduleData,
   useSchedules,
   useSetScheduleOpenAll,
-  useStore} from 'npm-pkg-hook'
+  useStore
+} from 'npm-pkg-hook'
 import {
   AlertInfo,
   AwesomeModal,

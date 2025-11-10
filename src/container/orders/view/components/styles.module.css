@@ -2,8 +2,8 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
+  background-color: var(--color-neutral-gray-white);
   padding: 1rem;
-  background-color: var(--color-neutral-gray-light);
 }
 
 @media (min-width: 768px) {
@@ -19,31 +19,18 @@
 }
 
 .column {
-  background-color: var(--color-neutral-gray-white);
-  border: 1px solid #e5e7eb;
-  border-radius: 1rem;
+  background-color: var(--color-neutral-gray-light);
+  border-radius: var(--border-radius-2xs);
   padding: 1rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--box-shadow-lg);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 270px;
+  max-width: 270px;
 }
 
 .column:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-}
-
-.statusTitle {
-  text-align: center;
-  font-size: 1.1rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.emptyText {
-  text-align: center;
-  color: #9ca3af;
-  font-size: 0.9rem;
 }
 
 .ordersList {

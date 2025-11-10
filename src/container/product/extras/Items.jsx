@@ -1,7 +1,10 @@
-import { EColor, Icon , 
-  numberFormat, 
+import {
+  EColor,
+  Icon,
+  numberFormat,
   QuantityButton,
-  RippleButton} from 'pkg-components'
+  RippleButton
+} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
 
@@ -12,7 +15,7 @@ const Items = ({
   dataExtra = [],
   disabled = false,
   handleRemove = (index, extra) => {
-    return { index, extra}
+    return { index, extra }
   },
   handleIncrementExtra = ({ Adicionales, index }) => {
     return { Adicionales, index }

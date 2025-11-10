@@ -1,34 +1,26 @@
 'use client'
 
-import { useOrderStatusTypes } from 'npm-pkg-hook'
 import {
- AwesomeModal, 
- Button, 
- getGlobalStyle 
+  AwesomeModal,
+  Button,
+  getGlobalStyle
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
-import React, {
-  useContext,
-  useState
-} from 'react'
+import React, { useState } from 'react'
 
-import { Context } from '../../../context/Context'
+import { useOrderTypes } from '../context'
 import { StatusTypeOrderCreate } from '../create'
+import { ListOrderStatusTypes } from './components/ListOrderStatusTypes'
 
 export const StatusTypeOrderView = () => {
-  const [data, setData] = useState<unknown>([])
-  const { sendNotification } = useContext(Context)
-  useOrderStatusTypes({
-    callback: (data: unknown) => {
-      return setData(data)
-    }
-  })
-
+  const { data } = useOrderTypes()
   const [ShowStatusTypes, setShowStatusTypes] = useState(false)
-
+  const handlePageChange = (pageNumber: number) => {
+    return pageNumber
+  }
 
   return (
-    <>
+    <React.Fragment>
       <AwesomeModal
         footer={false}
         header={true}
@@ -48,6 +40,7 @@ export const StatusTypeOrderView = () => {
       <Button onClick={() => { return setShowStatusTypes(!ShowStatusTypes) }}>
         Crear
       </Button>
-    </>
+      <ListOrderStatusTypes handlePageChange={handlePageChange} data={data} />
+    </React.Fragment>
   )
 }

@@ -1,26 +1,27 @@
 'use client'
 
-import { 
-  RandomCode, 
-  useFormTools, 
-  useStoreTableCreate, 
+import {
+  RandomCode,
+  useFormTools,
+  useStoreTableCreate,
   useStoreTables
 } from 'npm-pkg-hook'
-import { 
-  AlertInfo, 
-  Carousel, 
-  Column, 
-  Divider, 
-  getGlobalStyle, 
+import {
+  AlertInfo,
+  Carousel,
+  Column,
+  Divider,
+  getGlobalStyle,
   HeaderSteps,
-  Icon, 
-  InputHooks, 
-  RippleButton, 
-  Row, 
-  Text} from 'pkg-components'
-import React, { 
-  useContext, 
-  useEffect, 
+  Icon,
+  InputHooks,
+  RippleButton,
+  Row,
+  Text
+} from 'pkg-components'
+import React, {
+  useContext,
+  useEffect,
   useState
 } from 'react'
 
@@ -33,11 +34,11 @@ export const TableSeating = () => {
   const { sendNotification } = useContext(Context)
   const [selectedSeats, setSelectedSeats] = useState(4)
   const [handleChange, handleSubmit, setDataValue, { dataForm, errorForm }] = useFormTools({ sendNotification })
-  const [storeTableCreate, { loading }] = useStoreTableCreate({ sendNotification }) 
+  const [storeTableCreate, { loading }] = useStoreTableCreate({ sendNotification })
   const [data, { loading: loadingData }] = useStoreTables()
   const steps = ['CREA UNA MESA PARA TU COMERCIO', `LISTAR DE MESAS (${Number(data?.storeTables?.length) ?? 0})`]
   const list = [1, 2, 4, 6, 8, 10, 12, 14, 12, 16]
-  
+
   const handleForm = (e) => {
     const tableName = RandomCode(10)
     return handleSubmit({
@@ -52,7 +53,7 @@ export const TableSeating = () => {
       }
     })
   }
-  
+
 
   // Función para manejar la selección del número de asientos
   const handleSeatSelection = (numSeats) => {
@@ -110,7 +111,7 @@ export const TableSeating = () => {
           }}
         />
       </Column>
-      {active === 0 
+      {active === 0
         ? <>
           <Column
             alignItems='center'
@@ -124,7 +125,7 @@ export const TableSeating = () => {
               margin: '0 auto'
             }}
           >
-            <InputHooks 
+            <InputHooks
               error={errorForm?.tableName}
               margin='none'
               marginBottom={getGlobalStyle('--spacing-lg')}
@@ -151,7 +152,7 @@ export const TableSeating = () => {
               loading={loading}
               type='submit'
             >
-            Subir Mesa
+              Subir Mesa
             </RippleButton>
             <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
           </Column>
@@ -166,23 +167,25 @@ export const TableSeating = () => {
             <AlertInfo message='Aquí puedes seleccionar el número de asiento para la mesa que vas a crear, luego que crees la mesa no puedes eliminarla' type='warning' />
             <ul className={styles.seatList}>
               <Carousel breakpoints={breakpoints} pagination={false}>
-                {list.map((seatsOption) => {return (
-                  <li
-                    className={styles.seatOption}
-                    key={seatsOption}
-                    onClick={() => {return handleSeatSelection(seatsOption)}}
-                    style={selectedSeats === seatsOption ? { backgroundColor: '#ddd' } : {}}
-                  >
-                    <Column alignItems='center' justifyContent='center'>
-                      <Icon
-                        icon='IconChair'
-                        size={25}
-                      />
-                      {seatsOption} Asientos
-                    </Column>
-                  
-                  </li>
-                )})}
+                {list.map((seatsOption) => {
+                  return (
+                    <li
+                      className={styles.seatOption}
+                      key={seatsOption}
+                      onClick={() => { return handleSeatSelection(seatsOption) }}
+                      style={selectedSeats === seatsOption ? { backgroundColor: '#ddd' } : {}}
+                    >
+                      <Column alignItems='center' justifyContent='center'>
+                        <Icon
+                          icon='IconChair'
+                          size={25}
+                        />
+                        {seatsOption} Asientos
+                      </Column>
+
+                    </li>
+                  )
+                })}
               </Carousel>
             </ul>
           </div>
@@ -193,8 +196,8 @@ export const TableSeating = () => {
               number={selectedSeats}
             />
           </Column>
-        </> : 
-      
+        </> :
+
         <>
           {data?.storeTables?.length > 0 ? <>
             <Row
@@ -217,7 +220,7 @@ export const TableSeating = () => {
                 )
               })}
             </Row>
-      
+
           </> : <Text>No hay mesas creadas</Text>}
         </>
       }
