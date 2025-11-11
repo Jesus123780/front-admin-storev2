@@ -2,13 +2,15 @@
 
 import {
   useFormatDate,
-  useStore} from 'npm-pkg-hook'
+  useStore
+} from 'npm-pkg-hook'
 import {
   getGlobalStyle,
   Icon,
   numberFormat,
   RippleButton,
-  Text} from 'pkg-components'
+  Text
+} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React, { useEffect, useState } from 'react'
 
@@ -93,6 +95,7 @@ export const Prints = ({
     storeName,
     ...dataStore
   }
+  console.log('🚀 ~ Prints ~ dataToPrint:', dataToPrint)
   return (
     <ContainerTicket>
       <div className='wrapper-action__footer'>
