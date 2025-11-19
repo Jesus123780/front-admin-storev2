@@ -1,4 +1,8 @@
-import { AwesomeModal, getGlobalStyle, Loading } from 'pkg-components'
+import {
+ AwesomeModal, 
+ getGlobalStyle,
+Loading 
+} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
 

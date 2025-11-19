@@ -4,7 +4,9 @@ import {
   Divider,
   getGlobalStyle,
   Icon,
-  Text} from 'pkg-components'
+  ROUTES,
+  Text
+} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
 
@@ -12,22 +14,13 @@ import styles from './styles.module.css'
 
 export const SuccessSaleModal = ({
   code,
-  router = { push: (args) => { return args } },
-  loading = false,
   openCurrentSale = false,
-  products = [],
   setOpenCurrentSale = (boolean) => { return boolean },
   dispatch = (args) => { return args },
   handlePrint = () => { return },
   handleDownLoad = () => { return },
   handleCloseModal = () => { return }
 }) => {
-
-  const formatter = new Intl.ListFormat('es', { style: 'long', type: 'conjunction' })
-  const ListFormat = products
-    .map(product => product?.pName)
-    .filter(Boolean) // Remove null/undefined/empty values
-    .slice(0, 3)
 
   const arrayOptions = [
     {
@@ -38,8 +31,11 @@ export const SuccessSaleModal = ({
       icon: 'IconSales',
       tooltip: 'Puedes mirar el resumen del pedido y el estado.',
       onClick: () => {
-        window.location.href = `${process.env.NEXT_PUBLIC_URL_BASE}/orders?saleId=${code}`
-        return handleCloseModal()
+        if (typeof window !== 'undefined') {
+          window.location.href = `${window.location.origin}/${ROUTES.orders}/${code}`
+          return handleCloseModal()
+        }
+        return {}
        }
     },
     {

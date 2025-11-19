@@ -7,7 +7,8 @@ import {
   useEditClient,
   useFormTools,
   useGetClients,
-  useGetOneClient} from 'npm-pkg-hook'
+  useGetOneClient
+} from 'npm-pkg-hook'
 import {
   AwesomeModal,
   choices,
@@ -20,7 +21,9 @@ import {
   RippleButton,
   Section,
   Table,
-  Text} from 'pkg-components'
+  Text
+} from 'pkg-components'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import { useContext, useState } from 'react'
 
 import { Context } from '../../context/Context'
@@ -192,15 +195,15 @@ export const Clients = () => {
         customHeight='60vh'
         footer={false}
         header={true}
-        height='60vh'
+        height='calc(100% - 50%)'
         onCancel={() => { return false }}
         onHide={() => { setOpenModal(!openModal) }}
         padding={0}
         question={false}
         show={openModal}
-        size='600px'
+        size={MODAL_SIZES.medium}
         sizeIconClose='30px'
-        title=''
+        title='Crear / Editar cliente'
         zIndex={getGlobalStyle('--z-index-99999')}
       >
         <FormClients

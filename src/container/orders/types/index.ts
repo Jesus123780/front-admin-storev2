@@ -31,11 +31,12 @@ export interface OrderItem {
   idStore: string
   pCodeRef: string
   payMethodPState: number
+  state: number
   pPRecoger: boolean
   totalProductsPrice: number
   pSState: number
-  pDatCre: string
-  pDatMod: string
+  createdAt: string
+  updatedAt: string
   channel: string
   locationUser: string
   getStatusOrderType: OrderStatusType

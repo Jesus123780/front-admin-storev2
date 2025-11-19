@@ -3,15 +3,11 @@
   "version": "0.0.3",
   "private": true,
   "homepage": "https://github.com/Jesus123780/front-admin-storev2",
-  "author": {
-    "name": "venty",
-    "email": "juvinaojesusd@gmail.com",
-    "url": "https://github.com/Jesus123780/front-admin-storev2"
-  },
+  "author": "venty <juvinaojesusd@gmail.com> (https://github.com/Jesus123780/front-admin-storev2)",
   "main": "build/main.js",
   "description": "venty",
   "scripts": {
-    "next:dev": "next dev",
+    "next:dev": "node build/start.dev.js",
     "next:build": "next build",
     "next:start": "next start",
     "next:lint": "next lint",
@@ -172,5 +168,13 @@
       "createStartMenuShortcut": true
     },
     "copyright": "Copyright (c) 2025 Venty"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jesus123780/front-admin-storev2.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jesus123780/front-admin-storev2/issues"
   }
 }

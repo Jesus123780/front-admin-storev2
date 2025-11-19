@@ -15,11 +15,13 @@ import styles from './styles.module.css'
 interface IDragOrders {
   orders: Record<string, OrderGroup[]>
   statusTypes: OrderStatusType[]
+  onPrint: (pCodeRef: string) => void
 }
 
 export const DragOrders: React.FC<IDragOrders> = ({
   orders = {},
-  statusTypes = []
+  statusTypes = [],
+  onPrint
 }) => {
   if (statusTypes?.length === 0) { return null }
   return (
@@ -74,6 +76,9 @@ export const DragOrders: React.FC<IDragOrders> = ({
                           : ''
                       }
                       title={`Orden #${order.pCodeRef}`}
+                      onPrint={()=> {
+                        onPrint(order.pCodeRef)
+                      }}
                       {...order}
                     />
                   </div>

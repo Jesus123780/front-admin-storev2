@@ -6,6 +6,7 @@ import {
   useAmountInput,
   useFormatDate,
   useGetClients,
+  usePrintSaleTicket,
   useReactToPrint,
   useSales,
   useStore,
@@ -44,12 +45,12 @@ export const CreateSales = ({
   }
 }) => {
   // STATES
-  const { 
-    sendNotification, 
-    setAlertBox, 
-    setMessagesToast, 
+  const {
+    sendNotification,
+    setAlertBox,
+    setMessagesToast,
     setSalesOpen
-   } = useContext(Context)
+  } = useContext(Context)
   const [client, setClient] = useState({
     clientName: '',
     ccClient: '',
@@ -240,7 +241,7 @@ export const CreateSales = ({
   const { yearMonthDay, longDayName } = useFormatDate({})
   const localDate = date.toLocaleTimeString()
   const customDate = `${yearMonthDay + ' - ' + localDate + ' - ' + longDayName
-  }`
+    }`
 
   const {
     city,
@@ -342,7 +343,7 @@ export const CreateSales = ({
     }
 
     setInitialValues()
-     
+
   }, [values?.cliId]);
 
   const isLoading = loadingRegisterSale || loading || isPrinting
@@ -388,24 +389,26 @@ export const CreateSales = ({
   }
 
   const selectProduct = (product) => {
-    if (!product) {return}
+    if (!product) { return }
     handleProduct(product)
     setModalItem(!modalItem)
   }
 
   const handleToggleFree = (producto) => {
-    if (!producto)
-      {return sendNotification({
+    if (!producto) {
+      return sendNotification({
         message: 'No se ha seleccionado un producto',
         title: 'Error',
         backgroundColor: 'error'
-      })}
+      })
+    }
     return dispatch({ type: 'TOGGLE_FREE_PRODUCT', payload: producto })
   }
   const [openAside, setOpenAside] = useState(false)
   const handleOpenAside = () => {
     setOpenAside(!openAside)
   }
+  const [handlePrintSale] = usePrintSaleTicket()
 
   const paymentMethods = [
     { id: 1, name: 'Efectivo', icon: 'IconDollar' },
@@ -417,25 +420,21 @@ export const CreateSales = ({
   return (
     <>
       {/* {openCurrentSale && ( */}
-        <SuccessSaleModal
-          code={code}
-          dispatch={dispatch}
-          handleCloseModal={handleCloseModal}
-          handleDownLoad={handleDownLoad}
-          handlePrint={() => {
-            return handlePrint()
-          }}
-          loading={isPrinting}
-          openCurrentSale={openCurrentSale}
-          products={data?.PRODUCT || []}
-          router={router}
-          setOpenCurrentSale={setOpenCurrentSale}
-        />
-      {/* )} */}
-      {/* {data?.PRODUCT?.length > 0 ? ( */}
-        <ModalSales {...restPropsSalesModal} />
-      {/* ) : null} */}
-
+      <SuccessSaleModal
+        code={code}
+        dispatch={dispatch}
+        handleCloseModal={handleCloseModal}
+        handleDownLoad={handleDownLoad}
+        handlePrint={() => {
+          return handlePrintSale(code)
+        }}
+        loading={isPrinting}
+        openCurrentSale={openCurrentSale}
+        products={data?.PRODUCT || []}
+        router={router}
+        setOpenCurrentSale={setOpenCurrentSale}
+      />
+      <ModalSales {...restPropsSalesModal} />
       <GenerateSalesPkg
         client={client}
         currentPage={currentPage}

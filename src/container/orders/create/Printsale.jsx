@@ -95,7 +95,6 @@ export const Prints = ({
     storeName,
     ...dataStore
   }
-  console.log('🚀 ~ Prints ~ dataToPrint:', dataToPrint)
   return (
     <ContainerTicket>
       <div className='wrapper-action__footer'>

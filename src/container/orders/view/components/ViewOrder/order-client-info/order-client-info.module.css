@@ -1,0 +1,22 @@
+/* components/order-client-info/order-client-info.module.css */
+.container {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #f3f5f7;
+}
+.row {
+  display:flex;
+  justify-content: space-between;
+}
+.label {
+  font-size:12px;
+  color:#94a3b8;
+  margin-bottom:6px;
+}
+.smallLabel { font-size:12px; color:#94a3b8; }
+.name { font-weight:700; font-size:16px; color:#0b2545; }
+.address { margin-top:6px; color:#475569; }
+.store { margin-top:12px; color:#475569; font-size:14px }
+.email { color:#6b7280; font-size:13px }
+.right { text-align:right; }

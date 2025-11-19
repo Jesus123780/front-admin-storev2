@@ -3,7 +3,11 @@ import { join } from 'node:path'
 import { is } from '@electron-toolkit/utils'
 // 👉 CARGAS LAS VARIABLES .env AQUÍ
 import dotenv from 'dotenv'
-import { app, BrowserWindow, ipcMain } from 'electron'
+import {
+ app, 
+ BrowserWindow, 
+ ipcMain 
+} from 'electron'
 
 import { startBackendServer, startNextJSServer } from './services/index'
 dotenv.config();

@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
+import { EOrderQueryParams } from 'pkg-components/stories/organisms/ModalDetailOrder/type'
 import React from 'react'
 
 import { OrdersView } from '@/container/orders/view'
 
 const orders = () => {
   return (
-    <OrdersView />
+    <OrdersView query={EOrderQueryParams.ALL} />
   )
 }
 
