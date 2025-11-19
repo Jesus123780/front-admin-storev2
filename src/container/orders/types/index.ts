@@ -19,7 +19,7 @@ export interface StoreOrder {
   ShoppingCard: string
   pCodeRef: string
   pPStateP: number
-  payMethodPState: number
+  payId: string
   pPRecoger: boolean
   pDatCre: string
   pDatMod: string
@@ -30,7 +30,7 @@ export interface OrderItem {
   pdpId: string
   idStore: string
   pCodeRef: string
-  payMethodPState: number
+  payId: string
   state: number
   pPRecoger: boolean
   totalProductsPrice: number

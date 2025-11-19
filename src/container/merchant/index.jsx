@@ -28,14 +28,18 @@ import {
   Loading,
   motion,
   RippleButton,
+  ROUTES,
   Row,
   Stepper,
   StepsComponent,
   Text,
-  Toast} from 'pkg-components'
+  Toast
+} from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import PropTypes from 'prop-types'
-import React, { useContext, useEffect, useState } from 'react'
+import React, {
+ useContext, useEffect, useState 
+} from 'react'
 import styled, { css, keyframes } from 'styled-components'
 
 import { Context } from '../../context/Context'
@@ -220,24 +224,24 @@ export const Restaurant = ({ userToken = {} } = {}) => {
           }
         }
 
-        // if (success) {
-        //   setDataValue({})
-        //   setValues({})
-        //   if (nextStep === 3) {
-        //     sendNotification(messages.success)
-        //     setTimeout(() => {
-        //       handleSignOut()
-        //       sendNotification(messages.session)
-        //     }, 3000)
-        //     return
-        //   }
-        // }
+        if (success) {
+          setDataValue({})
+          setValues({})
+          if (nextStep === 3) {
+            sendNotification(messages.success)
+            setTimeout(() => {
+              handleSignOut()
+              sendNotification(messages.session)
+            }, 3000)
+            return
+          }
+        }
 
-        // if (message === 'No se encontró el usuario') {
-        //   window.location.href = ROUTES.login
-        // } else {
-        //   sendNotification(messages.defaultError)
-        // }
+        if (message === 'No se encontró el usuario') {
+          window.location.href = ROUTES.login
+        } else {
+          sendNotification(messages.defaultError)
+        }
         setAlertBox({ message })
       }
     } catch (error) {

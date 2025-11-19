@@ -1,37 +1,27 @@
-// components/order-payments/index.tsx
 'use client'
-import React, { useState } from 'react'
+
+import {
+ Icon, Row, Text 
+} from 'pkg-components'
+import React from 'react'
 
 import styles from './order-payments.module.css'
 
-const PAYMENT_METHODS = [
-  { id: 'cash', label: 'Cash' },
-  { id: 'card', label: 'Credit card' }
-]
-
-const OrderPayments: React.FC = () => {
-  const [selected, setSelected] = useState<string>('cash')
+const OrderPayments: React.FC = ({
+  paymentMethod = {
+    name: '—',
+    icon: ''
+  }
+}) => {
 
   return (
     <div className={styles.container}>
-      <h4 className={styles.title}>Select a payment method</h4>
-      <div className={styles.methods}>
-        {PAYMENT_METHODS.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setSelected(m.id)}
-            className={`${styles.method} ${selected === m.id ? styles.active : ''}`}
-            aria-pressed={selected === m.id}
-          >
-            {m.label}
-            {selected === m.id && <span className={styles.check}>✓</span>}
-          </button>
-        ))}
-      </div>
-
-      <div className={styles.bottom}>
-        <button className={styles.primary}>Complete payment</button>
-      </div>
+      <Row gap='md' alignItems='center'>
+        <Icon icon={paymentMethod?.icon} size={30} />
+        <Text>
+          {paymentMethod?.name}
+        </Text>
+      </Row>
     </div>
   )
 }

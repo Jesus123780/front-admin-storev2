@@ -1,9 +1,6 @@
 /* components/order-payments/order-payments.module.css */
 .container { background:#fff; border-radius:8px; padding:12px; border:1px solid #f3f5f7; display:flex; flex-direction:column; gap:12px; }
 .title { margin:0; font-weight:700; color:#0b2545; }
-.methods { display:flex; flex-direction:column; gap:8px; }
 .method { display:flex; justify-content:space-between; align-items:center; padding:10px; border-radius:8px; border:1px solid #e6eef9; background:#fbfdff; cursor:pointer; font-weight:600; }
 .method.active { border-color:#c7e0ff; background:#ecf8ff; }
 .check { margin-left:8px; color:#0b2545; font-weight:700; }
-.bottom { display:flex; justify-content:flex-end; }
-.primary { background:#0b5cff; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:700; }

@@ -1319,7 +1319,7 @@ export const initialState = {
   priceRange: 0,
   counter: 0,
   totalAmount: 0,
-  payMethodPState: 0
+  payId: null
 }
 
 export const initializer = (initialValue = initialState) => { return JSON.parse(localStorage.getItem(process.env.LOCAL_SALES_STORE)) || initialValue }

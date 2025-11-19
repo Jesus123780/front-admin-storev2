@@ -22,7 +22,6 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
   totals,
   handlePrint
 }) => {
-  console.log('🚀 ~ OrderDetail ~ order:', order)
   return (
     <div className={styles.container}>
       <div className={styles.panel}>
@@ -39,7 +38,7 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
           </div>
           <aside className={styles.right}>
             <OrderTotals totals={totals} />
-            <OrderPayments />
+            {order?.paymentMethod &&<OrderPayments paymentMethod={order.paymentMethod} />}
             <OrderActions handlePrint={handlePrint} />
           </aside>
         </div>

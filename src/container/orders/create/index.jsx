@@ -5,6 +5,7 @@ import {
   generateStoreURL,
   useAmountInput,
   useFormatDate,
+  useGetAllPaymentMethods,
   useGetClients,
   usePrintSaleTicket,
   useReactToPrint,
@@ -285,7 +286,7 @@ export const CreateSales = ({
   const restPropsSalesModal = {
     code,
     data,
-    paymentMethod: data?.payMethodPState === 1 ? 'TRANSFERENCIA' : 'EFECTIVO',
+    paymentMethod: data?.payId === 1 ? 'TRANSFERENCIA' : 'EFECTIVO',
     delivery,
     print,
     totalProductPrice,
@@ -409,13 +410,15 @@ export const CreateSales = ({
     setOpenAside(!openAside)
   }
   const [handlePrintSale] = usePrintSaleTicket()
+  const { data: paymentMethodsData } = useGetAllPaymentMethods()
 
-  const paymentMethods = [
-    { id: 1, name: 'Efectivo', icon: 'IconDollar' },
-    { id: 2, name: 'Transferencia', icon: 'IconTransfer' },
-    { id: 3, name: 'Visa', icon: 'IconVisaSimple' },
-    { id: 4, name: 'Mastercard', icon: 'IconMasterCardSimple' }
-  ]
+  const paymentMethods = paymentMethodsData.map((method) => {
+    return {
+      id: method.payId,
+      name: method.name,
+      icon: method.icon
+    }
+  })
 
   return (
     <>
