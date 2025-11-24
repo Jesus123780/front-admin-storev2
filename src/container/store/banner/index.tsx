@@ -63,7 +63,11 @@ export const Banner = ({
   const isLoading = lsc
   const isEmtySchedules = dataSchedules?.length === 0
   const handleClose = () => {
-    return sendNotification({ title: 'Banner', description: 'Muy pronto' })
+    return sendNotification({ 
+      title: 'Banner', 
+      description: 'Muy pronto',
+      position: 'top-right',
+    })
   }
   const props = {
     altLogo,

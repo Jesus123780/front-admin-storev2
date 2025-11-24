@@ -17,8 +17,13 @@ type Props = {
   statusOrder: { name: string, backgroundColor: string, color: string }
 }
 
-const OrderHeader: React.FC<Props> = ({ pCodeRef, status = 'DESCONOCIDO', createdAt, statusOrder }) => {
-  console.log('🚀 ~ OrderHeader ~ statusOrder:', statusOrder)
+const OrderHeader: React.FC<Props> = ({
+  pCodeRef,
+  status = 'DESCONOCIDO',
+  createdAt,
+  statusOrder
+}) => {
+
   return (
     <Row as='header' justifyContent='space-between' gap='md' style={{ padding: getGlobalStyle('--spacing-2xl') }}>
       <div className={styles.left}>

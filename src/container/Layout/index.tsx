@@ -460,22 +460,12 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
             }
           </React.Fragment>
           <CreateSales setShow={setSalesOpen} show={salesOpen} />
-          <div
-            style={{
-              position: 'fixed',
-              left: '50px',
-              zIndex: 9999999999,
-              bottom: 0,
-              width: 'min-content'
-            }}
-          >
             <Toast
               autoDelete={true}
               autoDeleteTime={7000}
-              position='bottom-right'
+              position='bottom-left'
               toastList={messagesToast}
             />
-          </div>
         </div>
         <Footer />
         <div style={{ gridArea: 'right' }} className={styles.area_right_container}>

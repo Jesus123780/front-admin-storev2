@@ -6,9 +6,13 @@ import React from 'react'
 
 import styles from './order-totals.module.css'
 
-export type PropsTotals = {
+export type Total = {
   name: string
   value: number
+}
+
+export type PropsTotals = {
+  totals: Total[]
 }
 
 const formatLabel = (key: string) => {

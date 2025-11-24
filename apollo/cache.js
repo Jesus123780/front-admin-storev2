@@ -34,25 +34,25 @@ export const cache = new InMemoryCache({
           read: () => {return isLoggedVar()}
         },
         allPosts: concatPagination(),
-        getStoreOrderById: {
-          keyArgs: ['pCodeRef'],
-          merge(existing, incoming) {
-            if (!incoming) {return existing}
-            if (!existing) {return incoming}
+        // getStoreOrderById: {
+        //   keyArgs: ['pCodeRef'],
+        //   merge(existing, incoming) {
+        //     if (!incoming) {return existing}
+        //     if (!existing) {return incoming}
 
-            // Creamos una copia de los resultados existentes y entrantes
-            const merged = {
-              ...existing,
-              ...incoming,
-              getStoreOrderById: [
-                ...(existing.getStoreOrders || []),
-                ...(incoming.getStoreOrders || [])
-              ]
-            }
+        //     // Creamos una copia de los resultados existentes y entrantes
+        //     const merged = {
+        //       ...existing,
+        //       ...incoming,
+        //       getStoreOrderById: [
+        //         ...(existing.getStoreOrders || []),
+        //         ...(incoming.getStoreOrders || [])
+        //       ]
+        //     }
 
-            return merged
-          }
-        },
+        //     return merged
+        //   }
+        // },
         getStoreOrdersFinal: {
           keyArgs: ['idStore', 'search', 'statusOrder'],
           merge(existing, incoming, { args: { max = Infinity } }) {

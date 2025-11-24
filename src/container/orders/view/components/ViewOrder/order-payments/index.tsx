@@ -7,12 +7,17 @@ import React from 'react'
 
 import styles from './order-payments.module.css'
 
-const OrderPayments: React.FC = ({
+export interface PaymentMethod {
+  name: string
+  icon: string
+}
+
+const OrderPayments: React.FC<{ paymentMethod?: PaymentMethod }> = ({
   paymentMethod = {
     name: '—',
     icon: ''
   }
-}) => {
+}: { paymentMethod?: PaymentMethod }) => {
 
   return (
     <div className={styles.container}>

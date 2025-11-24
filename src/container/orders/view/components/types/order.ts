@@ -1,3 +1,5 @@
+import { PaymentMethod } from '../ViewOrder/order-payments'
+
 // types/order.ts
 export type Product = {
   pId: string
@@ -27,6 +29,7 @@ export type Client = {
   ClientAddress?: string | null
   clientNumber?: string
   __typename?: string
+  ccClient?: string | null
 }
 
 export type Store = {
@@ -39,7 +42,7 @@ export type Store = {
 export type Order = {
   change: unknown
   channel: unknown
-  
+
   pCodeRef: string | null
   totalProductsPrice: number | null
   createdAt?: string | null
@@ -49,6 +52,8 @@ export type Order = {
   totals?: { name: string; value: number }[]
   discount?: number
   __typename?: string
+  statusOrder: { name: string, backgroundColor: string, color: string }
+  paymentMethod: PaymentMethod
 }
 
 export type ResponseSalesStore = {

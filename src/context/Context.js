@@ -260,7 +260,7 @@ const toggleModal = index => {
       title: title?.toString() || '',
       backgroundColor,
       description,
-      position
+      position: position ?? 'bottom-left'
     }
     setMessagesToast([...messagesToast, newMessage])
   }
