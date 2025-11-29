@@ -28,7 +28,7 @@ const generatePermissions = (categoriesConfig) => {
   return categoriesConfig.map(({ name, actions = ['create', 'read', 'update', 'delete'], ...rest }) => 
   {
     const { subject } = rest.category ?? null
-    const description = `Aqui puedes gestionar los permisos que va tener el usuario en el modulo ${rest.category?.name}, ` ?? ''
+    const description = rest.category?.name ? `Aqui puedes gestionar los permisos que va tener el usuario en el modulo ${rest.category?.name}, ` : ''
     return createPermissionCategory(name, description, actions, subject)
   }
   )

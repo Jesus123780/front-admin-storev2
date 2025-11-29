@@ -31,7 +31,7 @@ export interface OrderItem {
   idStore: string
   pCodeRef: string
   payId: string
-  state: number
+  status: string
   pPRecoger: boolean
   totalProductsPrice: number
   pSState: number
