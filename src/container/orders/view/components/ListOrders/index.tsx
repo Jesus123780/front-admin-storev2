@@ -25,14 +25,13 @@ export const ListOrders: React.FC<IListOrders> = ({
     handleCopy,
     handleOpenSale
 }) => {
-    if (!orders?.length) { return null }
 
+    if (!orders?.length) { return null }
     return (
         <div>
             <Table
                 pointer={false}
                 data={orders}
-
                 /** 🔥 Nuevo comportamiento */
                 enableKeyboardNav
                 enableColumnResize
@@ -63,6 +62,7 @@ export const ListOrders: React.FC<IListOrders> = ({
                         width: '1fr'
                     },
                 ]}
+                // 
 
                 renderBody={(dataB, titles) => {
                     return dataB.map((order: OrderItem, rowIndex: number) => {

@@ -19,7 +19,6 @@ import {
     Icon,
     InputQuery,
     LayoutSwitcher,
-    ModalDetailOrder,
     Row,
     Text
 } from 'pkg-components'
@@ -36,15 +35,18 @@ import { Context } from '@/context/Context'
 import { GetAllOrdersFromStoreResponse, OrderGroup } from '../types'
 import { DragOrders } from './components/DragOrders'
 import { ListOrders } from './components/ListOrders'
+import { ModalOrder } from './components/ModalOrder'
 import { ModalQueries } from './components/ModalQueries'
 import { ModalStatusTypes } from './components/ModalStatusTypes'
 import { StepperOrderStatus } from './components/Stepper'
+import { SaleResponse } from './components/ViewOrder/OrderDetailClient'
 import { HORIZONTAL_SCROLL_WRAPPER } from './constants'
 import styles from './styles.module.css'
 
 interface IOrdersView {
     query?: EOrderQueryParams,
 }
+
 export const OrdersView = ({
     query,
 }: IOrdersView) => {
@@ -73,6 +75,7 @@ export const OrdersView = ({
     const queryPCodeRef = getParams<{ CODE: string }>(EOrderQueryParams.CODE)
     const [openSaleDetailOrder, setOpenSaleDetailOrder] = useState(false)
     const { handleGetSale } = useGetSale()
+    const [data, setData] = useState<SaleResponse | null>(null)
 
     const [handleChange, handleSubmit, setDataValue, { dataForm }] = useFormTools({
         initialValues: initialDates
@@ -108,7 +111,16 @@ export const OrdersView = ({
     })
 
     const handleClickPrint = async (pCodeRef: string) => {
-        await handlePrintSale(pCodeRef)
+        const response = await handlePrintSale(pCodeRef)
+        const { success, message } = response ?? {
+            success: false,
+            message: 'No se pudo conectar con el servidor'
+        }
+        return sendNotification({
+            description: message,
+            title: success ? 'Impresión exitosa' : 'Error al imprimir',
+            backgroundColor: success ? 'success' : 'error'
+        })
     }
 
     useEffect(() => {
@@ -130,10 +142,8 @@ export const OrdersView = ({
     useEffect(() => {
         if (query === EOrderQueryParams.CODE) {
             (async () => {
-                const { data } = await handleGetSale(queryPCodeRef)
-                console.log('🚀 ~ OrdersView ~ data:', data)
+                await handleGetSale(queryPCodeRef)
                 setOpenSaleDetailOrder(true)
-
             })()
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -143,12 +153,16 @@ export const OrdersView = ({
         <div
             className={styles.container}
         >
-            {(query === EOrderQueryParams.CODE && queryPCodeRef !== undefined) &&
-                <ModalDetailOrder
-                    open={openSaleDetailOrder}
-                    onHide={() => setOpenSaleDetailOrder(false)}
-                />
-            }
+            <ModalOrder
+                data={data as SaleResponse}
+                handleClickPrint={handleClickPrint}
+                onCloseLateralMenu={() => {
+                    handleQuery('sale', '')
+                    return setOpenSaleDetailOrder(false)
+                }}
+                showModalComponent={openSaleDetailOrder}
+                loading={false}
+            />
             <Column>
                 <ModalQueries
                     open={openModalQueries}
@@ -270,9 +284,10 @@ export const OrdersView = ({
                             }
                         }}
                         handleOpenSale={async (pCodeRef: string) => {
+                            const response = await handleGetSale(pCodeRef)
                             handleQuery('sale', pCodeRef)
-                            await handleGetSale(pCodeRef)
-                            setOpenSaleDetailOrder(true)
+                            setData(response?.data as SaleResponse)
+                            setOpenSaleDetailOrder((prev) => !prev)
                         }}
                     />
                 }

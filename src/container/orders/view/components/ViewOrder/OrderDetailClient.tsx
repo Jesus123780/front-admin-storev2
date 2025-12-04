@@ -12,7 +12,7 @@ import OrderDetail, { PropsOrderDetail } from '@/container/orders/view/component
 import { Context } from '@/context/Context'
 
 type Props = { orderId: string }
-interface SaleResponse {
+export interface SaleResponse {
   getOneSalesStore: {
     data: PropsOrderDetail['order']
   }
@@ -20,8 +20,7 @@ interface SaleResponse {
 
 export default function OrderDetailClient({ orderId }: Props) {
   const [data, setData] = useState<SaleResponse>()
-  const { handleGetSale, loading, data: saleData } = useGetSale()
-  console.log('🚀 ~ OrderDetailClient ~ saleData:', saleData)
+  const { handleGetSale, loading } = useGetSale()
   const [handlePrintSale] = usePrintSaleTicket()
   const { sendNotification } = useContext(Context)
 
@@ -47,7 +46,8 @@ export default function OrderDetailClient({ orderId }: Props) {
   }
   if (loading || !data) { return <Loading /> }
   return <OrderDetail
-    order={data.getOneSalesStore.data}
+    loading={loading}
+    order={data?.getOneSalesStore?.data ?? {}}
     handlePrint={async () => await handleClickPrint(String(data?.getOneSalesStore?.data?.pCodeRef))}
     totals={{ totals: data?.getOneSalesStore?.data?.totals ?? [] }}
   />

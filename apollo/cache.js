@@ -25,6 +25,8 @@ const mergeArraysWithDuplicates = (existing = [], incoming = [], max = Infinity,
   return merged
 }
 
+export const DATE_KEYS_REGEX = /(^createdAt$|^updatedAt$|created_at|updated_at)/i
+
 
 export const cache = new InMemoryCache({
   typePolicies: {

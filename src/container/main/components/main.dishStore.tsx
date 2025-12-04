@@ -1,11 +1,17 @@
 'use client'
-
 import { useRouter } from 'next/navigation'
 import {
     useColorByLetters,
     useStore,
-    useUser} from 'npm-pkg-hook'
-import { Column, Divider, getGlobalStyle, Icon, Row, Text } from 'pkg-components'
+    useUser
+} from 'npm-pkg-hook'
+import {
+ Column,
+ Divider,
+ getGlobalStyle,
+ Row,
+ Text 
+} from 'pkg-components'
 import React, { useCallback } from 'react'
 
 import styles from '../styles.module.css'
@@ -15,12 +21,17 @@ export const DishStore = () => {
     const [dataUser] = useUser()
     const router = useRouter()
 
-    const { email } = dataUser || {}
+    const { email } = dataUser ?? {
+        email: null
+    }
 
     const {
         storeName,
         idStore
-    } = dataStore || {}
+    } = dataStore ?? {
+        storeName: null,
+        idStore: null
+    }
     const nameStore = storeName?.replace(/\s/g, '-').toLowerCase()
     const displayText = String(nameStore).substring(0, 2).toUpperCase()
 
@@ -41,15 +52,6 @@ export const DishStore = () => {
       })
     return (
         <div onClick={handleCardClick} className={styles.main__card}>
-            <div className={styles.iconWrapper}>
-                <Icon
-                    color={getGlobalStyle('--color-icons-primary')}
-                    height={50}
-                    icon="IconArrowRight"
-                    size={50}
-                    width={50}
-                />
-            </div>
             <div className={styles['main__user-email']}>
                 <div
                     className={styles.image_profile}

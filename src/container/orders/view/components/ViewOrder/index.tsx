@@ -14,6 +14,8 @@ import OrderTotals, { PropsTotals } from './order-totals'
 
 export type PropsOrderDetail = {
   order: Order
+  loading: boolean
+  modalView: boolean
   totals: PropsTotals
   handlePrint: () => void
 }
@@ -21,18 +23,36 @@ export type PropsOrderDetail = {
 const OrderDetail: React.FC<PropsOrderDetail> = ({
   order,
   totals,
+  loading,
+  modalView = false,
   handlePrint
 }) => {
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+      data-modal={modalView}
+      style={modalView
+        ? { height: '100%', overflowY: 'auto' }
+        : {}
+      }
+    >
+      {loading && <div className={styles.loadingOverlay}>Cargando...</div>}
       <div className={styles.panel}>
         <OrderHeader
           pCodeRef={String(order?.pCodeRef ?? '—')}
-          status={String(order.statusOrder?.name ?? '—')}
-          createdAt={order.createdAt ?? null}
-          statusOrder={order.statusOrder ?? {}}
+          status={String(order?.statusOrder?.name ?? '—')}
+          createdAt={order?.createdAt ?? null}
+          statusOrder={order?.statusOrder ?? {}}
+          modalView={modalView}
         />
-        <div className={styles.content}>
+        <div className={styles.content} style={
+          modalView ? { 
+            flexDirection: 'column',
+            overflowY: 'auto',
+            height: 'calc(100% - 160px)'
+          } : {
+          
+        }}>
           <div className={styles.left}>
             <OrderClientInfo
               client={order?.client}
@@ -43,8 +63,8 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
             <CodeDisplay pCodeRef={order?.pCodeRef} />
           </div>
           <aside className={styles.right}>
-            <OrderTotals totals={totals.totals} />
-            {order?.paymentMethod !== null && <OrderPayments paymentMethod={order.paymentMethod} />}
+            <OrderTotals totals={totals?.totals} />
+            {order?.paymentMethod !== null && <OrderPayments paymentMethod={order?.paymentMethod} />}
             <OrderActions handlePrint={handlePrint} />
           </aside>
         </div>

@@ -12,6 +12,7 @@ import styles from './order-header.module.css'
 
 type Props = {
   pCodeRef: string
+  modalView: boolean
   status?: string
   createdAt?: string | null
   statusOrder: { name: string, backgroundColor: string, color: string }
@@ -21,8 +22,46 @@ const OrderHeader: React.FC<Props> = ({
   pCodeRef,
   status = 'DESCONOCIDO',
   createdAt,
+  modalView = false,
   statusOrder
 }) => {
+  if (modalView) {
+    return (
+      <Column as='header' gap='md' style={{ padding: getGlobalStyle('--spacing-2xl') }}>
+        <div className={styles.left}>
+          <Row gap="md" alignItems='center'>
+            <Text className={styles.title}>
+              Orden
+            </Text>
+            <CopyToClipboard text={pCodeRef} onCopyError={() => {}} onCopySuccess={() => {}} />
+          </Row>
+        </div>
+        <div className={styles.right}>
+          <Column gap='sm' justifyContent='flex-start' alignItems='flex-start'>
+            <Column style={{
+              backgroundColor: statusOrder.backgroundColor,
+              color: statusOrder.color,
+              width: 'fit-content'
+            }}>
+              <Text className={styles.badge}>
+                {status}
+              </Text>
+            </Column>
+            {createdAt
+              && (
+                <Row alignItems='flex-start' gap='sm' justifyContent='flex-start'>
+                  <Icon icon='IconSimpleCalendar' size={25} />
+                  <Text as='time' className={styles.time}>
+                    {createdAt}
+                  </Text>
+                </Row>
+              )
+            }
+          </Column>
+        </div>
+      </Column>
+    )
+  }
 
   return (
     <Row as='header' justifyContent='space-between' gap='md' style={{ padding: getGlobalStyle('--spacing-2xl') }}>

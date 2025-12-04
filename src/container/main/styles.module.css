@@ -42,15 +42,6 @@
   margin-right: 20px;
 }
 
-.iconWrapper {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  width: min-content;
-  transform: translateY(-50%);
-  transition: opacity 0.3s ease-in-out;
-}
-
 .main__store-info {
   margin-top: 20px;
   position: relative;
