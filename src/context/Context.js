@@ -43,12 +43,14 @@ const initialStateContext = {
   sendNotification: ({
     title = '',
     description = '',
-    backgroundColor = ''
+    backgroundColor = '',
+    position = null
   }) => {
     return {
       title,
       description,
-      backgroundColor
+      backgroundColor,
+      position
     }
   },
   setIsOpenOrder: (state) => { return state },
@@ -254,8 +256,12 @@ const toggleModal = index => {
       }
       deleteToast(messagesToast[0].id)
     }
-    const id = Math.floor(Math.random() * 101 + 1)
-    const newMessage = {
+    // generate unique id for each notification
+    const id = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+
+      const newMessage = {
       id,
       title: title?.toString() || '',
       backgroundColor,

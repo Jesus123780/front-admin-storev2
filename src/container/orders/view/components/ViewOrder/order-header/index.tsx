@@ -6,7 +6,9 @@ import {
   Row,
   Text
 } from 'pkg-components'
-import React from 'react'
+import React, { useContext } from 'react'
+
+import { Context } from '@/context/Context'
 
 import styles from './order-header.module.css'
 
@@ -25,6 +27,8 @@ const OrderHeader: React.FC<Props> = ({
   modalView = false,
   statusOrder
 }) => {
+    const { sendNotification } = useContext(Context)
+  
   if (modalView) {
     return (
       <Column as='header' gap='md' style={{ padding: getGlobalStyle('--spacing-2xl') }}>
@@ -33,7 +37,14 @@ const OrderHeader: React.FC<Props> = ({
             <Text className={styles.title}>
               Orden
             </Text>
-            <CopyToClipboard text={pCodeRef} onCopyError={() => {}} onCopySuccess={() => {}} />
+            <CopyToClipboard text={pCodeRef} onCopyError={() => {}} onCopySuccess={() => {
+              sendNotification({
+                backgroundColor: 'success',
+                description: `El código ${pCodeRef} ha sido copiado al portapapeles.`,
+                title: 'Éxito',
+                position: 'top-left',
+              })
+            }} />
           </Row>
         </div>
         <div className={styles.right}>
@@ -47,16 +58,6 @@ const OrderHeader: React.FC<Props> = ({
                 {status}
               </Text>
             </Column>
-            {createdAt
-              && (
-                <Row alignItems='flex-start' gap='sm' justifyContent='flex-start'>
-                  <Icon icon='IconSimpleCalendar' size={25} />
-                  <Text as='time' className={styles.time}>
-                    {createdAt}
-                  </Text>
-                </Row>
-              )
-            }
           </Column>
         </div>
       </Column>
