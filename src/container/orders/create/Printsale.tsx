@@ -11,7 +11,6 @@ import {
   RippleButton,
   Text
 } from 'pkg-components'
-import PropTypes from 'prop-types'
 import React, { useEffect, useState } from 'react'
 
 import {
@@ -22,7 +21,24 @@ import {
 } from './styled'
 import { Ticket as TemplateTicket } from './Ticket'
 
-export const Prints = ({
+interface PrintsMemoProps {
+  data: unknown[]
+  dataClientes?: unknown[]
+  values: unknown
+  paymentMethod: string
+  handleSubmit?: () => void
+  code: string
+  change: number
+  total: number
+  isPrinting: boolean
+  promiseResolveRef: React.MutableRefObject<(() => void) | null>
+  discount?: {
+    type: string
+    value: number
+  }
+  componentRef: React.RefObject<HTMLDivElement>
+}
+export const PrintsMemo: React.FC<PrintsMemoProps> = ({
   data,
   code,
   change,
@@ -70,8 +86,9 @@ export const Prints = ({
     if (isPrinting && promiseResolveRef.current) {
       promiseResolveRef.current()
     }
-     
+
   }, [isPrinting])
+
   const customDate = `${yearMonthDay} ${longDayName}`
 
   const dataToPrint = {
@@ -101,7 +118,6 @@ export const Prints = ({
         <RippleButton
           onClick={() => { return handleSubmit() }}
           radius='100%'
-          widthButton='60px'
           style={{
             width: '60px',
             height: '60px',
@@ -124,7 +140,7 @@ export const Prints = ({
             <Text>Dirección: {addressStore ?? ULocation ?? ClientAddress}</Text>
             <Text>Teléfono: {storePhone ?? uPhoNum} </Text>
             {/* <Text>Fecha: {customDate}</Text> */}
-            {clientName && <Text fontSize='20px' fontWeight='800'>Cliente</Text>}
+            {clientName && <Text>Cliente</Text>}
             {clientName && <Text>Nombre: {clientName}</Text>}
             {clientNumber && <Text>Numero: {clientNumber}</Text>}
             {ccClient && <Text>CC: {ccClient}</Text>}
@@ -155,23 +171,39 @@ export const Prints = ({
               <th>Total</th>
             </Item>
             {data.map((item) => {
-              const ProPrice = `${numberFormat(item?.ProPrice)}`
-              const unitPrice = `${numberFormat(item?.unitPrice)}`
+              const ProPrice = numberFormat(item?.ProPrice)
+              const unitPrice = numberFormat(item?.unitPrice)
               return (
                 <React.Fragment key={item.pId}>
                   <Item >
-                    <span>{item?.pName || ''}</span>
-                    <span>{item?.ProQuantity || 0}</span>
-                    <span>{unitPrice || 0}</span>
-                    <span>{ProPrice}</span>
+                    <Text>
+                      {String(item?.pName ?? '')}
+                    </Text>
+                    <Text>
+                      {Number(item?.ProQuantity ?? 0)}
+                    </Text>
+                    <Text>
+                      {Number(unitPrice ?? 0)}
+                    </Text>
+                    <Text>
+                      {ProPrice}
+                    </Text>
                   </Item>
                   {item?.dataExtra?.length > 0 && item?.dataExtra?.map((extra) => {
                     return (
                       <Item key={extra.exPid}>
-                        <span>{extra?.extraName || ''}</span>
-                        <span>{extra.quantity || 0}</span>
-                        <span>{extra?.extraPrice || 0}</span>
-                        <span>{extra.newExtraPrice}</span>
+                        <Text>
+                          {extra?.extraName || ''}
+                        </Text>
+                        <Text>
+                          {extra.quantity || 0}
+                        </Text>
+                        <Text>
+                          {extra?.extraPrice || 0}
+                        </Text>
+                        <Text>
+                          {extra.newExtraPrice}
+                        </Text>
                       </Item>
                     )
                   })}
@@ -205,14 +237,14 @@ export const Prints = ({
               <div className='sub-item__values'>
                 {change &&
                   <div className='item--values'>
-                    <Text fontWeight='bold'>CAMBIO &nbsp;</Text>
-                    <Text fontWeight='bold'>{numberFormat(change)}</Text>
+                    <Text>CAMBIO &nbsp;</Text>
+                    <Text>{numberFormat(change)}</Text>
                   </div>
                 }
                 {total &&
                   <div className='item--values'>
-                    <Text fontWeight='bold'>TOTAL &nbsp;</Text>
-                    <Text fontWeight='bold'>{numberFormat(total)}</Text>
+                    <Text>TOTAL &nbsp;</Text>
+                    <Text>{numberFormat(total)}</Text>
                   </div>
                 }
 
@@ -222,9 +254,6 @@ export const Prints = ({
           <Text
             align='center'
             as='h3'
-            fontWeight='bold'
-            justifyContent='center'
-            margin='40px 0'
           >
             Gracias por su compra
           </Text>
@@ -241,23 +270,6 @@ export const Prints = ({
     </ContainerTicket>
   )
 }
-Prints.propTypes = {
-  change: PropTypes.any,
-  code: PropTypes.any,
-  componentRef: PropTypes.any,
-  data: PropTypes.shape({
-    map: PropTypes.func
-  }),
-  dataClientes: PropTypes.array,
-  discount: PropTypes.object,
-  handleSubmit: PropTypes.func,
-  isPrinting: PropTypes.any,
-  paymentMethod: PropTypes.any,
-  promiseResolveRef: PropTypes.shape({
-    current: PropTypes.func
-  }),
-  total: PropTypes.any,
-  values: PropTypes.shape({
-    cliId: PropTypes.any
-  })
-}
+// memo
+export const Prints = React.memo(PrintsMemo) 
+

@@ -1,4 +1,5 @@
 'use client'
+import { useFormatDate } from 'npm-pkg-hook'
 import {
     Button,
     ConnectorBoardExample,
@@ -26,19 +27,18 @@ export const ListOrders: React.FC<IListOrders> = ({
     handleCopy,
     handleOpenSale
 }) => {
-
+    const { formatToLocalDateYMD } = useFormatDate({})
     if (!orders?.length) { return null }
     return (
         <div>
-        <ConnectorBoardExample />
-
+            <ConnectorBoardExample />
             <Table
                 pointer={false}
                 data={orders}
                 /** 🔥 Nuevo comportamiento */
-                enableKeyboardNav
-                enableColumnResize
-                enableColumnDrag    // ⬅ habilita drag & drop
+                enableKeyboardNav={true}
+                enableColumnResize={true}
+                enableColumnDrag={true} // ⬅ habilita drag & drop
                 titles={[
                     {
                         justify: 'flex-start',
@@ -92,7 +92,7 @@ export const ListOrders: React.FC<IListOrders> = ({
 
                                 {/* ---- Columna 3 ---- */}
                                 <TableCell row={rowIndex} col={2}>
-                                    <Text>{createdAt}</Text>
+                                    <Text>{formatToLocalDateYMD(createdAt)}</Text>
                                 </TableCell>
 
                                 {/* ---- Columna 4 ---- */}

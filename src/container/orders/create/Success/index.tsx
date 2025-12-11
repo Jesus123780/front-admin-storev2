@@ -1,3 +1,4 @@
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import {
   AlertInfo,
   AwesomeModal,
@@ -7,13 +8,24 @@ import {
   ROUTES,
   Text
 } from 'pkg-components'
-import PropTypes from 'prop-types'
 import React from 'react'
 
 import styles from './styles.module.css'
 
-export const SuccessSaleModal = ({
+interface ISuccessSaleModal {
+  code: string
+  router: AppRouterInstance
+  openCurrentSale: boolean
+  setOpenCurrentSale: (boolean: boolean) => void
+  dispatch: (args: unknown) => void
+  handlePrint: () => void
+  handleDownLoad: () => void
+  handleCloseModal: () => void
+}
+
+export const SuccessSaleModal: React.FC<ISuccessSaleModal> = ({
   code,
+  router,
   openCurrentSale = false,
   setOpenCurrentSale = (boolean) => { return boolean },
   dispatch = (args) => { return args },
@@ -31,12 +43,9 @@ export const SuccessSaleModal = ({
       icon: 'IconSales',
       tooltip: 'Puedes mirar el resumen del pedido y el estado.',
       onClick: () => {
-        if (typeof window !== 'undefined') {
-          window.location.href = `${window.location.origin}/${ROUTES.orders}/${code}`
-          return handleCloseModal()
-        }
-        return {}
-       }
+        handleCloseModal()
+        return  router.push(`${ROUTES.orders}/${code}`)
+      }
     },
     {
       id: 2,
@@ -80,7 +89,12 @@ export const SuccessSaleModal = ({
       {/* {loading && <Loading />} */}
       <div>
         <div className={styles['container__success-invoice']} >
-          <Text size='xl' >Resumen de pedido ref: # <Text color='primary' size='xxl' >{code}</Text></Text>
+          <Text as='h2' size='xl' >
+            Resumen de pedido ref: #
+            <Text color='primary' size='xxl' >
+              {code}
+            </Text>
+          </Text>
 
           {arrayOptions.map((option) => {
             return (
@@ -100,20 +114,16 @@ export const SuccessSaleModal = ({
                       <div className={styles['card__success-invoice-icon']} >
                         <Icon
                           color={getGlobalStyle('--color-icons-primary')}
-                          height={30}
                           icon={option.icon}
                           size={30}
-                          width={30}
                         />
                       </div>
                       <div className={styles['card__success-invoice-content']} >
                         <div>
                           <Icon
                             color={getGlobalStyle('--color-icons-primary')}
-                            height={30}
                             icon='IconLogo'
                             size={30}
-                            width={30}
                           />
                         </div>
                         <Text size='sm' >{option.title} {option.subtitle}</Text>
@@ -121,12 +131,11 @@ export const SuccessSaleModal = ({
                       <div className={styles['card__success-invoice-action']} >
                         <Icon
                           color={getGlobalStyle('--color-icons-primary')}
-                          height={30}
                           icon='IconArrowRight'
-                          width={30}
+                          size={30}
                         />
                       </div>
-                    </div>            
+                    </div>
                   </div>
                 </div>
                 <Divider marginBottom='0.9375rem' />
@@ -141,16 +150,3 @@ export const SuccessSaleModal = ({
     </AwesomeModal>
   )
 }
-
-SuccessSaleModal.propTypes = {
-  code: PropTypes.any,
-  dispatch: PropTypes.func,
-  handleCloseModal: PropTypes.func,
-  handleDownLoad: PropTypes.func,
-  handlePrint: PropTypes.func,
-  loading: PropTypes.bool,
-  openCurrentSale: PropTypes.any,
-  products: PropTypes.array,
-  setOpenCurrentSale: PropTypes.func
-}
-
