@@ -9,7 +9,8 @@ import {
   signOutAuth,
   useLogout,
   useRegisterDeviceUser,
-  useSetSession} from 'npm-pkg-hook'
+  useSetSession
+} from 'npm-pkg-hook'
 import {
   Button,
   Column,
@@ -19,7 +20,8 @@ import {
   Icon,
   LoadingButton,
   ROUTES,
-  Text} from 'pkg-components'
+  Text
+} from 'pkg-components'
 import React, {
   useContext,
   useEffect,
@@ -38,8 +40,7 @@ const EXPIRED_MESSAGE = 'Session expired, refresh needed'
 interface ILogin {
   googleLoaded?: boolean
 }
-export const Login: React.FC<ILogin> = ({ googleLoaded = false,
-}: ILogin): React.ReactElement => {
+export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): React.ReactElement => {
   const router = useRouter()
   const [handleRegisterDeviceUser] = useRegisterDeviceUser()
   const { setAlertBox, isElectron, sendNotification } = useContext(Context)
@@ -446,7 +447,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false,
       <div className={styles.container}>
         <div className={styles.card} />
         <Column as='form' className={styles.form_login}>
-          <Text size='xxl'>
+          <Text size='xxl' color='gray-dark'>
             ¡Falta poco para iniciar tus ventas!
           </Text>
           <Divider marginTop={getGlobalStyle('--spacing-xl')} />

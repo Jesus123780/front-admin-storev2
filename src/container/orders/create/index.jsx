@@ -91,6 +91,7 @@ export const CreateSales = ({
     loading,
     modalItem,
     oneProductToComment,
+    handleAddAllProductsToCart,
     openCommentModal,
     handleRemoveValue,
     print,
@@ -422,6 +423,7 @@ export const CreateSales = ({
 
   return (
     <>
+
       {/* {openCurrentSale && ( */}
       <SuccessSaleModal
         code={code}
@@ -478,6 +480,7 @@ export const CreateSales = ({
         totalProductPrice={numberFormat(totalProductPrice)}
         useAmountInput={useAmountInput}
         values={values}
+        handleAddAllProductsToCart={handleAddAllProductsToCart}
       />
       <SubItems {...modalItems} />
       <AwesomeModal

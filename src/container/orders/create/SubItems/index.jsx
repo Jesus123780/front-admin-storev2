@@ -2,23 +2,20 @@
 
 import {
   AwesomeModal,
+  Column,
   getGlobalStyle,
   LoaderSubItem,
   numberFormat,
   QuantityButton,
   RippleButton,
   Row,
-  Skeleton} from 'pkg-components'
+  Skeleton
+} from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
-import PropTypes from 'prop-types'
-import React from 'react'
 
 import { ExtrasProductsItems } from '@/container/product/extras/ExtrasProductsItems'
 
-import { 
-  Container, 
-  Content
-} from './styled'
+import styles from './style.module.css'
 
 export const SubItems = ({
   dataExtra = [],
@@ -86,11 +83,11 @@ export const SubItems = ({
       
       zIndex={getGlobalStyle('--z-index-modal')}
     >
-      <Content>
-        <div className='header'>
+      <Column className={styles.container}>
+        <Column className={styles.header}>
           {pName}
-        </div>
-        <Container>
+        </Column>
+        <Column>
           {loading ? (
             <LoaderSubItem />
           ) : (
@@ -109,7 +106,7 @@ export const SubItems = ({
               }}
             />
           )}
-        </Container>
+        </Column>
 
         <Row>
           {loading ? (
@@ -136,27 +133,10 @@ export const SubItems = ({
             }}
           >
               Agregar
-            {!!sumExtraProducts && `${numberFormat(sumExtraProducts || '')}`}
+            {!!sumExtraProducts && `${numberFormat(sumExtraProducts ??  0)}`}
           </RippleButton>
         </Row>
-      </Content>
+      </Column>
     </AwesomeModal>
   )
-}
-
-SubItems.propTypes = {
-  dataExtra: PropTypes.array,
-  dataOptional: PropTypes.array,
-  disabled: PropTypes.bool,
-  handleAddOptional: PropTypes.func,
-  handleDecrement: PropTypes.any,
-  handleDecrementExtra: PropTypes.func,
-  handleIncrement: PropTypes.any,
-  handleIncrementExtra: PropTypes.func,
-  handleUpdateAllExtra: PropTypes.func,
-  loading: PropTypes.bool,
-  modalItem: PropTypes.any,
-  product: PropTypes.object,
-  setModalItem: PropTypes.func,
-  sumExtraProducts: PropTypes.string
 }

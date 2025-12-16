@@ -5,12 +5,12 @@
 .wrapper {
     padding: 0 30px;
     width: 100%;
-    max-width: 1366px;
+    max-width: var(--width-max-desktop);
     margin: auto;
     position: relative;
-    height: 100%;
     display: grid;
     justify-content: normal;
+    background-color: var(--color-base-white);
 }
 
 .wrapper.center {

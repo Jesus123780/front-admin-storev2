@@ -26,7 +26,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [progress, setProgress] = useState<number>(0)
   const [hidden, setHidden] = useState(true)
   const pathname = usePathname()
-
   useEffect(() => {
     setProgress(10)
     setHidden(false)
@@ -55,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
 
 
   return (

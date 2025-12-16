@@ -1,4 +1,5 @@
 import { usePathname, useRouter } from 'next/navigation'
+import { useTheme } from 'npm-pkg-hook'
 import PropTypes from 'prop-types'
 import {
   createContext,
@@ -10,7 +11,6 @@ import {
 } from 'react'
 
 import { MENU_OPTIONS } from './helpers'
-
 const initialCompanyState = {
   idStore: undefined
 }
@@ -113,15 +113,15 @@ const Provider = ({ children }) => {
  */
   const [modalsLector, setModalsLector] = useState(false)
 
-/**
- * Sets the open/close state of a specific modal.
- * If opening one modal, closes the other automatically.
- * @param {keyof ModalStates} modal - Modal key ('qr' or 'barcode')
- * @param {boolean} value - Whether to open (true) or close (false) the modal
- */
-const toggleModal = index => {
-  setModalsLector(prev => (prev === index ? false : index));
-};
+  /**
+   * Sets the open/close state of a specific modal.
+   * If opening one modal, closes the other automatically.
+   * @param {keyof ModalStates} modal - Modal key ('qr' or 'barcode')
+   * @param {boolean} value - Whether to open (true) or close (false) the modal
+   */
+  const toggleModal = index => {
+    setModalsLector(prev => (prev === index ? false : index));
+  };
   const setSessionActive = useCallback(sessionValue => { return setIsSession(sessionValue) }, [])
   // const pathname = router.pathname === '/dashboard/[...name]'
   const pathname = usePathname()
@@ -219,7 +219,7 @@ const toggleModal = index => {
       ...router.query,
       saleOpen: !salesOpen
     }
-    if (typeof router.push !== 'function') {return}
+    if (typeof router.push !== 'function') { return }
     router.push(pathname, {
       query: newQuery,
     })
@@ -261,7 +261,7 @@ const toggleModal = index => {
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 
-      const newMessage = {
+    const newMessage = {
       id,
       title: title?.toString() || '',
       backgroundColor,
@@ -290,6 +290,11 @@ const toggleModal = index => {
       setIsElectron(false);
     }
   }, []);
+  const { toggleTheme, initTheme, theme } = useTheme()
+
+  useEffect(() => {
+    initTheme()
+  }, [initTheme])
 
   const value = useMemo(
     () => {
@@ -312,9 +317,11 @@ const toggleModal = index => {
         isOpenOrder,
         show,
         showModalComponent,
+        theme,
         status,
         modalsLector,
         handleClick,
+        toggleTheme,
         handleMenu,
         toggleModal,
         sendNotification,

@@ -100,6 +100,8 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setSalesOpen,
     toggleModal,
     modalsLector,
+    theme, 
+    toggleTheme,
     setShowComponentModal,
     setStatus
   } = useContext(Context)
@@ -409,6 +411,8 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           setSalesOpen={setSalesOpen}
           style={style}
           userConsent={userConsent}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
 
         <Aside

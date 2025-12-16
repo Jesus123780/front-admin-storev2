@@ -8,7 +8,8 @@ import {
   InputHooks,
   NewSelect,
   QuantityButton,
-  ToggleSwitch} from 'pkg-components'
+  ToggleSwitch
+} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
 

@@ -4,7 +4,6 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useDeleteProductsFood, useUpdateCartCookie } from 'npm-pkg-hook'
 import {
-  BGColor,
   CardProducts,
   Loading,
   Skeleton,
@@ -65,7 +64,7 @@ export const ProductCategories = ({
                   name={x?.pName}
                 >
                   <div className={styles.content_search}>
-                    <Text color={BGColor} size='.9em' >
+                    <Text color='gray-dark' size='.9em' >
                       {x?.pName}
                     </Text>
                   </div>

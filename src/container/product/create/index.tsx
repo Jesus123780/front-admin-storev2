@@ -32,13 +32,15 @@ import {
     OptionalExtraProducts,
     Row,
     Tag,
-    Text} from 'pkg-components'
+    Text
+} from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import React, {
     memo,
     useContext,
     useEffect,
-    useState} from 'react'
+    useState
+} from 'react'
 
 import { Context } from '../../../context/Context'
 import { filterKeyObject } from '../../../utils'
@@ -503,7 +505,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     size='3xl'
                     styles={{
                         '-webkitLine-clamp': 2,
-                        color: '#3e3e3e',
+                        color: getGlobalStyle('--color-text-black'),
                         lineHeight: '1.5rem',
                         marginBottom: '9px',
                         overflow: 'hidden',
