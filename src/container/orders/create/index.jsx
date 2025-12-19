@@ -119,6 +119,7 @@ export const CreateSales = ({
     handleDecrementExtra,
     loadingExtraProduct,
     disabledModalItems,
+    handleAddProduct,
     datCat,
     setValues,
     handleChangeCheck,
@@ -449,6 +450,7 @@ export const CreateSales = ({
         fetchMoreProducts={fetchMoreProducts}
         handleChange={handleChange}
         handleComment={handleComment}
+        handleAddProduct={handleAddProduct}
         handleDecrement={handleDecrementClick}
         handleFreeProducts={(producto) => {
           return handleToggleFree(producto)

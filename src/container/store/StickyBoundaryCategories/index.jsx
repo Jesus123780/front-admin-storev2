@@ -45,11 +45,13 @@ export const ProductCategories = ({
     setIsLoadingProduct({ loading: false, id: null })
   }
 
-  if (loadingCatProd) {return (
-    <div>
-      <Skeleton height={200} numberObject={6} />
-    </div>
-  )}
+  if (loadingCatProd) {
+    return (
+      <div>
+        <Skeleton height={200} numberObject={6} />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -70,41 +72,45 @@ export const ProductCategories = ({
                   </div>
                 </div>
                 <div className={styles.container_carrusel}>
-                  {(x.productFoodsAll?.length > 0) ? x.productFoodsAll?.map(food => {
-                    const { ProImage } = food
-                    const image = ProImage?.startsWith('/images/placeholder-image.webp') ? '/images/placeholder-image-big-card.webp' : `/api/images/${ProImage}`
+                  {(x.productFoodsAll?.length > 0)
+                    ? x.productFoodsAll?.map(food => {
+                      const { ProImage } = food
+                      const image = ProImage?.startsWith('/images/placeholder-image.webp') ? '/images/placeholder-image-big-card.webp' : `/api/images/${ProImage}`
 
-                    return (
-                      <CardProducts
-                        food={food}
-                        handleDelete={() => { return handleClickDelete(food) }}
-                        image={
-                          <Image
-                            alt={`${image}`}
-                            blurDataURL={`${image}`}
-                            height={300}
-                            layout='responsive'
-                            objectFit='cover'
-                            src={`${image}`}
-                            width={300}
-                          />
-                        }
-                        isEdit={true}
-                        isVisible={true}
-                        key={food.pId}
-                        loading={isLoadingProduct.loading && isLoadingProduct.id === food.pId}
-                        onClick={() => { return handleGetOneProduct(food) }}
-                        redirect={() => {
-                          if (!food.pId) {return sendNotification({
-                            description: 'Lo sentimos, no encontramos tu producto.',
-                            title: 'Error',
-                            backgroundColor: 'error'
-                          })}
-                          return router.push(`products/create/${food.pId}`)
-                        }}
-                      />
-                    )
-                  }) : <Skeleton height={200} numberObject={2} />}
+                      return (
+                        <CardProducts
+                          food={food}
+                          handleDelete={() => { return handleClickDelete(food) }}
+                          image={
+                            <Image
+                              alt={`${image}`}
+                              blurDataURL={`${image}`}
+                              height={300}
+                              layout='responsive'
+                              objectFit='cover'
+                              src={`${image}`}
+                              width={300}
+                            />
+                          }
+                          isEdit={true}
+                          isVisible={true}
+                          key={food.pId}
+                          loading={isLoadingProduct.loading && isLoadingProduct.id === food.pId}
+                          onClick={() => { return handleGetOneProduct(food) }}
+                          redirect={() => {
+                            if (!food.pId) {
+                              return sendNotification({
+                                description: 'Lo sentimos, no encontramos tu producto.',
+                                title: 'Error',
+                                backgroundColor: 'error'
+                              })
+                            }
+                            return router.push(`products/create/${food.pId}`)
+                          }}
+                        />
+                      )
+                    })
+                    : <Skeleton height={200} numberObject={2} />}
                 </div>
               </div>
               {(key === data.length - 1) &&
