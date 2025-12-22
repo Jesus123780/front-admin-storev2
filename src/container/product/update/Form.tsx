@@ -208,7 +208,7 @@ export const FormMemo: React.FC<FormProps> = ({
         onChange={handleChange}
         range={{ min: 0, max: 180 }}
         title='Descripción'
-        typeTextarea={true}
+        as='textarea'
         value={dataForm?.ProDescription}
         width='100%'
       />

@@ -1,4 +1,5 @@
 import { Button, Stepper } from 'pkg-components'
+import { JSX } from 'react'
 
 interface IStepperOrderStatus {
     active: number

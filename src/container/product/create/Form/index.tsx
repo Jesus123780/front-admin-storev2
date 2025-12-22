@@ -183,7 +183,7 @@ export const FormProduct = ({
         range={{ min: 0, max: 180 }}
         required={false}
         title='Descripción del producto'
-        typeTextarea={true}
+        as='textarea'
         value={values?.ProDescription}
       />
     </Column>

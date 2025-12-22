@@ -30,7 +30,7 @@ export const InputHook = props => {
     range,
     required,
     type,
-    typeTextarea,
+    as='textarea',
     value,
     passConfirm
   } = props
@@ -99,7 +99,7 @@ export const InputHook = props => {
   return (
     <>
       <BoxInput error={error}>
-        {!typeTextarea ?
+        {!as='textarea' ?
           <Input
             data-required={required}
             disabled={disabled}
@@ -127,7 +127,7 @@ export const InputHook = props => {
   )
 }
 InputHook.propTypes = {
-  typeTextarea: PropTypes.any,
+  as='textarea': PropTypes.any,
   email: PropTypes.any,
   error: PropTypes.any,
   label: PropTypes.any,

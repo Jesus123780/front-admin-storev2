@@ -26,6 +26,7 @@ import {
   RippleButton,
   Row
 } from 'pkg-components'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import PropTypes from 'prop-types'
 import React, {
   useContext,
@@ -121,6 +122,7 @@ export const CreateSales = ({
     disabledModalItems,
     handleAddProduct,
     datCat,
+    handleChangeFilter,
     setValues,
     handleChangeCheck,
     code
@@ -450,6 +452,7 @@ export const CreateSales = ({
         fetchMoreProducts={fetchMoreProducts}
         handleChange={handleChange}
         handleComment={handleComment}
+        handleChangeFilter={handleChangeFilter}
         handleAddProduct={handleAddProduct}
         handleDecrement={handleDecrementClick}
         handleFreeProducts={(producto) => {
@@ -487,24 +490,23 @@ export const CreateSales = ({
       <SubItems {...modalItems} />
       <AwesomeModal
         btnConfirm={false}
-        customHeight='90%'
         footer={false}
         header={true}
-        height='95%'
         onCancel={() => {
           return handleComment()
         }}
         onHide={() => {
           return handleComment()
         }}
-        padding='0 1.25rem 0 1.25rem'
         question={false}
         show={openCommentModal}
-        size='small'
+        size={MODAL_SIZES.small}
         title='Dejar un comentario'
+        customHeight='auto'
+        padding={getGlobalStyle('--spacing-sm')}
         zIndex={getGlobalStyle('--z-index-modal')}
       >
-        <Column style={{ justifyContent: 'space-between', height: '100%' }}>
+        <Column alignItems='center' justifyContent='space-between'>
           <CardProductSimple
             {...oneProductToComment}
             ProDescription={oneProductToComment.ProDescription}
@@ -519,16 +521,21 @@ export const CreateSales = ({
             pName={oneProductToComment.pName}
             render={null}
           />
-          <Divider marginTop='2.875rem' />
+          <Divider marginTop={getGlobalStyle('--spacing-xl')} />
           <InputHooks
             name='comment'
             onChange={(e) => {
               return handleChange(e)
             }}
             placeholder='Deja un comentario'
-            typeTextarea
+            as='textarea'
             value={values.comment ?? ''}
+            range={{
+              min: 0,
+              max: 150
+            }}
           />
+          <Divider marginTop={getGlobalStyle('--spacing-xl')} />
           <Row style={{ justifyContent: 'space-between' }}>
             <RippleButton
               onClick={() => {
