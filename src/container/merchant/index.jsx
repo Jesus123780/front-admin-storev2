@@ -576,7 +576,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
                 alignItems: 'flex-end',
                 position: 'sticky',
                 left: '30px',
-                backgroundColor: '#ffffff',
+                backgroundColor: getGlobalStyle('--color-base-white'),
                 width: '100%',
                 bottom: '-35px',
                 zIndex: 99

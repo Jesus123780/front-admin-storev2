@@ -17,6 +17,7 @@ import {
   LoaderSubItem,
   numberFormat,
   OptionalExtraProducts,
+  PercentBadge,
   Row,
   Tag,
   Text,
@@ -155,7 +156,7 @@ export const ProductView: React.FC<IProductViewProps> = ({
         </Button>
         <Button
           onClick={() => {
-            if (pId) {return router.push(`/products/edit?pId=${pId}`)}
+            if (pId) { return router.push(`/products/edit?pId=${pId}`) }
             return null
           }}
         >
@@ -201,20 +202,27 @@ export const ProductView: React.FC<IProductViewProps> = ({
             </Text>
           </Column>
           <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-
           <Text color='gray-dark' size='md'>
             {ProDescription}
           </Text>
           <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-
           <Row>
-            <Text
-              className={styles.text_prices}
-              color='default'
-              size='xxl'
-            >
-              {numberFormat(ProPrice)}
-            </Text>
+            <Row>
+              <Text
+                className={styles.text_prices}
+                color='default'
+                size='xxl'
+              >
+                {numberFormat(ProPrice)}
+              </Text>
+              {Boolean(ProDescuento) &&
+                <PercentBadge
+                  baseValue={ProDescuento}
+                  compareValue={ProPrice}
+                  precision={0}
+                />
+              }
+            </Row>
             <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
 
             <Text className={[styles.text_prices, styles.text_prices__discount]} size='md'>
@@ -222,7 +230,6 @@ export const ProductView: React.FC<IProductViewProps> = ({
             </Text>
           </Row>
           <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-
           <div>
             {store && !!nameStore && (
               <Link

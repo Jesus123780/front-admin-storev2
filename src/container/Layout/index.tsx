@@ -13,11 +13,11 @@ import {
   newMessageSubscription,
   newStoreOrderSubscription,
   paymentMethodCards,
+  useConnection,
   useCreateDeliveryTime,
   useDeliveryTime,
   useLogout,
   useManageNewOrder,
-  // useConnection,
   useManageQueryParams,
   useMobile,
   useModules,
@@ -169,7 +169,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     ? 'Conexión a internet restablecida.'
     : 'Conexión a internet perdida.'
 
-  // useConnection({ setConnectionStatus })
+  useConnection({ setConnectionStatus })
 
   useEffect(() => {
     if (connectionStatus === 'initial') { return }

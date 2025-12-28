@@ -287,7 +287,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     }
 
     const [dayConfigs, setDayConfigs] = useState<Record<number, { startTime: string; endTime: string }>>({})
-    
+
     const handleChangeAvailability = (day: number, field: 'startTime' | 'endTime', value: string) => {
         setDayConfigs((prev) => ({
             ...prev,
@@ -310,7 +310,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 })
 
                 const pId = result?.data?.pId
-                if (pId) {handleQuery('food', pId)}
+                if (pId) { handleQuery('food', pId) }
 
                 setActive(STEPS.DESSERTS)
                 return
@@ -501,19 +501,26 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 <ImageProductEdit {...propsImageEdit} />
             </div>
             <div>
-                <Text
-                    size='3xl'
-                    styles={{
-                        '-webkitLine-clamp': 2,
-                        color: getGlobalStyle('--color-text-black'),
-                        lineHeight: '1.5rem',
-                        marginBottom: '9px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                    }}
-                >
-                    Tags
-                </Text>
+                <Row>
+                    <Text
+                        size='3xl'
+                        styles={{
+                            '-webkitLine-clamp': 2,
+                            color: getGlobalStyle('--color-text-black'),
+                            lineHeight: '1.5rem',
+                            marginBottom: '9px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        }}
+                    >
+                        Tags
+                    </Text>
+                    <Icon
+                        icon='IconTag'
+                        size={30}
+                        color={getGlobalStyle('--color-icons-black')}
+                    />
+                </Row>
                 <InputTags
                     disabled={false}
                     update={true}
@@ -546,7 +553,13 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                                     padding='0'
 
                                 >
-                                    <Tag label={tag.tag} />
+                                    <Tag label={tag.tag}>
+                                        <Icon
+                                            icon='IconTag'
+                                            size={20}
+                                            color={getGlobalStyle('--color-icons-white')}
+                                        />
+                                    </Tag>
                                 </Button>
                                 <Button
                                     onClick={() => handleRemoveTag(tag)}

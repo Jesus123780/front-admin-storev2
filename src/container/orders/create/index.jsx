@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import {
   generateStoreURL,
   useAmountInput,
+  useFilterConfigs,
   useFormatDate,
   useGetAllPaymentMethods,
   useGetClients,
@@ -424,6 +425,14 @@ export const CreateSales = ({
     }
   })
 
+  const { data: dataFilter } = useFilterConfigs()
+  const [activeFilter, setActiveFilter] = useState(0)
+
+  const filterProps = {
+      activeFilter,
+      setActiveFilter,
+      dataFilter
+  }
   return (
     <>
 
@@ -445,6 +454,7 @@ export const CreateSales = ({
       <ModalSales {...restPropsSalesModal} />
       <GenerateSalesPkg
         client={client}
+        dataFilter={dataFilter}
         currentPage={currentPage}
         data={data}
         dataClientes={dataClientes}
@@ -486,6 +496,7 @@ export const CreateSales = ({
         useAmountInput={useAmountInput}
         values={values}
         handleAddAllProductsToCart={handleAddAllProductsToCart}
+        {...filterProps}
       />
       <SubItems {...modalItems} />
       <AwesomeModal

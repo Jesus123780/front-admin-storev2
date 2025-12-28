@@ -213,7 +213,7 @@ export const Store = () => {
   const titleModal = {
     1: 'Ver productos',
     2: 'Categorías',
-    3: `Producto: ${product?.pName || ''}`,
+    3: `Producto ${product?.pName ?? ''}`,
     4: 'Crear multiples productos',
     5: 'Crear mesas'
   }
