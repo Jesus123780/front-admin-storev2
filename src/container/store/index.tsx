@@ -28,6 +28,7 @@ import {
   SearchBar
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
+import { ProductFood } from 'pkg-components/stories/pages/GenerateSales/types'
 import React, {
   useCallback,
   useContext,
@@ -53,7 +54,7 @@ export const Store = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showDessert, setShowDessert] = useState(false)
-  const ref = useRef(null)
+  const ref = useRef<HTMLDivElement>(null!)
   const {
     setAlertBox,
     handleClick,
@@ -127,16 +128,16 @@ export const Store = () => {
   const { storeName } = getStore || {}
   const { storeName: nameStore } = store || {}
 
-  const handleProduct = (product) => {
+  const handleProduct = (product: ProductFood) => {
     const { pId } = product || {}
     handleGetOneProduct({ pId })
     handleClick(1)
     handleQuery('food', pId)
-    setCheckStock(product?.manageStock)
+    setCheckStock(Boolean(product?.manageStock))
 
   }
 
-  const handleHidden = (queryName) => {
+  const handleHidden = (queryName: string) => {
     handleCleanQuery(queryName)
     handleClick(false)
   }
@@ -175,7 +176,7 @@ export const Store = () => {
    * @param {number} number - Action key from `select` (e.g. 1).
    * @param {string | boolean} [value=true] - Value to set in query param if not present.
    */
-  type HandleActionClickProps = (number: number, value?: string | boolean) => void;
+  type HandleActionClickProps = (number: number, value?: string | boolean) => { number: number; name: string; bool: boolean; };
 
   interface SelectMap {
     [key: number]: string;
@@ -189,7 +190,7 @@ export const Store = () => {
         title: 'Error',
         backgroundColor: 'error'
       });
-      return;
+      return { number, name: currentParam, bool: false };
     }
 
     handleClick(number);
@@ -208,6 +209,8 @@ export const Store = () => {
         handleCleanQuery(param);
       }
     });
+
+    return { number, name: currentParam, bool: true };
   }
 
   const titleModal = {
@@ -219,15 +222,11 @@ export const Store = () => {
   }
 
   const modalProps = {
-    backdrop: 'static',
-    btnCancel: true,
-    btnConfirm: false,
     footer: false,
     header: true,
-    height: '100%',
     modal: true,
     padding: 0,
-    show: show,
+    show: Boolean(show),
     title: show ? titleModal[show] : '',
     size: MODAL_SIZES.large,
     zIndex: getGlobalStyle('--z-index-modal'),
@@ -319,7 +318,7 @@ export const Store = () => {
     handleAddList,
     setData
   }
-  const handleDeleteProduct = (data: any) => {
+  const handleDeleteProduct = (data: ProductFood) => {
     handleDelete(data)
     handleClick(1)
   }
@@ -335,15 +334,15 @@ export const Store = () => {
 
   const { days } = useSaveAvailableProduct()
   const [alertModal, setAlertModal] = useState(false)
-  const [checkStock, setCheckStock] = useState(false)
+  const [checkStock, setCheckStock] = useState<boolean>(false)
 
   /**
      * Updates stock management state
      * @param {boolean} newState - The new value of manageStock
      */
-  const updateStockState = useCallback(async (newState: any) => {
+  const updateStockState = useCallback(async (newState: boolean) => {
     const response = await updateManageStock({ pId, manageStock: newState })
-    const notifyUpdateResult = (success: any, message: any) => {
+    const notifyUpdateResult = (success: boolean, message: string) => {
       sendNotification({
         title: success ? 'Exitoso' : 'Error',
         description: message,
@@ -433,7 +432,9 @@ export const Store = () => {
           setMoreCaProduct(s => { return s + 50 })
           fetchMore({
             variables: { max: moreCatProduct, min: 0 },
-            updateQuery: (prevResult, { fetchMoreResult }) => {
+            updateQuery: (prevResult: unknown, { fetchMoreResult }: { fetchMoreResult: {
+              getCatProductsWithProduct: { catProductsWithProduct: unknown[]; totalCount: number }
+            } }) => {
               // Check if fetchMoreResult is null or undefined
               if (!fetchMoreResult) {
                 return prevResult
@@ -451,7 +452,7 @@ export const Store = () => {
                 return prevResult
               }
               const validateArray = Array.isArray(fetchMoreResult.getCatProductsWithProduct.catProductsWithProduct)
-              if (!fetchMoreResult && !validateArray) {return prevResult}
+              if (!fetchMoreResult && !validateArray) { return prevResult }
               return {
                 getCatProductsWithProduct: {
                   getCatProductsWithProduct: [...fetchMoreResult.getCatProductsWithProduct.catProductsWithProduct],
@@ -463,7 +464,7 @@ export const Store = () => {
         }
       } catch (error) {
         interface ErrorType {
-          graphQLErrors?: any[];
+          graphQLErrors?: unknown[];
           message?: string;
         }
         const err = error as ErrorType
@@ -480,8 +481,8 @@ export const Store = () => {
     }
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
+  const handleChange = (value: string) => {
+    setSearchQuery(value)
   }
 
 
@@ -550,25 +551,21 @@ export const Store = () => {
         <ButtonsAction handle={handleActionClick} />
         <div style={{ marginTop: 20 }} />
         <SearchBar
-          handleChange={handleChange}
+          handleChange={(value) => handleChange(value)}
           padding='10px'
           placeholder={placeholder}
         />
         <div style={{ marginTop: 20 }} />
         <StickyBoundaryCategories
           data={categoriesWithProduct}
-          handleChange={handleChange}
           handleGetOneProduct={handleProduct}
-          isMobile={isMobile}
           loadingCatProd={loadingCatProd}
-          placeholder={placeholder}
           reference={ref}
           sendNotification={sendNotification}
-          setAlertBox={setAlertBox}
         />
       </div>
       <AwesomeModal {...modalProps} >
-        {component[show]}
+        {show && component[show]}
       </AwesomeModal>
     </div>
   )

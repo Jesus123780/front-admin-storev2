@@ -242,6 +242,12 @@ const Provider = ({ children }) => {
     }
   }, [isSession])
 
+  const deleteToast = (id) => {
+    const listItemIndex = messagesToast.findIndex((e) => { return e.id === id })
+    messagesToast.splice(listItemIndex, 1)
+    setMessagesToast([...messagesToast])
+  }
+
   const sendNotification = ({
     title = '',
     description = '',
@@ -249,11 +255,6 @@ const Provider = ({ children }) => {
     position = null
   }) => {
     if (messagesToast.length >= 10) {
-      const deleteToast = (id) => {
-        const listItemIndex = messagesToast.findIndex((e) => { return e.id === id })
-        messagesToast.splice(listItemIndex, 1)
-        setMessagesToast([...messagesToast])
-      }
       deleteToast(messagesToast[0].id)
     }
     // generate unique id for each notification
@@ -338,6 +339,7 @@ const Provider = ({ children }) => {
         setShowComponentModal: handleMenuLateral,
         setStatus,
         setStoreChatActive,
+        deleteToast,
         useCompany,
         setAlertBox: err => { return setError(err) }
       }
@@ -372,6 +374,7 @@ const Provider = ({ children }) => {
       toggleModal,
       setSalesOpen,
       setSessionActive,
+      deleteToast,
       setShowComponentModal,
       setStoreChatActive,
       useCompany

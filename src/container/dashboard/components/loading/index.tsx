@@ -4,7 +4,7 @@ import {
   Row,
   Skeleton
 } from 'pkg-components'
-import React from 'react'
+import React, { JSX } from 'react'
 
 const skeletonGroups = [
   { count: 8, height: 50, width: '95%', numberObject: 1 },

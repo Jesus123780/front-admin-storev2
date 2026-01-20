@@ -55,8 +55,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     setIsMounted(true)
   }, [])
 
-
-
   return (
     <html lang='es'>
       <Script
@@ -76,19 +74,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div id='portal' />
         <ProgressBar progress={progress} hidden={hidden} />
-        {isMounted && <Context>
-          {/* <BarcodeScanner /> */}
-          <StyledComponentsRegistry>
-            <ApolloClientProvider>
-              {ROUTES_WITHOUT_LAYOUT.has(pathname)
-                ? children
-                : <MemoLayout>
-                  {children}
-                </MemoLayout>
-              }
-            </ApolloClientProvider>
-          </StyledComponentsRegistry>
-        </Context>
+        {isMounted
+          && (
+            <Context>
+              {/* <BarcodeScanner /> */}
+              <StyledComponentsRegistry>
+                <ApolloClientProvider>
+                  {ROUTES_WITHOUT_LAYOUT.has(pathname)
+                    ? children
+                    : <MemoLayout>
+                      {children}
+                    </MemoLayout>
+                  }
+                </ApolloClientProvider>
+              </StyledComponentsRegistry>
+            </Context>
+          )
         }
       </body>
     </html>

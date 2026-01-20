@@ -16,7 +16,6 @@ import {
 import {
   AlertInfo,
   AwesomeModal,
-  BarCodes,
   Button,
   Column,
   Divider,
@@ -489,7 +488,7 @@ export const Update = ({ id = '' } = { id: null }) => {
                   >
                     Código de barras:
                   </Text>
-                  <BarCodes value={ProBarCode ?? ''} />
+                  {/* <BarCodes value={ProBarCode ?? ''} /> */}
                 </Column>
               )}
               <Column>

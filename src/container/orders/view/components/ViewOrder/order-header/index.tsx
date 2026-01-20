@@ -27,8 +27,8 @@ const OrderHeader: React.FC<Props> = ({
   modalView = false,
   statusOrder
 }) => {
-    const { sendNotification } = useContext(Context)
-  
+  const { sendNotification } = useContext(Context)
+
   if (modalView) {
     return (
       <Column as='header' gap='md' style={{ padding: getGlobalStyle('--spacing-2xl') }}>
@@ -37,14 +37,18 @@ const OrderHeader: React.FC<Props> = ({
             <Text className={styles.title}>
               Orden
             </Text>
-            <CopyToClipboard text={pCodeRef} onCopyError={() => {}} onCopySuccess={() => {
-              sendNotification({
-                backgroundColor: 'success',
-                description: `El código ${pCodeRef} ha sido copiado al portapapeles.`,
-                title: 'Éxito',
-                position: 'top-left',
-              })
-            }} />
+            <CopyToClipboard
+              text={pCodeRef}
+              onCopyError={() => { }}
+              onCopySuccess={() => {
+                sendNotification({
+                  backgroundColor: 'success',
+                  description: `El código ${pCodeRef} ha sido copiado al portapapeles.`,
+                  title: 'Éxito',
+                  position: 'top-left',
+                })
+              }}
+            />
           </Row>
         </div>
         <div className={styles.right}>
@@ -71,7 +75,15 @@ const OrderHeader: React.FC<Props> = ({
           <Text className={styles.title}>
             Orden
           </Text>
-          <CopyToClipboard text={pCodeRef} />
+          <CopyToClipboard text={pCodeRef}
+            onCopySuccess={() => {
+              sendNotification({
+                backgroundColor: 'success',
+                description: `El código ${pCodeRef} ha sido copiado al portapapeles.`,
+                title: 'Éxito'
+              })
+            }}
+          />
         </Row>
       </div>
       <div className={styles.right}>

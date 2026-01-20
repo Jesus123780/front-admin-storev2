@@ -46,7 +46,8 @@ import {
   Orders,
   Overline,
   Plan,
-  Toast
+  Toast,
+  ToastPosition
 } from 'pkg-components'
 import PropTypes from 'prop-types'
 import React, {
@@ -102,6 +103,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     modalsLector,
     theme, 
     toggleTheme,
+    deleteToast,
     setShowComponentModal,
     setStatus
   } = useContext(Context)
@@ -466,9 +468,10 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           <CreateSales setShow={setSalesOpen} show={salesOpen} />
             <Toast
               autoDelete={true}
-              autoDeleteTime={7000}
-              position='bottom-left'
+              autoDeleteTime={5000} // 5 seconds
+              position={ToastPosition['bottom-left']}
               toastList={messagesToast}
+              deleteToast={deleteToast}
             />
         </div>
         <Footer />

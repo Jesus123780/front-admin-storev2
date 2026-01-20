@@ -316,17 +316,6 @@ export const CreateSales = ({
     setValues({})
     onCloseModalSale()
   }
-  useEffect(() => {
-    const cliId = dataClientes?.data?.find((client) => {
-      return client?.ccClient === dataStore?.idStore
-    })?.cliId
-
-    if (cliId) {
-      setValues((prevValues) => {
-        return { ...prevValues, cliId }
-      })
-    }
-  }, [dataClientes, dataStore])
 
   useEffect(() => {
     const setInitialValues = () => {
