@@ -1,18 +1,18 @@
 'use client'
 
-import PropTypes from 'prop-types'
+import { PColor,SEGColor } from 'pkg-components'
 import React from 'react'
-import { SEGColor, PColor } from 'pkg-components'
+
 import {
   Card,
-  ScheduleHeader,
+  ContainLine,
+  LeftLine,
+  Line,
   ListSchedulesContainer,
   ScheduleContent,
-  ContainLine,
-  Line,
-  TimeLines,
-  LeftLine,
-  Text
+  ScheduleHeader,
+  Text,
+  TimeLines
 } from './styled'
 
 /**
@@ -118,7 +118,7 @@ export const ListSchedules = ({
             const end = handleHourPmAM(s.schHoEnd)
             const duration = calculateDurationInHours(s.schHoSta, s.schHoEnd)
             const yPosition = calculateYPosition(s.schHoSta) * 40 // Calculamos la posición en el eje Y
-            let xPosition = columnIndex * dayWidth // Ajusta el valor para adaptarse a la posición deseada en el eje X
+            const xPosition = columnIndex * dayWidth // Ajusta el valor para adaptarse a la posición deseada en el eje X
 
             if (lastDay !== day) {
               columnIndex++
@@ -154,13 +154,12 @@ export const ListSchedules = ({
                     fontSize: '1em', // Aumenta el tamaño de la fuente
                     textAlign: 'center',
                     fontWeight: '600', // Cambia el peso de la fuente
-                    color: s.schHoSta !== '' ? null : SEGColor
+                    color: s.schHoSta !== '' ? '' : SEGColor
                   }}
                 >
                   {days[day]}
                 </Text>
                 <Text
-                  size='1em'
                   style={{ textAlign: 'center' }}
                 >
                   {start ? `${start} - ${end}` : 'Sin horarios'}
@@ -175,23 +174,4 @@ export const ListSchedules = ({
 
 
   )
-}
-ListSchedules.propTypes = {
-  calculateDurationInHours: PropTypes.func,
-  calculateTimeLinesHeight: PropTypes.func,
-  calculateYPosition: PropTypes.func,
-  columnIndex: PropTypes.number,
-  combinedArray: PropTypes.array,
-  data: PropTypes.array,
-  dayWidth: PropTypes.number,
-  days: PropTypes.array,
-  handleClick: PropTypes.func,
-  handleHourPmAM: PropTypes.func,
-  isChart: PropTypes.bool,
-  isMobile: PropTypes.bool,
-  lastDay: PropTypes.any,
-  openStoreEveryDay: PropTypes.bool,
-  showTiming: PropTypes.any,
-  style: PropTypes.object,
-  uniqueHours: PropTypes.array
 }

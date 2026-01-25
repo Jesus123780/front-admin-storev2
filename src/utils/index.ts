@@ -1,14 +1,16 @@
 'use client'
 
 
+import {
+ ApolloCache, DocumentNode, NormalizedCacheObject, 
+ Unmasked
+} from '@apollo/client'
+import { Modifier } from '@apollo/client/cache'
 import jwt, { decode } from 'jsonwebtoken'
 import { ROUTES } from 'pkg-components'
-// import { useEffect } from 'react'
 
 // https://codesandbox.io/s/calculadora-de-salario-qi0ft?file=/src/index.js:293-298
 export const REFRESH_TOKEN_COOKIE_OPTIONS = {
-  // Get part after // and before : (in case port number in URL)
-  // domain: process.env.ADMIN_URL.split('//')[1].split(':')[0],
   domain: 'localhost:3001/',
   httpOnly: true,
   path: ROUTES.index,
@@ -89,150 +91,11 @@ export const isEmail = (email: string | null | undefined) => {
   } return false
 }
 
-export const passwordConfirm = (value, valueConfirm) => { return !(value === valueConfirm) }
+export const passwordConfirm = (value: string | null | undefined, valueConfirm: string | null | undefined) => { return !(value === valueConfirm) }
 
-export const numberFormat = value => { return value ? (parseInt(value) ? new Intl.NumberFormat('de-DE').format(parseFloat(`${value}`.replace(/\./g, ''))) : value) : (value) }
+export const numberFormat = (value: string | number | null | undefined) => { return value ? (parseInt(value as string) ? new Intl.NumberFormat('de-DE').format(parseFloat(`${value}`.replace(/\./g, ''))) : value) : (value) }
 
-// valida los inputs
-export const validations = (e, typeNull, typeLetters, typeNumeric, typeRange, minRange, maxRange, typeEmail, typeFormat) => {
-  let { value } = e.target
-  const { nextSibling } = e.target
-  // verifica si es formato de numero */
-  if (typeFormat) { value = value.replace(/\./g, '') }
-  // verifica que campos serán y si se encuentra la condición o no
-  if (typeNull) {
-    if (isNull(value)) {
-      e.target.style.border = '1px solid  red'
-      nextSibling.innerHTML = 'Campo requerido.'
-      return true
-    }
-  }
-  if (typeNumeric) {
-    if (isNumeric(value)) {
-      e.target.style.border = '1px solid  red'
-      nextSibling.innerHTML = 'Solo puede contener números.'
-      return true
-    }
-  }
-  if (typeRange) {
-    if (rangeLength(value, minRange, maxRange)) {
-      e.target.style.border = '1px solid  red'
-      nextSibling.innerHTML = `El rango de caracteres es de ${minRange} a ${maxRange}.`
-      return true
-    }
-  }
-  if (typeLetters) {
-    if (onlyLetters(value)) {
-      e.target.style.border = '1px solid  red'
-      nextSibling.innerHTML = 'Solo puede contener letras.'
-      return true
-    }
-  }
-  if (typeEmail) {
-    if (isEmail(value)) {
-      e.target.style.border = '1px solid  red'
-      nextSibling.innerHTML = 'No es un formato de email valido.'
-      return true
-    }
-  }
-  e.target.style.border = '1px solid  red'
-  nextSibling.innerHTML = ''
-  return false
-}
-
-// valida el formulario
-export const validationForm = (inputs, error) => {
-  let errorForm = false
-  /** verifica los campos del formulario */
-  for (let i = 0; i < inputs.length; i++) {
-    /** verifica los input y select si se encuentra vacio o si no, si hay un error del onchange */
-    if ((!!inputs[i].value === false || inputs[i].value === 'false') && inputs[i].type !== 'submit' && inputs[i].type !== 'file' && inputs[i].type !== 'button') {
-      //  verifica si es un input, select obligatorio */
-      if (inputs[i].dataset.ignore === 'false') {
-        inputs[i].style.border = '1px solid  red'
-        inputs[i].nextSibling.innerHTML = 'Campo requerido.'
-        errorForm = true
-      } else if (inputs[i].dataset.ignore === undefined) {
-        if (inputs[i].type === 'tel') {
-          inputs[i].style.border = '1px solid  red'
-          inputs[i].nextSibling.style.border = '1px solid  red'
-          inputs[i].parentNode.nextSibling.innerHTML = 'Campo requerido.'
-        } else {
-          inputs[i].parentNode.style.border = '1px solid  red'
-          inputs[i].parentNode.nextSibling.innerHTML = 'Campo requerido.'
-        }
-        errorForm = true
-      }
-    } else
-      if (error[inputs[i].name]) { errorForm = true }
-  }
-  return errorForm
-}
-
-// /** valida el formulario */
-// export const validationFormTwo = (inputs, error) => {
-//     let errorForm = false
-//     /** verifica los campos del formulario */
-//     for (let i = 0; i < inputs.length; i++) {
-//         /** verifica los input y select si se encuentra vacio o si no, si hay un error del onchange */
-//         if ((!!inputs[i].value === false || inputs[i].value === 'false') && inputs[i].type !== 'submit' && inputs[i].type !== 'file' && inputs[i].type !== 'button') {
-//             /** verifica si es un input, select obligatorio */
-//             if (inputs[i].dataset.ignore === 'false')
-//                 errorForm = true
-//             else if (inputs[i].dataset.ignore === undefined)
-//                 errorForm = true
-//         } else
-//             if (error[inputs[i].name])
-//                 errorForm = true
-//     }
-//     return errorForm
-// }
-
-// valida el input del telefono
-export const validationPhone = (v, e, typeNull, typeNumeric) => {
-  if (e !== true) {
-    const { nextSibling, parentNode } = e.target
-    // verifica que campos serán y si se encuentra la condición o no */
-    if (typeNull) {
-      if (isNull(v)) {
-        e.target.style.border = '1px solid  red'
-        nextSibling.style.border = '1px solid  red'
-        parentNode.nextSibling.innerHTML = 'Campo requerido.'
-        return true
-      }
-    }
-    if (typeNumeric) {
-      if (isNull(v)) {
-        e.target.style.border = '1px solid  red'
-        nextSibling.style.border = '1px solid  red'
-        parentNode.nextSibling.innerHTML = 'Solo puede contener letras.'
-        return true
-      }
-    }
-    if (rangeLength(v, 5, 15)) {
-      e.target.style.border = '1px solid  red'
-      nextSibling.style.border = '1px solid  red'
-      parentNode.nextSibling.innerHTML = 'El rango de caracteres es de 5 a 15.'
-      return true
-    }
-
-    e.target.style.border = '1px solid red'
-    nextSibling.style.border = '1px solid red'
-    parentNode.nextSibling.innerHTML = ''
-    return false
-  }
-  return false
-}
-
-// verifica los select
-export const validationsSelect = v => {
-  // le quita las clases a los select por ser seleccionado */
-  v.style.border = '1px solid red'
-  v.nextSibling.innerHTML = ''
-  return false
-}
-
-export const validationImg = file => { return (/\.(jpg|png|gif|jpeg)$/i).test(file.name) }
+export const validationImg = (file: File) => { return (/\.(jpg|png|gif|jpeg)$/i).test(file.name) }
 
 export const CalcularDigitoVerificacion = (value = '') => {
   if (value) {
@@ -245,7 +108,7 @@ export const CalcularDigitoVerificacion = (value = '') => {
     myNit = value.replace(/-/g, '') // Guiones
 
     // Se valida el nit
-    if (isNaN(myNit)) {
+    if (isNaN(Number(myNit))) {
       return ''
     }
 
@@ -270,9 +133,11 @@ export const CalcularDigitoVerificacion = (value = '') => {
     vpri[15] = 71
 
     for (i; i < z; i++) {
-      y = myNit.substr(i, 1)
+      y = Number(myNit.substr(i, 1))
 
-      x += (y * vpri[z - i])
+      if (typeof vpri[z - i] !== 'undefined' && vpri[z - i] !== undefined) {
+        x += (y * vpri[z - i]!)
+      }
     }
 
     y = x % 11
@@ -282,103 +147,12 @@ export const CalcularDigitoVerificacion = (value = '') => {
   }
 }
 
-export const extFile = filename => {
-  return (/[.]/.exec(filename)) ? /[^.]+$/.exec(filename)[0] : undefined
-}
-
-export const validationsTF = (input, label, tooltip, icon, text, res) => {
-  if (res) {
-    input.style.backgroundColor = '#FBCACA'
-    input.style.borderColor = '#15558d'
-    input.style.color = '#15558d'
-    label.style.color = '#15558d'
-    tooltip.style.opacity = 1
-    tooltip.innerHTML = text
-    icon.style.opacity = 1
-  } else {
-    input.style.backgroundColor = 'transparent'
-    input.style.borderColor = '#15558d'
-    input.style.color = '#15558d'
-    label.style.color = '#15558d'
-    tooltip.style.opacity = 0
-    tooltip.innerHTML = ''
-    icon.style.opacity = 0
+export const extFile = (filename: string): string | undefined => {
+  if (/[.]/.exec(filename)) {
+    const match = /[^.]+$/.exec(filename);
+    return match ? match[0] : undefined;
   }
-  return res
-}
-
-// valida el formulario
-export const validationFormTwo = (inputs, error) => {
-  let errorForm = false
-  /** verifica los campos del formulario */
-  for (let i = 0; i < inputs.length; i++) {
-    const { value, type, nextSibling, parentNode, dataset } = inputs[i]
-    /** verifica los input y select si se encuentra vacio o si no, si hay un error del onchange */
-    if ((!value || value === 'false' || (type === 'tel' && value.length <= 8)) && type !== 'submit' && type !== 'file' && type !== 'button') {
-      /** verifica si es un input, select obligatorio */
-      if (type === 'tel') {
-        inputs[i].style.backgroundColor = '#FBCACA'
-        inputs[i].style.borderColor = '#15558d'
-        nextSibling.style.backgroundColor = '#FBCACA'
-        nextSibling.style.borderColor = '#15558d'
-        parentNode.parentNode.firstChild.nextSibling.style.color = '#15558d'
-        parentNode.parentNode.firstChild.nextSibling.nextSibling.style.opacity = 1
-        parentNode.parentNode.firstChild.nextSibling.nextSibling.innerHTML = 'Campo Requerido.'
-        parentNode.parentNode.lastChild.style.opacity = 1
-      } else if (dataset.ignore === 'false') { errorForm = validationsTF(inputs[i], nextSibling, nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true) }
-      else if (dataset.ignore === undefined) { errorForm = validationsTF(parentNode, parentNode.firstChild.nextSibling, parentNode.firstChild.nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true) }
-    } else { error[inputs[i].name] && (errorForm = true) }
-  }
-  return errorForm
-}
-
-// verifica los select
-export const validationsSelectTwo = v => {
-  const s = document.getElementById(v.target.name)
-  if (s) { return validationsTF(s.parentNode, s.parentNode.firstChild.nextSibling, s.parentNode.firstChild.nextSibling.nextSibling, s.nextSibling, false, false) }
-}
-
-// valida los inputs
-export const validationsTwo = (e, typeNull, typeLetters, typeNumeric, typeRange, minRange, maxRange, typeEmail, typeFormat) => {
-  let { value } = e.target
-  const { nextSibling, parentNode } = e.target
-  /** verifica si es formato de numero */
-  if (typeFormat) { value = value.replace(/\./g, '') }
-  /** verifica que campos seran y si se encuentra la condicion o no */
-  if (typeNull) {
-    if (isNull(value)) { return validationsTF(e.target, nextSibling, nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido', true) }
-  }
-  if (typeNumeric) {
-    if (isNumeric(value)) { return validationsTF(e.target, nextSibling, nextSibling.nextSibling, parentNode.lastChild, 'Solo puede contener números', true) }
-  }
-  if (typeRange) {
-    if (rangeLength(value, minRange, maxRange)) { return validationsTF(e.target, nextSibling, nextSibling.nextSibling, parentNode.lastChild, `El rango de caracteres es de ${minRange} a ${maxRange}.`, true) }
-  }
-  if (typeLetters) {
-    if (onlyLetters(value)) { return validationsTF(e.target, nextSibling, nextSibling.nextSibling, parentNode.lastChild, 'Solo puede contener letras', true) }
-  }
-  if (typeEmail) {
-    if (isEmail(value)) { return validationsTF(e.target, nextSibling, nextSibling.nextSibling, parentNode.lastChild, 'No es un formato de email valido', true) }
-  }
-  return validationsTF(e.target, nextSibling, nextSibling.nextSibling, parentNode.lastChild, false, false)
-}
-
-/**
- *
- * @param {Object} data objeto a filtrar
- * @param {Array} filters array a comparar o claves del objeto a excluir
- * @return {Object} devuelve un objeto con los datos filtrados
- */
-export const filterKeyObjectOLD = (data, filters) => {
-  let values = {}
-  for (const elem in data) {
-    let coincidence = false
-    for (let i = 0; i < filters.length; i++) { if (elem === filters[i]) { coincidence = true } }
-
-    if (!coincidence) { values = { ...values, [elem]: data[elem] } }
-  }
-
-  return values
+  return undefined;
 }
 
 /**
@@ -403,104 +177,211 @@ export const validationSubmitHooks = (elements: HTMLInputElement[]) => {
   }
   return errorForm
 }
+
 /**
- *
- * @param {Object} data objeto a filtrar
- * @param {Array} filters array a comparar o claves del objeto a excluir
- * @param {boolean} dataFilter booleano para devolver los datos filtrados o no
- * @return {Object} devuelve un objeto con los datos filtrados
+ * Filtra las claves de un objeto según un array de filtros.
+ * @param data Objeto a filtrar.
+ * @param filters Array de claves a comparar o excluir.
+ * @param dataFilter Booleano para devolver los datos filtrados o no.
+ * @returns Objeto con los datos filtrados.
  */
-export const filterKeyObject = (data, filters, dataFilter) => {
-  let values = {}; let valuesFilter = {}
+export const filterKeyObject = <T = unknown>(
+  data: Record<string, T>,
+  filters: string[],
+  dataFilter: boolean
+): Record<string, T> | { values: Record<string, T>; valuesFilter: Record<string, T> } => {
+  let values: Record<string, T> = {};
+  let valuesFilter: Record<string, T> = {};
   for (const elem in data) {
-    let coincidence = false
-    for (let i = 0; i < filters.length; i++) {
-      if (elem === filters[i]) { coincidence = true }
-      else { valuesFilter = filters[i] }
+    let coincidence = false;
+    for (const filter of filters) {
+      if (elem === filter) {
+        coincidence = true;
+        break;
+      }
     }
 
-    if (!coincidence) { values = { ...values, [elem]: data[elem] } }
-    else { valuesFilter = { ...valuesFilter, [elem]: data[elem] } }
+    if (coincidence) {
+      valuesFilter = { ...valuesFilter, [elem]: data[elem] };
+    } else {
+      values = { ...values, [elem]: data[elem] };
+    }
   }
-  if (!dataFilter) { return values }
-  if (dataFilter) { return { values, valuesFilter } }
+  if (dataFilter) {
+    return { values, valuesFilter };
+  }
+  return values;
+}
+
+interface CacheField {
+  data?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface UpdateCacheParams {
+  cache: ApolloCache<NormalizedCacheObject>;
+  query: DocumentNode;
+  nameFun: string;
+  dataNew?: Partial<CacheField> | null;
 }
 
 /**
- * busca en el localstore la información y la parsea si es necesario
- * @version 0.0.1
- * @param {*} jsonValue clave de busqueda
- * @param {boolean} isParse si se quiere parsear o no
- * @return {boolean} devuelve el valor parseado o false si pudo guardar en localStorage
+ * Update Apollo cache by merging `dataNew` into a specific cache field
+ * and syncing the result with `cache.writeQuery`.
+ *
+ * @template TQueryResult - GraphQL query result shape
+ * @param {UpdateCacheParams<TQueryResult>} params
+ * @returns {Promise<void>}
  */
-export const getDataLS = jsonValue => {
+export const updateCache = async <TQueryResult>({
+  cache,
+  query,
+  nameFun,
+  dataNew = null,
+}: UpdateCacheParams): Promise<void> => {
+  if (!cache?.modify) {
+    throw new TypeError('Invalid Apollo cache provided.');
+  }
+  if (!query) {
+    throw new TypeError('`query` is required.');
+  }
+  if (!nameFun) {
+    throw new TypeError('`nameFun` must be a non-empty string.');
+  }
+  if (!dataNew) {return;}
+
   try {
-    return (jsonValue ? JSON.parse(jsonValue) : null)
-  } catch (e) {
-    return jsonValue
+    cache.modify({
+      fields: {
+        [nameFun]: (
+          existing: import('@apollo/client').Reference | import('@apollo/client').StoreObject | undefined = {}
+        ): import('@apollo/client').StoreObject => {
+          // Try to treat existing as a StoreObject (plain object)
+          const existingObj = (typeof existing === 'object' && existing !== null) ? existing as Record<string, unknown> : {};
+          const merged: Record<string, unknown> = {
+            ...existingObj,
+            ...dataNew,
+            data: {
+              ...(existingObj.data as object ?? {}),
+              ...(dataNew?.data as object ?? {}),
+            },
+          };
+
+          cache.writeQuery({
+            query,
+            data: {
+              [nameFun]: merged,
+            } as Unmasked<TQueryResult>,
+          });
+
+          return merged as import('@apollo/client').StoreObject;
+        },
+      },
+    });
+  } catch (error) {
+    throw new Error(
+      `updateCache failed for field "${nameFun}": ${(error as Error).message}`
+    );
   }
-}
-export function parse(str) {
-  if (Array.isArray(str)) {
-    alert()
-    for (const current in str) {
-      // eslint-disable-next-line
-      console.log(current)
-    }
-  }
-}
+};
+
 
 /**
- * actualizar cache de apollo
- * @param {object} params parametros para actualizar el cachet de apollo
- * @returns {null} no hay retorno
+ * Update multiple fields in Apollo cache safely.
+ *
+ * @param params.cache - Apollo cache instance
+ * @param params.queries - Array of objects with `query`, `nameFun` (field name to modify) and optional `dataNew`
+ * @returns void
  */
-export const updateCache = async ({ cache, query, nameFun, dataNew }) => {
-  return cache.modify({
-    fields: {
-      [nameFun](dataOld = {}) {
-        return cache.writeQuery({ query, data: { ...dataOld, data: { ...(dataOld?.data || {}), ...(dataNew?.data || {}) } } })
-      }
-    }
-  })
-}
+export const updateMultipleCache = async ({
+  cache,
+  queries,
+}: {
+  cache: ApolloCache<NormalizedCacheObject>
+  queries: Array<{
+    query: DocumentNode
+    nameFun: string
+    dataNew?: Partial<{ data?: Record<string, unknown> }> | null
+  }>
+}): Promise<void> => {
+  if (!cache) {throw new Error('updateMultipleCache: cache is required')}
+  if (!Array.isArray(queries)) {throw new Error('updateMultipleCache: queries must be an array')}
 
-export const updateMultipleCache = async ({ cache, queries }) => {
-  const modifiedFields = {}
+  type CacheField = { data?: Record<string, unknown> }
+  type FieldModifier = Modifier<CacheField | undefined>
+
+  const modifiedFields: Record<string, FieldModifier> = {}
+
   queries.forEach(({ query, nameFun, dataNew }) => {
-    modifiedFields[nameFun] = (dataOld = {}) => {
-      return cache.writeQuery({
-        query,
-        data: { ...dataOld, data: { ...(dataOld?.data || {}), ...(dataNew?.data || {}) } }
-      })
+    modifiedFields[nameFun] = (existing = {}) => {
+      const merged: CacheField = {
+        ...existing,
+        data: { ...(existing?.data || {}), ...(dataNew?.data || {}) },
+      }
+
+      // try to keep a corresponding query in sync if provided
+      try {
+        cache.writeQuery({ query, data: merged as unknown as Record<string, unknown> })
+      } catch {
+        // writing might fail if query shape doesn't match — ignore to let modify handle the field update
+      }
+
+      return merged
     }
   })
-  return cache.modify({ fields: modifiedFields })
+
+  cache.modify({ fields: modifiedFields })
 }
 
 
 /**
- * actualizar cache de apollo
- * @param {{ cache: object, query: object, nameFun: string, dataNew: object, type: number, id: string }} params Parámetros para actualizar el cachet de apollo
- * @returns {null} no hay retorno
+ * Actualiza el cache de Apollo.
+ * @param params Parámetros para actualizar el cache de Apollo.
+ * @returns null
  */
-export const updateCacheMod = async ({ cache, query, nameFun, dataNew, type, id }) => {
+export const updateCacheMod = async <TCache = unknown, TQuery = unknown, TDataNew = unknown>({
+  cache,
+  query,
+  nameFun,
+  dataNew,
+  type,
+  id,
+}: {
+  cache: {
+    modify: (options: { fields: Record<string, (dataOld?: TCache) => unknown> }) => unknown;
+    writeQuery: (options: { query: TQuery; data: unknown }) => unknown;
+  };
+  query: TQuery;
+  nameFun: string;
+  dataNew: TDataNew;
+  type: number;
+  id: string;
+}): Promise<unknown> => {
   return cache.modify({
     fields: {
-      [nameFun](dataOld = []) {
-        if (type === 1) { return cache.writeQuery({ query, data: [...(dataOld || []), { ...(dataNew || {}) }] }) }
-        if (type === 2) { return cache.writeQuery({ query, data: { ...(dataOld || {}), ...(dataNew || {}) } }) }
-        if (type === 3) { return cache.writeQuery({ query, data: dataOld.filter(x => { return x === id }) }) }
-      }
-    }
-  })
-}
+      [nameFun](dataOld: TCache = [] as unknown as TCache) {
+        if (type === 1) {
+          // For arrays, just spread dataOld and dataNew
+          return cache.writeQuery({ query, data: [...((dataOld as unknown as Array<unknown>) ?? []), ...(Array.isArray(dataNew) ? dataNew : [dataNew])] });
+        }
+        if (type === 2) {
+          // For objects, just spread dataOld and dataNew
+          return cache.writeQuery({ query, data: { ...(dataOld as object), ...(dataNew as object) } });
+        }
+        if (type === 3) {
+          // For filtering, avoid explicit any
+          return cache.writeQuery({ query, data: (Array.isArray(dataOld) ? dataOld.filter((x) => x === id) : []) });
+        }
+      },
+    },
+  });
+};
 /**
  * obtiene el token del usuario lo guarda en el localStorage
  * @returns {null} no hay retorno
  */
 const TOKEN = 'sma.sv1'
-export function setToken(token) {
+export function setToken(token: string | null) {
   if (token === null) { return false }
   else if (token !== null) { return JSON.parse }
 }
@@ -508,15 +389,17 @@ export function setToken(token) {
  * obtiene el token del usuario
  * @returns {null} no hay retorno
  */
-export function getToken({ restaurant }) {
+export function getToken({ restaurant }: { restaurant?: string } = {}) {
   if (window.localStorage) {
     return window.localStorage.getItem(restaurant || TOKEN)
   }
 }
+
 // obtiene el token del usuario y lo descodifica
 export function decodeToken(token: string) {
   return decode(token)
 }
+
 const now = Date.now().valueOf() / 1000
 
 export function getTokenState(token: string) {
@@ -533,7 +416,13 @@ export function getTokenState(token: string) {
       return { valid: true, needRefresh: false }
     }
   } catch (error) {
-    return {}
+    if (error instanceof Error) {
+      return { valid: false, needRefresh: true }
+    }
+    return {
+      valid: false,
+      needRefresh: true
+    }
   }
 }
 
@@ -578,7 +467,7 @@ export const calculateCheckDigit = (value: string): number => {
   nit = nit.replace(/-/g, '') // Guiones
 
   // Se valida el nit
-  if (isNaN(nit)) { return '' }
+  if (isNaN(nit as unknown as number)) { return 0 }
 
   // Procedimiento
   let x = 0
@@ -587,104 +476,25 @@ export const calculateCheckDigit = (value: string): number => {
   const z = nit.length
 
   for (i; i < z; i++) {
-    y = nit.substring(i, 1)
+    y = parseInt(nit.substring(i, i + 1), 10)
 
-    x += (y * vpri[z - i])
+    if (typeof vpri[z - i] !== 'undefined' && vpri[z - i] !== undefined) {
+      x += (y * vpri[z - i]!)
+    }
   }
 
   y = x % 11
 
   return (y > 1) ? 11 - y : y
 }
-/**
- * valida los inputs
- * @version 0.0.1
- * @param {boolean} data valor
- * @param {boolean} typeNull null
- * @param {boolean} typeLetters letras
- * @param {boolean} typeNumeric numerico
- * @param {boolean} typeRange rango
- * @param {boolean} minRange minimo de rango
- * @param {boolean} maxRange máximo de rango
- * @param {boolean} typeEmail correo electronico
- * @param {boolean} typeFormat formato numerico
- * @param {boolean} typeMatch comparación
- * @param {boolean} valueMatch segundo valor para comparar
- * @return {boolean} true o false
- */
-export const validationsOld = (e, typeNull, typeLetters, typeNumeric, typeRange, minRange, maxRange, typeEmail, typeFormat) => {
-  let { value } = e.target
-  const { nextSibling, parentNode } = e.target
 
-  /** verifica si es formato de número */
-  if (typeFormat) { value = value.replace(/\./g, '') }
-  /** verifica que campos seran y si se encuentra la condicion o no */
-  if (typeNull) {
-    if (isNull(value)) { return validationsTF(parentNode, nextSibling, 'Campo requerido.', true) }
-  }
-  if (typeNumeric) {
-    if (isNumeric(value)) { return validationsTF(parentNode, nextSibling, 'Solo puede contener números.', true) }
-  }
-  if (typeRange) {
-    if (rangeLength(value, minRange, maxRange)) { return validationsTF(parentNode, nextSibling, `El rango de caracteres es de ${minRange} a ${maxRange}.`, true) }
-  }
-  if (typeLetters) {
-    if (onlyLetters(value)) { return validationsTF(parentNode, nextSibling, 'Solo puede contener letras.', true) }
-  }
-  if (typeEmail) {
-    if (isEmail(value)) { return validationsTF(parentNode, nextSibling, 'No es un formato de email valido.', true) }
-  }
-  return validationsTF(parentNode, nextSibling, false, false)
-}
-/**
- * Busca el tipo de base 64
- * @version 0.0.1
- * @param {string} filename nombre del archivo con la extension
- * @return {string} nombre del tipo de base 64
- */
-/**
- * Se conecta a Aws3
- * @version 0.0.1
- * @return {boolean} la conexión
-    */
-// export const AWS3 = () => new AWS.S3({
-//     accessKeyId: 'AKIAYOOQNH4RCILB644J',
-//     secretAccessKey: '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'
-// })
-// Nombre del BUKE
-export const Bucket = 'NAME'
-//
-/**
- * Busca la extension del archivo
- * @version 0.0.1
- * @param {string} Key Key del bucket
- * @param {string} name nombre del documento
- * @return {string} nombre de la extension
- */
-// export const getFileS3 = async (Key, name) => {
-//     const S3 = AWS3()
-//     const result = await S3.getObject({ Bucket, Key }).promise().catch(() => undefined)
-//     return result && `data:${extFileType(name)};base64,${result.Body.toString('base64')}`
-// }
-
-/**
- * guarda un documento en S3
- * @param {String} Key variable de búsqueda
- * @param {Array} Body Array de buffer del documento
- * @return {String} respuesta del servidor
- */
-// export const putFileS3 = async (Key, Body) => {
-//     const S3 = AWS3()
-//     const res = await S3.putObject({ Bucket, Key, Body }).promise().catch(() => undefined)
-//     return res
-// }
 /**
  * Unidad en letra
  * @version 0.0.1
  * @param {number} value numero
  * @return {string} numero el letra
  */
-const Unidades = value => {
+const Unidades = (value: number): string => {
   switch (value) {
     case 1: return 'UN'
     case 2: return 'DOS'
@@ -706,7 +516,7 @@ const Unidades = value => {
  * @param {string} numUnit numero en letras
  * @return {string} concatena al cantidad
  */
-const DecenasY = (strSin, numUnit) => {
+const DecenasY = (strSin: string, numUnit: number) => {
   if (numUnit > 0) { return `${strSin} Y ${Unidades(numUnit)}` }
   return strSin
 }
@@ -717,7 +527,7 @@ const DecenasY = (strSin, numUnit) => {
  * @param {number} value numero
  * @return {string} cantidad en letra
  */
-const Decenas = value => {
+const Decenas = (value: number) => {
   const ten = Math.floor(value / 10)
   const Unit = value - (ten * 10)
 
@@ -754,7 +564,7 @@ const Decenas = value => {
  * @param {number} value numero
  * @return {string} cantidad en letra
  */
-const Centenas = value => {
+const Centenas = (value: number) => {
   const hundreds = Math.floor(value / 100)
   const tens = value - (hundreds * 100)
 
@@ -783,7 +593,7 @@ const Centenas = value => {
  * @param {string} strPlural numero en letras
  * @return {string} cantidad en letra
  */
-const Seccion = (value, divider, strSingular, strPlural) => {
+const Seccion = (value: number, divider: number, strSingular: string, strPlural: string) => {
   const hundreds = Math.floor(value / divider)
   const rest = value - (hundreds * divider)
   let letters = ''
@@ -803,7 +613,7 @@ const Seccion = (value, divider, strSingular, strPlural) => {
  * @param {number} value numero del valor
  * @return {string} cantidad en letra
  */
-const Miles = value => {
+const Miles = (value: number) => {
   const divider = 1000
   const hundreds = Math.floor(value / divider)
   const rest = value - (hundreds * divider)
@@ -821,7 +631,7 @@ const Miles = value => {
  * @param {number} value numero del valor
  * @return {string} cantidad en letra
  */
-const Millones = value => {
+const Millones = (value: number) => {
   const divider = 1000000
   const hundreds = Math.floor(value / divider)
   const rest = value - (hundreds * divider)
@@ -882,67 +692,67 @@ export const valRand = () => {
   return result
 }
 // Te devuelve un valor en formato reducido en millones
-export const numberFormatM = param => {
+export const numberFormatM = (param: number) => {
   let money = 0; let num = 0; let value = 0; let val = param
   if (val >= 1000000000) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`${num}000`)
     money += value
     val -= parseFloat(`${num}000000000`)
   }
 
   if (val >= 100000000) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`${num}00`)
     money += value
     val -= parseFloat(`${num}00000000`)
   }
 
   if (val >= 10000000) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`${num}0`)
     money += value
     val -= parseFloat(`${num}0000000`)
   }
 
   if (val >= 1000000) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`${num}`)
     money += value
     val -= parseFloat(`${num}000000`)
   }
   if (val >= 100000) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`0.${num}`)
     money += value
     val -= parseFloat(`${num}00000`)
   }
   if (val >= 10000) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`0.0${num}`)
     money += value
     val -= parseFloat(`${num}0000`)
   }
   if (val >= 1000) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`0.00${num}`)
     money += value
     val -= parseFloat(`${num}000`)
   }
   if (val >= 100) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`0.000${num}`)
     money += value
     val -= parseFloat(`${num}00`)
   }
   if (val >= 10) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`0.0000${num}`)
     money += value
     val -= parseFloat(`${num}0`)
   }
   if (val >= 1) {
-    num = `${val}`.charAt(0)
+    num = parseInt(`${val}`.charAt(0), 10)
     value = parseFloat(`0.00000${num}`)
     money += value
     val -= parseFloat(`${num}`)
@@ -966,26 +776,22 @@ export const mongoObjectId = function () {
   }).toLowerCase()
 }
 
-// export default function useKeypress(key, action) {
-//   useEffect(() => {
-//     function onKeyup(e) {
-//       if (e.key === key) action()
-//     }
-//     window.addEventListener('keyup', onKeyup)
-//     return () => { return window.removeEventListener('keyup', onKeyup) }
-//   }, [action, key])
-// }
-export const CalculateIva = (quantity, rate, iPercentage, state) => {
-  const rateNumber = parseInt(rate)
-  const PercentageNumber = parseInt(iPercentage)
-  const quantityNumber = parseInt(quantity)
+export const CalculateIva = (
+  quantity: string | number,
+  rate: string | number,
+  iPercentage: string | number,
+  state: string
+) => {
+  const rateNumber = Number.parseInt(rate as string)
+  const PercentageNumber = Number.parseInt(iPercentage as string)
+  const quantityNumber = Number.parseInt(quantity as string)
   let TotalIva
   const SubTotal = quantityNumber && rateNumber ? quantityNumber * rateNumber : 0
   if (state === 'INCLUSIVE') {
     TotalIva = SubTotal ? SubTotal / (100 + PercentageNumber) * PercentageNumber : 0
     return TotalIva
   } else if (state === 'EXCLUSIVE') {
-    const PercentageNumber = parseInt(iPercentage)
+    const PercentageNumber = Number.parseInt(iPercentage as string)
     TotalIva = SubTotal ? (SubTotal * PercentageNumber) / 100 : 0
     return TotalIva
   }
@@ -994,15 +800,14 @@ export const CalculateIva = (quantity, rate, iPercentage, state) => {
 
 }
 /**
- *
- * @param {value quantity} quantity
- * @param {*} rate
- * @returns {null} no hay retorno
- * @returns {calc} calculo amounTotal
+ * Calcula el monto total a partir de la cantidad y la tasa.
+ * @param quantity La cantidad (string o number).
+ * @param rate La tasa (string o number).
+ * @returns El cálculo amountTotal.
  */
-export const CalculateAmount = (quantity, rate) => {
-  const quantityNumber = parseFloat(quantity)
-  const rateNumber = parseFloat(rate)
+export const CalculateAmount = (quantity: string | number, rate: string | number): number | string => {
+  const quantityNumber = Number.parseFloat(quantity as string)
+  const rateNumber = Number.parseFloat(rate as string)
   const amountTotal = quantityNumber && rateNumber ? quantityNumber * rateNumber : '00'
   return amountTotal
 }
@@ -1015,7 +820,7 @@ export const CalculateAmount = (quantity, rate) => {
 const today = new Date()
 export const dateNow = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
 
-export const hiddenEmail = email => {
+export const hiddenEmail = (email: string) => {
   const domain = email.replace(/.*@/, '')
   const username = email.replace(/@.*/, '')
   const sliceDomain = domain.slice(domain.indexOf('.'), domain.length)
@@ -1031,7 +836,7 @@ export const hiddenEmail = email => {
 }
 
 export const roundToTwo = (num: number) => {
-  return (Math.round(num + 'e+2') + 'e-2')
+  return (Math.round(Number(num + 'e+2')) + 'e-2')
 }
 
 export function RandomCode(length: number) {
@@ -1048,15 +853,18 @@ export function RandomCode(length: number) {
 export const NewDateFormat = (date: string | Date) => {
   try {
     if (!date) { return }
-    const dateString = date => { return new Date(date).toString() !== 'Invalid Date' }
-    const newDate = dateString instanceof Date && !isNaN(dateString)
-    return newDate
+    const parsedDate = new Date(date)
+    const isValid = !Number.isNaN(parsedDate.getTime())
+    return isValid
   } catch (error) {
+    if (error) {
+      return new Error('Ocurrió un error')
+    }
     return new Error('Ocurrió un error')
   }
 }
 
-export const convertBase64 = file => {
+export const convertBase64 = (file: File) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     if (file) {

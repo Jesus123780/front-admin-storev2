@@ -1,5 +1,5 @@
 import { EmptyLayout } from 'pages/_app'
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { RandomCode } from 'utils'
 
 const Dessert = () => {
@@ -54,7 +54,7 @@ const Dessert = () => {
     const currentItem = dragItem.current
     if (e.target !== dragNode.current) {
       setList((oldList) => {
-        let newList = JSON.parse(JSON.stringify(oldList))
+        const newList = JSON.parse(JSON.stringify(oldList))
         newList[params.groupIndex].items.splice(params.itemIndex, 0, newList[currentItem.groupIndex].items.splice(currentItem.itemIndex, 1)[0])
         dragItem.current = params
         return newList
@@ -72,14 +72,14 @@ const Dessert = () => {
   const addCard = (groupIndex, itemIndex) => {
     const id = RandomCode(9)
     setList((oldList) => {
-      let newList = JSON.parse(JSON.stringify(oldList))
+      const newList = JSON.parse(JSON.stringify(oldList))
       newList[groupIndex].items.splice(itemIndex, 0, id)
       return newList
     })
   }
   const removeCard = (groupIndex, itemIndex) => {
     setList((oldList) => {
-      let newList = JSON.parse(JSON.stringify(oldList))
+      const newList = JSON.parse(JSON.stringify(oldList))
       newList[groupIndex].items.splice(itemIndex, 1)
       return newList
     })
@@ -87,14 +87,14 @@ const Dessert = () => {
   const duplicateCard = (groupIndex, itemIndex) => {
     const duplicate = list[groupIndex].items[itemIndex]
     setList((oldList) => {
-      let newList = JSON.parse(JSON.stringify(oldList))
+      const newList = JSON.parse(JSON.stringify(oldList))
       newList[groupIndex].items.splice(itemIndex, 0, duplicate)
       return newList
     })
   }
   const removeRow = (groupIndex) => {
     setList((oldList) => {
-      let newList = JSON.parse(JSON.stringify(oldList))
+      const newList = JSON.parse(JSON.stringify(oldList))
       newList.splice(groupIndex, 1)
       return newList
     })
@@ -102,7 +102,7 @@ const Dessert = () => {
   const addNewRow = () => {
     const id = RandomCode(9)
     setList((oldList) => {
-      let newList = JSON.parse(JSON.stringify(oldList))
+      const newList = JSON.parse(JSON.stringify(oldList))
       newList.push({
         title: id, id: id, items: [
           {

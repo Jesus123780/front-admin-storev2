@@ -56,14 +56,12 @@ const titleHeaders = ['DETALLES', 'ADICIONALES', 'COMPLEMENTOS', 'DISPONIBILIDAD
 
 export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     active,
-    alt,
     check,
     checkStock,
     data,
     dataCategoriesProducts,
     dataFree,
     errors,
-    fileInputRef,
     image,
     loading,
     names,
@@ -71,7 +69,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     propsImageEdit,
     search,
     showMore,
-    src,
     state: grid,
     STEPS,
     stock,
@@ -95,7 +92,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     handleIncreaseStock = () => { },
     handleRegister,
     onClickClear,
-    onTargetClick,
     setActive,
     setCheck: setCheckAvailableDays,
     setErrors,
@@ -143,7 +139,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         handleDaySelection,
         registerAvailableProduct,
         selectedDays,
-        setSelectedDays,
         handleCleanSelectedDays,
         loading: loaAvailable,
         days

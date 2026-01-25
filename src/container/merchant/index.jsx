@@ -37,9 +37,7 @@ import {
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import PropTypes from 'prop-types'
-import React, {
- useContext, useEffect, useState 
-} from 'react'
+import React, { useContext, useState } from 'react'
 import styled, { css, keyframes } from 'styled-components'
 
 import { Context } from '../../context/Context'
@@ -108,36 +106,13 @@ export const Restaurant = ({ userToken = {} } = {}) => {
       return null
     }
   })
-  const [handleChange, _handleSubmit, setDataValue, { dataForm, errorForm, setForcedError, errorSubmit }] = useFormTools()
+  const [handleChange, _handleSubmit, setDataValue, { dataForm, errorForm }] = useFormTools()
   // const { suggestions: { data }, setValue } = usePlacesAutocomplete({
   //   requestOptions: {
   //     // types: ['restaurant'],
   //     componentRestrictions: { country: 'CO' }
   //   }
   // })
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      const data = {
-        'storeOwner': 'Remo comida',
-        'storeName': 'Remo comida',
-        'uPhoNum': '301 454 8087',
-        'socialRaz': 'Vendemos de todo',
-        'documentIdentifier': '32423423',
-        'NitStore': '32424',
-        'catStore': '013e5387-34a1-6a78-303d-5098f17bf640',
-        'typeRegiments': '234324',
-        'email': '234234',
-        'addressStore': '2343223',
-        'neighborhoodStore': '23432',
-        'Viaprincipal': '234234',
-        'secVia': '234324',
-        'ULocation': '324324234',
-        'emailStore': 'juvinaojesusd@gmail.com',
-        'storePhone': '301 454 8087'
-      }
-      // setDataValue(data)
-    }
-  }, [])
 
   const handleSignOut = async () => {
     await onClickLogout()
@@ -245,6 +220,10 @@ export const Restaurant = ({ userToken = {} } = {}) => {
         setAlertBox({ message })
       }
     } catch (error) {
+      if (error?.message) {
+        setAlertBox({ message: error.message })
+        return
+      }
       setAlertBox({
         message: 'Lo sentimos, ocurrió un error. Por favor, inténtalo de nuevo.'
       })

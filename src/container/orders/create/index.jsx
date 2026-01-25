@@ -206,6 +206,13 @@ export const CreateSales = ({
         dispatch({ type: 'ADD_TO_CART', payload: product?.PRODUCT })
       }
     } catch (error) {
+      if (typeof error === 'string') {
+        return sendNotification({
+          message: error,
+          title: 'Error',
+          backgroundColor: 'error'
+        })
+      }
       return
     }
   }

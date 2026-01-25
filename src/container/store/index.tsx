@@ -351,6 +351,7 @@ export const Store = () => {
       })
     }
     notifyUpdateResult(response.success, response.message)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pId, updateManageStock])
 
   /**
@@ -433,9 +434,11 @@ export const Store = () => {
           setMoreCaProduct(s => { return s + 50 })
           fetchMore({
             variables: { max: moreCatProduct, min: 0 },
-            updateQuery: (prevResult: unknown, { fetchMoreResult }: { fetchMoreResult: {
-              getCatProductsWithProduct: { catProductsWithProduct: unknown[]; totalCount: number }
-            } }) => {
+            updateQuery: (prevResult: unknown, { fetchMoreResult }: {
+              fetchMoreResult: {
+                getCatProductsWithProduct: { catProductsWithProduct: unknown[]; totalCount: number }
+              }
+            }) => {
               // Check if fetchMoreResult is null or undefined
               if (!fetchMoreResult) {
                 return prevResult

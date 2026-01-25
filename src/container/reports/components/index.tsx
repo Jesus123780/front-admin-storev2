@@ -20,7 +20,7 @@ export const ComponentsReports = () => {
         setActive
     } = useComponentAnalytics()
 
-    const components: { [key: number]: any } = {
+    const components: { [key: number]: React.ReactNode } = {
         0: <ChatStatistic />,
         1: <ReportDownloadsPanel />,
     }

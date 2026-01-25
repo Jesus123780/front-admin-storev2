@@ -3,7 +3,8 @@
 import {
   GenerateReport,
   useUpdateMultipleProducts,
-  useUploadProducts} from 'npm-pkg-hook'
+  useUploadProducts
+} from 'npm-pkg-hook'
 import {
   Button,
   Divider,
@@ -51,7 +52,7 @@ export const UploadFilesProducts = ({
   const { updateProducts, loading } = useUpdateMultipleProducts({
     sendNotification
   })
-  const steps = ['SUBIR ARCHIVOS', `LISTAR PRODUCTOS (${Number(data?.length) ?? 0})`]
+  const steps = ['SUBIR ARCHIVOS', `LISTAR PRODUCTOS (${Number(data?.length) || 0})`]
 
   const handleDownloadTemplate = () => {
     const GenReporte = new GenerateReport()

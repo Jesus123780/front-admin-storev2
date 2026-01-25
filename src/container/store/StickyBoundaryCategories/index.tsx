@@ -150,7 +150,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     <>
       {loading && <Loading />}
       <div style={containerStyle}>
-    
         <VirtualizedList
           items={data}
           viewHeight="auto"
@@ -160,7 +159,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           columnGap={15}  // Espacio entre columnas
           itemHeight={250}  // Fijo o dinámico si se requiere.
           observeResize={true}  // Autoajuste del grid con ResizeObserver
-          className={styles.content__products}
+          className={styles.content__categories}
           emptyComponent={<EmptyData height={250} width={250} />}
           render={(category, index) => {
             const keyId = category.carProId ?? `cat-${index}`
@@ -212,7 +211,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                   backgroundColor: 'error'
                                 })
                               }
-                              return router.push(`products/create/${food.pId}`)
+                              return router.push(`/products/edit?pId=${encodeURIComponent(food.pId)}`)
                             }}
                           />
                         )

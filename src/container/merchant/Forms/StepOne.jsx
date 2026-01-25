@@ -74,7 +74,7 @@ export const StepOne = ({
             name='NitStore'
             onChange={handleChange}
             required={false}
-            value={dataForm?.NitStore ? Number(CalcularDigitoVerificacion(dataForm?.NitStore)) ?? 0 : 0}
+            value={dataForm?.NitStore ? Number(CalcularDigitoVerificacion(dataForm?.NitStore) ?? 0) : 0}
             width={isMobile ? '20%' : '10%'}
           />
         </div>

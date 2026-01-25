@@ -3,7 +3,8 @@ import {
     BGColor,
     getGlobalStyle,
     PColor,
-    PLColor} from 'pkg-components'
+    PLColor
+} from 'pkg-components'
 import styled, { css, keyframes } from 'styled-components'
 
 export const AnimationRight = keyframes`

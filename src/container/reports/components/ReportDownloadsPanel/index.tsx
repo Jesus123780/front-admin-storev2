@@ -2,7 +2,6 @@ import {
   useDownloadReportByDay,
   useFormatDate,
   useGetReportByDateRange,
-  UtilDateRange
 } from 'npm-pkg-hook'
 import {
   ButtonSuccess,
@@ -34,8 +33,6 @@ export const ReportDownloadsPanel = () => {
   const [getReport, {
     loading: loadingReportRange,
     finished: finishedReportRange,
-    error,
-    data
   }] = useGetReportByDateRange({
     sendNotification
   })
@@ -44,8 +41,6 @@ export const ReportDownloadsPanel = () => {
   const handleDownload = async ({
     days = 7
   }) => {
-    const todayRange = new UtilDateRange()
-    const { start, end } = todayRange.getRange()
 
     const now = new Date()
     const sevenDaysAgo = new Date()

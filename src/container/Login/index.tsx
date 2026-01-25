@@ -70,6 +70,13 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
         }
       }
     } catch (error) {
+      if (error instanceof Error) {
+        sendNotification({
+          title: 'Error',
+          description: error.message,
+          backgroundColor: 'error'
+        })
+      }
       setAlertBox({ message: 'Error al iniciar sesión con Google' })
       sendNotification({
         title: 'Error',
@@ -163,8 +170,6 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
       window.location.href = `${window.location.origin}/merchant`
 
     } catch (error) {
-      console.error('🚀 ~ responseGoogle ~ error:', error)
-
       setAlertBox({
         message: error instanceof Error ? error.message : 'Error al iniciar sesión',
         color: 'error'
@@ -244,7 +249,13 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
       window.location.href = `${baseUrl}/merchant`
 
     } catch (error) {
-      // if (session) await signOut({ redirect: false })
+      if (error instanceof Error) {
+        sendNotification({
+          title: 'Error',
+          description: error.message,
+          backgroundColor: 'error'
+        })
+      }
       setAlertBox({
         message: 'Error al iniciar sesión con Google',
         color: 'error'
@@ -297,6 +308,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
       }
       window.google.accounts.id.prompt()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleLoaded, router])
 
 
@@ -321,13 +333,13 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
   }
   useLayoutEffect(() => {
     handlelogOut()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     const ironSession = Cookies.get(process.env.NEXT_PUBLIC_SESSION_NAME)
     const jwtSession = Cookies.get('session')
     const isExpired = isTokenExpired(jwtSession)
-    const expired = isExpired && jwtSession
     if (isExpired && jwtSession) {
       onClickLogout({ redirect: false })
       signOutAuth({
@@ -389,7 +401,14 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.electron) {
-      const listener = (_event: any, data: any) => {
+      const listener = (_event: unknown, data: { 
+        user_info: {
+          name: string
+          email: string
+          sub: string
+          picture: string
+        }
+      }) => {
         const { user_info } = data || {}
         const {
           name,
@@ -440,6 +459,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -528,7 +548,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
               onSuccess={(e) => {
                 setLoading(false)
                 const { profileObj } = e || {}
-                const { name, email, familyName, givenName, googleId, imageUrl } = profileObj || {}
+                const { name, email, familyName, googleId, imageUrl } = profileObj || {}
                 const data = {
                   user: {
                     name,
@@ -545,6 +565,9 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
                 responseGoogle(data)
               }}
               onFailure={(e) => {
+                if (e.error) {
+                  setAlertBox({ message: `Error al iniciar sesión con Google: ${e.error}` })
+                }
                 setLoading(false)
               }}
 

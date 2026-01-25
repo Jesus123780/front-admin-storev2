@@ -1,48 +1,48 @@
-import PropTypes from 'prop-types'
 import { useRouter } from 'next/router'
-import React, {
-  useState,
-  memo,
-  useContext
-} from 'react'
 import {
-  Button,
-  Tag,
-  Text,
-  MemoCardProductSimple,
+  useAmountInput,
+  useDessert,
+  useDessertWithPrice,
+  useGetOneProductsFood,
+  useManageQueryParams,
+  useSaveAvailableProduct,
+  useStore,
+  verifyPriceInRange
+} from 'npm-pkg-hook'
+import {
   AwesomeModal,
+  Button,
   Checkbox,
   DaySelector,
-  Loading,
-  OptionalExtraProducts,
-  Portal,
+  Divider,
   getGlobalStyle,
   Image,
-  Divider
+  Loading,
+  MemoCardProductSimple,
+  OptionalExtraProducts,
+  Portal,
+  Tag,
+  Text
 } from 'pkg-components'
-import {
-  useGetOneProductsFood,
-  verifyPriceInRange,
-  useAmountInput,
-  useSaveAvailableProduct,
-  useManageQueryParams,
-  useDessertWithPrice,
-  useDessert,
-  useStore
-} from 'npm-pkg-hook'
+import React, {
+  memo,
+  useContext,
+  useState
+} from 'react'
+
 import { ExtrasProductsItems } from '../../../container/producto/extras/ExtrasProductsItems'
-import FormProduct from './Form'
-import { HeaderSteps } from './Steps'
+import { Context } from '../../../context/Context'
+import { filterKeyObject } from '../../../utils'
 import { Categories } from '../../Categories'
+import FormProduct from './Form'
+import { productSchema } from './schema/producSchema'
+import { HeaderSteps } from './Steps'
 import {
   Card,
   Container,
   ContainerAnimation
 } from './styled'
-import { Context } from '../../../context/Context'
-import { filterKeyObject } from '../../../utils'
 import styles from './styles.module.css'
-import { productSchema } from './schema/producSchema'
 
 export const FoodComponentMemo = ({
   alt,
@@ -298,11 +298,11 @@ export const FoodComponentMemo = ({
 
       }
     }
-    if ((active === 1 && !isCompleteRequired)) return sendNotification({
+    if ((active === 1 && !isCompleteRequired)) {return sendNotification({
       description: 'Completa los campos requeridos',
       title: 'Alerta',
       backgroundColor: 'warning'
-    })
+    })}
     if (active === 1 && food && isCompleteRequired) {
       handlerCreateDessert()
     }
@@ -421,7 +421,7 @@ export const FoodComponentMemo = ({
           values: formattedValues,
           sendNotification
         })
-        if (!isBigintNumber) return
+        if (!isBigintNumber) {return}
       }
       const input = createFormInput()
       if (asSaveAvailableProduct) {
@@ -711,64 +711,6 @@ export const FoodComponentMemo = ({
     </Container>
   </>
   )
-}
-
-FoodComponentMemo.propTypes = {
-  active: PropTypes.number,
-  alt: PropTypes.any,
-  check: PropTypes.shape({
-    availability: PropTypes.any,
-    noAvailability: PropTypes.any
-  }),
-  data: PropTypes.any,
-  dataCategoriesProducts: PropTypes.any,
-  dataFree: PropTypes.any,
-  errors: PropTypes.shape({
-    map: PropTypes.func
-  }),
-  fetchMore: PropTypes.any,
-  fileInputRef: PropTypes.any,
-  stock: PropTypes.number,
-  handleChange: PropTypes.any,
-  handleChangeFilter: PropTypes.any,
-  handleCheck: PropTypes.func,
-  handleCheckFreeShipping: PropTypes.any,
-  handleClick: PropTypes.func,
-  handleDelete: PropTypes.any,
-  handleRegister: PropTypes.func,
-  image: PropTypes.any,
-  loading: PropTypes.any,
-  names: PropTypes.shape({
-    trim: PropTypes.func
-  }),
-  onClickClear: PropTypes.any,
-  onFileInputChange: PropTypes.any,
-  onTargetClick: PropTypes.any,
-  pId: PropTypes.any,
-  search: PropTypes.any,
-  sendNotification: PropTypes.func,
-  setActive: PropTypes.func,
-  setAlertBox: PropTypes.func,
-  checkStock: PropTypes.bool,
-  setCheck: PropTypes.func,
-  setErrors: PropTypes.func,
-  setName: PropTypes.any,
-  setShowComponentModal: PropTypes.func,
-  setShowMore: PropTypes.any,
-  handleCheckStock: PropTypes.func,
-  handleDecreaseStock: PropTypes.func,
-  handleIncreaseStock: PropTypes.func,
-  showMore: PropTypes.any,
-  src: PropTypes.any,
-  state: PropTypes.any,
-  tagsProps: PropTypes.shape({
-    dataTags: PropTypes.shape({
-      map: PropTypes.func
-    }),
-    handleAddTag: PropTypes.func,
-    tags: PropTypes.any
-  }),
-  values: PropTypes.object
 }
 
 export const FoodComponent = memo(FoodComponentMemo)

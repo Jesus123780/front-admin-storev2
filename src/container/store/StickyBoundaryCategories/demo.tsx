@@ -1,21 +1,25 @@
-import PropTypes from 'prop-types'
-import React, { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
+import { useRouter } from 'next/router'
+import { useDeleteProductsFood } from 'npm-pkg-hook'
 import {
   CardProducts,
-  Skeleton,
   DropdownMenuHeader,
+  Loading,
   SearchBar,
-  Loading
+  Skeleton
 } from 'pkg-components'
+import PropTypes from 'prop-types'
+import React, {
+ useEffect, useRef, useState 
+} from 'react'
+
+import { BGColor } from '@/public/colors'
+
 import {
   ContainerCarrusel,
   ContentSearch,
   Title
 } from '../styledStore'
-import { useRouter } from 'next/router'
-import Image from 'next/image'
-import { BGColor } from '@/public/colors'
-import { useDeleteProductsFood } from 'npm-pkg-hook'
 import { useSticky } from './helpers'
 
 /**
@@ -64,7 +68,7 @@ export const ProductCategories = ({
     observer.current = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          if (!entry.target.textContent) return
+          if (!entry.target.textContent) {return}
           setCurrentTitle(entry.target.textContent)
         }
       })
@@ -80,11 +84,11 @@ export const ProductCategories = ({
   const elementRef = useRef(null)
   const isSticky = useSticky({ elementRef, data })
 
-  if (loadingCatProd) return (
+  if (loadingCatProd) {return (
     <ContainerCarrusel>
       <Skeleton height={200} numberObject={6} />
     </ContainerCarrusel>
-  )
+  )}
   const array = data?.map((cat) => {
     return cat.pName || ''
   })

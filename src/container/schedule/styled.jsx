@@ -1,10 +1,10 @@
-import styled, { css } from 'styled-components'
 import {
   BGColor,
   GraniteGray,
   PVColor,
   TFSColor
 } from 'pkg-components'
+import styled, { css } from 'styled-components'
 
 export const Bar = styled.div`
   background-color: #e0f2df;

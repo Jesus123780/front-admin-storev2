@@ -82,6 +82,7 @@ export const TableSeating = () => {
       tableName,
       oldTableName: tableName
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const [active, setActive] = useState(0)

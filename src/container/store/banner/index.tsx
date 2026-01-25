@@ -6,8 +6,7 @@ import {
   useStatusOpenStore,
   useStore
 } from 'npm-pkg-hook'
-import { BannerStore } from 'pkg-components'
-import PropTypes from 'prop-types'
+import { BannerStore, IStoreInterface } from 'pkg-components'
 import React, { memo, useContext } from 'react'
 
 import { Context } from '../../../context/Context'
@@ -89,17 +88,9 @@ export const Banner = ({
     src,
     srcLogo,
     handleDeleteLogo,
-    store: ({ ...store, Image: src } as any)
+    store: ({ ...store, Image: src } as IStoreInterface)
   }
   return (<BannerStore {...props} />)
 }
-Banner.propTypes = {
-  isMobile: PropTypes.any,
-  store: PropTypes.shape({
-    Image: PropTypes.string,
-    scheduleOpenAll: PropTypes.string,
-    idStore: PropTypes.any,
-    storeName: PropTypes.any
-  })
-}
+
 export const ManageBanner = memo(Banner)

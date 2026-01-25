@@ -6,7 +6,7 @@ export interface GoogleUserBody {
         email: string
         id: string
         image: string
-        locationFormat: any[]
+        locationFormat: unknown[]
         useragent: string | null
         deviceid?: string | null
         imageUrl: string

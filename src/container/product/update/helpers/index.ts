@@ -17,7 +17,7 @@ export const isEquivalent = <T extends IndexableObject>(a: T, b: T): boolean => 
       return false;
     }
   
-    for (let prop of aProps) {
+    for (const prop of aProps) {
       if (a[prop] !== b[prop]) {
         return false;
       }

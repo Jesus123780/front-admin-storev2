@@ -1,6 +1,6 @@
+import { Checkbox } from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
-import { Checkbox } from 'pkg-components'
 import {
   A11y,
   Navigation,
@@ -9,6 +9,7 @@ import {
   Virtual
 } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/react'
+
 import { CateItem, CtnSwiper } from '../styled'
 
 export const MemoSwiperSliderCategory = ({
@@ -17,7 +18,7 @@ export const MemoSwiperSliderCategory = ({
   disabledItems = new Set(),
   handleChangeCheck = () => { return }
 }) => {
-  if (datCat && datCat?.length === 0) return <div></div>
+  if (datCat && datCat?.length === 0) {return <div></div>}
 
   return (
     <div>
@@ -44,7 +45,7 @@ export const MemoSwiperSliderCategory = ({
           navigation
           slidesPerView={4}
           spaceBetween={15}
-          style={{padding:10}}
+          style={{ padding:10 }}
           virtual
         >
           {datCat?.map((slideContent, index) => {

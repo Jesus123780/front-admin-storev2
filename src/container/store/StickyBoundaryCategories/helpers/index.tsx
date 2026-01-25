@@ -1,8 +1,19 @@
-import { useEffect, useState, useRef } from 'react'
+import {
+ useEffect, 
+ useRef,
+ useState 
+} from 'react'
 
-export function useSticky({ elementRef, data }) {
+interface StickyProps {
+  elementRef: React.RefObject<HTMLElement>
+  data: {
+    id: string | number
+  }[]
+}
+
+export function useSticky({ elementRef, data }: StickyProps): boolean {
   const [isSticky, setIsSticky] = useState(false)
-  const observerRef = useRef(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   useEffect(() => {
     if (elementRef.current) {
@@ -10,7 +21,9 @@ export function useSticky({ elementRef, data }) {
 
       // Crear un elemento sentinel que se colocará justo antes del elemento objetivo
       const sentinel = document.createElement('div')
-      element.parentElement.insertBefore(sentinel, element)
+      if (element.parentElement) {
+        element.parentElement.insertBefore(sentinel, element)
+      }
 
       observerRef.current = new IntersectionObserver(
         ([entry]) => {
@@ -20,11 +33,15 @@ export function useSticky({ elementRef, data }) {
         { threshold: [0] } // Configura el umbral para que el cambio ocurra justo cuando el sentinel comienza a salir de la vista
       )
 
-      observerRef.current.observe(sentinel)
+      if (observerRef.current) {
+        observerRef.current.observe(sentinel)
+      }
 
       return () => {
         // Limpiar el observer y eliminar el sentinel al desmontar
-        observerRef.current.disconnect()
+        if (observerRef.current) {
+          observerRef.current.disconnect()
+        }
         sentinel.remove()
       }
     }

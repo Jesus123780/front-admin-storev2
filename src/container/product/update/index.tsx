@@ -29,7 +29,6 @@ import {
   ToggleSwitch
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
-import PropTypes from 'prop-types'
 import React, {
   useCallback,
   useContext,
@@ -87,6 +86,7 @@ export const Update = ({ id = '' } = { id: null }) => {
       }
       notifyUpdateResult(response.success, response.message)
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [id]
   )
 
@@ -282,10 +282,9 @@ export const Update = ({ id = '' } = { id: null }) => {
     }
   }
 
-  interface HandleFormEvent extends React.FormEvent<HTMLFormElement> { }
 
   // HANDLES
-  const handleForm = (e: HandleFormEvent) => {
+  const handleForm = (e) => {
     e.preventDefault()
     return handleSubmit({
       event: e,
@@ -375,9 +374,8 @@ export const Update = ({ id = '' } = { id: null }) => {
       return
     }
   }) as React.RefObject<HTMLInputElement>
-  interface OnTargetClickEvent extends React.MouseEvent<HTMLButtonElement, MouseEvent> { }
 
-  const onTargetClick = (e: OnTargetClickEvent) => {
+  const onTargetClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
 
     if (fileInputRef.current) {
@@ -579,11 +577,6 @@ export const Update = ({ id = '' } = { id: null }) => {
     </div>
   )
 }
-
-Update.propTypes = {
-  id: PropTypes.string.isRequired
-}
-
 Update.displayName = 'UpdateProduct'
 
 Update.defaultProps = {

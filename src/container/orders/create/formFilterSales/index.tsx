@@ -1,7 +1,7 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { Warper } from '../styled'
 import { InputHooks, RippleButton } from 'pkg-components'
+import React from 'react'
+
+import { Warper } from '../styled'
 
 export const FormFilterSales = ({
   search = '',
@@ -53,15 +53,4 @@ export const FormFilterSales = ({
       />
     </Warper>
   )
-}
-
-FormFilterSales.propTypes = {
-  handleChangeFilter: PropTypes.any,
-  onChangeInput: PropTypes.any,
-  handleCleanFilter: PropTypes.any,
-  search: PropTypes.any,
-  valuesDates: PropTypes.shape({
-    fromDate: PropTypes.any,
-    toDate: PropTypes.any
-  })
 }

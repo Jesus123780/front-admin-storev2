@@ -86,7 +86,7 @@ export const PrintsMemo: React.FC<PrintsMemoProps> = ({
     if (isPrinting && promiseResolveRef.current) {
       promiseResolveRef.current()
     }
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPrinting])
 
   const customDate = `${yearMonthDay} ${longDayName}`
@@ -271,5 +271,5 @@ export const PrintsMemo: React.FC<PrintsMemoProps> = ({
   )
 }
 // memo
-export const Prints = React.memo(PrintsMemo) 
+export const Prints = React.memo(PrintsMemo)
 

@@ -281,6 +281,7 @@ const Provider = ({ children }) => {
   )
   const setStoreChatActive = useCallback(sessionValue => {
     setSelectedStore(sessionValue)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStore, hidden])
 
   const [isElectron, setIsElectron] = useState(false);
@@ -344,6 +345,7 @@ const Provider = ({ children }) => {
         setAlertBox: err => { return setError(err) }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       alert,
       authData,
