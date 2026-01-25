@@ -839,7 +839,7 @@ const Millones = value => {
  * @param {number} format activar formato de pesos
  * @return {string} cantidad en letra
  */
-export const NumeroALetras = (value, format = false) => {
+export const NumeroALetras = (value: number, format = false) => {
   const data = {
     number: value,
     integers: Math.floor(value),
@@ -1029,10 +1029,12 @@ export const hiddenEmail = email => {
   const result = `${sliceUsername}${hideUsername}${lastChar}@${hideDomain}${sliceDomain}`
   return result
 }
-export const roundToTwo = (num) => {
+
+export const roundToTwo = (num: number) => {
   return (Math.round(num + 'e+2') + 'e-2')
 }
-export function RandomCode(length) {
+
+export function RandomCode(length: number) {
   let result = ''
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   const charactersLength = characters.length
@@ -1043,7 +1045,7 @@ export function RandomCode(length) {
   return result
 }
 
-export const NewDateFormat = (date) => {
+export const NewDateFormat = (date: string | Date) => {
   try {
     if (!date) { return }
     const dateString = date => { return new Date(date).toString() !== 'Invalid Date' }
@@ -1176,7 +1178,7 @@ export const toKebabCase = (string: string) => {
  * @returns {string} Detected card type or empty string if unknown.
  */
 export const getCardType = (cardNum: string): string => {
-  if (!cardNum || typeof cardNum !== 'string') {return ''}
+  if (!cardNum || typeof cardNum !== 'string') { return '' }
 
   const sanitized = cardNum.replace(/\s+/g, '')
   let cardType = ''
@@ -1185,12 +1187,12 @@ export const getCardType = (cardNum: string): string => {
     regEx: RegExp
     cardType: string
   }> = [
-    { regEx: /^4[0-9]{5}/i, cardType: 'VISA' },
-    { regEx: /^5[1-5][0-9]{4}/i, cardType: 'MASTERCARD' },
-    { regEx: /^3[47][0-9]{3}/i, cardType: 'AMEX' },
-    { regEx: /^6[0-9]{5}/i, cardType: 'DISCOVER' },
-    { regEx: /^(5[06-8]\d{4}|6\d{5})/i, cardType: 'MAESTRO' },
-  ]
+      { regEx: /^4[0-9]{5}/i, cardType: 'VISA' },
+      { regEx: /^5[1-5][0-9]{4}/i, cardType: 'MASTERCARD' },
+      { regEx: /^3[47][0-9]{3}/i, cardType: 'AMEX' },
+      { regEx: /^6[0-9]{5}/i, cardType: 'DISCOVER' },
+      { regEx: /^(5[06-8]\d{4}|6\d{5})/i, cardType: 'MAESTRO' },
+    ]
 
   for (const { regEx, cardType: type } of regexMap) {
     if (regEx.test(sanitized)) {
