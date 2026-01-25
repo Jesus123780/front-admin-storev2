@@ -1,9 +1,10 @@
 'use client'
 
-import { InMemoryCache, makeVar } from '@apollo/client'
+import { InMemoryCache } from '@apollo/client'
 import { concatPagination } from '@apollo/client/utilities'
 
-export const isLoggedVar = makeVar({ state: true, expired: false, message: '', code: '' })
+import { isLoggedVar } from './helpers/is-logged-var'
+
 
 const mergeArraysWithDuplicates = (existing = [], incoming = [], max = Infinity, uniqueKey = null) => {
   const merged = Array.isArray(existing) ? existing?.slice(0) : []
@@ -36,25 +37,6 @@ export const cache = new InMemoryCache({
           read: () => {return isLoggedVar()}
         },
         allPosts: concatPagination(),
-        // getStoreOrderById: {
-        //   keyArgs: ['pCodeRef'],
-        //   merge(existing, incoming) {
-        //     if (!incoming) {return existing}
-        //     if (!existing) {return incoming}
-
-        //     // Creamos una copia de los resultados existentes y entrantes
-        //     const merged = {
-        //       ...existing,
-        //       ...incoming,
-        //       getStoreOrderById: [
-        //         ...(existing.getStoreOrders || []),
-        //         ...(incoming.getStoreOrders || [])
-        //       ]
-        //     }
-
-        //     return merged
-        //   }
-        // },
         getStoreOrdersFinal: {
           keyArgs: ['idStore', 'search', 'statusOrder'],
           merge(existing, incoming, { args: { max = Infinity } }) {

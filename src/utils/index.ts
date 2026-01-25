@@ -1,8 +1,7 @@
 'use client'
 
- 
+
 import jwt, { decode } from 'jsonwebtoken'
-import { resolve } from 'path'
 import { ROUTES } from 'pkg-components'
 // import { useEffect } from 'react'
 
@@ -22,44 +21,54 @@ export const isNull = (dato: string | null | undefined) => {
 }
 
 export const isNumeric = (dato: string | null | undefined) => {
-  return !!(isNaN(dato) && dato !== '' && dato !== undefined && dato !== null)
+  return !!(dato !== '' && dato !== undefined && dato !== null && Number.isNaN(Number(dato)))
 }
+
 export const isPassword = (dato: string | null | undefined) => {
   const validar = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
-  if (validar.test(dato) === true) {
+  if (validar.test(dato ?? '') === true) {
     return false
   }
   return true
-
 }
+
 export const isCC = (dato: string | null | undefined) => {
-  const validar = /^[0-9]{6,10}/g
-  if (validar.test(dato) === true) {
+  const validar = /^\d{6,10}/g
+  if (validar.test(dato ?? '') === true) {
     return false
   } return true
 }
 
-export const valNit = (nit: string | null | undefined) => {
-  let nd; let add = 0
-  // eslint-disable-next-line no-cond-assign
-  if (nd = /^[0-9]+-[0-9kK]{1}$/i.exec(nit)) {
-    nd[2] = (nd[2].toLowerCase() == 'k') ? 10 : parseInt(nd[2])
-    for (let i = 0; i < nd[1].length; i++) {
-      add += ((((i - nd[1].length) * -1) + 1) * nd[1][i])
+export const valNit = (nit: string | null | undefined): boolean => {
+  if (typeof nit !== 'string') { return false; }
+  let add = 0;
+  // Use concise regex, remove duplicates, and ensure nit is a string
+  const match = /^(\d+)-([0-9kK])$/i.exec(nit);
+  if (match) {
+    // Extract numbers and check digit
+    const numberPart = match[1];
+    let checkDigit: number;
+    if (match[2].toLowerCase() === 'k') {
+      checkDigit = 10;
+    } else {
+      checkDigit = Number.parseInt(match[2], 10);
     }
-    return ((11 - (add % 11)) % 11) == nd[2]
+    for (let i = 0; i < numberPart.length; i++) {
+      add += (((i - numberPart.length) * -1) + 1) * Number.parseInt(numberPart[i], 10);
+    }
+    return ((11 - (add % 11)) % 11) === checkDigit;
   }
-  return false
-
+  return false;
 }
-export const onlyLetters = dato => {
+
+export const onlyLetters = (dato: string | null | undefined) => {
   const validar = /^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$/g
-  if (validar.test(dato) === false && dato !== '' && dato !== undefined && dato !== null) {
+  if (validar.test(dato ?? '') === false && dato !== '' && dato !== undefined && dato !== null) {
     return true
   } return false
 }
 
-export const rangeLength = (dato, min, max) => {
+export const rangeLength = (dato: string | null | undefined, min: number, max: number): boolean => {
   if (dato !== undefined && dato !== '' && dato !== null) {
     if ((dato.length < min) || (dato.length > max)) {
       return true
@@ -67,25 +76,21 @@ export const rangeLength = (dato, min, max) => {
   } return false
 }
 
-export const Match = (dato1, dato2) => {
+export const Match = (dato1: string | number | null | undefined, dato2: string | number | null | undefined): boolean => {
   if (dato1 !== dato2) {
     return true
   } return false
 }
 
-export const isEmail = email => {
+export const isEmail = (email: string | null | undefined) => {
   const validar = /^[-\w.%+]{1,64}@(?:[A-Z0-9-]{1,63}\.){1,125}[A-Z]{2,63}$/i
-  if (validar.test(email) === false && email !== '' && email !== undefined && email !== null) {
+  if (validar.test(email ?? '') === false && email !== '' && email !== undefined && email !== null) {
     return true
   } return false
 }
 
 export const passwordConfirm = (value, valueConfirm) => { return !(value === valueConfirm) }
-// export const numberFormat = value => value ? (parseInt(value) ? new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(parseFloat(`${value}`.replace(/\./g, ''))) : '') : (value === 0 ? 0 : '')
 
-// var options = { style: 'currency', currency: 'GBP' };
-// export const numberFormat = value => value && parseFloat(value) && new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(value)
-// export const numberFormat = value => value ? (parseInt(value) ? new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(parseFloat(`${value}`.replace(/\./g, ''))) : '') : (value === 0 ? 0 : '')
 export const numberFormat = value => { return value ? (parseInt(value) ? new Intl.NumberFormat('de-DE').format(parseFloat(`${value}`.replace(/\./g, ''))) : value) : (value) }
 
 // valida los inputs
@@ -320,9 +325,9 @@ export const validationFormTwo = (inputs, error) => {
         parentNode.parentNode.firstChild.nextSibling.nextSibling.style.opacity = 1
         parentNode.parentNode.firstChild.nextSibling.nextSibling.innerHTML = 'Campo Requerido.'
         parentNode.parentNode.lastChild.style.opacity = 1
-      } else if (dataset.ignore === 'false') {errorForm = validationsTF(inputs[i], nextSibling, nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true)}
-      else if (dataset.ignore === undefined) {errorForm = validationsTF(parentNode, parentNode.firstChild.nextSibling, parentNode.firstChild.nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true)}
-    } else {error[inputs[i].name] && (errorForm = true)}
+      } else if (dataset.ignore === 'false') { errorForm = validationsTF(inputs[i], nextSibling, nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true) }
+      else if (dataset.ignore === undefined) { errorForm = validationsTF(parentNode, parentNode.firstChild.nextSibling, parentNode.firstChild.nextSibling.nextSibling, parentNode.lastChild, 'Campo Requerido.', true) }
+    } else { error[inputs[i].name] && (errorForm = true) }
   }
   return errorForm
 }
@@ -368,9 +373,9 @@ export const filterKeyObjectOLD = (data, filters) => {
   let values = {}
   for (const elem in data) {
     let coincidence = false
-    for (let i = 0; i < filters.length; i++) {if (elem === filters[i]) {coincidence = true}}
+    for (let i = 0; i < filters.length; i++) { if (elem === filters[i]) { coincidence = true } }
 
-    if (!coincidence) {values = { ...values, [elem]: data[elem] }}
+    if (!coincidence) { values = { ...values, [elem]: data[elem] } }
   }
 
   return values
@@ -388,8 +393,8 @@ export const validationSubmitHooks = (elements: HTMLInputElement[]) => {
     if (element.name) {
       if (element.type === 'text' || element.type === 'password' || element.type === 'email' || element.type === 'number' || element.type === 'hidden') {
         if (element.dataset.required === 'true') {
-          if (!element.value) {errorForm = { ...errorForm, [element.name]: !element.value }}
-          else {errorForm = { ...errorForm, [element.name]: !element.value }}
+          if (!element.value) { errorForm = { ...errorForm, [element.name]: !element.value } }
+          else { errorForm = { ...errorForm, [element.name]: !element.value } }
         } else {
           errorForm = { ...errorForm, [element.name]: false }
         }
@@ -410,15 +415,15 @@ export const filterKeyObject = (data, filters, dataFilter) => {
   for (const elem in data) {
     let coincidence = false
     for (let i = 0; i < filters.length; i++) {
-      if (elem === filters[i]) {coincidence = true}
-      else {valuesFilter = filters[i]}
+      if (elem === filters[i]) { coincidence = true }
+      else { valuesFilter = filters[i] }
     }
 
-    if (!coincidence) {values = { ...values, [elem]: data[elem] }}
-    else {valuesFilter = { ...valuesFilter, [elem]: data[elem] }}
+    if (!coincidence) { values = { ...values, [elem]: data[elem] } }
+    else { valuesFilter = { ...valuesFilter, [elem]: data[elem] } }
   }
-  if (!dataFilter) {return values}
-  if (dataFilter) {return { values, valuesFilter }}
+  if (!dataFilter) { return values }
+  if (dataFilter) { return { values, valuesFilter } }
 }
 
 /**
@@ -483,9 +488,9 @@ export const updateCacheMod = async ({ cache, query, nameFun, dataNew, type, id 
   return cache.modify({
     fields: {
       [nameFun](dataOld = []) {
-        if (type === 1) {return cache.writeQuery({ query, data: [...(dataOld || []), { ...(dataNew || {}) }] })}
-        if (type === 2) {return cache.writeQuery({ query, data: { ...(dataOld || {}), ...(dataNew || {}) } })}
-        if (type === 3) {return cache.writeQuery({ query, data: dataOld.filter(x => { return x === id }) })}
+        if (type === 1) { return cache.writeQuery({ query, data: [...(dataOld || []), { ...(dataNew || {}) }] }) }
+        if (type === 2) { return cache.writeQuery({ query, data: { ...(dataOld || {}), ...(dataNew || {}) } }) }
+        if (type === 3) { return cache.writeQuery({ query, data: dataOld.filter(x => { return x === id }) }) }
       }
     }
   })
@@ -496,8 +501,8 @@ export const updateCacheMod = async ({ cache, query, nameFun, dataNew, type, id 
  */
 const TOKEN = 'sma.sv1'
 export function setToken(token) {
-  if (token === null) {return false}
-  else if (token !== null) {return JSON.parse}
+  if (token === null) { return false }
+  else if (token !== null) { return JSON.parse }
 }
 /**
  * obtiene el token del usuario
@@ -514,7 +519,7 @@ export function decodeToken(token: string) {
 }
 const now = Date.now().valueOf() / 1000
 
-export function getTokenState (token: string) {
+export function getTokenState(token: string) {
   try {
     if (!token) {
       return { valid: false, needRefresh: true }
@@ -528,7 +533,7 @@ export function getTokenState (token: string) {
       return { valid: true, needRefresh: false }
     }
   } catch (error) {
-    return { }
+    return {}
   }
 }
 
@@ -573,7 +578,7 @@ export const calculateCheckDigit = (value: string): number => {
   nit = nit.replace(/-/g, '') // Guiones
 
   // Se valida el nit
-  if (isNaN(nit)) {return ''}
+  if (isNaN(nit)) { return '' }
 
   // Procedimiento
   let x = 0
@@ -612,22 +617,22 @@ export const validationsOld = (e, typeNull, typeLetters, typeNumeric, typeRange,
   const { nextSibling, parentNode } = e.target
 
   /** verifica si es formato de número */
-  if (typeFormat) {value = value.replace(/\./g, '')}
+  if (typeFormat) { value = value.replace(/\./g, '') }
   /** verifica que campos seran y si se encuentra la condicion o no */
   if (typeNull) {
-    if (isNull(value)) {return validationsTF(parentNode, nextSibling, 'Campo requerido.', true)}
+    if (isNull(value)) { return validationsTF(parentNode, nextSibling, 'Campo requerido.', true) }
   }
   if (typeNumeric) {
-    if (isNumeric(value)) {return validationsTF(parentNode, nextSibling, 'Solo puede contener números.', true)}
+    if (isNumeric(value)) { return validationsTF(parentNode, nextSibling, 'Solo puede contener números.', true) }
   }
   if (typeRange) {
-    if (rangeLength(value, minRange, maxRange)) {return validationsTF(parentNode, nextSibling, `El rango de caracteres es de ${minRange} a ${maxRange}.`, true)}
+    if (rangeLength(value, minRange, maxRange)) { return validationsTF(parentNode, nextSibling, `El rango de caracteres es de ${minRange} a ${maxRange}.`, true) }
   }
   if (typeLetters) {
-    if (onlyLetters(value)) {return validationsTF(parentNode, nextSibling, 'Solo puede contener letras.', true)}
+    if (onlyLetters(value)) { return validationsTF(parentNode, nextSibling, 'Solo puede contener letras.', true) }
   }
   if (typeEmail) {
-    if (isEmail(value)) {return validationsTF(parentNode, nextSibling, 'No es un formato de email valido.', true)}
+    if (isEmail(value)) { return validationsTF(parentNode, nextSibling, 'No es un formato de email valido.', true) }
   }
   return validationsTF(parentNode, nextSibling, false, false)
 }
@@ -702,7 +707,7 @@ const Unidades = value => {
  * @return {string} concatena al cantidad
  */
 const DecenasY = (strSin, numUnit) => {
-  if (numUnit > 0) {return `${strSin} Y ${Unidades(numUnit)}`}
+  if (numUnit > 0) { return `${strSin} Y ${Unidades(numUnit)}` }
   return strSin
 }
 
@@ -755,7 +760,7 @@ const Centenas = value => {
 
   switch (hundreds) {
     case 1:
-      if (tens > 0) {return `CIENTO${Decenas(tens)}`}
+      if (tens > 0) { return `CIENTO${Decenas(tens)}` }
       return 'CIEN'
     case 2: return `DOSCIENTOS${Decenas(tens)}`
     case 3: return `TRESCIENTOS${Decenas(tens)}`
@@ -784,11 +789,11 @@ const Seccion = (value, divider, strSingular, strPlural) => {
   let letters = ''
 
   if (hundreds > 0) {
-    if (hundreds > 1) {letters = `${Centenas(hundreds)} ${strPlural}`}
-    else {letters = strSingular}
+    if (hundreds > 1) { letters = `${Centenas(hundreds)} ${strPlural}` }
+    else { letters = strSingular }
   }
 
-  if (rest > 0) {letters += ''}
+  if (rest > 0) { letters += '' }
 
   return letters
 }
@@ -805,7 +810,7 @@ const Miles = value => {
   const strThousands = Seccion(value, divider, 'UN MIL', 'MIL')
   const strhundreds = Centenas(rest)
 
-  if (strThousands === '') {return strhundreds}
+  if (strThousands === '') { return strhundreds }
 
   return `${strThousands} ${strhundreds}`
 }
@@ -823,7 +828,7 @@ const Millones = value => {
   const strMillions = Seccion(value, divider, 'UN MILLON DE', 'MILLONES DE')
   const strThousands = Miles(rest)
 
-  if (strMillions === '') {return strThousands}
+  if (strMillions === '') { return strThousands }
 
   return `${strMillions} ${strThousands}`
 }
@@ -848,14 +853,14 @@ export const NumeroALetras = (value, format = false) => {
 
   if (data.pennies > 0) {
     data.letterPennies = `CON ${(function () {
-      if (data.pennies === 1) {return `${Millones(data.pennies)} ${data.letterCoinPennieSingular}`}
+      if (data.pennies === 1) { return `${Millones(data.pennies)} ${data.letterCoinPennieSingular}` }
       return `${Millones(data.pennies)} ${data.letterCoinPenniesPlural}`
     })()
-    }`
+      }`
   }
 
-  if (data.integers === 0) {return `CERO ${data.letterCoinPlural} ${data.letterPennies}`}
-  if (data.integers === 1) {return `${Millones(data.integers)} ${data.letterCoinSingular} ${data.letterPennies}`}
+  if (data.integers === 0) { return `CERO ${data.letterCoinPlural} ${data.letterPennies}` }
+  if (data.integers === 1) { return `${Millones(data.integers)} ${data.letterCoinSingular} ${data.letterPennies}` }
   return `${Millones(data.integers)} ${data.letterCoinPlural} ${data.letterPennies}`
 }
 
@@ -949,7 +954,7 @@ export const numberFormatM = param => {
 /* Método para eliminar el primer carácter */
 // const str = '*plátano_'
 // const newStr = str.slice(1, -1)
- 
+
 /* Método para eliminar el primer carácter */
 // const string = '*plátano_'
 // const newString = string.substring(1, str.length - 1)
@@ -1040,7 +1045,7 @@ export function RandomCode(length) {
 
 export const NewDateFormat = (date) => {
   try {
-    if (!date) {return}
+    if (!date) { return }
     const dateString = date => { return new Date(date).toString() !== 'Invalid Date' }
     const newDate = dateString instanceof Date && !isNaN(dateString)
     return newDate
@@ -1066,20 +1071,29 @@ export const convertBase64 = file => {
 /**
  * OBTIENE EL TAMAÑO DE EL ARCHIVO
  */
-export const getFileSizeByUnit = (file, unit = 'B') => {
-  const originFileSize = file && file.size
+export const getFileSizeByUnit = (
+  file: { size?: number } | null | undefined,
+  unit: string = 'B'
+): [number, { unit: string }] => {
+  const originFileSize = file?.size;
   if (!originFileSize) {
-    return 0
+    return [0, { unit }];
   }
-  const unitStr = unit.toUpperCase()
-  const unitFormula = {
-    B: size => { return size },
-    KB: size => { return size / 1024 },
-    MB: size => { return size / (1024 * 1024) },
-    GB: size => { return size / (1024 * 1024 * 1024) },
-    TB: size => { return size / (1024 * 1024 * 1024 * 1024) }
-  }
-  return [unitFormula[unitStr] ? unitFormula[unitStr](originFileSize) : 0, { unit }]
+  const unitStr = unit.toUpperCase();
+  type UnitKey = 'B' | 'KB' | 'MB' | 'GB' | 'TB';
+  const unitFormula: Record<UnitKey, (size: number) => number> = {
+    B: (size: number) => size,
+    KB: (size: number) => size / 1024,
+    MB: (size: number) => size / (1024 * 1024),
+    GB: (size: number) => size / (1024 * 1024 * 1024),
+    TB: (size: number) => size / (1024 * 1024 * 1024 * 1024)
+  };
+  return [
+    unitFormula[unitStr as UnitKey]
+      ? unitFormula[unitStr as UnitKey](originFileSize)
+      : 0,
+    { unit }
+  ];
 }
 
 // const ratings = {
@@ -1126,13 +1140,13 @@ export const getFileSizeByUnit = (file, unit = 'B') => {
 //     ...
 // });
 
-export const cleanRut = (rut) => {
+export const cleanRut = (rut: string | null | undefined) => {
   return typeof rut === 'string'
     ? rut.replace(/^(0+|[^0-9kK]+)/g, '').toUpperCase()
     : ''
 }
 
-export const formatRut = (rut) => {
+export const formatRut = (rut: string | null | undefined) => {
   rut = cleanRut(rut)
   if (rut.length === 0) {
     return ''
@@ -1143,9 +1157,10 @@ export const formatRut = (rut) => {
   }
   return result
 }
+
 formatRut('https://www.facebook.com/messages/t/100017146501277')
 
-export const toKebabCase = (string) => {
+export const toKebabCase = (string: string) => {
   return string
     .replace(/([A-Z])([A-Z])/g, '$1-$2')
     .replace(/([a-z])([A-Z])/g, '$1-$2')
@@ -1153,43 +1168,63 @@ export const toKebabCase = (string) => {
     .toLowerCase()
 }
 
-export const getCardType = (cardNum) => {
-  let payCardType = ''
-  const regexMap = [
-    { regEx: /^4[0-9]{5}/gi, cardType: 'VISA' },
-    { regEx: /^5[1-5][0-9]{4}/gi, cardType: 'MASTERCARD' },
-    { regEx: /^3[47][0-9]{3}/gi, cardType: 'AMEX' },
-    { regEx: /^6[0-9]{5}/gi, cardType: 'DISCOVER' },
-    { regEx: /^(5[06-8]\d{4}|6\d{5})/gi, cardType: 'MAESTRO' }
+/**
+ * Detect credit/debit card type based on card number prefixes.
+ *
+ * @version 1.0.0
+ * @param {string} cardNum Card number as a string.
+ * @returns {string} Detected card type or empty string if unknown.
+ */
+export const getCardType = (cardNum: string): string => {
+  if (!cardNum || typeof cardNum !== 'string') {return ''}
+
+  const sanitized = cardNum.replace(/\s+/g, '')
+  let cardType = ''
+
+  const regexMap: ReadonlyArray<{
+    regEx: RegExp
+    cardType: string
+  }> = [
+    { regEx: /^4[0-9]{5}/i, cardType: 'VISA' },
+    { regEx: /^5[1-5][0-9]{4}/i, cardType: 'MASTERCARD' },
+    { regEx: /^3[47][0-9]{3}/i, cardType: 'AMEX' },
+    { regEx: /^6[0-9]{5}/i, cardType: 'DISCOVER' },
+    { regEx: /^(5[06-8]\d{4}|6\d{5})/i, cardType: 'MAESTRO' },
   ]
 
-  for (const element of regexMap) {
-    if (cardNum.match(element.regEx)) {
-      payCardType = element.cardType
+  for (const { regEx, cardType: type } of regexMap) {
+    if (regEx.test(sanitized)) {
+      cardType = type
       break
     }
   }
+
+  // RuPay detection (BIN ranges)
   if (
-    cardNum.indexOf('50') === 0 ||
-    cardNum.indexOf('60') === 0 ||
-    cardNum.indexOf('65') === 0
+    sanitized.startsWith('50') ||
+    sanitized.startsWith('60') ||
+    sanitized.startsWith('65')
   ) {
-    const g = '508500-508999|606985-607984|608001-608500|652150-653149'
-    const i = g.split('|')
-    for (const element of i) {
-      const c = parseInt(element.split('-')[0], 10)
-      const f = parseInt(element.split('-')[1], 10)
-      if (
-        cardNum.substr(0, 6) >= c &&
-        cardNum.substr(0, 6) <= f &&
-        cardNum.length >= 6
-      ) {
-        payCardType = 'RUPAY'
-        break
+    const ranges: ReadonlyArray<[number, number]> = [
+      [508500, 508999],
+      [606985, 607984],
+      [608001, 608500],
+      [652150, 653149],
+    ]
+
+    const bin = Number(sanitized.slice(0, 6))
+
+    if (!Number.isNaN(bin) && sanitized.length >= 6) {
+      for (const [start, end] of ranges) {
+        if (bin >= start && bin <= end) {
+          cardType = 'RUPAY'
+          break
+        }
       }
     }
   }
-  return payCardType
+
+  return cardType
 }
 
 export const MONTHS = [
@@ -1207,22 +1242,22 @@ export const MONTHS = [
   'December'
 ]
 export const SPANISH_MONTHS = {
-  0:'Enero',
-  1:'Febrero',
-  2:'Marzo',
-  3:'Abril',
-  4:'Mayo',
-  5:'Junio',
-  6:'Julio',
-  7:'Augosto',
-  8:'Septiembre',
-  9:'Octubre',
-  10:'Noviembre ',
-  11:'Diciembre'
+  0: 'Enero',
+  1: 'Febrero',
+  2: 'Marzo',
+  3: 'Abril',
+  4: 'Mayo',
+  5: 'Junio',
+  6: 'Julio',
+  7: 'Augosto',
+  8: 'Septiembre',
+  9: 'Octubre',
+  10: 'Noviembre ',
+  11: 'Diciembre'
 }
 
 
-export function months(config) {
+export function months(config: { count?: number; section?: number } | null | undefined) {
   const cfg = config || {}
   const count = cfg.count || 12
   const section = cfg.section
@@ -1237,14 +1272,14 @@ export function months(config) {
   return values
 }
 
-function rand(min, max) {
+function rand(min: number, max: number): number {
   return Math.random() * (max - min) + min
 }
 
 export const numbers = () => {
   const min = 1
   const max = 2
-  const from = 4
+  const from = [4, 4, 4, 4, 4] // Changed from number to array
   const count = 5
   const decimals = 6
   const continuity = 9
@@ -1284,7 +1319,7 @@ export const cookie = {
   }
 }
 
-export const formatDate = ({ date, local = 'ES' }) => {
+export const formatDate = ({ date, local = 'ES' }: { date: string | Date, local?: string }) => {
   const dateToFormat = new Date(date)
   const fullDate = dateToFormat.toLocaleDateString(local, { year: 'numeric', month: '2-digit', day: '2-digit' })
   const day = fullDate.split('/')[0]
@@ -1322,49 +1357,52 @@ export const initialState = {
   payId: null
 }
 
-export const initializer = (initialValue = initialState) => { return JSON.parse(localStorage.getItem(process.env.LOCAL_SALES_STORE)) || initialValue }
-
+export const initializer = (initialValue = initialState) => {
+  const storeKey = process.env.LOCAL_SALES_STORE ?? 'LOCAL_SALES_STORE'
+  const stored = localStorage.getItem(storeKey)
+  return stored ? JSON.parse(stored) : initialValue
+}
 
 /**
- * Organiza dos array
- * @version 0.0.1
- * @param {array} arrayP primer array
- * @param {array} arrayS segundo array
- * @param {array} priorityP nombre de la prioridad primaria
- * @param {array} priorityS nombre de la prioridad segundaria
- * @return {array} Todos los valores combinados en orden
+ * Merge and sort two arrays by primary or secondary priority key.
+ *
+ * @template T
+ * @version 1.0.0
+ * @param {ReadonlyArray<T>} arrayP Primary array.
+ * @param {ReadonlyArray<T>} arrayS Secondary array.
+ * @param {keyof T} priorityP Primary priority key.
+ * @param {keyof T} priorityS Secondary priority key.
+ * @returns {T[]} Merged and sorted array.
  */
-export const organizeArray = (arrayP, arrayS, priorityP, priorityS) => {
-  // retorna el nuevo orden de los productos y servicios
+export const organizeArray = <T extends Record<string, unknown>>(
+  arrayP: ReadonlyArray<T>,
+  arrayS: ReadonlyArray<T>,
+  priorityP: keyof T,
+  priorityS: keyof T
+): T[] => {
   return [...arrayP, ...arrayS].sort((a, b) => {
-    // variables necesarias
-    const valueA = a[priorityP] || a[priorityS]
-    const valueB = b[priorityP] || b[priorityS]
+    const valueA = (a[priorityP] ?? a[priorityS]) as number | string | undefined
+    const valueB = (b[priorityP] ?? b[priorityS]) as number | string | undefined
 
-    // comparacion
-    if ((valueA) > valueB) {return 1}
-    if (valueA < valueB) {return -1}
+    // Handle undefined values safely
+    if (valueA === null && valueB === null) { return 0 }
+    if (valueA === null) { return 1 }
+    if (valueB === null) { return -1 }
+
+    if (valueA === undefined && valueB === undefined) { return 0; }
+    if (valueA === undefined) { return 1; }
+    if (valueB === undefined) { return -1; }
+    if (valueA > valueB) { return 1 }
+    if (valueA < valueB) { return -1 }
     return 0
   })
 }
+
 // USE
 // const array = organizeArray(categoriesPro, categoriesSer, 'cp_priority', 'cs_priority')
 
 
-export const indexExport = async (req, res, url) => {
-  const filePath = resolve(__dirname, '../public', 'index.html')
-  let fileString = await (filePath, 'utf8')
-  fileString = fileString.replace('<title>Winby</title>', '<title>Winby</title>')
-  fileString = fileString.replace('<meta property="og:title" content="Winby"/>', '<meta property="og:title" content="Winby"/>')
-  fileString = fileString.replace('<meta name="description" content="El Centro Comercial Virtual más Grande de Latinoamérica."/>', '<meta name="description" content="El Centro Comercial Virtual más Grande de Latinoamérica."/>')
-  fileString = fileString.replace('<meta property="og:description" content="El Centro Comercial Virtual más Grande de Latinoamérica."/>', '<meta property="og:description" content="El Centro Comercial Virtual más Grande de Latinoamérica."/>')
-  fileString = fileString.replace(/%M_IMAGE%/g, `${url}/logo512.png`)
-  fileString = fileString.replace(/%M_URL%/g, `${url}${req.originalUrl}`)
-  res.send(fileString)
-}
-
-
-export const getUserFromToken = async (token) => {
+export const getUserFromToken = async (token: string) => {
   try {
     if (!token) {
       return { session: false, error: true, message: 'Token not provided' }
@@ -1383,6 +1421,9 @@ export const getUserFromToken = async (token) => {
 
     return { session: false, error: true, message: 'Token is not valid' }
   } catch (error) {
+    if (error instanceof Error) {
+      return { session: false, error: true, message: error.message }
+    }
     return { session: false, error: true, message: 'Internal error' }
   }
 }

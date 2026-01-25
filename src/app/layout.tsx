@@ -9,6 +9,7 @@ import { MemoLayout } from '@/container/Layout'
 import Context from '@/context/Context'
 import StyledComponentsRegistry from '@/utils/registry'
 
+import Auth from '../../apollo/Auth'
 import ApolloClientProvider from './providers/ApolloProvider'
 
 const ROUTES_WITHOUT_LAYOUT = new Set([
@@ -80,12 +81,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* <BarcodeScanner /> */}
               <StyledComponentsRegistry>
                 <ApolloClientProvider>
-                  {ROUTES_WITHOUT_LAYOUT.has(pathname)
-                    ? children
-                    : <MemoLayout>
-                      {children}
-                    </MemoLayout>
-                  }
+                  <Auth>
+                    {ROUTES_WITHOUT_LAYOUT.has(pathname)
+                      ? children
+                      : <MemoLayout>
+                        {children}
+                      </MemoLayout>
+                    }
+                  </Auth>
                 </ApolloClientProvider>
               </StyledComponentsRegistry>
             </Context>

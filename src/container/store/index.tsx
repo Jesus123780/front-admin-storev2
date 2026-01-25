@@ -167,6 +167,7 @@ export const Store = () => {
         handleClick(stateMap[key])
       }
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
 

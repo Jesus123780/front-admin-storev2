@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useState } from 'react'
-import { StyleSheetManager } from 'styled-components'
+import { ServerStyleSheet, StyleSheetManager } from 'styled-components'
 
 export function StyledComponentsRegistry({ children }: { children: React.ReactNode }) {
-    const [styledComponentsStyleSheet] = useState(() => typeof window === 'undefined' ? require('styled-components').ServerStyleSheet : null)
+    const [styledComponentsStyleSheet] = useState(() => typeof window === 'undefined' ? new ServerStyleSheet() : null)
 
     if (styledComponentsStyleSheet === null) {
         return <>{children}</>

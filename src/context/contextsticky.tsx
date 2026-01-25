@@ -5,22 +5,33 @@ import {
   useReducer
 } from 'react'
 
-const initialState = {
+const initialState: ReducerInterface = {
   containerRef: null,
-  stickyRefs: new Map(),
+  stickyRefs: new Map<React.RefObject<HTMLElement>, React.RefObject<HTMLElement>>(),
   debug: false
 }
 
 // No operation
 const noop = () => { return }
 
-const initialDispatch = {
-  setContainerRef: noop,
-  addStickyRef: noop
-}
+type StickyDispatch = {
+  setContainerRef: (containerRef: React.RefObject<HTMLElement>) => void;
+  addStickyRef: (
+    topSentinelRef: React.RefObject<HTMLElement>,
+    bottomSentinelRef: React.RefObject<HTMLElement>,
+    stickyRef: React.RefObject<HTMLElement>
+  ) => void;
+  toggleDebug: () => void;
+};
 
-const StickyStateContext = createContext(initialState)
-const StickyDispatchContext = createContext(initialDispatch)
+const initialDispatch: StickyDispatch = {
+  setContainerRef: noop,
+  addStickyRef: noop,
+  toggleDebug: noop
+};
+
+const StickyStateContext = createContext<ReducerInterface>(initialState);
+const StickyDispatchContext = createContext<StickyDispatch>(initialDispatch);
 
 const ActionType = {
   setContainerRef: 'set container ref',
@@ -28,19 +39,31 @@ const ActionType = {
   toggleDebug: 'toggle debug'
 }
 
-function reducer(state, action) {
+interface ReducerInterface {
+  containerRef: React.RefObject<HTMLElement> | null;
+  stickyRefs: Map<React.RefObject<HTMLElement>, React.RefObject<HTMLElement>>;
+  debug: boolean;
+}
+
+function reducer(state: ReducerInterface, action: { type: string; payload: unknown }) {
   const { type, payload } = action
   switch (type) {
     case ActionType.setContainerRef:
       // Reassigning a new ref, will infinitely re-load!
       return Object.assign(state, {
-        containerRef: { current: payload.containerRef }
+        containerRef: { current: (payload as { containerRef: React.RefObject<HTMLElement> }).containerRef }
       })
     case ActionType.addStickyRef: {
-      const { topSentinelRef, bottomSentinelRef, stickyRef } = payload
+      const { topSentinelRef, bottomSentinelRef, stickyRef } = payload as {
+        topSentinelRef: React.RefObject<HTMLElement>;
+        bottomSentinelRef: React.RefObject<HTMLElement>;
+        stickyRef: React.RefObject<HTMLElement>;
+      }
 
-      state.stickyRefs.set(topSentinelRef.current, stickyRef)
-      state.stickyRefs.set(bottomSentinelRef.current, stickyRef)
+      if (topSentinelRef && bottomSentinelRef && stickyRef) {
+        state.stickyRefs.set(topSentinelRef, stickyRef)
+        state.stickyRefs.set(bottomSentinelRef, stickyRef)
+      }
 
       return Object.assign(state, {
         stickyRefs: state.stickyRefs
@@ -53,25 +76,48 @@ function reducer(state, action) {
   }
 }
 
-function StickyProvider({ children }) {
+interface StickyProviderProps {
+  children: React.ReactNode
+}
+const StickyProvider: React.FC<StickyProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState)
 
-  const setContainerRef = containerRef => {return dispatch({ type: ActionType.setContainerRef, payload: { containerRef } })}
+  interface SetContainerRefPayload {
+    containerRef: React.RefObject<HTMLElement>;
+  }
 
-  const addStickyRef = (topSentinelRef, bottomSentinelRef, stickyRef) => {return dispatch({
-    type: ActionType.addStickyRef,
-    payload: { topSentinelRef, bottomSentinelRef, stickyRef }
-  })}
+  interface SetContainerRefAction {
+    type: typeof ActionType.setContainerRef;
+    payload: SetContainerRefPayload;
+  }
 
-  const toggleDebug = () => {return dispatch({ type: ActionType.toggleDebug })}
+  const setContainerRef = (containerRef: React.RefObject<HTMLElement>) => {
+    return dispatch({
+      type: ActionType.setContainerRef,
+      payload: { containerRef }
+    } as SetContainerRefAction);
+  }
+
+  const addStickyRef = (
+    topSentinelRef: React.RefObject<HTMLElement>,
+    bottomSentinelRef: React.RefObject<HTMLElement>,
+    stickyRef: React.RefObject<HTMLElement>
+  ) => {
+    return dispatch({
+      type: ActionType.addStickyRef,
+      payload: { topSentinelRef, bottomSentinelRef, stickyRef }
+    } as const)
+  }
+
+  const toggleDebug = () => { return dispatch({ type: ActionType.toggleDebug, payload: undefined }) }
 
   const actions = {
     setContainerRef,
     addStickyRef,
     toggleDebug
-  }
+  } as const
   return (
-    <StickyStateContext.Provider value={state}>
+    <StickyStateContext.Provider value={state as ReducerInterface}>
       <StickyDispatchContext.Provider value={actions}>
         {children}
       </StickyDispatchContext.Provider>
@@ -85,17 +131,17 @@ StickyProvider.propTypes = {
 
 function useStickyState() {
   const context = useContext(StickyStateContext)
-  if (context === undefined)
-    throw Error('"useStickyState should be used under "StickyStateContext')
+  if (context === undefined) { throw Error('"useStickyState should be used under "StickyStateContext') }
   return context
 }
 
 function useStickyActions() {
   const context = useContext(StickyDispatchContext)
-  if (context === undefined)
+  if (context === undefined) {
     throw Error(
       '"useStickyActions should be used under "StickyDispatchContext'
     )
+  }
   return context
 }
 
@@ -107,9 +153,9 @@ const initialSectionValues = {
 const StickySectionContext = createContext(initialSectionValues)
 
 export {
-  StickyProvider,
-  useStickyState,
-  useStickyActions,
   ActionType,
-  StickySectionContext
+  StickyProvider,
+  StickySectionContext,
+  useStickyActions,
+  useStickyState
 }

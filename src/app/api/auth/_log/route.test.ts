@@ -3,11 +3,11 @@ import { POST } from './route'
 describe('src/app/api/auth/_log/route POST', () => {
   // Minimal Response polyfill for environments lacking WHATWG Response (e.g., older Node/Jest)
   beforeAll(() => {
-    if (typeof (globalThis as any).Response === 'undefined') {
+    if (typeof (globalThis).Response === 'undefined') {
       class SimpleResponse {
         private _body: string
         status: number
-        constructor(body?: any, init?: any) {
+        constructor(body?: BodyInit | null, init?: ResponseInit) {
           this._body = body !== undefined ? String(body) : ''
           this.status = (init && init.status) || 200
         }
@@ -40,7 +40,7 @@ describe('src/app/api/auth/_log/route POST', () => {
 
   it('returns 500 and logs an error when req.json throws', async () => {
     const error = new Error('boom')
-    const req = { json: jest.fn().mockRejectedValue(error) } as any
+    const req = { json: jest.fn().mockRejectedValue(error) }
     const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
     const res = await POST(req)

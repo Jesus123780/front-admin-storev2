@@ -36,7 +36,7 @@ export const TableSeating = () => {
   const [handleChange, handleSubmit, setDataValue, { dataForm, errorForm }] = useFormTools({ sendNotification })
   const [storeTableCreate, { loading }] = useStoreTableCreate({ sendNotification })
   const [data, { loading: loadingData }] = useStoreTables()
-  const steps = ['CREA UNA MESA PARA TU COMERCIO', `LISTAR DE MESAS (${Number(data?.storeTables?.length) ?? 0})`]
+  const steps = ['CREA UNA MESA PARA TU COMERCIO', `LISTAR DE MESAS (${Number(data?.storeTables?.length) || 0})`]
   const list = [1, 2, 4, 6, 8, 10, 12, 14, 12, 16]
 
   const handleForm = (e) => {
