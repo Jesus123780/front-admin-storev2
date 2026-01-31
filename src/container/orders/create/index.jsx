@@ -9,7 +9,7 @@ import {
   useGetAllPaymentMethods,
   useGetClients,
   usePrintSaleTicket,
-  useReactToPrint,
+  // useReactToPrint,
   useSales,
   useStore,
   useStoreTables
@@ -225,24 +225,9 @@ export const CreateSales = ({
     )
   }
 
-  const handlePrint = useReactToPrint({
-    documentTitle: '',
-    pageStyle: 'padding: 0px',
-    content: () => {
-      return componentRef.current
-    },
-    onBeforeGetContent: () => {
-      return new Promise((resolve) => {
-        promiseResolveRef.current = resolve
-        setIsPrinting(true)
-      })
-    },
-    onAfterPrint: () => {
-      // Reset the Promise resolve so we can print again
-      promiseResolveRef.current = null
-      setIsPrinting(false)
-    }
-  })
+  const handlePrint = () => {
+    console.log('Print function called');
+  }
 
   const { ClientAddress } = client || {
     clientName: '',

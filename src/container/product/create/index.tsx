@@ -48,7 +48,6 @@ import { Categories } from '../../categories'
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import { FormProduct } from './Form'
 import { productSchema } from './schema/producSchema'
-import { Container } from './styled'
 import styles from './styles.module.css'
 import { FoodComponentMemoProps } from './types'
 
@@ -699,7 +698,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
 
     return (<>
         {loaAvailable && <Loading />}
-        <Container>
+        <div>
             <AwesomeModal
                 customHeight='70vh'
                 footer={false}
@@ -764,7 +763,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     {asSaveAvailableProduct ? 'Guardar' : 'Continuar'}
                 </Button>
             </div>
-        </Container>
+        </div>
     </>
     )
 }

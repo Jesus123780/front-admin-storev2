@@ -1,13 +1,13 @@
 import {
  AwesomeModal, 
  getGlobalStyle,
+ InputHooks,
 Loading 
 } from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
 
 import { Prints } from '../Printsale'
-import { Input } from '../styled'
 
 export const ModalSales = ({
   print,
@@ -66,7 +66,7 @@ export const ModalSales = ({
         size='small'
         title='Añade el costo del envío'
       >
-        <Input
+        <InputHooks
           autoComplete='off'
           name='ValueDelivery'
           onChange={handleChange}
@@ -80,7 +80,7 @@ export const ModalSales = ({
           placeholder='Costo de envió'
           value={values?.ValueDelivery}
         />
-        <Input
+        <InputHooks
           autoComplete='off'
           name='change'
           onChange={handleChange}

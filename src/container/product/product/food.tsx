@@ -13,12 +13,13 @@ import {
   AwesomeModal,
   Button,
   Checkbox,
+  Column,
   DaySelector,
   Divider,
   getGlobalStyle,
   Image,
   Loading,
-  MemoCardProductSimple,
+  MemodivProductSimple,
   OptionalExtraProducts,
   Portal,
   Tag,
@@ -37,11 +38,6 @@ import { Categories } from '../../Categories'
 import FormProduct from './Form'
 import { productSchema } from './schema/producSchema'
 import { HeaderSteps } from './Steps'
-import {
-  Card,
-  Container,
-  ContainerAnimation
-} from './styled'
 import styles from './styles.module.css'
 
 export const FoodComponentMemo = ({
@@ -430,16 +426,18 @@ export const FoodComponentMemo = ({
         await handleNextSteps()
       }
     } catch (error) {
-      sendNotification({
-        description: 'Ha ocurrido un error',
-        title: 'Error',
-        backgroundColor: 'error'
-      })
+      if (error) {
+        sendNotification({
+          description: 'Ha ocurrido un error',
+          title: 'Error',
+          backgroundColor: 'error'
+        })
+      }
     }
   }
 
 
-  const valuesObj = filterKeyObject({ ...values, names }, ['ProWeight', 'carProId', 'ProHeight'])
+  const valuesObj = filterKeyObject({ ...values, names }, ['ProWeight', 'carProId', 'ProHeight'], false)
   const { error } = productSchema.validate(valuesObj)
 
   const disabled = {
@@ -451,7 +449,7 @@ export const FoodComponentMemo = ({
 
   return (<>
     {loaAvailable && <Loading />}
-    <Container>
+    <Column>
       <Portal selector='portal'>
         <AwesomeModal
           customHeight='70vh'
@@ -517,17 +515,15 @@ export const FoodComponentMemo = ({
       </Portal>
       <HeaderSteps active={active} />
       <div className='container_step'>
-        <ContainerAnimation active={active === 0}>
+        <div>
           {active === 0 &&
             <>
-              <Card bgColor={getGlobalStyle('--color-base-white')} state='30%'>
+              <div bgColor={getGlobalStyle('--color-base-white')} state='30%'>
                 <FormProduct {...propsForm} />
-              </Card>
-              {false && <Card state='20%'>
+              </div>
+              {false && <div state='20%'>
                 <Text
-                  fontSize='sm'
-                  margin='10px 0'
-                  style={{
+                  styles={{
                     '-webkitLine-clamp': 2,
                     color: '#3e3e3e',
                     fontSize: '1.125rem',
@@ -553,9 +549,9 @@ export const FoodComponentMemo = ({
                     </Button>
                   )
                 })}
-              </Card>
+              </div>
               }
-              <Card state='30%'>
+              <div state='30%'>
                 <Text
                   fontSize='16px'
                   margin='10px 0'
@@ -571,8 +567,8 @@ export const FoodComponentMemo = ({
                 >
                   Vista previa
                 </Text>
-                <Card bgColor={getGlobalStyle('--color-base-white')}>
-                  <MemoCardProductSimple
+                <div bgColor={getGlobalStyle('--color-base-white')}>
+                  <MemodivProductSimple
                     {...values}
                     alt={alt}
                     fileInputRef={fileInputRef}
@@ -583,12 +579,12 @@ export const FoodComponentMemo = ({
                     src={src}
                     tag={tags}
                   />
-                </Card>
-              </Card>
+                </div>
+              </div>
             </>
           }
-        </ContainerAnimation>
-        <ContainerAnimation active={Boolean(active === 1)}>
+        </div>
+        <div active={Boolean(active === 1)}>
           {(active === 1 && food) &&
             <OptionalExtraProducts
               data={dataLines}
@@ -608,8 +604,8 @@ export const FoodComponentMemo = ({
               title={title}
             />
           }
-        </ContainerAnimation>
-        <ContainerAnimation active={Boolean(active === 2)}>
+        </div>
+        <div active={Boolean(active === 2)}>
           {active === 2 &&
             <div style={{ flexDirection: 'column', display: 'flex' }}>
               <Button
@@ -629,8 +625,8 @@ export const FoodComponentMemo = ({
               />
             </div>
           }
-        </ContainerAnimation>
-        <ContainerAnimation active={active === 3}>
+        </div>
+        <div active={active === 3}>
           {active === 3 &&
             <div className='container_availability'>
               <Text
@@ -685,7 +681,7 @@ export const FoodComponentMemo = ({
               }
             </div>
           }
-        </ContainerAnimation>
+        </div>
       </div>
       <div>
         {(active !== 1 && active !== 0) &&
@@ -708,7 +704,7 @@ export const FoodComponentMemo = ({
         </Button>
       </div>
 
-    </Container>
+    </Column>
   </>
   )
 }

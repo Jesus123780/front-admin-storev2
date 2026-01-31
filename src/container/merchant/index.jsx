@@ -38,19 +38,12 @@ import {
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import PropTypes from 'prop-types'
 import React, { useContext, useState } from 'react'
-import styled, { css, keyframes } from 'styled-components'
 
 import { Context } from '../../context/Context'
 import { StepCero } from './Forms/StepCero'
 import { StepOne } from './Forms/StepOne'
 import { StepTow } from './Forms/StepTow'
 import { CREATE_ONE_STORE } from './queries'
-import {
-  Card,
-  Content,
-  Form,
-  GoBack
-} from './styled'
 import styles from './styles.module.css'
 
 export const Restaurant = ({ userToken = {} } = {}) => {
@@ -318,7 +311,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
   const { createStorePendingToRegister } = useCreateStorePendingToRegister()
 
   const handleSave = async () => {
-    if (!id) {return}
+    if (!id) { return }
     const input = {
       UserId: id,
       UserEmail: email || dataUser?.email || '',
@@ -370,7 +363,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
 
   const showStores = (dataUser && Array.isArray(dataUser?.associateStore))
   return (
-    <Content>
+    <div>
       <div
         style={{
           position: 'fixed',
@@ -437,9 +430,9 @@ export const Restaurant = ({ userToken = {} } = {}) => {
         </Column>
       </AwesomeModal>
 
-      <Card>
+      <div>
         {/* vacio */}
-      </Card>
+      </div>
 
       <div className='container-step'>
         <Divider marginBottom={getGlobalStyle('--spacing-3xl')} />
@@ -467,7 +460,8 @@ export const Restaurant = ({ userToken = {} } = {}) => {
               titles={stepTitles}
             />
           </div>
-          <Form
+          <Column
+            as='form'
             onSubmit={(e) => {
               return handleForm(e)
             }}
@@ -479,7 +473,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
                 width: '65%'
               }}
             >
-              <GoBack
+              <button
                 onClick={() => {
                   return validateRouter()
                 }}
@@ -488,7 +482,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
                   icon='IconArrowLeft'
                   color={getGlobalStyle('--color-icons-primary')}
                 />
-              </GoBack>
+              </button>
               <Text
                 align='center'
                 as='h2'
@@ -541,9 +535,9 @@ export const Restaurant = ({ userToken = {} } = {}) => {
                   userName={dataUser?.username || name || email}
                 />
               ) : nextStep === 3 ? (
-                <ContainerAnimation active={3}>
+                <div>
                   {loading && 'Cargando....'}
-                </ContainerAnimation>
+                </div>
               ) : (
                 <></>
               )}
@@ -581,7 +575,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
               </RippleButton>
             </div>
 
-          </Form>
+          </Column>
         </>}
         {active === 1 &&
           <div className={styles.container_stores} >
@@ -619,45 +613,10 @@ export const Restaurant = ({ userToken = {} } = {}) => {
           </div>
         }
       </div>
-    </Content>
+    </div>
   )
 }
 
 Restaurant.propTypes = {
   userToken: PropTypes.object
 }
-
-export const AnimationRight = keyframes`
-  0% {
-    transform: translateX(50vw);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-`
-
-export const AnimationLeft = keyframes`
-  0% {
-    transform: translateX(-50vw);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-`
-
-export const ContainerAnimation = styled.div`
-  ${(props) => {
-    if (props.active === 1) {
-      return css`animation: ${AnimationRight} 200ms;`
-    } else if (props.active === 2 || props.active === 3) {
-      return css`animation: ${AnimationLeft} 200ms;`
-    } else if (props.active === 4) {
-      return css`animation: ${AnimationLeft} 200ms;`
-    }
-    return ''
-  }}
-`

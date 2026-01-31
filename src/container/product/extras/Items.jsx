@@ -8,7 +8,6 @@ import {
 import PropTypes from 'prop-types'
 import React from 'react'
 
-import { CardsComponent } from './styled'
 
 const Items = ({
   editing,
@@ -30,7 +29,7 @@ const Items = ({
         const contentPrice = extra.extraPrice === 0 && extra.quantity == 0
         return (
           <div key={extra.exPid}>
-            <CardsComponent>
+            <div>
               <div>
                 <h3 className='title_card'>
                   {extra?.extraName || ''}
@@ -101,7 +100,7 @@ const Items = ({
                   />
                 )}
               </div>
-            </CardsComponent>
+            </div>
           </div>
         )
       })}

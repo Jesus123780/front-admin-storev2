@@ -29,12 +29,11 @@ import {
   useGetClients,
   statusOrder,
   GET_ALL_COUNT_SALES,
-  useReactToPrint,
+  // useReactToPrint,
   useFormatDate
 } from 'npm-pkg-hook'
 import { useRouter, useSearchParams } from 'next/navigation'
 // import { SubItems } from '../Sales/SubItems'
-import { Bubble, ContainerDrag } from './styled'
 // import { Ticket } from '../Sales/Ticket'
 import { dataToPrintProduct } from './helpers'
 import styles from './styles.module.css'
@@ -304,23 +303,25 @@ export const DragOrders = ({
 
   const pDatCre = useFormatDate({ date: sale?.pDatCre })
 
-  const handlePrint = useReactToPrint({
-    documentTitle: '',
-    pageStyle: `padding: 20px`,
-    content: () => { return componentRef.current },
-    onBeforeGetContent: () => {
-      return new Promise((resolve) => {
-        promiseResolveRef.current = resolve
-        setIsPrinting(true)
-      })
-    },
-    onAfterPrint: () => {
-      // Reset the Promise resolve so we can print again
-      promiseResolveRef.current = null
-      setIsPrinting(false)
-    }
-  })
-
+  // const handlePrint = useReactToPrint({
+  //   documentTitle: '',
+  //   pageStyle: `padding: 20px`,
+  //   content: () => { return componentRef.current },
+  //   onBeforeGetContent: () => {
+  //     return new Promise((resolve) => {
+  //       promiseResolveRef.current = resolve
+  //       setIsPrinting(true)
+  //     })
+  //   },
+  //   onAfterPrint: () => {
+  //     // Reset the Promise resolve so we can print again
+  //     promiseResolveRef.current = null
+  //     setIsPrinting(false)
+  //   }
+  // })
+  const handlePrint = () => {
+    console.log("Print function called");
+  }
   useEffect(() => {
 
     if (isPrinting && promiseResolveRef.current) {
@@ -410,7 +411,7 @@ export const DragOrders = ({
     }
   })
   return (
-    <ContainerDrag>
+    <div>
       {showContextMenu && (
         <DropdownMenu
           options={options}
@@ -522,11 +523,11 @@ export const DragOrders = ({
                         marginTop={getGlobalStyle('--spacing-md')}
                       />
                       <Row alignItems='center' justifyContent='space-between'>
-                        <Bubble color={color[item?.pSState || null]}>
+                        <div color={color[item?.pSState || null]}>
                           <span className='bubble-outer-dot'>
                             <span className='bubble-inner-dot'></span>
                           </span>
-                        </Bubble>
+                        </div>
                         <Tag label={item?.channel === 0 ? `${process.env.BUSINESS_TITLE}` : 'Restaurante'} />
                       </Row>
                     </Column>
@@ -537,7 +538,7 @@ export const DragOrders = ({
           })}
         </Row>
       </Column>
-    </ContainerDrag>
+    </div>
   )
 }
 

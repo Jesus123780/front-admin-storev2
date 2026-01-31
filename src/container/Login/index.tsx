@@ -319,7 +319,9 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
         const { message } = await getUserFromToken(jwtSession)
         const sessionExpired = message === EXPIRED_MESSAGE
         if (sessionExpired) {
-          await onClickLogout({ redirect: false })
+          if (typeof onClickLogout === 'function') {
+            await onClickLogout({ redirect: false })
+          }
           await signOutAuth({
             redirect: true,
             callbackUrl: ROUTES.index,

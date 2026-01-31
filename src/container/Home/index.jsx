@@ -3,11 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { useMobile } from 'npm-pkg-hook'
 import { HomeMain, ROUTES } from 'pkg-components'
-import React from 'react'
-
-import {
-  Container
-} from './styled'
 
 export const Home = () => {
   const router = useRouter()
@@ -26,8 +21,8 @@ export const Home = () => {
     isMobile
   }
   return (
-    <Container>
+    <div>
       <HomeMain {...headerProps} />
-    </Container>
+    </div>
   )
 }

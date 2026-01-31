@@ -11,7 +11,6 @@ import React from 'react'
 import { CalcularDigitoVerificacion } from '@/utils'
 
 import { ContainerAnimation } from '..'
-import { WrapDirection } from '../styled'
 
 export const StepOne = ({
   catStore = [],
@@ -130,7 +129,7 @@ export const StepOne = ({
           value={dataForm?.addressStore}
           width='100%'
         />
-        <WrapDirection showLocation={true}>
+        <div>
           <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
           <NewSelect
             error={errorForm?.countryId}
@@ -227,7 +226,7 @@ export const StepOne = ({
               width='45%'
             />
           </div>
-        </WrapDirection>
+        </div>
       </React.Fragment>
     </ContainerAnimation>
   )

@@ -10,8 +10,6 @@ import {
 import PropTypes from 'prop-types'
 import React from 'react'
 
-import { CardsComponent, GarnishChoicesHeader } from './styled'
-
 export const Optional = ({
   editing,
   loading = false,
@@ -39,7 +37,7 @@ export const Optional = ({
       {dataOptional?.length > 0 && dataOptional?.map((x, i) => {
         return (
           <div key={x.opExPid}>
-            <GarnishChoicesHeader>
+            <div>
               <div>
                 <p className='garnish-choices__title'>{x.OptionalProName}</p>
                 {!!x.numbersOptionalOnly && <p className='garnish-choices__title-desc'>Escoge hasta {x.numbersOptionalOnly} opciones.</p>}
@@ -53,11 +51,11 @@ export const Optional = ({
                 {Boolean(x.required) && <Tag label='OBLIGATORIO' />}
               </div>
               {loading && '...Cargando'}
-            </GarnishChoicesHeader>
+            </div>
             {
               x?.ExtProductFoodsSubOptionalAll?.map((z, index) => {
                 return (
-                  <CardsComponent key={z.opSubExPid}>
+                  <div key={z.opSubExPid}>
                     <div>
                       <h3 className='title_card'>{z?.OptionalSubProName}</h3>
                       <h3 className='title_card'>Item: {index + 1}</h3>
@@ -93,7 +91,7 @@ export const Optional = ({
                         value={z.opSubExPid}
                       />
                     }
-                  </CardsComponent>
+                  </div>
                 )
               })
             }

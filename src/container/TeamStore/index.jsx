@@ -2,14 +2,13 @@
 
 import { useColorByLetters,useEmployee } from 'npm-pkg-hook'
 import { ProfileCard, Skeleton } from 'pkg-components'
-import styled, { css } from 'styled-components'
 
 export const TeamStore = () => {
   const [data] = useEmployee()
   const { getCustomColors } = useColorByLetters()
 
   return (
-    <ContainerTeam>
+    <div>
       {!data?.length &&
         <Skeleton
           className='loading'
@@ -34,34 +33,6 @@ export const TeamStore = () => {
           <ProfileCard {...props} key={x.eId} />
         )
       }) : <></>}
-    </ContainerTeam>
+    </div>
   )
 }
-
-export const ContainerTeam = styled.div`
-  .loading {
-    margin-top: 10px;
-  }
-  .team__item {
-    align-items: center;
-    border-radius: 5px;
-    border: 0;
-    border: 1px solid var(--color-neutral-gray-silver);
-    display: flex;
-    min-height: 69px;
-    padding: 0.9375rem 1.25rem;
-    position: relative;
-    text-align: left;
-    width: 100%;
-
-  }
-`
-export const ItemInf = styled.div`
-  padding: .75rem;
-  ${props => {
-    return props.end && css`
-  justify-content: flex-end;
-    display: flex;
-
-  `}}
-`

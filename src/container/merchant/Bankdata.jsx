@@ -1,13 +1,12 @@
 import { useFormTools } from 'npm-pkg-hook'
 import { InputHooks } from 'pkg-components'
-import { ContentCards } from './styled'
 
 const Bankdata = () => {
   // eslint-disable-next-line
   const [handleChange, handleSubmit, setDataValue, { dataForm, errorForm }] = useFormTools()
 
   return (
-    <ContentCards>
+    <div>
       <InputHooks
         error={errorForm?.email}
         name='email'
@@ -53,12 +52,8 @@ const Bankdata = () => {
         value={dataForm?.email}
         width='100%'
       />
-    </ContentCards>
+    </div>
   )
-}
-
-Bankdata.propTypes = {
-
 }
 
 export default Bankdata

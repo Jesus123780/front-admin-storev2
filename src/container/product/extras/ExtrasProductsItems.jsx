@@ -10,7 +10,6 @@ import React from 'react'
 
 import Items from './Items'
 import { Optional } from './Optional'
-import { GarnishChoicesHeader } from './styled'
 
 /**
  * Component to render extra products and their options.
@@ -71,12 +70,14 @@ export const ExtrasProductsItems = ({
     handleIncrementExtra,
     handleDecrementExtra
   }
+
+  // eslint-disable-next-line
   const [_, handleRemoveSubProductOptional] = useDeleteSubProductOptional()
   return (
     <Column>
       {dataExtra?.length > 0 &&
     <div>
-      <GarnishChoicesHeader>
+      <div>
         <div>
           <p className='garnish-choices__title'>
             Complementos
@@ -90,7 +91,7 @@ export const ExtrasProductsItems = ({
           icon='IconMiniCheck'
           size={15}
         />
-      </GarnishChoicesHeader>
+      </div>
       <Items
         dataExtra={dataExtra}
         disabled={disabled}

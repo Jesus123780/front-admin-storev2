@@ -10,8 +10,6 @@ import {
 } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/react'
 
-import { CateItem, CtnSwiper } from '../styled'
-
 export const MemoSwiperSliderCategory = ({
   datCat = [],
   checkedItems,
@@ -22,7 +20,7 @@ export const MemoSwiperSliderCategory = ({
 
   return (
     <div>
-      <CtnSwiper>
+      <div>
         <Swiper
           breakpoints={{
             // Cuando el ancho de la pantalla sea menor o igual a 767px
@@ -56,7 +54,7 @@ export const MemoSwiperSliderCategory = ({
                 style={{ marginRight: isLastChild ? '20px' : '0' }}
                 virtualIndex={index}
               >
-                <CateItem style={{ marginRight: isLastChild ? '20px' : '0' }} >
+                <div style={{ marginRight: isLastChild ? '20px' : '0' }} >
                   <Checkbox
                     checked={checkedItems.has(slideContent.carProId)}
                     disabled={disabledItems.has(slideContent.carProId)}
@@ -64,12 +62,12 @@ export const MemoSwiperSliderCategory = ({
                     label={slideContent?.pName}
                     onChange={handleChangeCheck}
                   />
-                </CateItem>
+                </div>
               </SwiperSlide>
             )
           })}
         </Swiper>
-      </CtnSwiper>
+      </div>
     </div>
   )
 }

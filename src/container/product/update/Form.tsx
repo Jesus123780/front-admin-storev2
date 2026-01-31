@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { generateStoreURL } from 'npm-pkg-hook'
 import {
   AmountInput,
+  Column,
   Divider,
   getGlobalStyle,
   ImageProductEdit,
@@ -12,7 +13,6 @@ import {
   RippleButton
 } from 'pkg-components'
 import React from 'react'
-import styled from 'styled-components'
 
 interface FormProps {
   alt?: string
@@ -110,7 +110,7 @@ export const FormMemo: React.FC<FormProps> = ({
 
   return (
     <form onSubmit={(e) => { return handleForm(e) }}>
-      <ContentImage >
+      <Column>
         <Image
           alt={alt}
           height={320}
@@ -127,7 +127,7 @@ export const FormMemo: React.FC<FormProps> = ({
           ref={fileInputRef}
           type='file'
         />
-      </ContentImage>
+      </Column>
       <ImageProductEdit {...propsImageEdit} />
       <InputHooks
         error={errorForm?.pName}
@@ -208,7 +208,6 @@ export const FormMemo: React.FC<FormProps> = ({
         onChange={handleChange}
         range={{ min: 0, max: 180 }}
         title='Descripción'
-        as='textarea'
         value={dataForm?.ProDescription}
         width='100%'
       />
@@ -229,17 +228,3 @@ export const FormMemo: React.FC<FormProps> = ({
   )
 }
 export const Form = React.memo(FormMemo)
-
-
-export const ContentImage = styled.div`
-    display: flex;
-    width: 100%;
-    && > img {
-        height: 300px; 
-        min-height: 300px; 
-        object-fit: cover;
-        max-height: 300px; 
-        width: 100%; 
-    }
-`
-

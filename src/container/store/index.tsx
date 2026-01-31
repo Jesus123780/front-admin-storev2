@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   errorHandler,
   getCategoriesWithProduct,
-  onClickLogout,
   useCatWithProduct,
   useDeleteProductsFood,
   useDessert,
@@ -12,6 +11,7 @@ import {
   useGetOneProductsFood,
   useImageUploaderProduct,
   useIntersectionObserver,
+  useLogout,
   useManageQueryParams,
   useMobile,
   useSaveAvailableProduct,
@@ -54,6 +54,12 @@ export const Store = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showDessert, setShowDessert] = useState(false)
+  interface LogoutParams {
+    redirect?: boolean;
+    [key: string]: unknown;
+  }
+  const [onClickLogout] = useLogout() as [(params: LogoutParams) => Promise<void>, { loading: boolean; error: boolean }]
+
   const ref = useRef<HTMLDivElement>(null!)
   const {
     setAlertBox,
@@ -479,7 +485,9 @@ export const Store = () => {
         const responseError = errorHandler(errors)
 
         if (err?.message === 'Token expired' || responseError) {
-          onClickLogout()
+          onClickLogout({
+            redirect: true
+          })
         }
       }
     }

@@ -21,6 +21,7 @@ import {
   useManageQueryParams,
   useMobile,
   useModules,
+  // useModules,
   usePosition,
   usePushNotifications,
   useScrollColor,
@@ -38,18 +39,14 @@ import {
   AwesomeModal,
   Button,
   DeliveryTime,
-  FloatingScanButtons,
   getGlobalStyle,
   Header,
   Icon,
   LateralModal,
   Orders,
   Overline,
-  Plan,
-  Toast,
-  ToastPosition
+  Plan
 } from 'pkg-components'
-import PropTypes from 'prop-types'
 import React, {
   useContext,
   useEffect,
@@ -60,7 +57,6 @@ import packageJson from '../../../package.json'
 import { Context } from '../../context/Context'
 import { Categories } from '../categories'
 import { Clients } from '../clients'
-import { ModalScanner } from '../ModalScanner'
 import { CreateSales } from '../orders/create'
 import { useDevServerStatus } from '../orders/view/hooks'
 import { Product } from '../product'
@@ -72,8 +68,12 @@ import styles from './styles.module.css'
 
 interface MemoLayoutProps {
   children: React.ReactNode
-  watch?: any
-  settings?: any
+  watch?: boolean
+  settings?: {
+    enableHighAccuracy: boolean
+    timeout: number
+    maximumAge: number
+  }
 }
 
 export const MemoLayout: React.FC<MemoLayoutProps> = ({
@@ -108,14 +108,14 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setStatus
   } = useContext(Context)
   const dataLocation = usePosition(watch, settings)
-  const { handleCleanQuery } = useManageQueryParams({ router: location, searchParams: searchParams })
+  useManageQueryParams({ router: location, searchParams: searchParams })
   const [dataUser] = useUser()
-  const [modulesOrder, setModulesOrder] = useState<any[]>([])
+  const [modulesOrder, setModulesOrder] = useState<unknown[]>([])
   const [updateModulesOrder] = useUpdateModuleOrder()
 
   useModules({
     dataUser,
-    callback: (modules: any) => {
+    callback: (modules: unknown[]) => {
       setModulesOrder(modules)
     }
   })
@@ -123,10 +123,10 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   const [count, { loading: loadingCount }] = useTotalSales()
   const style = useScrollHook()
   const { scrollNav } = useScrollColor()
-  const [isCollapsedMenu, setIsColapsedMenu] = useState(false)
+  const [isCollapsedMenu, setIsCollapsedMenu] = useState(false)
   const { isMobile, isTablet } = useMobile({
     callback: ({ isMobile }: { isMobile: boolean }) => {
-      return setIsColapsedMenu(isMobile ? false : isCollapsedMenu)
+      return setIsCollapsedMenu(isMobile ? false : isCollapsedMenu)
     }
   })
 
@@ -134,11 +134,14 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   // const [play] = useSound('/sounds/notification.mp3')
 
   useEffect(() => {
-    const { latitude, longitude } = dataLocation
+    const { latitude, longitude } = dataLocation ?? {
+      latitude: null,
+      longitude: null
+    }
     if (latitude) {
-      window.localStorage.setItem('latitude', latitude)
-      window.localStorage.setItem('longitude', longitude)
-      window.localStorage.setItem('location', JSON.stringify(dataLocation))
+      globalThis.localStorage.setItem('latitude', latitude)
+      globalThis.localStorage.setItem('longitude', longitude)
+      globalThis.localStorage.setItem('location', JSON.stringify(dataLocation))
     }
     setAlertBox({ message: '', color: 'success' })
 
@@ -184,7 +187,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     sendNotification({
       title: 'Wifi',
       description: statusConnection,
-      backgroundColor: !connectionStatus ? 'warning' : 'success'
+      backgroundColor: connectionStatus ? 'success' : 'warning'
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectionStatus])
@@ -259,7 +262,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   const sendCookieValuesAsQueryParams = (cookies, url) => {
     try {
       if (!Array.isArray(cookies)) {
-        throw new Error('Input should be an array of cookies.')
+        throw new TypeError('Input should be an array of cookies.')
       }
 
       // Construct the query parameter string
@@ -269,11 +272,11 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       const finalUrl = `${url}?${queryParams}`
 
       // Redirect to the final URL
-      window.location.href = finalUrl
-    } catch (error) {
+      globalThis.location.href = finalUrl
+    } catch {
       sendNotification({
         title: 'Error',
-        description: 'Ocurrió un erro al intentar pagar',
+        description: 'Ocurrió un error al intentar pagar',
         backgroundColor: 'warning'
       })
     }
@@ -301,14 +304,11 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   }
   const showModal = false
 
-  const params = useParams<{ name?: string[] }>()
-  const heightsByRoute: Record<string, { [key: number]: string }> = {
-    '/dashboard/[...name]': { 4: heights[4] },
-    '/dashboard': { 3: heights[3] }
-  }
-  const customHeights = heightsByRoute[pathname] || heights[showModalComponent as keyof typeof heights]
-  const onDragEnd = async (result) => {
-    const { destination, source } = result;
+  useParams<{ name?: string[] }>()
+
+  // customHeights is not used
+  const onDragEnd = async (result: unknown) => {
+    const { destination, source } = result as { destination: { index: number } | null, source: { index: number } };
 
     // Si no se ha movido el ítem (destino es null o es el mismo), no hacer nada
     if (!destination || destination.index === source.index) { return; }
@@ -323,9 +323,9 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     reorderedModules.splice(destination.index, 0, removed);
 
     // Ajustar las prioridades
-    const updatedModules = reorderedModules.map((module, index) => {
+    const updatedModules = reorderedModules.map((_module, index) => {
       return {
-        ...module,
+        // ...module,
         mPriority: index + 1  // La prioridad se asigna según la nueva posición en el arreglo
       };
     });
@@ -336,7 +336,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
 
 
   const handleCollapsedMenu = () => {
-    setIsColapsedMenu(!isCollapsedMenu)
+    setIsCollapsedMenu(!isCollapsedMenu)
   }
   const { connected } = useDevServerStatus()
   return (
@@ -393,7 +393,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       />
 
       <AlertBox err={error} />
-      <main className={`${styles.main} ${!('/' !== pathname) ? styles.noAside : ''} ${isCollapsedMenu ? styles.collapsed_main : ''}`}>
+      <main className={`${styles.main} ${pathname === '/' ? styles.noAside : ''} ${isCollapsedMenu ? styles.collapsed_main : ''}`}>
         <Header
           count={count}
           countOrders={countOrders}
@@ -448,31 +448,8 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           }}
           className={styles.main_app_content}
         >
-          <React.Fragment>
-            {children}
-            {false &&
-              <>
-                <FloatingScanButtons
-                  onOpenQRModal={() => toggleModal('barcode')}
-                  onOpenBarcodeModal={() => toggleModal('qr')}
-                />
-                <ModalScanner
-                  show={modalsLector}
-                  onHide={() => {
-                    toggleModal(false)
-                  }}
-                />
-              </>
-            }
-          </React.Fragment>
+          {children}
           <CreateSales setShow={setSalesOpen} show={salesOpen} />
-            <Toast
-              autoDelete={true}
-              autoDeleteTime={5000} // 5 seconds
-              position={ToastPosition['bottom-left']}
-              toastList={messagesToast}
-              deleteToast={deleteToast}
-            />
         </div>
         <Footer />
         <div style={{ gridArea: 'right' }} className={styles.area_right_container}>
@@ -500,21 +477,19 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
                 color={getGlobalStyle('--color-icons-primary')}
               />
             </Button>
-            {components[showModalComponent]}
+            {components[showModalComponent] as React.ReactNode ?? null}
           </LateralModal>
-
         </div>
-
       </main>
     </>
   )
 }
 
-MemoLayout.propTypes = {
+/* MemoLayout.propTypes = {
   children: PropTypes.any,
   settings: PropTypes.any,
   watch: PropTypes.any
-}
+} */
 export const Layout = React.memo(MemoLayout)
 
 interface LayoutWithAlertProps {

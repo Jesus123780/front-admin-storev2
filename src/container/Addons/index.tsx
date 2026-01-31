@@ -5,7 +5,6 @@ import React from 'react'
 
 import { Devices } from '../../container/Devices'
 import { TeamStore } from '../TeamStore'
-import { ContentAddonsGrid } from './styled'
 
 export const Addons = () => {
   const style = {
@@ -13,7 +12,7 @@ export const Addons = () => {
   }
 
   return (
-    <ContentAddonsGrid>
+    <div>
       <div style={style} title='Mi equipo'>
         <Text
           as='h3'
@@ -37,6 +36,6 @@ export const Addons = () => {
           Nuestras Promo banners
         </Text>
       </div>
-    </ContentAddonsGrid>
+    </div>
   )
 }

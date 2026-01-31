@@ -13,12 +13,6 @@ import {
 } from 'pkg-components'
 import React, { useEffect, useState } from 'react'
 
-import {
-  ContainerTicket,
-  Content,
-  Item,
-  Ticket
-} from './styled'
 import { Ticket as TemplateTicket } from './Ticket'
 
 interface PrintsMemoProps {
@@ -113,7 +107,7 @@ export const PrintsMemo: React.FC<PrintsMemoProps> = ({
     ...dataStore
   }
   return (
-    <ContainerTicket>
+    <div>
       <div className='wrapper-action__footer'>
         <RippleButton
           onClick={() => { return handleSubmit() }}
@@ -128,7 +122,7 @@ export const PrintsMemo: React.FC<PrintsMemoProps> = ({
       </div>
       {/* {isPrinting && <Loading />} */}
       <TemplateTicket componentRef={componentRef} dataToPrint={dataToPrint} />
-      <Ticket >
+      <div>
         <div
           className='ticket'
           id='ticket'
@@ -160,27 +154,27 @@ export const PrintsMemo: React.FC<PrintsMemoProps> = ({
           <div className='divider'>
             <div></div>
           </div>
-          <Text fontWeight='800'>
+          <Text>
             TICKET DE VENTA
           </Text>
-          <Content>
-            <Item>
+          <div>
+            <div>
               <th>Descripción</th>
               <th>Cantidad</th>
               <th>Precio</th>
               <th>Total</th>
-            </Item>
-            {data.map((item) => {
-              const ProPrice = numberFormat(item?.ProPrice)
-              const unitPrice = numberFormat(item?.unitPrice)
+            </div>
+            {data.map((div) => {
+              const ProPrice = numberFormat(div?.ProPrice)
+              const unitPrice = numberFormat(div?.unitPrice)
               return (
-                <React.Fragment key={item.pId}>
-                  <Item >
+                <React.Fragment key={div.pId}>
+                  <div >
                     <Text>
-                      {String(item?.pName ?? '')}
+                      {String(div?.pName ?? '')}
                     </Text>
                     <Text>
-                      {Number(item?.ProQuantity ?? 0)}
+                      {Number(div?.ProQuantity ?? 0)}
                     </Text>
                     <Text>
                       {Number(unitPrice ?? 0)}
@@ -188,10 +182,10 @@ export const PrintsMemo: React.FC<PrintsMemoProps> = ({
                     <Text>
                       {ProPrice}
                     </Text>
-                  </Item>
-                  {item?.dataExtra?.length > 0 && item?.dataExtra?.map((extra) => {
+                  </div>
+                  {div?.dataExtra?.length > 0 && div?.dataExtra?.map((extra) => {
                     return (
-                      <Item key={extra.exPid}>
+                      <div key={extra.exPid}>
                         <Text>
                           {extra?.extraName || ''}
                         </Text>
@@ -204,23 +198,23 @@ export const PrintsMemo: React.FC<PrintsMemoProps> = ({
                         <Text>
                           {extra.newExtraPrice}
                         </Text>
-                      </Item>
+                      </div>
                     )
                   })}
-                  {item?.dataOptional?.length > 0 && item?.dataOptional?.map((extraOptional) => {
+                  {div?.dataOptional?.length > 0 && div?.dataOptional?.map((extraOptional) => {
                     return (
                       <React.Fragment key={extraOptional.opExPid}>
-                        <Item>
+                        <div>
                           <span style={{ fontWeight: 'bold' }}>{extraOptional?.OptionalProName || ''}</span>
-                        </Item>
+                        </div>
                         {extraOptional?.ExtProductFoodsSubOptionalAll?.map((extraOptional) => {
                           return (
-                            <Item key={extraOptional?.exPid}>
+                            <div key={extraOptional?.exPid}>
                               <span>{extraOptional?.OptionalSubProName || ''}</span>
                               <span>{1}</span>
                               <span>Gratis</span>
                               <span>{0}</span>
-                            </Item>
+                            </div>
                           )
                         })}
                       </React.Fragment>
@@ -229,20 +223,20 @@ export const PrintsMemo: React.FC<PrintsMemoProps> = ({
                 </React.Fragment>
               )
             })}
-          </Content>
-          <div className='wrapper__sub-items'>
-            <div className='sub-items'>
-              <div className='sub-item__values'>
+          </div>
+          <div className='wrapper__sub-divs'>
+            <div className='sub-divs'>
+              <div className='sub-div__values'>
               </div>
-              <div className='sub-item__values'>
+              <div className='sub-div__values'>
                 {change &&
-                  <div className='item--values'>
+                  <div className='div--values'>
                     <Text>CAMBIO &nbsp;</Text>
                     <Text>{numberFormat(change)}</Text>
                   </div>
                 }
                 {total &&
-                  <div className='item--values'>
+                  <div className='div--values'>
                     <Text>TOTAL &nbsp;</Text>
                     <Text>{numberFormat(total)}</Text>
                   </div>
@@ -266,8 +260,8 @@ export const PrintsMemo: React.FC<PrintsMemoProps> = ({
             })}
           </div>
         </div>
-      </Ticket>
-    </ContainerTicket>
+      </div>
+    </div>
   )
 }
 // memo

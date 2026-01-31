@@ -1,15 +1,17 @@
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import process from 'node:process'
+
 /** ESM __dirname workaround */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  output: 'standalone',
   outputFileTracingRoot: __dirname, // ✅ Root correcto para evitar warnings y builds fallidos
 
-  transpilePackages: ["npm-pkg-hook", "pkg-components"],
+  transpilePackages: ['npm-pkg-hook', 'pkg-components'],
 
   env: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
@@ -18,6 +20,7 @@ const nextConfig = {
     URL_ADMIN_SERVER: process.env.URL_ADMIN_SERVER,
     NEXT_PUBLIC_URL_BASE: process.env.NEXT_PUBLIC_URL_BASE,
     NEXT_PUBLIC_URL_ADMIN_SERVER_SOCKET: process.env.NEXT_PUBLIC_URL_ADMIN_SERVER_SOCKET,
+    NEXT_LOCAL_SALES_STORE: process.env.NEXT_LOCAL_SALES_STORE,
   },
 
   eslint: { ignoreDuringBuilds: true },
@@ -28,6 +31,6 @@ const nextConfig = {
     reactRemoveProperties: true,
     styledComponents: true,
   }
-};
+}
 
-export default nextConfig;
+export default nextConfig

@@ -1,4 +1,3 @@
-import { useReactToPrint } from 'npm-pkg-hook'
 import {
   useEffect,
   useState,
@@ -18,21 +17,9 @@ export const Invoice = ({ children }) => {
     }
   }, [isPrinting])
 
-  const handlePrint = useReactToPrint({
-    
-    content: () => {return componentRef.current},
-    onBeforeGetContent: () => {
-      return new Promise((resolve) => {
-        promiseResolveRef.current = resolve
-        setIsPrinting(true)
-      })
-    },
-    onAfterPrint: () => {
-    // Reset the Promise resolve so we can print again
-      promiseResolveRef.current = null
-      setIsPrinting(false)
-    }
-  })
+  const handlePrint = () => {
+    console.log("Print function called");
+  }
 
   return (
     <>

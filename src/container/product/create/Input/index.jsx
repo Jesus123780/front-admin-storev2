@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types'
 import React, { useState, useEffect } from 'react'
 import {
   BoxInput,
@@ -14,6 +13,7 @@ import {
   passwordConfirm,
   rangeLength
 } from 'utils'
+import { InputHooks } from 'pkg-components'
 
 export const InputHook = props => {
   const {
@@ -30,7 +30,7 @@ export const InputHook = props => {
     range,
     required,
     type,
-    as='textarea',
+    as = 'textarea',
     value,
     passConfirm
   } = props
@@ -97,56 +97,34 @@ export const InputHook = props => {
     }
   }
   return (
-    <>
-      <BoxInput error={error}>
-        {!as='textarea' ?
-          <Input
-            data-required={required}
-            disabled={disabled}
-            error={error}
-            name={name}
-            numeric={numeric}
-            onChange={validations}
-            placeholder={placeholder}
-            type={type}
-            value={value}
-          />
-          : <TextAreaInput
-            data-required={required}
-            name={name}
-            numeric={numeric}
-            onChange={validations}
-            placeholder={placeholder}
-            type={type}
-            value={value}
-          />}
-        <LabelInput >{label}</LabelInput>
-        {errors && <label className='alert_error'>{message}</label>}
-      </BoxInput>
-    </>
+    <div error={error}>
+      {as !== 'textarea' ?
+        <InputHooks
+          data-required={required}
+          disabled={disabled}
+          error={error}
+          name={name}
+          numeric={numeric}
+          onChange={validations}
+          placeholder={placeholder}
+          type={type}
+          value={value}
+        />
+        : <TextAreaInput
+          data-required={required}
+          name={name}
+          numeric={numeric}
+          onChange={validations}
+          placeholder={placeholder}
+          type={type}
+          value={value}
+        />
+      }
+      <Text>
+        {label}
+      </Text>
+      {errors && <label className='alert_error'>{message}</label>}
+    </div>
   )
 }
-InputHook.propTypes = {
-  as='textarea': PropTypes.any,
-  email: PropTypes.any,
-  error: PropTypes.any,
-  label: PropTypes.any,
-  letters: PropTypes.any,
-  name: PropTypes.any,
-  numeric: PropTypes.any,
-  disabled: PropTypes.bool,
-  onChange: PropTypes.func,
-  pass: PropTypes.any,
-  passConfirm: PropTypes.shape({
-    passValue: PropTypes.any,
-    validate: PropTypes.any
-  }),
-  placeholder: PropTypes.any,
-  range: PropTypes.shape({
-    max: PropTypes.any,
-    min: PropTypes.any
-  }),
-  required: PropTypes.any,
-  type: PropTypes.any,
-  value: PropTypes.any
-}
+

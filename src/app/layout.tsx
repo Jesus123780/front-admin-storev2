@@ -7,8 +7,8 @@ import { useEffect, useState } from 'react'
 
 import { MemoLayout } from '@/container/Layout'
 import Context from '@/context/Context'
-import StyledComponentsRegistry from '@/utils/registry'
 
+// import StyledComponentsRegistry from '@/utils/registry'
 import Auth from '../../apollo/Auth'
 import ApolloClientProvider from './providers/ApolloProvider'
 
@@ -79,7 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           && (
             <Context>
               {/* <BarcodeScanner /> */}
-              <StyledComponentsRegistry>
+              {/* <StyledComponentsRegistry> */}
                 <ApolloClientProvider>
                   <Auth>
                     {ROUTES_WITHOUT_LAYOUT.has(pathname)
@@ -90,7 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     }
                   </Auth>
                 </ApolloClientProvider>
-              </StyledComponentsRegistry>
+              {/* </StyledComponentsRegistry> */}
             </Context>
           )
         }

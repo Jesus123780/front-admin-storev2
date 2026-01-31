@@ -1168,7 +1168,7 @@ export const initialState = {
 }
 
 export const initializer = (initialValue = initialState) => {
-  const storeKey = process.env.LOCAL_SALES_STORE ?? 'LOCAL_SALES_STORE'
+  const storeKey = process.env.NEXT_LOCAL_SALES_STORE ?? 'NEXT_LOCAL_SALES_STORE'
   const stored = localStorage.getItem(storeKey)
   return stored ? JSON.parse(stored) : initialValue
 }

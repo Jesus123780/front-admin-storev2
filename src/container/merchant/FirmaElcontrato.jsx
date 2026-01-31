@@ -1,19 +1,14 @@
-import { 
-  useEffect, 
-  useRef, 
-  useState, 
+import {
+  useEffect,
+  useRef,
+  useState,
   useContext
 } from 'react'
 import { useMutation } from '@apollo/client'
-import { 
-  Card2, 
-  ContentCardInfo, 
-  ContentCards, 
-  Text
-} from './styled'
-import { 
-  useUser, 
-  useStore, 
+
+import {
+  useUser,
+  useStore,
   BColor
 } from 'npm-pkg-hook'
 import { useRouter } from 'next/router'
@@ -51,7 +46,7 @@ export const Contract = () => {
   }
   useEffect(() => {
     window.setInterval(() => {
-      setColor( '#' + Math.floor(Math.random() * 16777215).toString(16))
+      setColor('#' + Math.floor(Math.random() * 16777215).toString(16))
     }, 6000)
   }, [color])
 
@@ -60,37 +55,37 @@ export const Contract = () => {
       setAlertBox({ message: 'Contrato guardado correctamente' })
     }
   })
-  
+
   const [dataUser] = useUser()
   const [data] = useStore()
   const router = useRouter()
   const store = data || {}
 
   return (
-    <ContentCards>
+    <div>
       {loading && <Loading />}
       {/* <button onClick={() => {return handleClick()}} type='submit'>Click</button>
-      <button onClick={() => {return handleClean()}}>Limpiar</button>
-      <button onClick={() => {return handleUndo()}}>Volver</button> */}
+        <button onClick={() => {return handleClean()}}>Limpiar</button>
+        <button onClick={() => {return handleUndo()}}>Volver</button> */}
       {/* <CanvasDraw
-        brushColor={PColor}
-        brushRadius={1}
-        clampLinesToDocument
-        disabled={false}
-        gridColor='#ccc'
-        ref={ref}
-      />
-      <CanvasDraw
-        brushColor={color}
-        brushRadius={1}
-        clampLinesToDocument
-        disabled={true}
-        gridColor={color}
-        ref={secondCanvas}
-      /> */}
-      <ContentCardInfo>
+          brushColor={PColor}
+          brushRadius={1}
+          clampLinesToDocument
+          disabled={false}
+          gridColor='#ccc'
+          ref={ref}
+        />
+        <CanvasDraw
+          brushColor={color}
+          brushRadius={1}
+          clampLinesToDocument
+          disabled={true}
+          gridColor={color}
+          ref={secondCanvas}
+        /> */}
+      <div>
         <h1>Antes de terminar, revisa tus datos</h1>
-        <Card2>
+        <div>
           <div>
             <Text color={BColor} size='15px'>Nombre del restaurante </Text>
             <Text color={BColor} size='15px'>{store?.storeName}</Text>
@@ -100,8 +95,8 @@ export const Contract = () => {
             <Text color={BColor} size='15px'>{store?.NitStore}</Text>
           </div>
 
-        </Card2>
-        <Card2>
+        </div>
+        <div>
           <div>
             <Text color={BColor} size='15px'>Documento de identidad </Text>
             <Text color={BColor} size='15px'>{store?.documentIdentifier}</Text>
@@ -110,8 +105,8 @@ export const Contract = () => {
             <Text color={BColor} size='15px'>Email Store </Text>
             <Text color={BColor} size='15px'>{store?.emailStore}</Text>
           </div>
-        </Card2>
-        <Card2>
+        </div>
+        <div>
           <div>
             <div>
               <Text color={BColor} size='15px'>Información del representante legal </Text>
@@ -122,22 +117,22 @@ export const Contract = () => {
           <div>
             {dataUser?.email || ''}
           </div>
-        </Card2>
-        <Card2>
+        </div>
+        <div>
           <div>
             <div>
               <Text color={BColor} size='15px'>Dirección</Text>
               <Text color={BColor} size='15px'>{store?.addressStore}</Text>
             </div>
           </div>
-        </Card2>
-        <Card2>
+        </div>
+        <div>
           <div>
-                        Numero
+            Numero
           </div>
           {store.uPhoNum}
-        </Card2>
-        <Card2>
+        </div>
+        <div>
           <div>
             <Text color={BColor} size='15px'>  Descripcion </Text>
             <Text color={BColor} size='15px'>{store?.description}</Text>
@@ -147,18 +142,18 @@ export const Contract = () => {
             <Text color={BColor} size='15px'>{store?.cateStore?.cName}</Text>
           </div>
 
-        </Card2>
+        </div>
         <RippleButton
           margin='20px auto'
-          onClick={() => {return router.push('/dashboard')}}
+          onClick={() => { return router.push('/dashboard') }}
           type='submit'
           widthButton='100%'
         >Finalizar</RippleButton>
         {/* <RippleButton widthButton='150px' padding={'15px 5px'} bgColor={PVColor} color={BGColor} onClick={() => generatePdfDocumentInvoice({ dataInvoice: { ...data } })}> */}
         {/* Download */}
         {/* </RippleButton> */}
-      </ContentCardInfo>
-    </ContentCards>
+      </div>
+    </div>
   )
 }
 

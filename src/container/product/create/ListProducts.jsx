@@ -1,16 +1,10 @@
 import PropTypes from 'prop-types'
-import React from 'react'
 import { 
   Skeleton, 
   RippleButton,
   Text,
   MemoCardProductSimple
 } from 'pkg-components'
-import {
-  ContainerCardProduct,
-  ContentProducts,
-  WrapperProducts
-} from './styled'
 
 export const ListProducts = ({
   data,
@@ -24,10 +18,10 @@ export const ListProducts = ({
   const isData = Boolean(data?.length > 0)
   return (
     <div>
-      <ContentProducts>
+      <div>
         {isData && <Text>Lista de productos registrados {pState === 1 ? 'Activos' : 'Desactivados'}</Text>}
-        <WrapperProducts className='filter'>
-          <ContainerCardProduct>
+        <div>
+          <div>
             {!isData ? <Skeleton height='400' numberObject={8} /> : data?.map(producto => {
               return (
                 <MemoCardProductSimple
@@ -39,8 +33,8 @@ export const ListProducts = ({
                 />
               )
             })}
-          </ContainerCardProduct>
-        </WrapperProducts>
+          </div>
+        </div>
         {isData && <RippleButton
           margin='20px auto'
           onClick={() => {
@@ -58,7 +52,7 @@ export const ListProducts = ({
           }}
           widthButton='100%'
         >{loading ? 'Cargando...' : 'CARGAR MÁS'}</RippleButton>}
-      </ContentProducts>
+      </div>
     </div>
   )
 }

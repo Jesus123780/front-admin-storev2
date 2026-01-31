@@ -1,12 +1,5 @@
-import React, { useState } from 'react'
-import {
-  Content,
-  Form,
-  Card,
-  Text
-} from './styled'
-import PropTypes from 'prop-types'
-import { RippleButton, InputOTPHook } from 'pkg-components'
+import { useState } from 'react'
+import { RippleButton, InputOTPHook, Text } from 'pkg-components'
 import { EColor } from 'public/colors'
 import { useRouter } from 'next/navigation'
 import { decodeToken, getTokenState } from 'utils'
@@ -29,11 +22,11 @@ export const EmailVerifyCode = ({ code }) => {
   } else if (!tokenState) {
     return router.push('/entrar')
   } return (
-    <Content>
-      <Card>
-      </Card>
-      <Form>
-        <Text size='15px'>Hola {decode?.uEmail}</Text>
+    <div>
+      <div>
+      </div>
+      <form>
+        <Text size='md'>Hola {decode?.uEmail}</Text>
         <InputOTPHook
           arrayCode={array}
           autoFocus
@@ -51,13 +44,9 @@ export const EmailVerifyCode = ({ code }) => {
           widthButton='100%'
         >Continuar</RippleButton>
         <Text size='15px'>No recibí mi código</Text>
-      </Form>
-    </Content>
+      </form>
+    </div>
   )
-}
-
-EmailVerifyCode.propTypes = {
-  code: PropTypes.string
 }
 
 EmailVerifyCode.Layout = EmptyLayout

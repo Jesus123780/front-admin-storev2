@@ -1,13 +1,10 @@
-import PropTypes from 'prop-types'
 import {
   InputHooks,
-  RippleButton,
   AwesomeModal,
   OptionalExtraProducts,
   ChoicesHeader
 } from 'pkg-components'
 import { transformDataToDessert } from 'npm-pkg-hook'
-import { ContentModal } from './styled'
 
 export const EditExtra = ({
   openModalCatExtra,
@@ -38,7 +35,7 @@ export const EditExtra = ({
         size='70%'
         zIndex='99988'
       >
-        <ContentModal>
+        <div>
           <ChoicesHeader
             title={infoExtra.OptionalProName}
             descrition={`Escoge hasta ${infoExtra.numbersOptionalOnly} opciones.`}
@@ -52,25 +49,9 @@ export const EditExtra = ({
             required
             value={dataForm.OptionalProName}
           />
-        </ContentModal>
+        </div>
         <OptionalExtraProducts {...dissertProps} />
       </AwesomeModal>
     </div>
   )
-}
-
-EditExtra.propTypes = {
-  dataForm: PropTypes.shape({
-    OptionalProName: PropTypes.any
-  }),
-  handleChange: PropTypes.any,
-  handleDeleteCatOptional: PropTypes.func,
-  infoExtra: PropTypes.shape({
-    OptionalProName: PropTypes.any,
-    numbersOptionalOnly: PropTypes.any,
-    pDatCre: PropTypes.any,
-    required: PropTypes.number
-  }),
-  openModalCatExtra: PropTypes.any,
-  setOpenModalCatExtra: PropTypes.func
 }

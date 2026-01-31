@@ -64,7 +64,6 @@ export default function Auth({ children }: AuthProps) {
     const verifySession = async () => {
       try {
         const session = await getSession()
-        console.log('🚀 ~ verifySession ~ session:', session)
         const isExpired = isTokenExpired(session?.token)
 
         if (session?.isSession) {
@@ -77,7 +76,6 @@ export default function Auth({ children }: AuthProps) {
           if (isExpired) {
             onClickLogout?.()
           }
-          console.log('onClickLogout()')
           return
         }
 

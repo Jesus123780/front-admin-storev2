@@ -4,10 +4,10 @@ import { useFormTools } from 'npm-pkg-hook'
 import {
   InputOTPHook,
   RippleButton,
-  InputHooks
+  InputHooks,
+  Text
 } from 'pkg-components'
 import { EColor } from '../../public/colors'
-import { ContentCards, Text } from './styled'
 
 const CodeValidation = () => {
   // eslint-disable-next-line
@@ -23,7 +23,7 @@ const CodeValidation = () => {
   }
   return (
     <div>
-      <ContentCards>
+      <div>
         <h1>Confirma tu correo electrónico</h1>
         <Text margin='30px 0' size='14px'>Introduce el código de validación enviado al correo electrónico:</Text>
         {step === 1 ?
@@ -61,7 +61,7 @@ const CodeValidation = () => {
           type='submit'
           widthButton='100%'
         >{step !== 1 ? 'Continuar' : 'Enviar'}</RippleButton>
-      </ContentCards>
+      </div>
     </div>
   )
 }

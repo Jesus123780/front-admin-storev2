@@ -1,42 +1,57 @@
 {
-  "name": "nextjs_approuter_electron",
-  "version": "0.0.3",
-  "private": true,
-  "homepage": "https://github.com/Jesus123780/front-admin-storev2",
   "author": "venty <juvinaojesusd@gmail.com> (https://github.com/Jesus123780/front-admin-storev2)",
-  "main": "build/main.js",
-  "description": "venty",
-  "scripts": {
-    "next:dev": "node build/start.dev.js",
-    "next:build": "next build",
-    "next:start": "next start",
-    "next:lint": "next lint",
-    "format": "dprint fmt",
-    "postinstall": "electron-builder install-app-deps",
-    "electron:dist": "electron-builder --dir",
-    "electron:dist:deb": "electron-builder --linux deb",
-    "build": "run-s next:build electron:build",
-    "electron:build": "electron-builder",
-    "dist": "run-s build electron:dist",
-    "prebuild:backend": "node electron/src/build-backend.js",
-    "dev": "concurrently -n \"NEXT,ELECTRON\" -c \"yellow,blue\" --kill-others \"next dev -p 3000\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:build_watch": "tsup --watch",
-    "electron:dev": "cross-env NODE_ENV='development' electron .",
-    "electron:watch": "cross-env NODE_ENV='development' nodemon",
-    "link:pkgch": "npm link npm-pkg-hook pkg-components rm -rf .next",
-    "link:pkgche": "npm link npm-pkg-hook pkg-components eslint-config-next-front &&  rm -rf .next",
-    "remove:ports:3000": "npx kill-port 3000",
-    "remove:ports:8080": "npx kill-port 8080",
-    "test": "npm run test:next && npm run test:electron",
-    "test:next": "jest --config jest.config.ts",
-    "test:electron": "jest --config jest.electron.config.ts",
-    "test:watch": "npm run test -- --watch",
-    "coverage": "jest --coverage",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "check": "npm run lint && npm run type-check",
-    "type-check": "tsc --noEmit",
-    "prepare": "husky"
+  "bugs": {
+    "url": "https://github.com/Jesus123780/front-admin-storev2/issues"
+  },
+  "build": {
+    "appId": "com.saybackend.nextjs-electronJ",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/next",
+      "node_modules/@img",
+      "node_modules/sharp",
+      "**/*.node",
+      "**/*.dll"
+    ],
+    "copyright": "Copyright (c) 2025 Venty",
+    "executableName": "NextJSElectronJ",
+    "extraResources": [
+      {
+        "from": "front-back-server/front-back-server.exe",
+        "to": "front-back-server.exe"
+      }
+    ],
+    "files": [
+      "build",
+      {
+        "filter": [
+          "!**/.env",
+          "!**/package.json"
+        ],
+        "from": ".next/standalone",
+        "to": "app"
+      },
+      {
+        "from": ".next/static",
+        "to": "app/.next/static"
+      },
+      {
+        "from": "public",
+        "to": "app/public"
+      }
+    ],
+    "nsis": {
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "oneClick": false,
+      "perMachine": true
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
   },
   "dependencies": {
     "@apollo/client": "3.13.5",
@@ -55,18 +70,19 @@
     "get-port-please": "3.1.2",
     "google-auth-library": "9.15.1",
     "graphql-ws": "5.16.2",
+    "js-cookie": "3.0.5",
     "jsonwebtoken": "9.0.1",
     "lodash": "4.17.21",
     "next": "15.2.4",
-    "npm-pkg-hook": "latest",
+    "npm-pkg-hook": "^1.13.7",
     "pkg-components": "latest",
     "qr.js": "0.0.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "styled-components": "5.3.11",
     "subscriptions-transport-ws": "0.11.0",
     "ws": "8.18.2"
   },
+  "description": "venty",
   "devDependencies": {
     "@babel/core": "7.28.5",
     "@commitlint/cli": "20.1.0",
@@ -118,62 +134,47 @@
     "typescript-eslint": "8.32.1",
     "wait-on": "8.0.3"
   },
-  "build": {
-    "asar": true,
-    "executableName": "NextJSElectronJ",
-    "appId": "com.saybackend.nextjs-electronJ",
-    "asarUnpack": [
-      "node_modules/next",
-      "node_modules/@img",
-      "node_modules/sharp",
-      "**/*.node",
-      "**/*.dll"
-    ],
-    "files": [
-      "build",
-      {
-        "from": ".next/standalone",
-        "to": "app",
-        "filter": [
-          "!**/.env",
-          "!**/package.json"
-        ]
-      },
-      {
-        "from": ".next/static",
-        "to": "app/.next/static"
-      },
-      {
-        "from": "public",
-        "to": "app/public"
-      }
-    ],
-    "extraResources": [
-      {
-        "from": "front-back-server/front-back-server.exe",
-        "to": "front-back-server.exe"
-      }
-    ],
-    "win": {
-      "target": [
-        "nsis"
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "copyright": "Copyright (c) 2025 Venty"
-  },
+  "homepage": "https://github.com/Jesus123780/front-admin-storev2",
+  "license": "ISC",
+  "main": "build/main.js",
+  "name": "nextjs_approuter_electron",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Jesus123780/front-admin-storev2.git"
   },
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Jesus123780/front-admin-storev2/issues"
-  }
+  "scripts": {
+    "build": "run-s next:build electron:build",
+    "check": "npm run lint && npm run type-check",
+    "coverage": "jest --coverage",
+    "dev": "concurrently -n \"NEXT,ELECTRON\" -c \"yellow,blue\" --kill-others \"next dev -p 3000\" \"wait-on http://localhost:3000 && electron .\"",
+    "dist": "run-s build electron:dist",
+    "electron:build": "electron-builder",
+    "electron:build_watch": "tsup --watch",
+    "electron:dev": "cross-env NODE_ENV='development' electron .",
+    "electron:dist": "electron-builder --dir",
+    "electron:dist:deb": "electron-builder --linux deb",
+    "electron:watch": "cross-env NODE_ENV='development' nodemon",
+    "format": "dprint fmt",
+    "link:pkgch": "npm link npm-pkg-hook pkg-components rm -rf .next",
+    "link:pkgche": "npm link npm-pkg-hook pkg-components eslint-config-next-front &&  rm -rf .next",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "next:build": "next build",
+    "next:dev": "node build/start.dev.js",
+    "next:lint": "next lint",
+    "next:start": "next start",
+    "postinstall": "electron-builder install-app-deps",
+    "prebuild:backend": "node electron/src/build-backend.js",
+    "prepare": "husky",
+    "remove:ports:3000": "npx kill-port 3000",
+    "remove:ports:8080": "npx kill-port 8080",
+    "rm": "rm -rf node_modules .next",
+    "test": "npm run test:next && npm run test:electron",
+    "test:electron": "jest --config jest.electron.config.ts",
+    "test:next": "jest --config jest.config.ts",
+    "test:watch": "npm run test -- --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "version": "0.0.3"
 }
