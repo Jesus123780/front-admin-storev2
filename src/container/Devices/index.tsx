@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react'
 
 import { getDeviceId } from '../../../apollo/getDeviceId'
 
+
 export const Devices = () => {
   const [deviceId, setDeviceId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -19,6 +20,10 @@ export const Devices = () => {
         }
         setLoading(false)
       } catch (error) {
+        if (error instanceof Error) {
+          // eslint-disable-next-line no-console
+          console.error('Error fetching device ID:', error.message)
+        }
         setLoading(false)
       }
     }

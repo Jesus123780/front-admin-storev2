@@ -68,7 +68,7 @@ export const Restaurant = ({ userToken = {} } = {}) => {
   const { setAlertBox, sendNotification, messagesToast } = useContext(Context)
   const { isMobile } = useMobile()
   const [handleSession] = useSetSession()
-  const [onClickLogout] = useLogout({})
+  const { onClickLogout } = useLogout({})
   const { data: dataCountries, loading: loadingCountries } = useCountries()
   const [getDepartments, { data: dataDepartments, loading: loadingDepartments }] = useDepartments()
   const { data: dataRoad } = useRoads()

@@ -21,7 +21,7 @@ export default function Auth({ children }: AuthProps) {
   // STATE
   const pathname = usePathname()
   const params = useParams()
-  const [onClickLogout] = useLogout({})
+  const { onClickLogout } = useLogout({})
 
   // QUERIES
   // const [updateToken, { data, called }] = useMutation(UPDATE_TOKEN)

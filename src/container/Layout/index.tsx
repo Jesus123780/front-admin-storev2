@@ -130,7 +130,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     }
   })
 
-  const [onClickLogout] = useLogout({})
+  const { onClickLogout } = useLogout({})
   // const [play] = useSound('/sounds/notification.mp3')
 
   useEffect(() => {

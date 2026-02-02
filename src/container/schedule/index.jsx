@@ -47,7 +47,7 @@ export const ScheduleTimings = ({ isChart = false }) => {
   const [showModalTiming, setShowModalTiming] = useState(false)
   // HOOKS
   const { handleHourPmAM } = useFormatDate({})
-  const [onClickLogout] = useLogout({})
+  const { onClickLogout } = useLogout({})
   const { isMobile } = useMobile()
   const [setStoreSchedule, { loading }] = useCreateSchedules()
 

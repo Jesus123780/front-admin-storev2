@@ -54,11 +54,7 @@ export const Store = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showDessert, setShowDessert] = useState(false)
-  interface LogoutParams {
-    redirect?: boolean;
-    [key: string]: unknown;
-  }
-  const [onClickLogout] = useLogout() as [(params: LogoutParams) => Promise<void>, { loading: boolean; error: boolean }]
+  const { onClickLogout } = useLogout({})
 
   const ref = useRef<HTMLDivElement>(null!)
   const {
