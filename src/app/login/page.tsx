@@ -4,7 +4,8 @@ import Script from 'next/script'
 import { Column } from 'pkg-components'
 import React, { useState } from 'react'
 
-import { Login } from '@/container/login/index'
+import { Login } from '@/container/Login'
+
 
 export default function Entrar() {
     const [googleLoaded, setGoogleLoaded] = useState(false)

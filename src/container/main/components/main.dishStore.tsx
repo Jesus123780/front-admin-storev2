@@ -48,7 +48,7 @@ export const DishStore = () => {
         bgColor,
         borderColor
       } = useColorByLetters({
-        value: nameStore
+        value: nameStore ?? 'Store',
       })
     return (
         <div onClick={handleCardClick} className={styles.main__card}>

@@ -1,3 +1,4 @@
+// components/Login.tsx
 'use client'
 
 import { useRouter } from 'next/navigation'
@@ -7,6 +8,7 @@ import {
   fetchJson,
   isTokenExpired,
   signOutAuth,
+  useLoading,
   useLogout,
   useRegisterDeviceUser,
   useSetSession
@@ -23,299 +25,190 @@ import {
   Text
 } from 'pkg-components'
 import React, {
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useState
+  useContext, useEffect, useLayoutEffect
 } from 'react'
 
 import { getDeviceId } from '../../../apollo/getDeviceId'
 import { Context } from '../../context/Context'
-import { decodeToken,getUserFromToken } from '../../utils'
+import { decodeToken, getUserFromToken } from '../../utils'
 import styles from './styles.module.css'
-import { GoogleUserBody } from './types'
+
+
 
 const EXPIRED_MESSAGE = 'Session expired, refresh needed'
 
 interface ILogin {
   googleLoaded?: boolean
 }
-export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): React.ReactElement => {
+
+export const Login: React.FC<ILogin> = ({ googleLoaded = false }) => {
   const router = useRouter()
   const [handleRegisterDeviceUser] = useRegisterDeviceUser()
   const { setAlertBox, isElectron, sendNotification } = useContext(Context)
-  const [onClickLogout] = useLogout()
+  const { onClickLogout } = useLogout()
   const [handleSession] = useSetSession()
-  const [loading, setLoading] = useState(false)
+
+  // useLoading: configurable
+  const {
+    loading,
+    wrap,
+    start,
+    stop
+  } = useLoading({ delayMs: 120, minDurationMs: 350 })
+
+  /**
+   * Centralized login flow used by google callbacks.
+   * It does NOT manipulate UI loading directly; we rely on wrapping the call with loading.wrap
+   */
+  interface UserPayload {
+    user: {
+      name: string
+      username?: string
+      lastName?: string
+      email: string
+      id?: string
+      image?: string
+      imageUrl?: string
+      locationFormat?: unknown[]
+      useragent?: string | null
+    }
+  }
+
+  const doLoginFlow = async (userPayload: UserPayload) => {
+    // Validate input quickly
+    if (!userPayload?.user?.email) {
+      throw new Error('Invalid user payload')
+    }
+    const { user } = userPayload
+    const device = await getDeviceId()
+    const body = {
+      name: user.name,
+      username: user.username ?? user.name,
+      lastName: user.lastName ?? user.name,
+      email: user.email,
+      password: user.id ?? '',
+      locationFormat: user.locationFormat ?? [],
+      useragent: globalThis?.navigator?.userAgent ?? null,
+      deviceId: device,
+      imageUrl: user.imageUrl ?? user.image
+    }
+
+    const requestLogin = await fetchJson(
+      `${process.env.NEXT_PUBLIC_URL_BACK_SERVER}/api/auth`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        credentials: 'include'
+      }
+    )
+
+    if (!requestLogin?.success && !requestLogin?.ok) {
+      // prefer server message
+      throw new Error(requestLogin?.message || 'Failed to fetch authentication.')
+    }
+
+    const { user: userResp, token, store, refreshToken } = requestLogin.data ?? {}
+    if (!userResp || !token) {
+      throw new Error('Invalid login response structure.')
+    }
+
+    const encryptedData = encryptSession(JSON.stringify(requestLogin.data))
+
+    setAlertBox({ message: requestLogin.message, color: 'success' })
+    sendNotification({
+      title: 'Success',
+      description: 'Iniciaste sesión correctamente',
+      backgroundColor: 'success'
+    })
+
+    const cookiesDefault = [
+      { name: 'restaurant', value: store?.idStore },
+      { name: 'usuario', value: userResp?.id },
+      { name: 'session', value: token },
+      { name: process.env.NEXT_PUBLIC_SESSION_NAME || 'session_name', value: encryptedData }
+    ]
+    await handleSession({ cookies: cookiesDefault })
+
+    if (store?.idStore) {
+      const cookiesToSave = [
+        { name: 'merchant', value: store.idStore },
+        { name: 'usuario', value: userResp?.id },
+        { name: 'session', value: token },
+        { name: 'refreshToken', value: refreshToken }
+      ]
+      await handleSession({ cookies: cookiesToSave })
+      if (typeof handleRegisterDeviceUser === 'function') {
+        await handleRegisterDeviceUser({ deviceId: device })
+      }
+        stop()
+        // hard redirect to ensure session pick-up
+        globalThis.location.href = `${globalThis.location.origin}/dashboard`
+        return
+      }
+      
+      stop()
+    globalThis.location.href = `${globalThis.location.origin}/merchant`
+  }
+
+  // Wrap calls where you previously used setLoading(true)
+  const responseGoogle = async (response: UserPayload) => {
+    // call the centralized flow wrapped with loading
+    return await wrap(async () => {
+      try {
+        await doLoginFlow(response)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Error al iniciar sesión'
+        setAlertBox({ message, color: 'error' })
+        sendNotification({
+          title: 'Error',
+          description: message,
+          backgroundColor: 'error'
+        })
+        throw err
+      }
+    })
+  }
+
+  // Removed unused responseGoogleLegacy function
 
   const handleLogin = async (type: string) => {
-    try {
-      if (type === 'login-google') {
-        setAlertBox({ message: 'Iniciando sesión con Google, abre tu navegador y selecciona un perfil' })
-        if (typeof window !== 'undefined' && window.electron) {
+    if (type === 'login-google') {
+      setAlertBox({ message: 'Iniciando sesión con Google, abre tu navegador y selecciona un perfil' })
+      interface ElectronIpcRendererInvoke {
+        invoke(channel: string, ...args: unknown[]): Promise<unknown>
+      }
+      interface ElectronWindowInvoke {
+        electron?: {
+          ipcRenderer?: ElectronIpcRendererInvoke
+        }
+      }
+      const win = globalThis as unknown as { window?: ElectronWindowInvoke }
+      if (win.window !== undefined && win.window.electron) {
+        sendNotification({
+          title: 'Iniciando sesión',
+          description: 'Abre tu navegador y selecciona un perfil',
+          backgroundColor: 'success'
+        })
+        if (win.window.electron.ipcRenderer && typeof win.window.electron.ipcRenderer.invoke === 'function') {
+          win.window.electron.ipcRenderer.invoke('start-google-auth')
+        } else {
           sendNotification({
-            title: 'Iniciando sesión',
-            description: 'Abre tu navegador y selecciona un perfil',
-            backgroundColor: 'success'
+            title: 'Error',
+            description: 'No se pudo iniciar sesión con Google, por favor intenta de nuevo',
+            backgroundColor: 'error'
           })
-          if (window.electron.ipcRenderer && typeof window.electron.ipcRenderer.invoke === 'function') {
-            window.electron.ipcRenderer.invoke('start-google-auth')
-          } else {
-            sendNotification({
-              title: 'Error',
-              description: 'No se pudo iniciar sesión con Google, por favor intenta de nuevo',
-              backgroundColor: 'error'
-            })
-          }
         }
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        sendNotification({
-          title: 'Error',
-          description: error.message,
-          backgroundColor: 'error'
-        })
-      }
-      setAlertBox({ message: 'Error al iniciar sesión con Google' })
-      sendNotification({
-        title: 'Error',
-        description: 'No se pudo iniciar sesión con Google, por favor intenta de nuevo',
-        backgroundColor: 'error'
-      })
-    }
-  }
-  const responseGoogle = async (response: GoogleUserBody) => {
-    setLoading(true)
-    const { user } = response || {}
-    const { name, email, id, image } = user || {}
-    const device = await getDeviceId()
-    const body = {
-      name: name,
-      username: name,
-      lastName: name,
-      email,
-      password: id,
-      locationFormat: [],
-      useragent: window?.navigator?.userAgent ?? null,
-      deviceid: device,
-      imageUrl: image
-    }
-
-    try {
-      const requestLogin = await fetchJson(
-        `${process.env.NEXT_PUBLIC_URL_BACK_SERVER}/api/auth`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          credentials: 'include'
-        }
-      )
-
-      // Validación de respuesta
-      if (!requestLogin?.success) {
-        throw new Error(requestLogin?.message || 'Failed to fetch authentication.')
-      }
-
-      const {
-        user,
-        token,
-        store,
-        refreshToken
-      } = requestLogin.data
-      if (!user || !token) {
-        throw new Error('Invalid login response structure.')
-      }
-
-      // 🔒 Encriptar sesión
-      const encryptedData = encryptSession(JSON.stringify(requestLogin.data))
-
-      // ✅ Notificaciones UI
-      setAlertBox({ message: requestLogin.message, color: 'success' })
-      sendNotification({
-        title: 'Success',
-        description: 'Iniciaste sesión correctamente',
-        backgroundColor: 'success'
-      })
-
-      // 🥠 Cookies base
-      const cookiesDefault = [
-        { name: 'restaurant', value: store?.idStore },
-        { name: 'usuario', value: user?.id },
-        { name: 'session', value: token },
-        { name: process.env.NEXT_PUBLIC_SESSION_NAME, value: encryptedData }
-      ]
-      await handleSession({ cookies: cookiesDefault })
-
-      // 🍪 Cookies adicionales si hay store
-      if (store?.idStore) {
-        const cookiesToSave = [
-          { name: 'merchant', value: store.idStore },
-          { name: 'usuario', value: user?.id },
-          { name: 'session', value: token },
-          { name: 'refreshToken', value: refreshToken }
-        ]
-        await handleSession({ cookies: cookiesToSave })
-
-        // 🔔 Registrar dispositivo
-        await handleRegisterDeviceUser({ deviceId: device })
-
-        // 🔀 Redirección con recarga completa
-        window.location.href = `${window.location.origin}/dashboard`
-        return
-      }
-
-      // 🔀 Redirección sin recarga completa (cuando no hay store)
-      window.location.href = `${window.location.origin}/merchant`
-
-    } catch (error) {
-      setAlertBox({
-        message: error instanceof Error ? error.message : 'Error al iniciar sesión',
-        color: 'error'
-      })
-
-    } finally {
-      setLoading(false)
-    }
-
-  }
-  const responseGoogleLegacy = async (response: GoogleUserBody) => {
-    setLoading(true)
-    const { user } = response || {}
-    const { name, email, id, image } = user || {}
-    const device = await getDeviceId()
-    const body = {
-      name: name,
-      username: name,
-      lastName: name,
-      email,
-      password: id,
-      locationFormat: [],
-      useragent: window?.navigator?.userAgent ?? null,
-      deviceid: device,
-      imageUrl: image
-    }
-
-    try {
-      const requestLogin = await fetchJson(
-        `${process.env.NEXT_PUBLIC_URL_BACK_SERVER}/api/auth`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          credentials: 'include'
-        }
-      )
-      if (!requestLogin.ok) {
-        throw new Error('Failed to fetch authentication.')
-      }
-      const encryptedData = encryptSession(JSON.stringify(requestLogin))
-      setAlertBox({ message: requestLogin.message, color: 'success' })
-      sendNotification({
-        title: 'Success',
-        description: 'Iniciaste sesión correctamente',
-        backgroundColor: 'success'
-      })
-      const { storeUserId, token } = requestLogin
-      const { idStore, id } = storeUserId || {}
-      const decode = decodeToken(token) ?? {
-        id: ''
-      }
-      const cookiesDefault = [
-        { name: 'restaurant', value: idStore },
-        { name: 'usuario', value: decode?.id || id },
-        { name: 'session', value: token },
-        { name: process.env.NEXT_PUBLIC_SESSION_NAME, value: encryptedData }
-      ]
-      await handleSession({ cookies: cookiesDefault })
-
-      if (storeUserId) {
-        const cookiesToSave = [
-          { name: 'merchant', value: idStore },
-          { name: 'usuario', value: decode?.id || id },
-          { name: 'session', value: token }
-        ]
-        await handleSession({ cookies: cookiesToSave })
-        await handleRegisterDeviceUser({ deviceId: device })
-        // Redirección con recarga completa
-        const baseUrl = window.location.origin
-
-        window.location.href = `${baseUrl}/dashboard`
-        return
-      }
-      const baseUrl = window.location.origin
-      // Redirección sin recarga completa
-      window.location.href = `${baseUrl}/merchant`
-
-    } catch (error) {
-      if (error instanceof Error) {
-        sendNotification({
-          title: 'Error',
-          description: error.message,
-          backgroundColor: 'error'
-        })
-      }
-      setAlertBox({
-        message: 'Error al iniciar sesión con Google',
-        color: 'error'
-      })
-    } finally {
-      setLoading(false)
     }
   }
 
-  useEffect(() => {
-    if (googleLoaded && window.google) {
-      handlelogOut()
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string,
-        callback: async (response: { credential: string }) => {
-          const { credential } = response
-          if (credential) {
-            const data: DecodedToken = decodeToken(credential)
-            const {
-              name,
-              email,
-              picture,
-              sub: id
-            } = data
-            const body: GoogleUserBody = {
-              user: {
-                name,
-                username: name,
-                lastName: name,
-                email,
-                id,
-                image: picture,
-                locationFormat: [],
-                useragent: window?.navigator?.userAgent ?? null,
-                imageUrl: picture
-              }
-            }
-            responseGoogle(body)
-          }
-        },
-        auto_select: true,
-      })
-
-      // Interfaces
-      interface DecodedToken {
-        name: string
-        email: string
-        picture: string
-        sub: string
-      }
-      window.google.accounts.id.prompt()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [googleLoaded, router])
-
-
-  const handlelogOut = async () => {
+  // logout flow: use loading.wrap for async parts
+  const handleLogout = async () => {
     const jwtSession = Cookies.get('session')
-    if (jwtSession) {
-      (async () => {
+    if (!jwtSession) { return }
+    return await wrap(async () => {
+      try {
         const { message } = await getUserFromToken(jwtSession)
         const sessionExpired = message === EXPIRED_MESSAGE
         if (sessionExpired) {
@@ -330,19 +223,56 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
             setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
           })
         }
-      })()
-    }
+      } catch (err) {
+        if (err instanceof Error) {
+          setAlertBox({ message: 'Ocurrió un error al cerrar sesión', color: 'error' })
+        }
+        setAlertBox({ message: 'Ocurrió un error al cerrar sesión', color: 'error' })
+      }
+    })
   }
+
+  useEffect(() => {
+    if (googleLoaded && (globalThis).google) {
+      handleLogout();
+      // @ts-expect-error Google accounts id API types are not available in TypeScript
+      globalThis.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string,
+        callback: async (response: { credential: string }) => {
+          const { credential } = response
+          if (credential) {
+            const data = decodeToken(credential)
+            const session = {
+              user: {
+                name: data.name,
+                username: data.name,
+                lastName: data.name,
+                email: data.email,
+                id: data.sub,
+                image: data.picture
+              }
+            }
+            // wrap call to display loader properly
+            await responseGoogle(session)
+          }
+        },
+        auto_select: true
+        // @ts-expect-error Google accounts id API types are not available in TypeScript
+      }); (globalThis).google.accounts.id.prompt()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [googleLoaded, router])
+
   useLayoutEffect(() => {
-    handlelogOut()
+    handleLogout()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    const ironSession = Cookies.get(process.env.NEXT_PUBLIC_SESSION_NAME)
+    const ironSession = Cookies.get(String(process.env.NEXT_PUBLIC_SESSION_NAME))
     const jwtSession = Cookies.get('session')
-    const isExpired = isTokenExpired(jwtSession)
-    if (isExpired && jwtSession) {
+    const expired = isTokenExpired(jwtSession)
+    if (expired && jwtSession) {
       onClickLogout({ redirect: false })
       signOutAuth({
         redirect: true,
@@ -352,58 +282,23 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
         setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
       })
     }
-    if (ironSession) {return}
-    // if (session && status === 'authenticated' && !ironSession && !expired) {
-    //   (async () => {
-    //     setLoading(true)
-    //     if (jwtSession) {
-    //       const { message } = await getUserFromToken(jwtSession)
-    //       const sessionExpired = message === EXPIRED_MESSAGE
-    //       if (sessionExpired) {
-    //         await onClickLogout({ redirect: false })
-    //         return await signOutAuth({
-    //           redirect: true,
-    //           callbackUrl: '/',
-    //           reload: false
-    //         }).catch(() => {
-    //           setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
-    //         })
-    //       }
-    //     }
-    //     const { token, storeUserId } = session.session ?? {
-    //       token: '',
-    //       storeUserId: null
-    //     }
-    //     const { idStore, id } = storeUserId || {}
-    //     const decode = decodeToken(token) || {
-    //       id: null
-    //     }
-    //     const cookiesDefault = [
-    //       {
-    //         name: process.env.NEXT_PUBLIC_SESSION_NAME,
-    //         value: session[process.env.NEXT_PUBLIC_SESSION_NAME]
-    //       },
-    //       { name: 'restaurant', value: idStore },
-    //       { name: 'usuario', value: decode?.id || id },
-    //       { name: 'session', value: token }
-    //     ]
-    //     await handleSession({ cookies: cookiesDefault })
-    //     const deviceId = await getDeviceId()
-
-    //     await handleRegisterDeviceUser({ deviceId })
-    //     window.location.href =
-    //       process.env.NODE_ENV === 'production'
-    //         ? `${process.env.URL_BASE}/restaurante/getDataVerify`
-    //         : `${window.location.origin}/restaurante/getDataVerify`
-    //     setLoading(false)
-    //   })()
-    // }
+    if (ironSession) { return }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.electron) {
-      const listener = (_event: unknown, data: { 
+    interface ElectronIpcRenderer {
+      on(channel: string, listener: (...args: object[]) => void): void
+      removeListener(channel: string, listener: (...args: object[]) => void): void
+    }
+    interface ElectronWindow {
+      electron?: {
+        ipcRenderer?: ElectronIpcRenderer
+      }
+    }
+    const win = globalThis as unknown as { window?: ElectronWindow }
+    if (win.window !== undefined && win.window.electron) {
+      const listener = async (_event: unknown, data: {
         user_info: {
           name: string
           email: string
@@ -412,31 +307,21 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
         }
       }) => {
         const { user_info } = data || {}
-        const {
-          name,
-          email,
-          sub:
-          id,
-          picture
-        } = user_info || {}
         const session = {
           user: {
-            name,
-            username: name,
-            lastName: name,
-            email,
-            id,
-            image: picture,
-            imageUrl: picture,
-            locationFormat: [],
-            useragent: window?.navigator?.userAgent ?? null
+            name: user_info.name,
+            username: user_info.name,
+            lastName: user_info.name,
+            email: user_info.email,
+            id: user_info.sub,
+            image: user_info.picture,
+            imageUrl: user_info.picture
           }
         }
-        setLoading(false)
-        return responseGoogle(session)
+        // wrap so loader shows while we process
+        await responseGoogle(session)
       }
       const errorListener = () => {
-        setLoading(false)
         setAlertBox({ message: 'Error al iniciar sesión con Google' })
         sendNotification({
           title: 'Error',
@@ -445,19 +330,19 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
         })
       }
 
-      if (window.electron && window.electron.ipcRenderer && typeof window.electron.ipcRenderer.on === 'function') {
-        window.electron.ipcRenderer.on('google-auth-success', listener)
-        window.electron.ipcRenderer.on('google-auth-error', errorListener)
+      if (win.window.electron && win.window.electron.ipcRenderer && typeof win.window.electron.ipcRenderer.on === 'function') {
+        // @ts-expect-error Google accounts id API types are not available in TypeScript
+        win.window.electron.ipcRenderer.on('google-auth-success', listener)
+        win.window.electron.ipcRenderer.on('google-auth-error', errorListener)
       }
+
       return () => {
-        // Limpia el listener cuando el componente se desmonta
-        setLoading(false)
-        if (
-          window.electron &&
-          window.electron.ipcRenderer &&
-          typeof window.electron.ipcRenderer.removeListener === 'function'
-        ) {
-          window.electron.ipcRenderer.removeListener('google-auth-success', listener)
+        // @ts-expect-error Google accounts id API types are not available in TypeScript
+        if (win.window.electron && win.window.electron.ipcRenderer && typeof win.window.electron.ipcRenderer.removeListener === 'function') {
+          // @ts-expect-error Google accounts id API types are not available in TypeScript
+          win.window.electron.ipcRenderer.removeListener('google-auth-success', listener)
+          // @ts-expect-error Google accounts id API types are not available in TypeScript
+          win.window.electron.ipcRenderer.removeListener('google-auth-error', errorListener)
         }
       }
     }
@@ -465,68 +350,52 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
   }, [])
 
   return (
-    <>
-      <div className={styles.container}>
-        <div className={styles.card} />
-        <Column as='form' className={styles.form_login}>
-          <Text size='xxl' color='gray-dark'>
-            ¡Falta poco para iniciar tus ventas!
-          </Text>
-          <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-          <Text size='xl'>
-            ¿Cómo deseas continuar?
-          </Text>
-          <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-          <button className={styles.btn_close} type='button' onClick={() => {
-            const data = {
-              user: {
-                name: 'test',
-                username: 'test',
-                lastName: 'test',
-                email: 'test@gmail.com',
-                id: 'test',
-                image: 'test',
-                locationFormat: [],
-                useragent: window?.navigator?.userAgent ?? null,
-                imageUrl: 'test'
-              }
-            }
-            setLoading(true)
-            responseGoogle(data)
-          }}>
-            Login mock false
-          </button>
-          <button className={styles.btn_close} type='button' onClick={() => {
-            const data = {
-              user: {
-                name: 'test',
-                username: 'test',
-                lastName: 'test',
-                email: 'test@gmail.com',
-                id: 'test',
-                image: 'test',
-                locationFormat: [],
-                useragent: window?.navigator?.userAgent ?? null,
-                imageUrl: 'test'
-              }
-            }
-            setLoading(true)
-            responseGoogleLegacy(data)
-          }}>
-            Login mock false (legacy)
-          </button>
-          {isElectron
-            && <Button
-              border='none'
-              className={styles.btn_login}
-              styles={{
-                borderRadius: getGlobalStyle('--border-radius-2xs'),
-                border: 'none',
-                padding: getGlobalStyle('--spacing-xl'),
-                boxShadow: getGlobalStyle('--box-shadow-sm'),
-              }}
-              onClick={async () => {
-                setLoading(true)
+    <div className={styles.container}>
+      <div className={styles.card} />
+      <Column as='form' className={styles.form_login}>
+        <Text size='xxl' color='gray-dark'>
+          ¡Falta poco para iniciar tus ventas!
+        </Text>
+        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
+        <Text size='xl'>¿Cómo deseas continuar?</Text>
+        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
+
+        {/* Mock buttons: use wrap when calling responseGoogle */}
+        <button
+          className={styles.btn_close}
+          type='button'
+          onClick={() =>
+            wrap(async () =>
+              responseGoogle({
+                user: {
+                  name: 'test',
+                  username: 'test',
+                  lastName: 'test',
+                  email: 'test@gmail.com',
+                  id: 'test',
+                  image: 'test',
+                  locationFormat: [],
+                  useragent: globalThis?.navigator?.userAgent ?? null,
+                  imageUrl: 'test'
+                }
+              })
+            )
+          }
+        >
+          Login mock
+        </button>
+
+        {isElectron && (
+          <Button
+            border='none'
+            styles={{
+              borderRadius: getGlobalStyle('--border-radius-2xs'),
+              border: 'none',
+              padding: getGlobalStyle('--spacing-xl'),
+              boxShadow: getGlobalStyle('--box-shadow-sm')
+            }}
+            onClick={async () =>
+              wrap(async () => {
                 await onClickLogout({ redirect: false })
                 await signOutAuth({
                   redirect: true,
@@ -536,21 +405,33 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
                   setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
                 })
                 return handleLogin('login-google')
-              }}
-              type='button'
-            >
-              <Icon icon='IconGoogleFullColor' size={30} />
-              {loading ? <LoadingButton /> : 'Continuar con Google'}
-              <div style={{ width: 'min-content' }} />
-            </Button>
-          }
-          {!isElectron &&
-            <GoogleLogin
-              clientId={process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string}
-              onSuccess={(e) => {
-                setLoading(false)
+              })
+            }
+            type='button'
+          >
+            <Icon icon='IconGoogleFullColor' size={30} />
+            {loading ? (
+              <LoadingButton />
+            ) : (
+              'Continuar con Google'
+            )}
+            <div style={{ width: 'min-content' }} />
+          </Button>
+        )}
+
+        {!isElectron && (
+          <GoogleLogin
+            clientId={process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string}
+            onSuccess={(e) =>
+              wrap(async () => {
                 const { profileObj } = e || {}
-                const { name, email, familyName, googleId, imageUrl } = profileObj || {}
+                const {
+                  name,
+                  email,
+                  familyName,
+                  googleId,
+                  imageUrl
+                } = profileObj || {}
                 const data = {
                   user: {
                     name,
@@ -560,44 +441,61 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false, }: ILogin): Reac
                     id: googleId,
                     image: imageUrl,
                     locationFormat: [],
-                    useragent: window?.navigator?.userAgent ?? null,
+                    useragent: globalThis?.navigator?.userAgent ?? null,
                     imageUrl
                   }
                 }
-                responseGoogle(data)
-              }}
-              onFailure={(e) => {
-                if (e.error) {
-                  setAlertBox({ message: `Error al iniciar sesión con Google: ${e.error}` })
+                await responseGoogle(data)
+              })
+            }
+            onFailure={(e) => {
+              if ((e as { error?: string }).error) {
+                setAlertBox({ message: `Error al iniciar sesión con Google: ${(e as { error?: string }).error}` })
+              }
+              stop()
+            }}
+            onPopupClosed={(e: string) => {
+              if (e !== 'user') {
+                return null
+              }
+              sendNotification({
+                title: 'Login cancelled',
+                description: 'Please try again or choose another sign-in method.',
+                backgroundColor: 'warning'
+              })
+              stop()
+            }}
+            onAutoLoadFinished={() => {
+              stop()
+            }}
+            render={({ onClick, disabled }) => (
+              <Button
+                color='black'
+                styles={{
+                  borderRadius: getGlobalStyle('--border-radius-2xs'),
+                  border: 'none',
+                  padding: getGlobalStyle('--spacing-xl'),
+                  boxShadow: getGlobalStyle('--box-shadow-sm'),
+                  color: getGlobalStyle('--color-neutral-black')
+                }}
+                onClick={() => {
+                  onClick()
+                  start()
+                }}
+                disabled={disabled}
+                type='button'
+              >
+                <Icon icon='IconGoogleFullColor' size={30} />
+                {loading
+                  ? <LoadingButton color={getGlobalStyle('--color-primary-red')} />
+                  : 'Continuar con Google'
                 }
-                setLoading(false)
-              }}
-
-              render={({ onClick, disabled }) => (
-                <Button
-                  className={styles.btn_login}
-                  styles={{
-                    borderRadius: getGlobalStyle('--border-radius-2xs'),
-                    border: 'none',
-                    padding: getGlobalStyle('--spacing-xl'),
-                    boxShadow: getGlobalStyle('--box-shadow-sm'),
-                  }}
-                  onClick={() => {
-                    onClick()
-                    setLoading(true)
-                  }}
-                  disabled={disabled}
-                  type='button'
-                >
-                  <Icon icon='IconGoogleFullColor' size={30} />
-                  {loading ? <LoadingButton /> : 'Continuar con Google'}
-                  <div style={{ width: 'min-content' }} />
-                </Button>
-              )}
-            />
-          }
-        </Column>
-      </div>
-    </>
+                <div style={{ width: 'min-content' }} />
+              </Button>
+            )}
+          />
+        )}
+      </Column>
+    </div>
   )
 }

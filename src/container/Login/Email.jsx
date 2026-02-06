@@ -3,7 +3,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   fetchJson,
   useFormTools,
-  useManageQueryParams} from 'npm-pkg-hook'
+  useManageQueryParams
+} from 'npm-pkg-hook'
 import {
   BColor,
   Button,
@@ -17,11 +18,13 @@ import {
   RippleButton,
   ROUTES,
   Text,
-  validateEmail} from 'pkg-components'
+  validateEmail
+} from 'pkg-components'
 import React, {
   useContext,
   useEffect,
-  useState} from 'react'
+  useState
+} from 'react'
 
 import { decodeToken } from '@/utils'
 

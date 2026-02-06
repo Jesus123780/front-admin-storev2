@@ -6,10 +6,6 @@
     justify-content: center;
 }
 
-.btn_login {
-    display: flex;
-    justify-content: space-between;
-}
 
 .form_login {
     box-shadow: var(--box-shadow-2xs);

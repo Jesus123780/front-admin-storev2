@@ -5,15 +5,16 @@ import {
     Portal,
     Toast
 } from 'pkg-components'
+import { AlertContentProps } from 'pkg-components/stories/molecules/AlertBox/types'
 import { useContext } from 'react'
 
 import { Context } from '@/context/Context'
 
 export default function EmptyLayout({ children }: { children: React.ReactNode }) {
-    const { messagesToast, error } = useContext(Context)
+    const { messagesToast, error, deleteToast } = useContext(Context)
     return (
         <>
-            <AlertBox err={error} />
+            <AlertBox err={error as AlertContentProps} />
             <Portal selector='portal'>
                 <div style={{
                     position: 'fixed',
@@ -22,7 +23,8 @@ export default function EmptyLayout({ children }: { children: React.ReactNode })
                 }} >
                     <Toast
                         autoDelete={true}
-                        autoDeleteTime={7000}
+                        autoDeleteTime={3000}
+                        deleteToast={deleteToast}
                         position={'bottom-left'}
                         toastList={messagesToast}
                     />
