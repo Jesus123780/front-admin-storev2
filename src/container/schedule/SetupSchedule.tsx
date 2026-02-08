@@ -1,22 +1,23 @@
 'use client'
 
-import PropTypes from 'prop-types'
-import React, { useContext } from 'react'
+import { useRouter } from 'next/navigation'
+import { 
+  getTotalHours, 
+  isValidTimeString,
+  useSetupSchedule
+} from 'npm-pkg-hook'
 import { 
   AlertInfo,
   AwesomeModal,
+  getGlobalStyle,
   RippleButton,
   Row,
   SetupSchedule as SetupSchedulePkg, 
-  Toast, 
-  getGlobalStyle
+  Toast
 } from 'pkg-components'
-import { 
-  useSetupSchedule, 
-  getTotalHours, 
-  isValidTimeString
-} from 'npm-pkg-hook'
-import { useRouter } from 'next/navigation'
+import PropTypes from 'prop-types'
+import React, { useContext } from 'react'
+
 import { Context } from '../../context/Context'
 
 export const SetupSchedule = ({

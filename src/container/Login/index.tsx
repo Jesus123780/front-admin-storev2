@@ -1,6 +1,7 @@
 // components/Login.tsx
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Cookies,
@@ -29,11 +30,10 @@ import React, {
 } from 'react'
 
 import { getDeviceId } from '../../../apollo/getDeviceId'
+import pkg from '../../../package.json'
 import { Context } from '../../context/Context'
 import { decodeToken, getUserFromToken } from '../../utils'
 import styles from './styles.module.css'
-
-
 
 const EXPIRED_MESSAGE = 'Session expired, refresh needed'
 
@@ -141,13 +141,13 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false }) => {
       if (typeof handleRegisterDeviceUser === 'function') {
         await handleRegisterDeviceUser({ deviceId: device })
       }
-        stop()
-        // hard redirect to ensure session pick-up
-        globalThis.location.href = `${globalThis.location.origin}/dashboard`
-        return
-      }
-      
       stop()
+      // hard redirect to ensure session pick-up
+      globalThis.location.href = `${globalThis.location.origin}/dashboard`
+      return
+    }
+
+    stop()
     globalThis.location.href = `${globalThis.location.origin}/merchant`
   }
 
@@ -495,6 +495,36 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false }) => {
             )}
           />
         )}
+        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
+        <Text align='center'>
+          {pkg?.version ?? ''}
+        </Text>
+        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
+        <Text size='sm' color='gray-dark'>
+          Al continuar, aceptas los{' '}
+          <Link
+            href='/'
+            target='_blank'
+            rel='noopener noreferrer'
+            style={{
+              color: getGlobalStyle('--color-text-secondary')
+            }}
+          >
+            Términos y Condiciones
+          </Link>{' '}
+          y la{' '}
+          <Link
+            href='/'
+            target='_blank'
+            rel='noopener noreferrer'
+            style={{
+              color: getGlobalStyle('--color-text-secondary')
+            }}
+          >
+            Política de Privacidad
+          </Link>{' '}
+          del sotware.
+        </Text>
       </Column>
     </div>
   )

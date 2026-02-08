@@ -1,18 +1,23 @@
-import { useState } from 'react'
-import { RippleButton, InputOTPHook, Text } from 'pkg-components'
-import { EColor } from 'public/colors'
 import { useRouter } from 'next/navigation'
-import { decodeToken, getTokenState } from 'utils'
-import { EmptyLayout } from 'pages/_app'
+import {
+ InputOTPHook, RippleButton, Text 
+} from 'pkg-components'
+import { useState } from 'react'
 
-export const EmailVerifyCode = ({ code }) => {
+import EmptyLayout from '@/app/login/layout'
+import { decodeToken, getTokenState } from '@/utils'
+
+interface EmailVerifyCodeProps {
+  code: string
+}
+export const EmailVerifyCode = ({ code }: EmailVerifyCodeProps) => {
   const router = useRouter()
   // eslint-disable-next-line
   const [step, setStep] = useState(0)
   const tokenState = getTokenState(code)
   const decode = decodeToken(code)
-  let str = decode?.code.toString()
-  let arr = Object.assign([], str)
+  const str = decode?.code.toString()
+  const arr = Object.assign([], str)
   const array = arr
   if (tokenState?.needRefresh === true) {
 
@@ -37,13 +42,13 @@ export const EmailVerifyCode = ({ code }) => {
           onChangeOTP={() => { return }}
         />
         <RippleButton
-          bgColor={EColor}
           margin='20px auto'
           onClick={() => { return setStep(1) }}
           type='button'
-          widthButton='100%'
-        >Continuar</RippleButton>
-        <Text size='15px'>No recibí mi código</Text>
+        >
+          Continuar
+        </RippleButton>
+        <Text>No recibí mi código</Text>
       </form>
     </div>
   )

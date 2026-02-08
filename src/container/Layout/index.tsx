@@ -477,7 +477,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
                 color={getGlobalStyle('--color-icons-primary')}
               />
             </Button>
-            {components[showModalComponent] as React.ReactNode ?? null}
+            {components[showModalComponent as keyof typeof components] as React.ReactNode ?? null}
           </LateralModal>
         </div>
       </main>

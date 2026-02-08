@@ -6,7 +6,6 @@
     justify-content: center;
 }
 
-
 .form_login {
     box-shadow: var(--box-shadow-2xs);
     border-radius: 8px;
@@ -30,18 +29,19 @@
 }
 
 .card::before {
-    content: "";
-    min-width: 130vh;
-    min-height: 135vh;
-    width: 130vw;
-    height: 130vw;
-    z-index: -1;
-    position: absolute;
-    background-color: #fdedee;
+    background-color: var(--color-primary-pink-light);
     border-radius: 0 100% 100%;
-    left: 50%;
-    transform: translate(-70%);
     bottom: -70px;
+    content: "";
+    opacity: 0.7;
+    height: 130vw;
+    left: 50%;
+    min-height: 135vh;
+    min-width: 130vh;
+    position: absolute;
+    transform: translate(-70%);
+    width: 130vw;
+    z-index: -1;
 }
 
 @media only screen and (min-width: 960px) {

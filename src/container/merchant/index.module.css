@@ -1,0 +1,78 @@
+/* Restaurant.module.css */
+.wrapper {
+    position: relative;
+    min-height: 100vh;
+    /* ajusta según necesites */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: var(--color-base-white);
+}
+
+/* Gran círculo rosa (detrás de todo) */
+.heroCircle {
+    position: absolute;
+    left: -30%;
+    top: -40%;
+    width: 120vmax;
+    /* muy grande para cubrir fondo */
+    height: 120vmax;
+    border-radius: 50%;
+    background-color: var(--color-primary-pink-light);
+    /* color base rosa */
+    z-index: 0;
+    pointer-events: none;
+    /* no interfiere con clicks */
+    transform: translate3d(0, 0, 0);
+    opacity: 0.6;
+}
+
+/* Contenedor del contenido (card y elementos) */
+.content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 620px;
+    /* ancho de la tarjeta */
+    margin-left: auto;
+    /* empuja a la derecha */
+    margin-right: 5%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Estilo base de la tarjeta (solo layout) */
+.card {
+    background-color: var(--color-base-white);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 1.5rem;
+    max-height: 600px;
+    overflow: hidden auto;
+}
+
+/* Opcional: controlar el botón para que no sobresalga */
+.actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}
+
+/* Responsive: en pantallas pequeñas, círculo más escondido y contenido centrado */
+@media (max-width: 768px) {
+    .heroCircle {
+        left: 50%;
+        width: 200vmax;
+        height: 100vh;
+        transform: translateX(-50%);
+    }
+
+    .content {
+        max-width: 95%;
+        margin: 0 2.5%;
+        align-self: center;
+    }
+}

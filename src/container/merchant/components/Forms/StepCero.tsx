@@ -4,9 +4,32 @@ import {
   InputHooks,
   PhoneInput
 } from 'pkg-components'
-import PropTypes from 'prop-types'
 
-import { ContainerAnimation } from '..'
+interface DataForm {
+  storeOwner: string
+  storeName: string
+  email: string
+  uPhoNum: string
+}
+
+interface DataUser {
+  email: string
+}
+
+interface ErrorForm {
+  storeOwner?: string
+  storeName?: string
+  email?: string
+  uPhoNum?: string
+}
+
+interface StepCeroProps {
+  dataForm?: DataForm
+  dataUser?: DataUser
+  email?: string
+  errorForm?: ErrorForm
+  handleChange?: (event: { target: { name: string; value: string } }) => void
+}
 
 export const StepCero = ({
   dataForm = {
@@ -21,9 +44,9 @@ export const StepCero = ({
   email = '',
   errorForm = {},
   handleChange = () => { return }
-}) => {
+}: StepCeroProps) => {
   return (
-    <ContainerAnimation active={0}>
+    <div>
       <div>
         <InputHooks
           error={errorForm?.storeOwner}
@@ -56,6 +79,8 @@ export const StepCero = ({
           width='100%'
         />
         <PhoneInput
+          name='uPhoNum'
+          value={dataForm?.uPhoNum}
           onChange={(value) => {
             const event = {
               target: {
@@ -63,20 +88,11 @@ export const StepCero = ({
                 value
               }
             }
-            return handleChange(event)
+            handleChange?.(event)
           }}
           required
-          width='100%'
         />
       </div>
-    </ContainerAnimation>
+    </div>
   )
-}
-
-StepCero.propTypes = {
-  dataForm: PropTypes.object,
-  dataUser: PropTypes.object,
-  email: PropTypes.string,
-  errorForm: PropTypes.object,
-  handleChange: PropTypes.func
 }

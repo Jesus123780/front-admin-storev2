@@ -7,8 +7,6 @@ import {
 import PropTypes from 'prop-types'
 import React from 'react'
 
-import { ContainerAnimation } from '..'
-
 export const StepTow = ({
   errorForm = {
     emailStore: false,
@@ -21,19 +19,32 @@ export const StepTow = ({
     username: ''
   },
   isMobile = false,
-  userName = '',
   handleChange = (e) => { return e }
 }) => {
+
+StepTow.propTypes = {
+  errorForm: PropTypes.shape({
+    emailStore: PropTypes.bool,
+    storePhone: PropTypes.bool,
+    username: PropTypes.bool
+  }),
+  dataForm: PropTypes.shape({
+    emailStore: PropTypes.string,
+    storePhone: PropTypes.string,
+    username: PropTypes.string
+  }),
+  isMobile: PropTypes.bool,
+  handleChange: PropTypes.func
+}
   return (
-    <ContainerAnimation active={2} >
-      <React.Fragment>
+    <div>
         <InputHooks
           error={errorForm?.username}
           name='username'
           onChange={handleChange}
           required
           title={isMobile ? 'Nombre dueño de la tienda' : 'Nombre del representante legal de la tienda'}
-          value={userName}
+          value={dataForm.username}
           width='100%'
         />
         <InputHooks
@@ -62,16 +73,6 @@ export const StepTow = ({
           required={true}
           width='100%'
         />
-
-      </React.Fragment>
-    </ContainerAnimation >
+    </div>
   )
-}
-
-StepTow.propTypes = {
-  dataForm: PropTypes.object,
-  errorForm: PropTypes.object,
-  handleChange: PropTypes.func,
-  isMobile: PropTypes.bool,
-  userName: PropTypes.string
 }
