@@ -45,7 +45,7 @@ export const Goal = () => {
     };
 
     return (
-        <Column style={{ width: '100%', padding: getGlobalStyle('--spacing-md') }} justifyContent='center' alignItems='center'>
+        <Column style={{ width: '100%', padding: getGlobalStyle('--spacing-md'), height: '100%' }} justifyContent='center' alignItems='center'>
             <AwesomeModal
                 show={openModalGoal}
                 onHide={handleOpenEditgoal}
@@ -96,7 +96,7 @@ export const Goal = () => {
             </Column> */}
             <KmhGoalChart
                 size={250}
-                current={loading ? 0 : data?.total} goal={loading ? 0 : dailyGoal}
+                current={loading ? 0 : data?.total} goal={loading ? 0 : Number(dailyGoal ?? 0)}
                 moneyFormat
                 numberFormat={numberFormat}
                 orientation='vertical'

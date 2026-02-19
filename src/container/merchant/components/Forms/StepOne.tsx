@@ -11,6 +11,67 @@ import { CalcularDigitoVerificacion } from '@/utils'
 
 import { formatWithDots } from '../../helpers/formatWithDots'
 
+interface IFormData {
+  socialRaz?: string
+  documentIdentifier?: string
+  nitStore?: string
+  catStore?: string
+  typeRegiments?: string
+  email?: string
+  addressStore?: string
+  countryId?: string
+  code_dId?: string
+  ctId?: string
+  rId?: string
+  neighborhoodStore?: string
+  viaPrincipal?: string
+  secVia?: string
+  uLocation?: string
+}
+
+interface IErrorForm {
+  socialRaz?: boolean
+  documentIdentifier?: boolean
+  nitStore?: boolean
+  catStore?: boolean
+  typeRegiments?: boolean
+  email?: boolean
+  addressStore?: boolean
+  countryId?: boolean
+  code_dId?: boolean
+  ctId?: boolean
+  rId?: boolean
+  neighborhoodStore?: boolean
+  viaPrincipal?: boolean
+  secVia?: boolean
+  uLocation?: boolean
+}
+
+interface IValues {
+  countryId?: string
+  code_dId?: string
+  ctId?: string
+  rId?: string
+}
+
+interface IStepOneProps {
+  catStore?: Array<{ cName?: string }>
+  countries?: Array<{ cName?: string }>
+  dataForm?: IFormData
+  departments?: Array<{ dName?: string }>
+  cities?: Array<{ cName?: string }>
+  road?: Array<{ rName?: string }>
+  isMobile?: boolean
+  errorForm?: IErrorForm
+  values?: IValues
+  loadingCountries?: boolean
+  loadingCatStore?: boolean
+  loadingDepartments?: boolean
+  loadingCities?: boolean
+  handleChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, hasError: boolean) => void
+  handleChangeSearch?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+  handleBlur?: (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+}
 
 export const StepOne = ({
   catStore = [],
@@ -29,7 +90,7 @@ export const StepOne = ({
   handleChange = () => { return },
   handleChangeSearch = () => { return },
   handleBlur = () => { return }
-}) => {
+}: IStepOneProps) => {
   return (
     <div>
       <InputHooks
@@ -37,75 +98,64 @@ export const StepOne = ({
         name='socialRaz'
         onChange={handleChange}
         required
-        title='Razon social'
+        title='Razón social *'
         value={dataForm?.socialRaz}
         width='100%'
+        step={1}
       />
+      <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
       <InputHooks
         error={errorForm?.documentIdentifier}
         name='documentIdentifier'
         onChange={(e) => {
-          const value = e.target.value.replace(/\D/g, '')
-          handleChange({ target: { name: 'documentIdentifier', value } })
+          const value = e.target.value.replaceAll(/\D/g, '')
+          handleChange({ target: { name: 'documentIdentifier', value } } as React.ChangeEvent<HTMLInputElement>, false)
         }}
         required
-        title='Documento de identificación'
-        value={formatWithDots(dataForm?.documentIdentifier)}
+        title='Documento de identificación *'
+        value={formatWithDots(dataForm?.documentIdentifier as string)}
         width='100%'
+        step={1}
       />
+      <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <InputHooks
-          error={errorForm?.NitStore}
-          name='NitStore'
+          error={errorForm?.nitStore}
+          name='nitStore'
           numeric={true}
           onChange={handleChange}
-          required={true}
-          title='Nit de la tienda'
-          value={dataForm?.NitStore}
+          required={false}
+          title='NIT de la tienda'
+          value={dataForm?.nitStore as string}
           width={isMobile ? '80%' : '85%'}
+          step={1}
         />
         <InputHooks
           disabled={true}
-          name='NitStore'
+          name='nitStoreCheckDigit'
           onChange={handleChange}
           required={false}
-          value={dataForm?.NitStore ? Number(CalcularDigitoVerificacion(dataForm?.NitStore) ?? 0) : 0}
+          step={1}
+          value={dataForm?.nitStore ? String(CalcularDigitoVerificacion(dataForm?.nitStore) ?? 0) : ''}
           width={isMobile ? '20%' : '10%'}
         />
       </div>
       <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
       <NewSelect
-        error={errorForm?.catStore}
+        error={errorForm?.catStore as boolean}
         id='catStore'
         loading={loadingCatStore}
         name='catStore'
-        onChange={handleChange}
+        step={1}
+        onChange={(e) => handleChange(e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, false)}
         optionName='cName'
         options={catStore}
-        required
-        title='Categoría de la tienda *'
-        value={dataForm?.catStore}
+        required={true}
+        title='Categoría de la tienda'
+        value={dataForm?.catStore as string}
       />
 
-      {false && <>
-        <InputHooks
-          error={errorForm?.typeRegiments}
-          name='typeRegiments'
-          onChange={handleChange}
-          title='Tipo de Regimen'
-          value={dataForm?.typeRegiments}
-          width='100%'
-        />
-        <InputHooks
-          error={errorForm?.email}
-          name='email'
-          onChange={handleChange}
-          title='Tipo de Contribuyente'
-          value={dataForm?.email}
-          width='100%'
-        />
-      </>
-      }
+      {/* Commented out for future use */}
       <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
       <Text
         as='h2'
@@ -121,11 +171,13 @@ export const StepOne = ({
         onBlur={handleBlur}
         onChange={handleChange}
         onFocus={handleBlur}
-        padding='15px 0'
+        required={true}
+        step={1}
         title='Dirección de la tienda'
         value={dataForm?.addressStore}
         width='100%'
       />
+      <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
       <div>
         <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
         <NewSelect
@@ -133,10 +185,10 @@ export const StepOne = ({
           id='cId'
           loading={loadingCountries}
           name='countryId'
-          onChange={handleChangeSearch}
+          onChange={(e) => handleChangeSearch(e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)}
           optionName='cName'
           options={countries}
-          title='País'
+          title='Selecciona el país'
           value={values?.countryId}
         />
         <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
@@ -145,7 +197,7 @@ export const StepOne = ({
           id='code_dId'
           loading={loadingDepartments}
           name='code_dId'
-          onChange={handleChangeSearch}
+          onChange={(e) => handleChangeSearch(e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)}
           optionName='dName'
           options={departments}
           title='Departamento'
@@ -157,7 +209,7 @@ export const StepOne = ({
           id='ctId'
           loading={loadingCities}
           name='ctId'
-          onChange={handleChangeSearch}
+          onChange={(e) => handleChangeSearch(e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)}
           optionName='cName'
           options={cities ?? []}
           title='Ciudad'
@@ -168,7 +220,7 @@ export const StepOne = ({
           error={errorForm?.rId}
           id='rId'
           name='rId'
-          onChange={handleChangeSearch}
+          onChange={(e) => handleChangeSearch(e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)}
           optionName='rName'
           options={road}
           title='Tipo de via'
@@ -183,35 +235,32 @@ export const StepOne = ({
             title='Barrio*'
             value={dataForm?.neighborhoodStore}
             width='45%'
-
           />
           <InputHooks
-            error={errorForm?.Viaprincipal}
-            name='Viaprincipal'
+            error={errorForm?.viaPrincipal}
+            name='viaPrincipal'
             onChange={handleChange}
             required
-            title='Via principal*'
-            value={dataForm?.Viaprincipal}
+            title='Vía principal*'
+            value={dataForm?.viaPrincipal}
             width='45%'
-
           />
           <InputHooks
             error={errorForm?.secVia}
             name='secVia'
             onChange={handleChange}
             required
-            title='Via secundaria*'
+            title='Vía secundaria*'
             value={dataForm?.secVia}
             width='45%'
-
           />
           <InputHooks
-            error={errorForm?.ULocation}
-            name='ULocation'
+            error={errorForm?.uLocation}
+            name='uLocation'
             onChange={handleChange}
             required
             title='Complemento*'
-            value={dataForm?.ULocation}
+            value={dataForm?.uLocation}
             width='45%'
           />
         </div>

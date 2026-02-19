@@ -74,16 +74,9 @@
 
 .qrCard {
   align-items: center;
-  border-radius: 6px;
-  border: 3px dashed var(--color-neutral-gray-silver);
-  box-sizing: border-box;
   display: flex;
   height: 100%;
   justify-content: center;
-  margin: 1rem 0;
-  max-width: 90%;
-  padding: 0.75rem 0.75rem 0.55rem;
-  width: 100%;
 }
 
 .goal_chart_action {

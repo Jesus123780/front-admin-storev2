@@ -1,7 +1,6 @@
 // components/Login.tsx
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Cookies,
@@ -14,25 +13,16 @@ import {
   useRegisterDeviceUser,
   useSetSession
 } from 'npm-pkg-hook'
-import {
-  Button,
-  Column,
-  Divider,
-  getGlobalStyle,
-  GoogleLogin,
-  Icon,
-  LoadingButton,
-  ROUTES,
-  Text
-} from 'pkg-components'
+import { ROUTES } from 'pkg-components'
+import GridStack from 'pkg-components/stories/organisms/grid_stack_react_pure_js_module/components/GridStack/GridStack'
 import React, {
-  useContext, 
+  useContext,
   useEffect,
-  useLayoutEffect
+  useLayoutEffect,
+  useState
 } from 'react'
 
 import { getDeviceId } from '../../../apollo/getDeviceId'
-import pkg from '../../../package.json'
 import { Context } from '../../context/Context'
 import { decodeToken, getUserFromToken } from '../../utils'
 import styles from './styles.module.css'
@@ -351,183 +341,47 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const [layout, setLayout] = useState([
+    { static: true,  id: 'card1', x: 0, y: 0, w: 4, h: 3, title: 'Card 1', component: { text: 'Hola Jesús' } },
+    { static: false,  id: 'card2', x: 4, y: 0, w: 4, h: 3, title: 'Card 2' },
+  ])
+
+  const COMPONENT_MAP = {
+    card1: ({ text }) => <div>{text}</div>,
+    card2: () => <div>Otra tarjeta</div>,
+  }
+
   return (
-    <div className={styles.container}>
+    <div style={{
+      backgroundColor: '#ffd4d4'
+    }}>
+      <GridStack
+        items={layout}
+        cols={12}
+        rowHeight={30}
+        margin={[0, 0]}
+        containerPadding={[0, 0]}
+        componentMap={COMPONENT_MAP}
+        onLayoutChange={(newLayout) => {
+          setLayout(prev => prev.map(item => {
+            const found = newLayout.find(l => l.i === item.id);
+            return found ? { ...item, x: found.x, y: found.y, w: found.w, h: found.h } : item;
+          }));
+        }}
+
+        snapEnabled={false}
+        snapThreshold={16}
+        /* NUEVAS PROPS */
+        dragMode="overlay"            // overlay | direct
+        collisionMode="push"          // push | swap | none
+        dragThrottleMs={0}            // 0 = requestAnimationFrame
+        allowOverlapDuringDrag={false}
+        animateOnDrop={true}
+        preventCollision={true}
+      />
+
       <div className={styles.card} />
-      <Column as='form' className={styles.form_login}>
-        <Text size='xxl' color='gray-dark'>
-          ¡Falta poco para iniciar tus ventas!
-        </Text>
-        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-        <Text size='xl'>¿Cómo deseas continuar?</Text>
-        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
 
-        {/* Mock buttons: use wrap when calling responseGoogle */}
-        <button
-          className={styles.btn_close}
-          type='button'
-          onClick={() =>
-            wrap(async () =>
-              responseGoogle({
-                user: {
-                  name: 'test',
-                  username: 'test',
-                  lastName: 'test',
-                  email: 'test@gmail.com',
-                  id: 'test',
-                  image: 'test',
-                  locationFormat: [],
-                  useragent: globalThis?.navigator?.userAgent ?? null,
-                  imageUrl: 'test'
-                }
-              })
-            )
-          }
-        >
-          Login mock
-        </button>
-
-        {isElectron && (
-          <Button
-            border='none'
-            styles={{
-              borderRadius: getGlobalStyle('--border-radius-2xs'),
-              border: 'none',
-              padding: getGlobalStyle('--spacing-xl'),
-              boxShadow: getGlobalStyle('--box-shadow-sm')
-            }}
-            onClick={async () =>
-              wrap(async () => {
-                await onClickLogout({ redirect: false })
-                await signOutAuth({
-                  redirect: true,
-                  callbackUrl: ROUTES.index,
-                  reload: false
-                }).catch(() => {
-                  setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
-                })
-                return handleLogin('login-google')
-              })
-            }
-            type='button'
-          >
-            <Icon icon='IconGoogleFullColor' size={30} />
-            {loading ? (
-              <LoadingButton />
-            ) : (
-              'Continuar con Google'
-            )}
-            <div style={{ width: 'min-content' }} />
-          </Button>
-        )}
-
-        {!isElectron && (
-          <GoogleLogin
-            clientId={process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string}
-            onSuccess={(e) =>
-              wrap(async () => {
-                const { profileObj } = e || {}
-                const {
-                  name,
-                  email,
-                  familyName,
-                  googleId,
-                  imageUrl
-                } = profileObj || {}
-                const data = {
-                  user: {
-                    name,
-                    username: name,
-                    lastName: familyName,
-                    email,
-                    id: googleId,
-                    image: imageUrl,
-                    locationFormat: [],
-                    useragent: globalThis?.navigator?.userAgent ?? null,
-                    imageUrl
-                  }
-                }
-                await responseGoogle(data)
-              })
-            }
-            onFailure={(e) => {
-              if ((e as { error?: string }).error) {
-                setAlertBox({ message: `Error al iniciar sesión con Google: ${(e as { error?: string }).error}` })
-              }
-              stop()
-            }}
-            onPopupClosed={(e: string) => {
-              if (e !== 'user') {
-                return null
-              }
-              sendNotification({
-                title: 'Login cancelled',
-                description: 'Please try again or choose another sign-in method.',
-                backgroundColor: 'warning'
-              })
-              stop()
-            }}
-            onAutoLoadFinished={() => {
-              stop()
-            }}
-            render={({ onClick, disabled }) => (
-              <Button
-                color='black'
-                styles={{
-                  borderRadius: getGlobalStyle('--border-radius-2xs'),
-                  border: 'none',
-                  padding: getGlobalStyle('--spacing-xl'),
-                  boxShadow: getGlobalStyle('--box-shadow-sm'),
-                  color: getGlobalStyle('--color-neutral-black')
-                }}
-                onClick={() => {
-                  onClick()
-                  start()
-                }}
-                disabled={disabled}
-                type='button'
-              >
-                <Icon icon='IconGoogleFullColor' size={30} />
-                {loading
-                  ? <LoadingButton color={getGlobalStyle('--color-primary-red')} />
-                  : 'Continuar con Google'
-                }
-                <div style={{ width: 'min-content' }} />
-              </Button>
-            )}
-          />
-        )}
-        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-        <Text align='center'>
-          {pkg?.version ?? ''}
-        </Text>
-        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-        <Text size='sm' color='gray-dark'>
-          Al continuar, aceptas los{' '}
-          <Link
-            href='#'
-            target='_blank'
-            rel='noopener noreferrer'
-            style={{
-              color: getGlobalStyle('--color-text-secondary')
-            }}
-          >
-            Términos y Condiciones
-          </Link>{' '}
-          y la{' '}
-          <Link
-            href='#'
-            target='_blank'
-            rel='noopener noreferrer'
-            style={{
-              color: getGlobalStyle('--color-text-secondary')
-            }}
-          >
-            Política de Privacidad
-          </Link>{' '}
-          del sotware.
-        </Text>
-      </Column>
     </div>
   )
 }

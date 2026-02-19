@@ -53,9 +53,10 @@ export const StepCero = ({
           name='storeOwner'
           onChange={handleChange}
           required
-          title='Nombre del dueño de la tienda.'
+          title='Nombre del dueño de la tienda *'
           value={dataForm?.storeOwner}
           width='100%'
+          step={0}
         />
         <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
         <InputHooks
@@ -63,9 +64,10 @@ export const StepCero = ({
           name='storeName'
           onChange={handleChange}
           required
-          title='Nombre de la tienda.'
+          title='Nombre de la tienda *'
           value={dataForm?.storeName}
           width='100%'
+          step={0}
         />
         <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
         <InputHooks
@@ -77,9 +79,13 @@ export const StepCero = ({
           title='Correo.'
           value={email ?? dataUser?.email}
           width='100%'
+          step={0}
         />
         <PhoneInput
           name='uPhoNum'
+          step={0}
+          error={Boolean(errorForm?.uPhoNum)}
+          title='Número de teléfono *'
           value={dataForm?.uPhoNum}
           onChange={(value) => {
             const event = {
@@ -90,7 +96,7 @@ export const StepCero = ({
             }
             handleChange?.(event)
           }}
-          required
+          required={true}
         />
       </div>
     </div>

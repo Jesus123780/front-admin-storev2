@@ -1,20 +1,24 @@
 'use client'
 
-import { useMobile,useUpdateDashboardComponent } from 'npm-pkg-hook'
-import { 
-    Column, 
+import { useMobile, useUpdateDashboardComponent } from 'npm-pkg-hook'
+import {
+    Divider,
     getGlobalStyle,
-    Layout, 
-    Layouts, 
-    Responsive, 
-    Text, 
-    ToggleSwitch, 
-    WidthProvider
+    Text,
+    ToggleSwitch
 } from 'pkg-components'
+import GridStack from 'pkg-components/stories/organisms/grid_stack_react_pure_js_module/components/GridStack/GridStack'
 import React, {
- FunctionComponent,useContext, useEffect, useState 
+    FunctionComponent,
+    useContext,
+    useEffect,
+    useState
 } from 'react'
 
+/**
+ * IMPORT OUR GridStack component
+ * Ajusta la ruta si tu proyecto no hace resolve de '@' hacia 'src'
+ */
 import { ChatStatistic } from '@/container/ChatStatistic'
 import { Devices } from '@/container/Devices'
 import { DishStore } from '@/container/main/components/main.dishStore'
@@ -26,15 +30,34 @@ import { Context } from '@/context/Context'
 
 import { Loading } from '../components'
 import { useComponents } from '../context'
-import styles from './styles.module.css'
 
-const ResponsiveGridLayout = WidthProvider(Responsive)
+/**
+ * onLayoutChange receives an array of nodes from GridStack (each node has .i, x,y,w,h)
+ * We update setComponents and call updateComponent (remote persistence) only when editMode && !skipUpdate
+ */
+interface GridStackLayoutItem {
+    i: string
+    x: number
+    y: number
+    w: number
+    h: number
+}
+
+interface UpdatePayloadItem {
+    id: string
+    coordinates: {
+        x: number
+        y: number
+        w: number
+        h: number
+    }
+}
 
 /**
  * Map of available dashboard components
  * Key is now the same as component name
  */
-export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
+export const COMPONENT_MAP: Record<string, React.ComponentType<Record<string, unknown>>> = {
     DishStore,
     Goal,
     QrCode,
@@ -43,25 +66,19 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
     TeamStore,
     Devices,
 }
-interface ItemProps {
-    id: string
-    component?: Record<string, any>
-}
-
-const Item: FunctionComponent<ItemProps> = ({ id, component }) => {
-    const View = COMPONENT_MAP[id]
-    if (!View) {return null}
-
-    return (
-        <div style={{ width: '100%', height: '100%' }}>
-            <View {...(component || {})} />
-        </div>
-    )
-}
 
 interface ControlledGridProps {
-    items: any[]
-    setComponents: React.Dispatch<React.SetStateAction<any[]>>
+    items: {
+        id: string
+        x?: number
+        y?: number
+        w?: number
+        h?: number
+        title?: string
+        static?: boolean
+        component?: Record<string, UpdatePayloadItem['coordinates']>
+    }[]
+    setComponents: React.Dispatch<React.SetStateAction<ControlledGridProps['items']>>
 }
 const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComponents }) => {
     const { isMobile } = useMobile()
@@ -69,43 +86,60 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
     const { updateComponent } = useUpdateDashboardComponent()
     const { sendNotification } = useContext(Context)
     const [editMode, setEditMode] = useState(false)
-    const [layouts, setLayouts] = useState<Layouts>({ lg: [] })
 
-    // Convertimos los items en layout para RGL
-    useEffect(() => {
-        const newLayout: Layout[] = items.map((item) => ({
-            i: item.id, // ahora el id ya es el nombre del componente
+    // Local layout state that mirrors items (optional, used only to initialize GridStack if needed)
+    const [localLayout, setLocalLayout] = useState(
+        items.map((item) => ({
+            id: item.id,
             x: item.x ?? 0,
             y: item.y ?? 0,
             w: item.w ?? 3,
             h: item.h ?? 4,
             title: item.title ?? '',
-            moved: !!item.moved,
             static: !!item.static,
+            component: item.component ?? {}
         }))
-        setLayouts({
-            lg: newLayout
-        })
-    }, [])
+    )
 
-    /**
-     * Handle changes in layout (drag / resize)
-     */
-    const handleLayoutChange = (layout: Layout[], allLayouts: Layouts) => {
-        if (!editMode || skipUpdate) {return}
-        setLayouts(allLayouts)
+    // Keep localLayout in sync when items change externally
+    useEffect(() => {
+        setLocalLayout(items.map((item) => ({
+            id: item.id,
+            x: item.x ?? 0,
+            y: item.y ?? 0,
+            w: item.w ?? 3,
+            h: item.h ?? 4,
+            title: item.title ?? '',
+            static: !!item.static,
+            component: item.component ?? {}
+        })))
+
+    }, [items])
+
+
+
+    const handleLayoutChange = (newLayout: GridStackLayoutItem[]): void => {
+        if (!editMode || skipUpdate) {
+            // still update localLayout so UI stays accurate if needed
+            const mapped = localLayout.map((item) => {
+                const found = newLayout.find((l) => l.i === item.id)
+                return found ? { ...item, x: found.x, y: found.y, w: found.w, h: found.h } : item
+            })
+            setLocalLayout(mapped)
+            return
+        }
+
+        // update local components state
         setComponents((prev) =>
             prev.map((comp) => {
-                const newLayout = layout.find((l) => l.i === comp.id)
-                return newLayout
-                    ? { ...comp, x: newLayout.x, y: newLayout.y, w: newLayout.w, h: newLayout.h }
-                    : comp
+                const found = newLayout.find((l) => l.i === comp.id)
+                return found ? { ...comp, x: found.x, y: found.y, w: found.w, h: found.h } : comp
             })
         )
 
-        // Verifica si algún dato ha cambiado en coordinates
-        const hasChanged = layout.some((node) => {
-            const prevComp = items.find((comp) => comp.id === node.i)
+        // detect changes to persist
+        const hasChanged = newLayout.some((node) => {
+            const prevComp = items.find((c) => c.id === node.i)
             return (
                 prevComp &&
                 (prevComp.x !== node.x ||
@@ -116,12 +150,12 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
         })
 
         if (hasChanged) {
-            updateComponent([
-                ...layout.map((node) => ({
-                    id: node.i,
-                    coordinates: { x: node.x, y: node.y, w: node.w, h: node.h },
-                }))
-            ])
+            // format for updateComponent API
+            const payload: UpdatePayloadItem[] = newLayout.map((node) => ({
+                id: node.i,
+                coordinates: { x: node.x, y: node.y, w: node.w, h: node.h },
+            }))
+            updateComponent(payload)
         }
     }
 
@@ -140,13 +174,23 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
     }
 
     const handleBreakpointChange = () => {
-        // 👇 activamos un flag para evitar que handleLayoutChange dispare updateComponent
+        // flag para evitar que handleLayoutChange dispare updateComponent
         setSkipUpdate(true)
-        // lo reseteamos en el siguiente ciclo
         setTimeout(() => setSkipUpdate(false), 0)
     }
+
+    if (items.length === 0) {
+        return (<div style={{ width: '100%' }}>
+            <Text as='h2' size='2xl' align='center'>
+                No components added yet
+            </Text>
+        </div>
+        )
+    }
+
     return (
         <div style={{ width: '100%', marginRight: '10px' }}>
+            <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
             <ToggleSwitch
                 checked={editMode}
                 id='edit_mode'
@@ -154,68 +198,76 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
                 onChange={handleEditMode}
                 successColor='green'
             />
+            <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+            {/* GridStack reemplaza a ResponsiveGridLayout */}
+            <GridStack
+                items={localLayout}
+                cols={15}
+                rowHeight={40}
+                margin={[10, 10]}
+                containerPadding={[0, 10]}
+                componentMap={COMPONENT_MAP}
+                onLayoutChange={handleLayoutChange}
 
-            <ResponsiveGridLayout
-                className='layout'
-                layouts={layouts}
-                breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                cols={{ lg: 12, md: 8, sm: 6, xs: 2, xxs: 1 }}
-                rowHeight={30}
-                margin={[20, 20]}
+                /* snap / magnetismo */
+                snapEnabled={true}
+                snapThreshold={9}
+
+                /* interacción */
+                dragMode="overlay"            /* recomendado: overlay para capas y FLIP */
+                collisionMode="push"          /* push produce reflow que activa soft displacement */
+                dragThrottleMs={0}            /* 0 === RAF (suave) */
+                allowOverlapDuringDrag={false}
+                animateOnDrop={true}
+                preventCollision={true}
                 isDraggable={editMode}
                 isResizable={editMode}
-                preventCollision={!editMode}
-                onLayoutChange={handleLayoutChange}
-                onBreakpointChange={handleBreakpointChange}
-                useCSSTransforms={true}
-            >
-                {items
-                    .filter((item) => !(isMobile && item.mobile === false))
-                    .map((item) => (
-                        <div
-                            key={item.id}
-                            className={styles.gridItems}
-                            style={{
-                                background: '#fff',
-                                margin: '16px', // Agrega más separación entre items
-                                borderRadius: '8px', // Opcional: mejora visual
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.06)', // Opcional: mejora visual
-                            }}
-                        >
-                            <Column
-                                className={styles['grid-stack-item-header']}
-                                style={{
-                                    position: 'absolute',
-                                    top: -20,
-                                    left: 10,
-                                    width: '100%',
-                                }}
-                            >
-                                <Text as='h2' size='2xl'>
-                                    {item.title}
-                                </Text>
-                            </Column>
-                            <div className={styles['grid-stack-item-content']}>
-                                <Item {...item} />
-                            </div>
-                        </div>
-                    ))}
-            </ResponsiveGridLayout>
 
+                /* parámetros de animación (ajusta según gusto) */
+                animation={{ duration: 320, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+
+                /* soft displacement / roll */
+                enableRollOnPush={true}   /* true hace visible el rotateX sutil */
+                // sticky es una nueva opción que hace que los elementos "se peguen" a su posición original durante el drag, lo que puede ayudar a visualizar mejor el movimiento y evitar que se desplacen demasiado lejos. Es especialmente útil en combinación con enableRollOnPush para mejorar la experiencia visual.
+                sticky={true}
+
+                /* otros */
+                showGrid={editMode}
+                enableHitOnPush={true}
+                hitMultiplier={1.06}           // más sutil
+                hitDuration={120}
+                hitThresholdPx={8}
+                rollAngleMax={8}
+                rollDuration={300}
+                rollStagger={12}
+
+            />
+
+            {/* Hidden: breakpoint handler (si necesitas integrarlo, podrías usar un componente de tamaño/responsive)
+                Actualmente mantenemos la misma API para handleBreakpointChange */}
+            <div style={{ display: 'none' }}>
+                <button onClick={handleBreakpointChange}>simulateBreakpointChange</button>
+            </div>
         </div>
     )
 }
 
 export const GridStackWrapper: FunctionComponent = () => {
     const { components: items, setComponents, loading } = useComponents()
-    if (loading) {return <Loading />}
+    if (loading) { return <Loading /> }
+
+    const normalizedItems: ControlledGridProps['items'] = items.map((item, index) => {
+        const safeId = item.id ?? (item as { i?: string }).i ?? `component-${index}`
+        return { ...item, id: safeId }
+    })
+
     return (
         <div style={{
             maxWidth: getGlobalStyle('--width-max-desktop'),
             margin: 'auto',
             display: 'flex'
         }}>
-            <ControlledGrid items={items} setComponents={setComponents} />
+            <ControlledGrid items={normalizedItems} setComponents={setComponents as React.Dispatch<React.SetStateAction<ControlledGridProps['items']>>} />
         </div>
     )
 }

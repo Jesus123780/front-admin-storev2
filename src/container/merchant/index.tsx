@@ -52,7 +52,7 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
   const [active, setActive] = useState(0)
   const [nextStep, setNextStep] = useState<number>(0)
   const { email, id } = userToken ?? { email: '', id: '', name: '' }
-
+  const [disabled, setDisabled] = useState(false)
   // CONTEXT & HOOKS
   const {
     setAlertBox,
@@ -71,17 +71,19 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
   const { createStorePendingToRegister } = useCreateStorePendingToRegister()
   const { onClickLogout } = useLogout({})
   const { data: dataCountries } = useCountries()
+  // @ts-expect-error useFormTools has incompatible return type
   const [getDepartments, { data: dataDepartments }] = useDepartments()
   const { data: dataRoad } = useRoads()
   const { isMobile } = useMobile()
   const [dataCatStore] = useCategoryStore()
+  // @ts-expect-error useUser has incompatible return type
   const [getCities, { data: dataCities, loading: loadingCities }] = useCities()
   const [dataUser, { loading: loadingUser }] = useUser(email)
   const road = dataRoad?.road || []
   const catStore = dataCatStore?.getAllCatStore || []
   const departments = dataDepartments || []
   const countries = dataCountries || []
-  const cities = dataCities
+  const cities = dataCities || []
 
   const {
     values,
@@ -98,8 +100,17 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
     }
   })
 
-  const [handleChange, handleSubmit, setDataValue, { dataForm, errorForm }] = useFormTools({
-    sendNotification
+  // @ts-expect-error useFormTools has incompatible return type
+  const [handleChange, handleSubmit, setDataValue, { dataForm, errorForm, validateStep }] = useFormTools({
+    initialValues: {
+      emailStore: email,
+    },
+    // @ts-expect-error sendNotification has incompatible type
+    sendNotification,
+    onValidityChange: (isDisabled: boolean) => {
+      // Aquí puedes manejar el cambio de validez, por ejemplo, deshabilitando el botón de continuar
+      setDisabled(isDisabled)
+    }
   })
 
   const handleSavePendingStore = async () => {
@@ -125,16 +136,20 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
   }
 
   const handleForm = async (event: React.FormEvent<HTMLFormElement>) => {
+    // @ts-expect-error handleSubmit function has incompatible overload signatures
     return handleSubmit({
       actionAfterCheck: () => {
         start()
-        goNext()
+        const isStepValid = validateStep(event, nextStep)
+        if (isStepValid) {
+          goNext()
+        }
         if (nextStep === 0) {
           handleSavePendingStore()
         }
         stop()
       },
-      event: event,
+      event,
       action: wrap(async () => {
         if (nextStep === STEP_TITLES.length - 1) {
           const registerStoreResult = await newRegisterStore({
@@ -142,8 +157,8 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
               input: {
                 cId: values.countryId,
                 id: dataUser?.id || id,
-                dId: '622b4edc-62f8-418e-9222-42861deec133',
-                ctId: 'f0a59395-9ad2-426f-817c-eb034578fa80',
+                dId: values.code_dId,
+                ctId: values.ctId,
                 catStore: dataForm?.catStore,
                 neighborhoodStore: dataForm?.storePhone,
                 Viaprincipal: dataForm?.storePhone,
@@ -179,33 +194,25 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
             })
             return
           }
-          const messages = {
-            success: {
-              backgroundColor: 'success',
-              description: `${message}`,
-              title: 'Tienda creada con éxito'
-            },
-            session: {
-              backgroundColor: 'success',
-              description: 'Debes iniciar sesión nuevamente',
-              title: 'Inicia sesión'
-            },
-            defaultError: {
-              backgroundColor: 'error',
-              description: `${message}`,
-              title: `${message}`
-            }
-          }
-
           if (success) {
-            // setDataValue({})
+            // reset form and location states for a better UX in case the user wants to register another store
+            // @ts-expect-error setDataValue has incompatible type
+            setDataValue({})
             setValues({})
             if (nextStep === 3) {
-              sendNotification(messages.success)
-              // setTimeout(() => {
-              //   handleSignOut()
-              //   sendNotification(messages.session)
-              // }, 3000)
+              sendNotification({
+                backgroundColor: 'success',
+                description: `${message}`,
+                title: 'Tienda creada con éxito'
+              })
+              setTimeout(() => {
+                handleSignOut()
+                sendNotification({
+                  backgroundColor: 'success',
+                  description: 'Debes iniciar sesión nuevamente',
+                  title: 'Inicia sesión'
+                })
+              }, 3000)
               return
             }
           }
@@ -213,7 +220,11 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
           if (message === 'No se encontró el usuario') {
             globalThis.location.href = ROUTES.login
           } else {
-            sendNotification(messages.defaultError)
+            sendNotification({
+              backgroundColor: 'error',
+              description: `${message}`,
+              title: `${message}`
+            })
           }
           setAlertBox({ message })
         }
@@ -224,8 +235,6 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
   const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShowLocation(!!e.target.checked)
   }
-
-  const disabled = false
 
   const goNext = () => {
     setNextStep(prev => {

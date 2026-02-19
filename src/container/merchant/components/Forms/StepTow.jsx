@@ -1,8 +1,8 @@
 import { 
   Divider, 
+  getGlobalStyle, 
   InputHooks, 
-  PhoneInput, 
-  Text
+  PhoneInput
 } from 'pkg-components'
 import PropTypes from 'prop-types'
 import React from 'react'
@@ -43,24 +43,26 @@ StepTow.propTypes = {
           name='username'
           onChange={handleChange}
           required
-          title={isMobile ? 'Nombre dueño de la tienda' : 'Nombre del representante legal de la tienda'}
+          title={isMobile ? 'Nombre dueño de la tienda *' : 'Nombre del representante legal de la tienda *'}
           value={dataForm.username}
           width='100%'
+          step={2}
         />
+        <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
         <InputHooks
           email={true}
           error={errorForm?.emailStore}
           name='emailStore'
           onChange={handleChange}
-          title='Email de la tienda ( Opcional )'
+          title='Email de la tienda *'
           value={dataForm?.emailStore}
           width='100%'
+          required={true}
+          step={2}
         />
-        <Text>
-          Numero de la tienda (requerido)
-        </Text>
         <Divider marginBottom='0.625rem' />
         <PhoneInput
+          required={true}
           onChange={(value) => {
             const event = {
               target: {
@@ -70,7 +72,6 @@ StepTow.propTypes = {
             }
             return handleChange(event)
           }}
-          required={true}
           width='100%'
         />
     </div>
