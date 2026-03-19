@@ -4,9 +4,11 @@ import { useMobile, useUpdateDashboardComponent } from 'npm-pkg-hook'
 import {
     Divider,
     getGlobalStyle,
+    Row,
     Text,
     ToggleSwitch
 } from 'pkg-components'
+// import GridStack from 'pkg-components/stories/organisms/grid_stack_react_pure_js_module/components/GridStack/GridStack'
 import GridStack from 'pkg-components/stories/organisms/grid_stack_react_pure_js_module/components/GridStack/GridStack'
 import React, {
     FunctionComponent,
@@ -15,6 +17,7 @@ import React, {
     useState
 } from 'react'
 
+import { Categories } from '@/container/categories'
 /**
  * IMPORT OUR GridStack component
  * Ajusta la ruta si tu proyecto no hace resolve de '@' hacia 'src'
@@ -65,6 +68,7 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<Record<string, un
     ChatStatistic,
     TeamStore,
     Devices,
+    Categories,
 }
 
 interface ControlledGridProps {
@@ -79,9 +83,11 @@ interface ControlledGridProps {
         component?: Record<string, UpdatePayloadItem['coordinates']>
     }[]
     setComponents: React.Dispatch<React.SetStateAction<ControlledGridProps['items']>>
+    registerComponent: (key: string, component: React.ComponentType<Record<string, unknown>>) => { success: boolean; reason?: string }
 }
-const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComponents }) => {
+const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComponents, registerComponent }) => {
     const { isMobile } = useMobile()
+    const [sticky, setSticky] = useState<boolean>(true)
     const [skipUpdate, setSkipUpdate] = useState(false)
     const { updateComponent } = useUpdateDashboardComponent()
     const { sendNotification } = useContext(Context)
@@ -100,7 +106,6 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
             component: item.component ?? {}
         }))
     )
-
     // Keep localLayout in sync when items change externally
     useEffect(() => {
         setLocalLayout(items.map((item) => ({
@@ -188,59 +193,96 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
         )
     }
 
+    const handleRegisterComponent = (key: string, component: React.ComponentType<Record<string, unknown>>) => {
+        const result = registerComponent(key, component)
+        console.log('🚀 ~ handleRegisterComponent ~ result:', result)
+        if (!result.success) {
+            sendNotification({
+                title: 'Error registering component',
+                description: result.reason || 'An unknown error occurred while registering the component',
+                backgroundColor: 'danger',
+            })
+        }
+    }
     return (
         <div style={{ width: '100%', marginRight: '10px' }}>
             <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-            <ToggleSwitch
-                checked={editMode}
-                id='edit_mode'
-                label='Edit Mode'
-                onChange={handleEditMode}
-                successColor='green'
-            />
+            <Row justifyContent='flex-start' gap='lg'>
+                <ToggleSwitch
+                    checked={editMode}
+                    id='edit_mode'
+                    label='Editar dashboard'
+                    onChange={handleEditMode}
+                    successColor='green'
+                    style={{
+                        width: 'min-content'
+                    }}
+                    size='small'
+                />
+                {/* ENABLE sticky MODE */}
+                {editMode &&
+                    <Row alignItems='center' gap='xs'>
+                        <ToggleSwitch
+                            checked={sticky}
+                            id='sticky_mode'
+                            label='Modo pegajoso'
+                            onChange={() => setSticky((prev) => !prev)}
+                            key='sticky_toggle'
+                            name='sticky_mode'
+                            successColor='green'
+                            style={{
+                                width: 'min-content'
+                            }}
+                            size='small'
+                        />
+                    </Row>
+                }
+            </Row>
+            <button onClick={() => handleRegisterComponent('Categories', Categories)}>Register ChatStatistic</button>
             <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
             {/* GridStack reemplaza a ResponsiveGridLayout */}
             <GridStack
                 items={localLayout}
                 cols={15}
+                radio={8}
                 rowHeight={40}
                 margin={[10, 10]}
                 containerPadding={[0, 10]}
                 componentMap={COMPONENT_MAP}
                 onLayoutChange={handleLayoutChange}
 
-                /* snap / magnetismo */
-                snapEnabled={true}
-                snapThreshold={9}
+                /* SNAP / MAGNETISMO */
+                snapEnabled
+                snapThreshold={0}
 
-                /* interacción */
-                dragMode="overlay"            /* recomendado: overlay para capas y FLIP */
-                collisionMode="push"          /* push produce reflow que activa soft displacement */
-                dragThrottleMs={0}            /* 0 === RAF (suave) */
+                /* INTERACCIÓN */
+                dragMode='overlay'
+                collisionMode='push'
+                dragThrottleMs={0} // RAF
                 allowOverlapDuringDrag={false}
-                animateOnDrop={true}
-                preventCollision={true}
+                preventCollision
+                animateOnDrop
+
                 isDraggable={editMode}
                 isResizable={editMode}
 
-                /* parámetros de animación (ajusta según gusto) */
-                animation={{ duration: 320, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                /* ANIMATION CORE */
+                animation={{
+                    duration: 150,
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)' // curva tipo Material / Linear
+                }}
 
-                /* soft displacement / roll */
-                enableRollOnPush={true}   /* true hace visible el rotateX sutil */
-                // sticky es una nueva opción que hace que los elementos "se peguen" a su posición original durante el drag, lo que puede ayudar a visualizar mejor el movimiento y evitar que se desplacen demasiado lejos. Es especialmente útil en combinación con enableRollOnPush para mejorar la experiencia visual.
-                sticky={true}
+                /* SOFT DISPLACEMENT */
+                // enableRollOnPush
+                sticky={sticky}
 
-                /* otros */
+                /* ROLL (micro tilt) */
+                rollAngleMax={15.5}
+                rollDuration={180}
+                rollStagger={10}
+
+                /* VISUAL */
                 showGrid={editMode}
-                enableHitOnPush={true}
-                hitMultiplier={1.06}           // más sutil
-                hitDuration={120}
-                hitThresholdPx={8}
-                rollAngleMax={8}
-                rollDuration={300}
-                rollStagger={12}
-
             />
 
             {/* Hidden: breakpoint handler (si necesitas integrarlo, podrías usar un componente de tamaño/responsive)
@@ -253,7 +295,13 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
 }
 
 export const GridStackWrapper: FunctionComponent = () => {
-    const { components: items, setComponents, loading } = useComponents()
+    const {
+        components: items,
+        setComponents,
+        registerComponent,
+        loading
+    } = useComponents()
+
     if (loading) { return <Loading /> }
 
     const normalizedItems: ControlledGridProps['items'] = items.map((item, index) => {
@@ -267,7 +315,11 @@ export const GridStackWrapper: FunctionComponent = () => {
             margin: 'auto',
             display: 'flex'
         }}>
-            <ControlledGrid items={normalizedItems} setComponents={setComponents as React.Dispatch<React.SetStateAction<ControlledGridProps['items']>>} />
+            <ControlledGrid
+                items={normalizedItems}
+                setComponents={setComponents as React.Dispatch<React.SetStateAction<ControlledGridProps['items']>>}
+                registerComponent={registerComponent}
+            />
         </div>
     )
 }

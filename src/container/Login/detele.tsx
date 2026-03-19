@@ -358,6 +358,7 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false }) => {
       <GridStack
         items={layout}
         cols={12}
+        radio={20}
         rowHeight={30}
         margin={[0, 0]}
         containerPadding={[0, 0]}

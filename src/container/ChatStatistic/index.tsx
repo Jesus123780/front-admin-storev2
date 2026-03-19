@@ -4,7 +4,8 @@ import { useChartData, useMobile } from 'npm-pkg-hook'
 import {
   BarChat,
   HorizontalBarChart,
-  Skeleton} from 'pkg-components'
+  Skeleton
+} from 'pkg-components'
 import { ChangeEvent,memo } from 'react'
 
 import styles from './styles.module.css'
