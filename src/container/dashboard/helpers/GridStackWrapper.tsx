@@ -1,6 +1,6 @@
 'use client'
 
-import { useMobile, useUpdateDashboardComponent } from 'npm-pkg-hook'
+import { useUpdateDashboardComponent } from 'npm-pkg-hook'
 import {
     Divider,
     getGlobalStyle,
@@ -8,8 +8,9 @@ import {
     Text,
     ToggleSwitch
 } from 'pkg-components'
-// import GridStack from 'pkg-components/stories/organisms/grid_stack_react_pure_js_module/components/GridStack/GridStack'
 import GridStack from 'pkg-components/stories/organisms/grid_stack_react_pure_js_module/components/GridStack/GridStack'
+import { GridItem } from 'pkg-components/stories/organisms/grid_stack_react_pure_js_module/types/types'
+import { collisionModeType, dragModeType } from 'pkg-components/stories/organisms/grid_stack_react_pure_js_module/types/useGrid.types'
 import React, {
     FunctionComponent,
     useContext,
@@ -86,7 +87,6 @@ interface ControlledGridProps {
     registerComponent: (key: string, component: React.ComponentType<Record<string, unknown>>) => { success: boolean; reason?: string }
 }
 const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComponents, registerComponent }) => {
-    const { isMobile } = useMobile()
     const [sticky, setSticky] = useState<boolean>(true)
     const [skipUpdate, setSkipUpdate] = useState(false)
     const { updateComponent } = useUpdateDashboardComponent()
@@ -195,7 +195,6 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
 
     const handleRegisterComponent = (key: string, component: React.ComponentType<Record<string, unknown>>) => {
         const result = registerComponent(key, component)
-        console.log('🚀 ~ handleRegisterComponent ~ result:', result)
         if (!result.success) {
             sendNotification({
                 title: 'Error registering component',
@@ -242,23 +241,21 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
             <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
             {/* GridStack reemplaza a ResponsiveGridLayout */}
             <GridStack
-                items={localLayout}
+                items={localLayout as GridItem[]}
                 cols={15}
                 radio={8}
                 rowHeight={40}
                 margin={[10, 10]}
                 containerPadding={[0, 10]}
-                componentMap={COMPONENT_MAP}
+                componentMap={COMPONENT_MAP as GridItem['component']}
                 onLayoutChange={handleLayoutChange}
 
-                /* SNAP / MAGNETISMO */
                 snapEnabled
-                snapThreshold={0}
+                snapThreshold={8}
 
-                /* INTERACCIÓN */
-                dragMode='overlay'
-                collisionMode='push'
-                dragThrottleMs={0} // RAF
+                dragMode={dragModeType.overlay}
+                collisionMode={collisionModeType.push}
+                dragThrottleMs={0}
                 allowOverlapDuringDrag={false}
                 preventCollision
                 animateOnDrop
@@ -266,22 +263,18 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({ items, setComp
                 isDraggable={editMode}
                 isResizable={editMode}
 
-                /* ANIMATION CORE */
                 animation={{
-                    duration: 150,
-                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)' // curva tipo Material / Linear
+                    duration: 220,
+                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
                 }}
 
-                /* SOFT DISPLACEMENT */
-                // enableRollOnPush
-                sticky={sticky}
+                sticky={true}
 
-                /* ROLL (micro tilt) */
-                rollAngleMax={15.5}
+                enableRollOnPush={true}
+                rollAngleMax={10}
                 rollDuration={180}
-                rollStagger={10}
+                rollStagger={12}
 
-                /* VISUAL */
                 showGrid={editMode}
             />
 
