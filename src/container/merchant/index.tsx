@@ -16,6 +16,7 @@ import {
   useUser
 } from 'npm-pkg-hook'
 import {
+  Button,
   Column,
   Divider,
   getGlobalStyle,
@@ -74,7 +75,7 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
   // @ts-expect-error useFormTools has incompatible return type
   const [getDepartments, { data: dataDepartments }] = useDepartments()
   const { data: dataRoad } = useRoads()
-  const { isMobile } = useMobile()
+  const { isMobile, isDesktop } = useMobile()
   const [dataCatStore] = useCategoryStore()
   // @ts-expect-error useUser has incompatible return type
   const [getCities, { data: dataCities, loading: loadingCities }] = useCities()
@@ -274,10 +275,28 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
         position={ToastPosition['top-right']}
         toastList={messagesToast as unknown as ToastItem[]}
         deleteToast={deleteToast}
-
       />
       <div className={styles.wrapper}>
-        <div className={styles.heroCircle} aria-hidden='true' />
+        {isDesktop &&
+          <Button
+            onClick={() => {
+              handleSignOut()
+            }}
+            border='none'
+            styles={{
+              position: 'absolute',
+              zIndex: getGlobalStyle('--z-index-high'),
+              bottom: getGlobalStyle('--spacing-3xl'),
+              left: getGlobalStyle('--spacing-3xl'),
+            }}>
+            <Icon
+              icon='IconLogout'
+              size={50}
+              color={getGlobalStyle('--color-icons-primary')}
+            />
+          </Button>
+        }
+        <div className={styles.heroCircle} />
         <Column
           as='form'
           className={styles.content}
@@ -286,21 +305,25 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
             return handleForm(event)
           }}
         >
+          {!isDesktop &&
+            <Button
+              type='button'
+              onClick={() => {
+                handleSignOut()
+              }}
+              border='none'
+              styles={{
+                width: 'min-content',
+                margin: '0 0 0 auto'
+              }}>
+              <Icon
+                icon='IconLogout'
+                size={40}
+                color={getGlobalStyle('--color-icons-primary')}
+              />
+            </Button>
+          }
           <Divider marginBottom={getGlobalStyle('--spacing-3xl')} />
-          <Row>
-            {[0, 1, 2, 3, 4, 5].map((step) => (
-              <button
-                type='button'
-                key={step}
-                onClick={() => setNextStep(step)}
-                style={nextStep === step ? { backgroundColor: getGlobalStyle('--color-primary') } : { backgroundColor: getGlobalStyle('--color-base-transparent') }}
-              >
-                <div className={styles.circle}>
-                  {step}
-                </div>
-              </button>
-            ))}
-          </Row>
           <Stepper
             active={active}
             key={1}
@@ -343,7 +366,7 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
                   marginRight: getGlobalStyle('--spacing-3xl')
                 }}
               >
-                {STEP_TITLES[nextStep]}
+                {STEP_TITLES[Math.min(Math.max(nextStep, 0), STEP_TITLES.length - 1)] ?? 'Paso'}
               </Text>
             </Row>
             <Divider marginBottom={getGlobalStyle('--spacing-3xl')} />

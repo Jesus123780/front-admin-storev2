@@ -6,6 +6,7 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -25,9 +26,17 @@ interface ComponentOptions {
   static?: boolean;
 }
 
-interface GridComponent {
+interface GridCoordinates {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface GridComponent {
   id: string;
   key?: string;
+  componentKey?: string;
   title: string;
   moved: boolean;
   static: boolean;
@@ -35,6 +44,7 @@ interface GridComponent {
   y: number;
   w: number;
   h: number;
+  component?: Record<string, unknown>;
 }
 
 type ComponentMap = Record<string, ComponentType<Record<string, unknown>>>;
@@ -43,166 +53,389 @@ type ComponentsContextValue = {
   components: GridComponent[];
   loading: boolean;
   setComponents: React.Dispatch<React.SetStateAction<GridComponent[]>>;
-  handleAddComponent: (componentKey?: string, opts?: Partial<ComponentOptions>) => { success: boolean; reason?: string; added?: GridComponent };
-  registerComponent: (key: string, component: ComponentType<Record<string, unknown>>) => { success: boolean; reason?: string };
+  handleAddComponent: (
+    componentKey?: string,
+    opts?: Partial<ComponentOptions>
+  ) => { success: boolean; reason?: string; added?: GridComponent };
+  registerComponent: (
+    key: string,
+    component: ComponentType<Record<string, unknown>>,
+    opts?: Partial<ComponentOptions>
+  ) => { success: boolean; reason?: string; added?: GridComponent };
   unregisterComponent: (key: string) => { success: boolean; reason?: string };
+  removeComponentInstance: (instanceId: string) => { success: boolean; reason?: string };
   componentMap: ComponentMap;
+  isBuiltInComponent: (key: string) => boolean;
 };
 
 const DEFAULT: ComponentsContextValue = {
   components: [],
   loading: false,
-  setComponents: () => { },
+  setComponents: () => {},
   handleAddComponent: () => ({ success: false, reason: 'not initialized' }),
   registerComponent: () => ({ success: false, reason: 'not initialized' }),
   unregisterComponent: () => ({ success: false, reason: 'not initialized' }),
+  removeComponentInstance: () => ({ success: false, reason: 'not initialized' }),
   componentMap: {},
+  isBuiltInComponent: () => false,
 };
 
 const ComponentsContext = createContext<ComponentsContextValue>(DEFAULT);
 
 export const useComponents = () => useContext(ComponentsContext);
 
-export const ComponentsContextProvider: React.FC<{ children: ReactNode; initialMap?: ComponentMap; initialComponents?: GridComponent[]; }> = ({
+const DEFAULT_COLS = 12;
+const DEFAULT_NODE_WIDTH = 3;
+const DEFAULT_NODE_HEIGHT = 4;
+const PLACE_OPTIONS = {
+  maxDepth: 20,
+  maxRows: 200,
+} as const;
+
+const makeId = () =>
+  `comp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+const toFiniteNumber = (value: unknown, fallback: number) =>
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+
+const buildComponentPayload = (
+  componentKey: string | undefined,
+  coords: GridCoordinates,
+  instanceId?: string
+): Record<string, unknown> => {
+  return {
+    componentKey,
+    instanceId,
+    coordinates: coords,
+    ...(componentKey ? { [componentKey]: coords } : {}),
+  };
+};
+
+const buildLayoutSnapshot = (components: GridComponent[]) =>
+  components.map((c) => ({
+    i: c.id,
+    x: toFiniteNumber(c.x, 0),
+    y: toFiniteNumber(c.y, 0),
+    w: c.w,
+    h: c.h,
+    static: c.static,
+  }));
+
+const buildGridComponentFromPlacement = ({
+  id,
+  key,
+  title,
+  moved,
+  staticValue,
+  placedNode,
+  fallbackW,
+  fallbackH,
+}: {
+  id: string;
+  key?: string;
+  title: string;
+  moved: boolean;
+  staticValue: boolean;
+  placedNode?: {
+    i: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    static?: boolean;
+  };
+  fallbackW: number;
+  fallbackH: number;
+}): GridComponent => {
+  const coords: GridCoordinates = placedNode
+    ? {
+        x: placedNode.x,
+        y: placedNode.y,
+        w: placedNode.w,
+        h: placedNode.h,
+      }
+    : {
+        x: 0,
+        y: Infinity,
+        w: fallbackW,
+        h: fallbackH,
+      };
+
+  return {
+    id: placedNode?.i ?? id,
+    key,
+    componentKey: key,
+    title,
+    moved,
+    static: placedNode?.static ?? staticValue,
+    x: coords.x,
+    y: coords.y,
+    w: coords.w,
+    h: coords.h,
+    component: buildComponentPayload(key, coords, placedNode?.i ?? id),
+  };
+};
+
+const mapDashboardComponent = (component: DashboardComponent): GridComponent => {
+  const componentKey =
+    (component.coordinates as Record<string, unknown>)?.componentKey as string | undefined
+    ?? component.coordinates.title
+    ?? undefined;
+
+  const coords: GridCoordinates = {
+    x: component.coordinates?.x ?? 0,
+    y: component.coordinates?.y ?? 0,
+    w: component.coordinates?.w ?? DEFAULT_NODE_WIDTH,
+    h: component.coordinates?.h ?? DEFAULT_NODE_HEIGHT,
+  };
+
+  return {
+    id: component.coordinates.id,
+    key: componentKey,
+    componentKey,
+    title: component.coordinates.title ?? '',
+    moved: component.coordinates.moved ?? false,
+    static: component.coordinates.static ?? false,
+    x: coords.x,
+    y: coords.y,
+    w: coords.w,
+    h: coords.h,
+    component: buildComponentPayload(componentKey, coords, component.coordinates.id),
+  };
+};
+
+export const ComponentsContextProvider: React.FC<{
+  children: ReactNode;
+  initialMap?: ComponentMap;
+  initialComponents?: GridComponent[];
+}> = ({
   children,
   initialMap = COMPONENT_MAP,
   initialComponents = [],
 }) => {
-    const { sendNotification } = useContext(Context)
-  
+  const { sendNotification } = useContext(Context);
+
+  const [componentMap, setComponentMap] = useState<ComponentMap>(initialMap);
+  const [components, setComponents] = useState<GridComponent[]>(initialComponents);
+
+  const builtInKeys = useMemo(() => new Set(Object.keys(initialMap)), [initialMap]);
+
+  const isBuiltInComponent = useCallback(
+    (key: string) => builtInKeys.has(key),
+    [builtInKeys]
+  );
+
   const { data, loading } = useDashboardComponents({
-    callback: (data: DashboardComponent[]) => {
-      const components = data.map((component) => ({
-        id: component.coordinates.id,
-        title: component.coordinates.title ?? '',
-        moved: component.coordinates.moved ?? false,
-        static: component.coordinates.static ?? false,
-        x: component.coordinates?.x ?? 0,
-        y: component.coordinates?.y ?? 0,
-        w: component.coordinates?.w ?? 3,
-        h: component.coordinates?.h ?? 4
-      }));
-      setComponents(components as GridComponent[]);
+    callback: (apiData: DashboardComponent[]) => {
+      const mappedComponents = apiData.map(mapDashboardComponent);
+      setComponents(mappedComponents);
     },
   });
 
-  const [componentMap, setComponentMap] = useState<ComponentMap>(initialMap);
-  const [components, setComponents] = useState<GridComponent[]>(initialComponents || data);
+  useEffect(() => {
+    if (!Array.isArray(data)) {return;}
+    const mappedComponents = data.map(mapDashboardComponent);
+    setComponents(mappedComponents);
+  }, [data]);
 
   /**
-   * Register a component and attempt to mount it in the first free grid slot.
-   *
-   * - Validates inputs.
-   * - Registers component in componentMap.
-   * - Tries to place it using placeNewComponent (BFS + fallback scan).
-   * - If placement succeeds, uses placed coords; otherwise adds with y: Infinity as fallback.
-   *
-   * @param {string} key
-   * @param {ComponentType<Record<string, unknown>>} component
-   * @returns {{ success: boolean; reason?: string; added?: GridComponent }}
+   * Importantísimo para tu GridStack actual:
+   * la grilla renderiza con componentMap[node.i], así que cada instancia
+   * debe tener su propio alias dentro del mapa usando el id del item.
    */
-  const registerComponent = useCallback((key: string, component: ComponentType<Record<string, unknown>>) => {
-    if (!key || typeof key !== 'string') {
-      return { success: false, reason: 'invalid key' };
-    }
-    if (!component) {
-      return { success: false, reason: 'invalid component' };
-    }
-    if (componentMap[key]) {
-      return { success: false, reason: 'key already registered' };
-    }
+  useEffect(() => {
+    setComponentMap((prev) => {
+      let changed = false;
+      const next = { ...prev };
 
-    // generate id deterministically
-    const id = `comp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      for (const item of components) {
+        const baseKey = item.componentKey ?? item.key ?? item.title ?? undefined;
+        if (!baseKey) {continue;}
 
-    try {
-      // Build layout snapshot from current components (non-mutating)
-      const baseLayout = components.map((c) => ({
-        i: c.id,
-        x: Number.isFinite(c.x) ? c.x : 0,
-        y: Number.isFinite(c.y) ? c.y : 0,
-        w: c.w,
-        h: c.h,
-        static: c.static,
-      }));
-
-      // node initial hint (we try origin 0,0 — BFS will search from here)
-      const nodeHint = { i: id, x: 0, y: 0, w: 3, h: 4, static: false };
-
-      // try to place (cols default to 12, tune maxDepth/maxRows if needed)
-      const { success, placedNode } = placeNewComponent.placeNewComponent(baseLayout, nodeHint, 12, { maxDepth: 20, maxRows: 200 });
-
-      // build the GridComponent that we'll add to state
-      const added: GridComponent = success && placedNode
-        ? {
-          id: placedNode.i,
-          key,
-          title: key,
-          moved: false,
-          static: placedNode.static ?? false,
-          x: placedNode.x,
-          y: placedNode.y,
-          w: placedNode.w,
-          h: placedNode.h,
+        const baseComponent = prev[baseKey];
+        if (baseComponent && !next[item.id]) {
+          next[item.id] = baseComponent;
+          changed = true;
         }
-        : {
+      }
+
+      return changed ? next : prev;
+    });
+  }, [components]);
+
+  const handleAddComponent = useCallback(
+    (
+      componentKey?: string,
+      opts?: Partial<ComponentOptions>
+    ): { success: boolean; reason?: string; added?: GridComponent } => {
+      if (componentKey && !componentMap[componentKey]) {
+        return {
+          success: false,
+          reason: `componentKey "${componentKey}" is not registered`,
+        };
+      }
+
+      const id = makeId();
+      const title = opts?.title ?? componentKey ?? 'New component';
+
+      const nodeHint = {
+        i: id,
+        x: opts?.x ?? 0,
+        y: typeof opts?.y === 'number' ? opts.y : 0,
+        w: opts?.w ?? DEFAULT_NODE_WIDTH,
+        h: opts?.h ?? DEFAULT_NODE_HEIGHT,
+        static: opts?.static ?? false,
+      };
+
+      try {
+        const baseLayout = buildLayoutSnapshot(components);
+        const { success, placedNode } = placeNewComponent.placeNewComponent(
+          baseLayout,
+          nodeHint,
+          DEFAULT_COLS,
+          PLACE_OPTIONS
+        );
+
+        const added = buildGridComponentFromPlacement({
+          id,
+          key: componentKey,
+          title,
+          moved: opts?.moved ?? false,
+          staticValue: opts?.static ?? false,
+          placedNode: success ? placedNode : undefined,
+          fallbackW: nodeHint.w,
+          fallbackH: nodeHint.h,
+        });
+
+        const componentToAlias = componentKey ? componentMap[componentKey] : undefined;
+
+        setComponentMap((prev) => ({
+          ...prev,
+          ...(componentKey && componentToAlias ? { [id]: componentToAlias } : {}),
+        }));
+
+        setComponents((prev) => [...prev, added]);
+
+        return { success: true, added };
+      } catch (err) {
+        return {
+          success: false,
+          reason: `unexpected error: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        };
+      }
+    },
+    [componentMap, components]
+  );
+
+  const registerComponent = useCallback(
+    (
+      key: string,
+      component: ComponentType<Record<string, unknown>>,
+      opts?: Partial<ComponentOptions>
+    ): { success: boolean; reason?: string; added?: GridComponent } => {
+      if (!key || typeof key !== 'string') {
+        return { success: false, reason: 'invalid key' };
+      }
+
+      if (!component) {
+        return { success: false, reason: 'invalid component' };
+      }
+
+      if (componentMap[key]) {
+        return { success: false, reason: 'key already registered' };
+      }
+
+      const id = makeId();
+      const title = opts?.title ?? key;
+
+      const nodeHint = {
+        i: id,
+        x: opts?.x ?? 0,
+        y: typeof opts?.y === 'number' ? opts.y : 0,
+        w: opts?.w ?? DEFAULT_NODE_WIDTH,
+        h: opts?.h ?? DEFAULT_NODE_HEIGHT,
+        static: opts?.static ?? false,
+      };
+
+      try {
+        const baseLayout = buildLayoutSnapshot(components);
+        const { success, placedNode } = placeNewComponent.placeNewComponent(
+          baseLayout,
+          nodeHint,
+          DEFAULT_COLS,
+          PLACE_OPTIONS
+        );
+
+        const added = buildGridComponentFromPlacement({
           id,
           key,
-          title: key,
-          moved: false,
-          static: false,
-          x: 0,
-          y: Infinity, // fallback so grid logic can place later
-          w: nodeHint.w,
-          h: nodeHint.h,
-        };
+          title,
+          moved: opts?.moved ?? false,
+          staticValue: opts?.static ?? false,
+          placedNode: success ? placedNode : undefined,
+          fallbackW: nodeHint.w,
+          fallbackH: nodeHint.h,
+        });
 
-      // persist component map and list (avoid duplicates)
-      setComponentMap((prev: ComponentMap) => ({ ...prev, [key]: component }));
-      setComponents((prev: GridComponent[]) => {
-        if (prev.some((c) => c.key === key)) {return prev;}
-        return [...prev, added];
+        setComponentMap((prev) => ({
+          ...prev,
+          [key]: component,
+          [id]: component,
+        }));
+
+        setComponents((prev) => [...prev, added]);
+
+        return { success: true, added };
+      } catch (err) {
+        return {
+          success: false,
+          reason: `unexpected error: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        };
+      }
+    },
+    [componentMap, components]
+  );
+
+  const unregisterComponent = useCallback(
+    (key: string) => {
+      if (!componentMap[key]) {
+        return { success: false, reason: 'key not found' };
+      }
+
+      setComponentMap((prev: ComponentMap) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
       });
 
-      return { success: true, added };
-    } catch (err) {
-      return { success: false, reason: `unexpected error: ${err?.message ?? String(err)}` };
-    }
-  }, [componentMap, components, setComponentMap, setComponents]);
+      return { success: true };
+    },
+    [componentMap]
+  );
 
+  const removeComponentInstance = useCallback(
+    (instanceId: string) => {
+      const exists = components.some((item) => item.id === instanceId);
+      if (!exists) {
+        return { success: false, reason: 'instance not found' };
+      }
 
-  const unregisterComponent = useCallback((key: string) => {
-    if (!componentMap[key]) { return { success: false, reason: 'key not found' }; }
-    setComponentMap((prev: ComponentMap) => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-    return { success: true };
-  }, [componentMap]);
+      setComponents((prev) => prev.filter((item) => item.id !== instanceId));
 
-  const handleAddComponent = useCallback((componentKey?: string, opts?: Partial<ComponentOptions>) => {
-    if (componentKey && !componentMap[componentKey]) {
-      return { success: false, reason: `componentKey "${componentKey}" is not registered` };
-    }
+      setComponentMap((prev) => {
+        const next = { ...prev };
+        delete next[instanceId];
+        return next;
+      });
 
-    const id = `comp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-
-    const newComponent: GridComponent = {
-      id,
-      key: componentKey ?? undefined,
-      x: opts?.x ?? 0,
-      y: typeof opts?.y === 'number' ? opts.y : Infinity,
-      w: opts?.w ?? 3,
-      h: opts?.h ?? 4,
-      title: opts?.title ?? (componentKey ? `${componentKey}` : 'New component'),
-      moved: opts?.moved ?? false,
-      static: opts?.static ?? false,
-    };
-
-    setComponents((prev: GridComponent[]) => [...prev, newComponent]);
-    return { success: true, added: newComponent };
-  }, [componentMap]);
+      return { success: true };
+    },
+    [components]
+  );
 
   const memoValue = useMemo(
     () => ({
@@ -212,9 +445,20 @@ export const ComponentsContextProvider: React.FC<{ children: ReactNode; initialM
       handleAddComponent,
       registerComponent,
       unregisterComponent,
+      removeComponentInstance,
       componentMap,
+      isBuiltInComponent,
     }),
-    [components, loading, handleAddComponent, registerComponent, unregisterComponent, componentMap]
+    [
+      components,
+      loading,
+      handleAddComponent,
+      registerComponent,
+      unregisterComponent,
+      removeComponentInstance,
+      componentMap,
+      isBuiltInComponent,
+    ]
   );
 
   return (

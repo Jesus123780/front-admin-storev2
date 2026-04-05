@@ -50,24 +50,18 @@ pais {
         cName
         cCalCod
         cState
-        cDatCre
-        cDatMod
       }
       city {
         ctId
         dId
         cName
         cState
-        cDatCre
-        cDatMod
       } 
       department {
         dId
         cId
         dName
         dState
-        dDatCre
-        dDatMod
       }
   getStoreSchedules {
       idStore
@@ -82,8 +76,6 @@ pais {
     catStore
     cName
     cState
-    cDatCre
-    cDatMod
     csDescription
     
   }
@@ -126,7 +118,6 @@ createAt
     catStore
     cName
     cState
-    cDatCre
     cDatMod
     csDescription
     

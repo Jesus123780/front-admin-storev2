@@ -1,7 +1,9 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { Button, Column, getGlobalStyle, Portal, ROUTES, Text } from 'pkg-components'
+import {
+ Button, Column, getGlobalStyle, Portal, ROUTES, Text 
+} from 'pkg-components'
 import React from 'react'
 
 interface NotFoundProps {
