@@ -1,11 +1,12 @@
 'use client';
 
-import { useUpdateDashboardComponent } from 'npm-pkg-hook';
+import { useCreateDashboardComponent, useDeleteDashboardComponent, useUpdateDashboardComponent } from 'npm-pkg-hook';
 import {
+    Button,
     Divider,
     getGlobalStyle,
+    Icon,
     Row,
-    Text,
     ToggleSwitch,
 } from 'pkg-components';
 import GridStack from 'pkg-components/stories/organisms/grid_stack_react_pure_js_module/components/GridStack/GridStack';
@@ -24,16 +25,21 @@ import React, {
 
 import { Categories } from '@/container/categories';
 import { ChatStatistic } from '@/container/ChatStatistic';
+import { Clients } from '@/container/clients';
 import { Devices } from '@/container/Devices';
 import { DishStore } from '@/container/main/components/main.dishStore';
 import { Goal } from '@/container/main/components/main.goal';
 import { QrCode } from '@/container/main/components/main.qr';
 import { SalesDay } from '@/container/main/components/main.salesDay';
+import { Reports } from '@/container/reports';
+import { ScheduleTimings } from '@/container/schedule';
+import { TableSeating } from '@/container/seating';
 import { TeamStore } from '@/container/TeamStore';
 import { Context } from '@/context/Context';
 
 import { Loading } from '../components';
 import { useComponents } from '../context';
+import { AddComponentModal } from './AddComponentModal';
 
 interface GridStackLayoutItem {
     i: string;
@@ -64,6 +70,10 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<Record<string, un
     TeamStore,
     Devices,
     Categories,
+    Clients: Clients as React.ComponentType<Record<string, unknown>>,
+    Reports: Reports as React.ComponentType<Record<string, unknown>>,
+    ScheduleTimings: ScheduleTimings as React.ComponentType<Record<string, unknown>>,
+    TableSeating: TableSeating as React.ComponentType<Record<string, unknown>>,
 };
 
 interface ControlledGridProps {
@@ -155,8 +165,21 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({
 }) => {
     const [skipUpdate, setSkipUpdate] = useState(false);
     const { updateComponent } = useUpdateDashboardComponent();
+    const [deleteDashboardComponent] = useDeleteDashboardComponent() as [
+        (id: string) => Promise<{ success?: boolean; message?: string; id?: string } | undefined>,
+        { loading?: boolean; error?: unknown }
+    ];
+    const [createDashboardComponent] = useCreateDashboardComponent() as [
+        (input: {
+            idStore?: string;
+            title?: string;
+            coordinates: Record<string, unknown>;
+        }) => Promise<{ success?: boolean; message?: string; data?: unknown } | undefined>,
+        { loading?: boolean; error?: unknown }
+    ];
     const { sendNotification } = useContext(Context);
     const [editMode, setEditMode] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     const [localLayout, setLocalLayout] = useState(
         items.map((item) => {
@@ -308,7 +331,7 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({
             sendNotification({
                 title: 'Error registering component',
                 description: result.reason || 'An unknown error occurred while registering the component',
-                backgroundColor: 'danger',
+                backgroundColor: 'error',
             });
             return;
         }
@@ -320,7 +343,55 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({
         });
     };
 
-    const removeComponent = (key: string) => {
+    const handleAddFromCatalog = async (key: string) => {
+        const component = componentMap[key] ?? COMPONENT_MAP[key];
+        if (!component) {
+            sendNotification({
+                title: 'Componente no disponible',
+                description: `No se encontró el componente "${key}"`,
+                backgroundColor: 'error',
+            });
+            return;
+        }
+
+        // Optimistic UI: add to the local grid first.
+        handleRegisterComponent(key, component);
+
+        // Persist in the database so it survives a reload / refetch.
+        // `coordinates.name` carries the component key, which is how the mapper
+        // and the update/delete operations identify the component.
+        try {
+            const result = await createDashboardComponent({
+                title: key,
+                coordinates: {
+                    x: 0,
+                    y: 0,
+                    w: 3,
+                    h: 4,
+                    name: key,
+                    id: key,
+                    title: key,
+                    moved: false,
+                    static: false,
+                },
+            });
+            if (result && result.success === false) {
+                sendNotification({
+                    title: 'No se pudo guardar',
+                    description: result.message || 'El componente no se guardó en la base de datos',
+                    backgroundColor: 'error',
+                });
+            }
+        } catch (error) {
+            sendNotification({
+                title: 'Error al guardar',
+                description: error instanceof Error ? error.message : 'Ocurrió un error al guardar el componente',
+                backgroundColor: 'error',
+            });
+        }
+    };
+
+    const removeComponent = async (key: string) => {
         const target = [...items].reverse().find(
             (comp) => comp.id === key || comp.key === key || comp.componentKey === key
         );
@@ -329,16 +400,41 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({
             sendNotification({
                 title: 'Component not found',
                 description: `No component instance found for "${key}"`,
-                backgroundColor: 'danger',
+                backgroundColor: 'error',
             });
             return;
         }
 
+        // Optimistic UI: quitar del estado local primero.
         setComponents((prev) => prev.filter((comp) => comp.id !== target.id));
         removeComponentInstance(target.id);
 
         if (!COMPONENT_MAP[key]) {
             unregisterComponent(key);
+        }
+
+        // Persistir el borrado en la base de datos.
+        try {
+            const result = await deleteDashboardComponent(target.id);
+            if (result && result.success === false) {
+                sendNotification({
+                    title: 'No se pudo eliminar',
+                    description: result.message || 'El componente no se eliminó de la base de datos',
+                    backgroundColor: 'error',
+                });
+                return;
+            }
+            sendNotification({
+                title: 'Componente eliminado',
+                description: `"${target.componentKey ?? target.key ?? key}" se eliminó del dashboard`,
+                backgroundColor: 'success',
+            });
+        } catch (error) {
+            sendNotification({
+                title: 'Error al eliminar',
+                description: error instanceof Error ? error.message : 'Ocurrió un error al eliminar el componente',
+                backgroundColor: 'error',
+            });
         }
     };
 
@@ -367,20 +463,12 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({
         [localLayout]
     );
 
-    if (items.length === 0) {
-        return (
-            <div style={{ width: '100%' }}>
-                <Text as='h2' size='2xl' align='center'>
-                    No components added yet
-                </Text>
-            </div>
-        );
-    }
+
     return (
         <div style={{ width: '100%', marginRight: '10px' }}>
             <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
 
-            <Row justifyContent='flex-start' gap='lg'>
+            <Row justifyContent='space-between' alignItems='center' gap='lg'>
                 <ToggleSwitch
                     checked={editMode}
                     id='edit_mode'
@@ -390,15 +478,26 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({
                     style={{ width: 'min-content' }}
                     size='small'
                 />
+                <Row justifyContent='flex-end'>
+                    <Button
+                        onClick={() => setShowAddModal(true)}
+                        border='gray'
+                    >
+                        <Icon icon='IconGrid' size={20} />
+                    </Button>
+
+                </Row>
+
             </Row>
 
-            <button onClick={() => handleRegisterComponent('Categories', Categories)}>
-                Agregar Categories
-            </button>
-
-            <button onClick={() => removeComponent('Categories')}>
-                Remove Componente
-            </button>
+            <AddComponentModal
+                show={showAddModal}
+                onHide={() => setShowAddModal(false)}
+                componentMap={COMPONENT_MAP}
+                activeKeys={items.map((comp) => comp.componentKey ?? comp.key ?? comp.title ?? '')}
+                onAdd={handleAddFromCatalog}
+                onRemove={(key) => { void removeComponent(key); }}
+            />
 
             <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
 

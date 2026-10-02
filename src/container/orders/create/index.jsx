@@ -37,6 +37,7 @@ import React, {
 } from 'react'
 
 import { Context } from '../../../context/Context'
+import { useModalLayer } from './modalLayers'
 import { ModalSales } from './ModalSales'
 import { SubItems } from './SubItems'
 import { SuccessSaleModal } from './Success'
@@ -60,6 +61,10 @@ export const CreateSales = ({
     ClientAddress: '',
     clientNumber: ''
   })
+  // Explicit, app-owned signal for the post-sale success UX. Decoupled from the
+  // hook's internal `openCurrentSale` so the Success modal has a single source
+  // of truth and no competing states.
+  const [saleSuccess, setSaleSuccess] = useState(false)
   const [dataClientes, { loading: loadingClients }] = useGetClients()
   const date = new Date()
   const [fetchMoreLoader, setFetchMoreLoader] = useState(false)
@@ -74,7 +79,7 @@ export const CreateSales = ({
   const onCloseModalSale = () => {
     setMessagesToast([])
     setSalesOpen(false)
-    setOpenCurrentSale(false)
+    setSaleSuccess(false)
   }
   // QUERIES
 
@@ -111,10 +116,8 @@ export const CreateSales = ({
     showMore,
     handleComment,
     totalProductPrice,
-    setOpenCurrentSale,
     values,
     handleUpdateAllExtra,
-    openCurrentSale,
     handleAddOptional,
     handleIncrementExtra,
     sumExtraProducts,
@@ -132,9 +135,14 @@ export const CreateSales = ({
     router,
     sendNotification,
     setAlertBox,
-    setSalesOpen: onCloseModalSale
+    setSalesOpen: onCloseModalSale,
+    onSaleSuccess: (payload) => {
+      // Sale registered successfully: the hook already closed the invoice/print
+      // modal. Present the Success modal via our explicit signal.
+      if (payload?.code) {setSaleSuccess(payload)}
+      
+    }
   })
-
   const restPropsSliderCategory = {
     data: datCat,
     handleChangeCheck,
@@ -408,6 +416,7 @@ export const CreateSales = ({
 
   const { data: dataFilter } = useFilterConfigs()
   const [activeFilter, setActiveFilter] = useState(0)
+  const commentZIndex = useModalLayer(Boolean(openCommentModal))
 
   const filterProps = {
       activeFilter,
@@ -416,8 +425,6 @@ export const CreateSales = ({
   }
   return (
     <>
-
-      {/* {openCurrentSale && ( */}
       <SuccessSaleModal
         code={code}
         dispatch={dispatch}
@@ -427,11 +434,12 @@ export const CreateSales = ({
           return handlePrintSale(code)
         }}
         loading={isPrinting}
-        openCurrentSale={openCurrentSale}
+        openCurrentSale={saleSuccess}
         products={data?.PRODUCT || []}
         router={router}
-        setOpenCurrentSale={setOpenCurrentSale}
+        setOpenCurrentSale={setSaleSuccess}
       />
+
       <ModalSales {...restPropsSalesModal} />
       <GenerateSalesPkg
         client={client}
@@ -496,7 +504,7 @@ export const CreateSales = ({
         title='Dejar un comentario'
         customHeight='auto'
         padding={getGlobalStyle('--spacing-sm')}
-        zIndex={getGlobalStyle('--z-index-modal')}
+        zIndex={commentZIndex}
       >
         <Column alignItems='center' justifyContent='space-between'>
           <CardProductSimple

@@ -1,12 +1,13 @@
 import {
  AwesomeModal, 
- getGlobalStyle,
  InputHooks,
 Loading 
 } from 'pkg-components'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import PropTypes from 'prop-types'
 import React from 'react'
 
+import { useModalLayer } from '../modalLayers'
 import { Prints } from '../Printsale'
 
 export const ModalSales = ({
@@ -25,6 +26,8 @@ export const ModalSales = ({
   handleSubmit = () => { return },
   ...rest
 }) => {
+  const printZIndex = useModalLayer(Boolean(print))
+  const deliveryZIndex = useModalLayer(Boolean(delivery))
   return (
     <div>
       {loading && <Loading />}
@@ -37,8 +40,9 @@ export const ModalSales = ({
         onConfirm={() => { return handleSubmit() }}
         onHide={() => { return setPrint(!print) }}
         show={print}
-        size='100%'
-        zIndex={getGlobalStyle('--z-index-modal')}
+        size={MODAL_SIZES.large}
+        useScroll={true}
+        zIndex={printZIndex}
       >
         <Prints
           change={values?.change}
@@ -65,6 +69,7 @@ export const ModalSales = ({
         show={delivery}
         size='small'
         title='Añade el costo del envío'
+        zIndex={deliveryZIndex}
       >
         <InputHooks
           autoComplete='off'

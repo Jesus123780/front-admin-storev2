@@ -1,4 +1,5 @@
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+import { SalesActionTypes, useManageQueryParams } from 'npm-pkg-hook'
 import {
   AlertInfo,
   AwesomeModal,
@@ -10,6 +11,7 @@ import {
 } from 'pkg-components'
 import React from 'react'
 
+import { useModalLayer } from '../modalLayers'
 import styles from './styles.module.css'
 
 interface ISuccessSaleModal {
@@ -33,6 +35,8 @@ export const SuccessSaleModal: React.FC<ISuccessSaleModal> = ({
   handleDownLoad = () => { return },
   handleCloseModal = () => { return }
 }) => {
+  const { handleCleanQuery } = useManageQueryParams()
+  const zIndex = useModalLayer(Boolean(openCurrentSale))
 
   const arrayOptions = [
     {
@@ -44,7 +48,7 @@ export const SuccessSaleModal: React.FC<ISuccessSaleModal> = ({
       tooltip: 'Puedes mirar el resumen del pedido y el estado.',
       onClick: () => {
         handleCloseModal()
-        return  router.push(`${ROUTES.orders}/${code}`)
+        return router.push(`${ROUTES.orders}/${code}`)
       }
     },
     {
@@ -75,16 +79,18 @@ export const SuccessSaleModal: React.FC<ISuccessSaleModal> = ({
       header={true}
       height='100%'
       onCancel={() => {
-        dispatch({ type: 'REMOVE_ALL_PRODUCTS' })
+        dispatch({ type: SalesActionTypes.REMOVE_ALL_PRODUCTS })
+        handleCleanQuery('sale')
         return setOpenCurrentSale(false)
       }}
       onHide={() => {
-        dispatch({ type: 'REMOVE_ALL_PRODUCTS' })
+        dispatch({ type: SalesActionTypes.REMOVE_ALL_PRODUCTS })
         return setOpenCurrentSale(false)
       }}
       show={openCurrentSale}
       size='100%'
-      zIndex={getGlobalStyle('--z-index-modal')}
+      useScroll={true}
+      zIndex={zIndex}
     >
       {/* {loading && <Loading />} */}
       <div>

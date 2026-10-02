@@ -45,7 +45,7 @@ const OrderHeader: React.FC<Props> = ({
                   backgroundColor: 'success',
                   description: `El código ${pCodeRef} ha sido copiado al portapapeles.`,
                   title: 'Éxito',
-                  position: 'top-left',
+                  position: 'bottom-center',
                 })
               }}
             />

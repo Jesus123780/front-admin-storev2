@@ -3,7 +3,8 @@
 import {
     AlertBox,
     Portal,
-    Toast
+    Toast,
+    ToastPosition
 } from 'pkg-components'
 import { AlertContentProps } from 'pkg-components/stories/molecules/AlertBox/types'
 import { useContext } from 'react'
@@ -21,12 +22,21 @@ export default function EmptyLayout({ children }: { children: React.ReactNode })
                     bottom: 0,
                     right: 0
                 }} >
+
                     <Toast
-                        autoDelete={true}
-                        autoDeleteTime={3000}
+                        toastList={messagesToast.map((toast) => ({
+                            id: toast.id,
+                            title: String(toast.title ?? ''),
+                            description: String(toast.description ?? ''),
+                            backgroundColor: toast.backgroundColor,
+                            position: toast.position,
+                            createdAt: toast.createdAt,
+                            sequence: toast.sequence
+                        }))}
+                        autoDelete
+                        autoDeleteTime={5000}
+                        position={ToastPosition['bottom-left']}
                         deleteToast={deleteToast}
-                        position={'bottom-left'}
-                        toastList={messagesToast}
                     />
                 </div>
             </Portal>

@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
 import {
   errorHandler,
   getCategoriesWithProduct,
@@ -38,6 +37,12 @@ import React, {
   useState
 } from 'react'
 
+import {
+  usePathname,
+  useRouter,
+  useSearchParams
+} from 'next/navigation'
+
 import { UploadFilesProducts } from '../../container/product/create/uploadFilesProducts'
 import { Context } from '../../context/Context'
 import { Categories } from '../categories'
@@ -47,51 +52,228 @@ import { TableSeating } from '../seating'
 import { Banner } from './banner'
 import { ButtonsAction } from './options/index'
 import { StickyBoundaryCategories } from './StickyBoundaryCategories'
+
 import styles from './styles.module.css'
 
-export const Store = () => {
-  // STATES
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [showDessert, setShowDessert] = useState(false)
-  const { onClickLogout } = useLogout({})
+type ModalKey = 1 | 2 | 3 | 4 | 5
 
-  const ref = useRef<HTMLDivElement>(null!)
+type ModalQuery =
+  | 'food'
+  | 'categories'
+  | 'product'
+  | 'upload_product_file'
+  | 'create_table_store'
+
+type HandleActionClickResult = {
+  number: ModalKey
+  name: ModalQuery
+  bool: boolean
+}
+
+type HandleActionClick = (
+  number: ModalKey,
+  value?: string | boolean
+) => HandleActionClickResult
+
+interface AvailableProduct {
+  dayAvailable: string
+}
+
+interface GraphQLError {
+  graphQLErrors?: unknown[]
+  message?: string
+}
+
+interface FetchMoreResult {
+  getCatProductsWithProduct?: {
+    catProductsWithProduct?: unknown[]
+    totalCount?: number
+  }
+}
+
+interface ActiveModal {
+  number: ModalKey
+  name: ModalQuery
+  value: string
+}
+
+const MODAL_QUERY: Record<ModalKey, ModalQuery> = {
+  1: 'food',
+  2: 'categories',
+  3: 'product',
+  4: 'upload_product_file',
+  5: 'create_table_store'
+}
+
+const MODAL_TITLE: Record<ModalKey, string> = {
+  1: 'Ver productos',
+  2: 'Categorías',
+  3: 'Producto',
+  4: 'Crear multiples productos',
+  5: 'Crear mesas'
+}
+
+const MODAL_KEYS: ModalKey[] = [1, 2, 3, 4, 5]
+
+/**
+ * Modal queries whose values must always be normalized to `true`.
+ *
+ * `food` is the only modal that preserves a contextual value,
+ * such as the selected product ID.
+ */
+const BOOLEAN_MODAL_QUERIES = new Set<ModalQuery>([
+  'categories',
+  'product',
+  'upload_product_file',
+  'create_table_store'
+])
+
+/**
+ * Identifies whether a value corresponds to a valid modal key.
+ *
+ * @param {unknown} value - Value to validate.
+ * @returns {value is ModalKey} Whether the value is a valid modal key.
+ */
+const isModalKey = (
+  value: unknown
+): value is ModalKey => {
+  return (
+    typeof value === 'number' &&
+    MODAL_KEYS.includes(
+      value as ModalKey
+    )
+  )
+}
+
+/**
+ * Normalizes the query value according to the modal.
+ *
+ * All modal queries except `food` are boolean and therefore
+ * always use the value `true`.
+ *
+ * `food` preserves its contextual value, such as the product ID.
+ *
+ * @param {ModalQuery} queryName - Query associated with the modal.
+ * @param {string | boolean} value - Original query value.
+ * @returns {string | boolean} Normalized query value.
+ */
+const normalizeModalQueryValue = (
+  queryName: ModalQuery,
+  value: string | boolean
+): string | boolean => {
+  if (
+    BOOLEAN_MODAL_QUERIES.has(
+      queryName
+    )
+  ) {
+    return true
+  }
+
+  return value
+}
+
+/**
+ * Finds the first modal query present in the URL.
+ *
+ * @param {URLSearchParams} params - Current URL parameters.
+ * @returns {ActiveModal | null} Active modal information.
+ */
+const getActiveModalFromParams = (
+  params: URLSearchParams
+): ActiveModal | null => {
+  for (
+    const key of MODAL_KEYS
+  ) {
+    const queryName =
+      MODAL_QUERY[key]
+
+    const value =
+      params.get(queryName)
+
+    if (value !== null) {
+      return {
+        number: key,
+        name: queryName,
+        value
+      }
+    }
+  }
+
+  return null
+}
+
+export const Store: React.FC = () => {
+  const [showDessert, setShowDessert] =
+    useState<boolean>(false)
+
+  const [modal, setModal] =
+    useState<boolean>(false)
+
+  const [searchQuery, setSearchQuery] =
+    useState<string>('')
+
+  const [alertModal, setAlertModal] =
+    useState<boolean>(false)
+
+  const [checkStock, setCheckStock] =
+    useState<boolean>(false)
+
+  const [moreCatProduct, setMoreCaProduct] =
+    useState<number>(400)
+
+  const { isMobile, isTablet } =
+    useMobile()
+
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  /**
+   * Stores the query that opened the current modal.
+   */
+  const activeModalQueryRef =
+    useRef<ModalQuery | null>(null)
+
+  /**
+   * Prevents the initial URL synchronization
+   * from running more than once.
+   */
+  const hasInitializedModalRef =
+    useRef<boolean>(false)
+
+  const ref =
+    useRef<HTMLDivElement>(null!)
+
   const {
     setAlertBox,
     handleClick,
     sendNotification,
     show
   } = useContext(Context)
-  const [updateManageStock] = useUpdateManageStock()
 
-  const [searchFilter] = useState({
-    gender: [],
-    desc: [],
-    speciality: []
-  })
-  const [moreCatProduct, setMoreCaProduct] = useState(400)
-  const [modal, setModal] = useState(false)
-  // HOOKS
-  const { isMobile, isTablet } = useMobile()
+  const { onClickLogout } =
+    useLogout({})
+
+  const [updateManageStock] =
+    useUpdateManageStock()
+
+  const [searchFilter] =
+    useState<{
+      gender: string[]
+      desc: string[]
+      speciality: string[]
+    }>({
+      gender: [],
+      desc: [],
+      speciality: []
+    })
+
   const {
-    handleQuery,
-    handleCleanQuery,
-    getQuery
-  } = useManageQueryParams({
-    location: router,
-    searchParams
-  })
-  const { handleDelete, loading: loadingDeleteProduct } = useDeleteProductsFood({
-    sendNotification,
-    onSuccess: () => {
-      handleClick(false)
-      handleCleanQuery('food')
-      setAlertModal(false)
-    }
-  })
-  const [searchQuery, setSearchQuery] = useState('')
-  const [handleGetOneProduct,
+    handleCleanQuery
+  } = useManageQueryParams()
+
+  const [
+    handleGetOneProduct,
     {
       loading,
       data: product,
@@ -99,146 +281,38 @@ export const Store = () => {
       dataOptional
     }
   ] = useGetOneProductsFood()
-  const [store] = useStore()
 
-  const [data, {
-    fetchMore,
-    totalCount,
-    loading: loadingCatProd
-  }] = useCatWithProduct({
+  const [store] =
+    useStore()
+
+  const [
+    data,
+    {
+      fetchMore,
+      totalCount,
+      loading: loadingCatProd
+    }
+  ] = useCatWithProduct({
     search: '',
     max: moreCatProduct,
     ...searchFilter
   })
 
-  // HANDLESS
-  const handleOpenModalAdditional = () => {
-    setModal(!modal)
-  }
+  const {
+    handleDelete,
+    loading: loadingDeleteProduct
+  } = useDeleteProductsFood({
+    sendNotification,
+    onSuccess: () => {
+      handleClick(false)
+      handleCleanQuery('food')
+      setAlertModal(false)
+    }
+  })
 
   const {
-    getStore,
-    pId,
-    pName,
-    ProPrice,
-    ProDescuento,
-    ProBarCode,
-    ProDescription,
-    ProImage
-  } = product || {}
-
-  const { storeName } = getStore || {}
-  const { storeName: nameStore } = store || {}
-
-  const handleProduct = (product: ProductFood) => {
-    const { pId } = product || {}
-    handleGetOneProduct({ pId })
-    handleClick(1)
-    handleQuery('food', pId)
-    setCheckStock(Boolean(product?.manageStock))
-
-  }
-
-  const handleHidden = (queryName: string) => {
-    handleCleanQuery(queryName)
-    handleClick(false)
-  }
-
-  const food = getQuery('food')
-
-  const select = {
-    1: 'food',
-    2: 'categories',
-    3: 'product',
-    4: 'upload_product_file',
-    5: 'create_table_store'
-  }
-
-  useEffect(() => {
-    const stateMap = Object.keys(select).reduce<Record<string, number>>((acc, key) => {
-      acc[select[key as unknown as keyof typeof select]] = Number(key)
-      return acc
-    }, {})
-
-    if (food) {
-      handleGetOneProduct({ pId: food })
-    }
-
-    Object.keys(stateMap).forEach((key) => {
-      if (getQuery(key)) {
-        handleClick(stateMap[key])
-      }
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-
-  /**
-   * Handles action click: fires logic, sets query if missing, and cleans other params.
-   * 
-   * @param {number} number - Action key from `select` (e.g. 1).
-   * @param {string | boolean} [value=true] - Value to set in query param if not present.
-   */
-  type HandleActionClickProps = (number: number, value?: string | boolean) => { number: number; name: string; bool: boolean; };
-
-  interface SelectMap {
-    [key: number]: string;
-  }
-
-  const handleActionClick: HandleActionClickProps = (number, value = true) => {
-    const currentParam = (select as SelectMap)[number];
-    if (!currentParam) {
-      sendNotification({
-        description: 'Acción no válida',
-        title: 'Error',
-        backgroundColor: 'error'
-      });
-      return { number, name: currentParam, bool: false };
-    }
-
-    handleClick(number);
-
-    // Add query if missing
-    const isQueryPresent = getQuery(currentParam);
-    if (!isQueryPresent) {
-      handleQuery(currentParam, value);
-    }
-
-    // Clean all other query params
-    Object.entries(select).forEach(([key, param]) => {
-      const isSame = Number(key) === number;
-      const exists = getQuery(param);
-      if (!isSame && exists) {
-        handleCleanQuery(param);
-      }
-    });
-
-    return { number, name: currentParam, bool: true };
-  }
-
-  const titleModal = {
-    1: 'Ver productos',
-    2: 'Categorías',
-    3: `Producto ${product?.pName ?? ''}`,
-    4: 'Crear multiples productos',
-    5: 'Crear mesas'
-  }
-
-  const modalProps = {
-    footer: false,
-    header: true,
-    modal: true,
-    padding: 0,
-    show: Boolean(show),
-    title: show ? titleModal[show] : '',
-    size: MODAL_SIZES.large,
-    zIndex: getGlobalStyle('--z-index-modal'),
-    onCancel: () => { return show ? handleHidden(select[show]) : null },
-    onHide: () => { return show ? handleHidden(select[show]) : null }
-  }
-
-  const {
-    handleCheck: handleCheckDessert,
+    handleCheck:
+      handleCheckDessert,
     handleRemoveList,
     setTitle,
     title,
@@ -259,17 +333,19 @@ export const Store = () => {
     handleAddList,
     setData
   } = useDessert({
-    pId,
+    pId: product?.pId,
     initialData: dataOptional,
     sendNotification
   })
 
   const {
-    handleAdd: handleAddExtra,
+    handleAdd:
+      handleAddExtra,
     handleRemove,
-    handleSubmit: onSubmitUpdate,
+    handleSubmit:
+      onSubmitUpdate,
     handleLineChange,
-    loading: l,
+    loading: loadingExtra,
     handleFocusChange,
     handleEdit,
     setLine,
@@ -277,11 +353,567 @@ export const Store = () => {
     handleSelect,
     LineItems,
     inputRefs,
-    handleCleanLines: CleanLines
-  } = useDessertWithPrice({ sendNotification, setAlertBox, dataExtra })
+    handleCleanLines:
+      cleanLines
+  } = useDessertWithPrice({
+    sendNotification,
+    setAlertBox,
+    dataExtra
+  })
+
+  const {
+    getStore,
+    pId,
+    pName,
+    ProPrice,
+    ProDescuento,
+    ProBarCode,
+    ProDescription,
+    ProImage
+  } = product || {}
+
+  const { storeName } =
+    getStore || {}
+
+  const { storeName: nameStore } =
+    store || {}
+
+  /**
+   * Removes only modal-related query parameters
+   * while preserving unrelated query parameters.
+   *
+   * @param {URLSearchParams} params - URL parameters to clean.
+   * @param {ModalQuery} activeQuery - Query that must remain.
+   * @returns {void}
+   */
+  const removeOtherModalQueries = (
+    params: URLSearchParams,
+    activeQuery: ModalQuery
+  ): void => {
+    MODAL_KEYS.forEach(
+      (key) => {
+        const queryName =
+          MODAL_QUERY[key]
+
+        if (
+          queryName !==
+          activeQuery
+        ) {
+          params.delete(
+            queryName
+          )
+        }
+      }
+    )
+  }
+
+  /**
+   * Synchronizes a modal query with the current URL.
+   *
+   * Boolean modals always use `true`.
+   * `food` preserves its contextual value.
+   *
+   * All unrelated query parameters remain intact.
+   *
+   * @param {ModalQuery} queryName - Query associated with the modal.
+   * @param {string | boolean} value - Query value.
+   * @returns {void}
+   */
+  const syncModalQuery =
+    useCallback(
+      (
+        queryName: ModalQuery,
+        value: string | boolean
+      ): void => {
+        const params =
+          new URLSearchParams(
+            searchParams.toString()
+          )
+
+        const normalizedValue =
+          normalizeModalQueryValue(
+            queryName,
+            value
+          )
+
+        removeOtherModalQueries(
+          params,
+          queryName
+        )
+
+        params.set(
+          queryName,
+          String(
+            normalizedValue
+          )
+        )
+
+        const queryString =
+          params.toString()
+
+        router.replace(
+          queryString
+            ? `${pathname}?${queryString}`
+            : pathname,
+          {
+            scroll: false
+          }
+        )
+      },
+      [
+        pathname,
+        router,
+        searchParams
+      ]
+    )
+
+  /**
+   * Removes a specific query parameter
+   * while preserving every other query parameter.
+   *
+   * @param {string} queryName - Query parameter to remove.
+   * @returns {void}
+   */
+  const removeQueryParam =
+    useCallback(
+      (
+        queryName: string
+      ): void => {
+        const params =
+          new URLSearchParams(
+            searchParams.toString()
+          )
+
+        params.delete(
+          queryName
+        )
+
+        const queryString =
+          params.toString()
+
+        router.replace(
+          queryString
+            ? `${pathname}?${queryString}`
+            : pathname,
+          {
+            scroll: false
+          }
+        )
+      },
+      [
+        pathname,
+        router,
+        searchParams
+      ]
+    )
+
+  /**
+   * Closes the currently active modal.
+   *
+   * Only the active modal query is removed.
+   * Other query parameters remain intact.
+   *
+   * @returns {void}
+   */
+  const handleCloseModal =
+    useCallback(
+      (): void => {
+        const currentParams =
+          new URLSearchParams(
+            searchParams.toString()
+          )
+
+        const activeModal =
+          getActiveModalFromParams(
+            currentParams
+          )
+
+        const queryName =
+          activeModalQueryRef.current ??
+          activeModal?.name ??
+          null
+
+        if (queryName) {
+          removeQueryParam(
+            queryName
+          )
+        }
+
+        activeModalQueryRef.current =
+          null
+
+        handleClick(false)
+      },
+      [
+        handleClick,
+        removeQueryParam,
+        searchParams
+      ]
+    )
+
+  /**
+   * Opens a product modal and synchronizes
+   * its product ID in the URL.
+   *
+   * @param {ProductFood} selectedProduct - Product selected by the user.
+   * @returns {void}
+   */
+  const handleProduct =
+    useCallback(
+      (
+        selectedProduct: ProductFood
+      ): void => {
+        const productId =
+          selectedProduct?.pId
+
+        if (
+          productId == null
+        ) {
+          return
+        }
+
+        activeModalQueryRef.current =
+          'food'
+
+        handleGetOneProduct({
+          pId: productId
+        })
+
+        handleClick(1)
+
+        syncModalQuery(
+          'food',
+          String(productId)
+        )
+
+        setCheckStock(
+          Boolean(
+            selectedProduct?.manageStock
+          )
+        )
+      },
+      [
+        handleClick,
+        handleGetOneProduct,
+        syncModalQuery
+      ]
+    )
+
+  /**
+   * Opens a modal and synchronizes its query parameter.
+   *
+   * Boolean modals are always stored as `true`.
+   *
+   * @param {ModalKey} number - Modal identifier.
+   * @param {string | boolean} [value=true] - Query value.
+   * @returns {HandleActionClickResult} Action result.
+   */
+  const handleActionClick =
+    useCallback<HandleActionClick>(
+      (
+        number,
+        value = true
+      ): HandleActionClickResult => {
+        const queryName =
+          MODAL_QUERY[number]
+
+        if (!queryName) {
+          sendNotification({
+            description:
+              'Acción no válida',
+            title: 'Error',
+            backgroundColor:
+              'error'
+          })
+
+          return {
+            number,
+            name: queryName,
+            bool: false
+          }
+        }
+
+        const normalizedValue =
+          normalizeModalQueryValue(
+            queryName,
+            value
+          )
+
+        activeModalQueryRef.current =
+          queryName
+
+        /**
+         * Preserve the original modal opening event.
+         */
+        handleClick(number)
+
+        /**
+         * Synchronize only the active modal query.
+         *
+         * create_table_store is always converted to:
+         *
+         * ?create_table_store=true
+         */
+        syncModalQuery(
+          queryName,
+          normalizedValue
+        )
+
+        return {
+          number,
+          name: queryName,
+          bool: true
+        }
+      },
+      [
+        handleClick,
+        sendNotification,
+        syncModalQuery
+      ]
+    )
+
+  /**
+   * Synchronizes the modal state from the URL
+   * on initial mount.
+   *
+   * Supported examples:
+   *
+   * ?food=123
+   * ?categories=true
+   * ?product=true
+   * ?upload_product_file=true
+   * ?create_table_store=true
+   *
+   * @returns {void}
+   */
+  useEffect(() => {
+    if (
+      hasInitializedModalRef.current
+    ) {
+      return
+    }
+
+    hasInitializedModalRef.current =
+      true
+
+    const params =
+      new URLSearchParams(
+        searchParams.toString()
+      )
+
+    const activeModal =
+      getActiveModalFromParams(
+        params
+      )
+
+    if (!activeModal) {
+      return
+    }
+
+    const {
+      number,
+      name,
+      value
+    } = activeModal
+
+    activeModalQueryRef.current =
+      name
+
+    /**
+     * Preserve the original product loading
+     * event when food is opened directly by URL.
+     */
+    if (
+      name === 'food' &&
+      value
+    ) {
+      handleGetOneProduct({
+        pId: value
+      })
+    }
+
+    /**
+     * Preserve the original modal opening event.
+     */
+    handleClick(number)
+
+    /**
+     * Normalize every boolean modal query.
+     *
+     * Examples:
+     *
+     * ?categories=anything
+     *        -> ?categories=true
+     *
+     * ?product=anything
+     *        -> ?product=true
+     *
+     * ?upload_product_file=anything
+     *        -> ?upload_product_file=true
+     *
+     * ?create_table_store=categories
+     *        -> ?create_table_store=true
+     */
+    const normalizedValue =
+      normalizeModalQueryValue(
+        name,
+        value
+      )
+
+    const currentValue =
+      String(
+        normalizedValue
+      )
+
+    if (
+      currentValue !== value
+    ) {
+      params.set(
+        name,
+        currentValue
+      )
+
+      const queryString =
+        params.toString()
+
+      router.replace(
+        queryString
+          ? `${pathname}?${queryString}`
+          : pathname,
+        {
+          scroll: false
+        }
+      )
+    }
+
+    // Initial synchronization intentionally runs once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /**
+   * Updates stock management state.
+   *
+   * @param {boolean} newState - New stock management state.
+   * @returns {Promise<void>}
+   */
+  const updateStockState =
+    useCallback(
+      async (
+        newState: boolean
+      ): Promise<void> => {
+        if (pId == null) {
+          return
+        }
+
+        const response =
+          await updateManageStock({
+            pId,
+            manageStock:
+              newState
+          })
+
+        sendNotification({
+          title: response.success
+            ? 'Exitoso'
+            : 'Error',
+          description:
+            response.message,
+          backgroundColor:
+            response.success
+              ? 'success'
+              : 'error'
+        })
+      },
+      [
+        pId,
+        sendNotification,
+        updateManageStock
+      ]
+    )
+
+  /**
+   * Toggles product stock management.
+   *
+   * @returns {void}
+   */
+  const handleCheckStock =
+    useCallback(
+      (): void => {
+        setCheckStock(
+          (previousState) => {
+            const newState =
+              !previousState
+
+            void updateStockState(
+              newState
+            )
+
+            return newState
+          }
+        )
+      },
+      [updateStockState]
+    )
+
+  const propsUploadProductImage =
+    useImageUploaderProduct({
+      sendNotification
+    })
+
+  const { image } =
+    propsUploadProductImage
+
+  const [
+    updateImageProducts
+  ] = useSetImageProducts()
+
+  /**
+   * Updates the product image.
+   *
+   * @returns {Promise<void>}
+   */
+  const handleUpdateImageProduct =
+    useCallback(
+      async (): Promise<void> => {
+        if (pId == null) {
+          return
+        }
+
+        const response =
+          await updateImageProducts({
+            pId,
+            image
+          })
+
+        const {
+          message,
+          success
+        } =
+          response?.data
+            ?.editProductFoods ||
+          {}
+
+        sendNotification({
+          title: 'Exitoso',
+          description:
+            message,
+          backgroundColor:
+            success
+              ? 'success'
+              : 'warning'
+        })
+      },
+      [
+        image,
+        pId,
+        sendNotification,
+        updateImageProducts
+      ]
+    )
 
   const propsExtra = {
-    handleAdd: handleAddExtra,
+    handleAdd:
+      handleAddExtra,
     handleRemove,
     onSubmitUpdate,
     inputRefs,
@@ -290,17 +922,25 @@ export const Store = () => {
     handleLineChange,
     selected,
     pId,
-    loading: l,
-    setModal: handleOpenModalAdditional,
+    loading:
+      loadingExtra,
+    setModal: () => {
+      setModal(
+        (previous) =>
+          !previous
+      )
+    },
     modal,
     handleFocusChange,
     setLine,
     LineItems,
-    handleCleanLines: CleanLines
+    handleCleanLines:
+      cleanLines
   }
 
   const dissertProps = {
-    handleCheck: handleCheckDessert,
+    handleCheck:
+      handleCheckDessert,
     handleRemoveList,
     setTitle,
     title,
@@ -321,266 +961,456 @@ export const Store = () => {
     handleAddList,
     setData
   }
-  const handleDeleteProduct = (data: ProductFood) => {
-    handleDelete(data)
-    handleClick(1)
-  }
-  interface AvailableProduct {
-    dayAvailable: string;
-  }
 
-  const selectedDays: string[] = (Array.isArray(product?.getAllAvailableProduct) && product?.getAllAvailableProduct?.length)
-    ? product?.getAllAvailableProduct?.map((day: AvailableProduct) => {
-      return day?.dayAvailable;
-    })
-    : []
+  const { days } =
+    useSaveAvailableProduct()
 
-  const { days } = useSaveAvailableProduct()
-  const [alertModal, setAlertModal] = useState(false)
-  const [checkStock, setCheckStock] = useState<boolean>(false)
+  const selectedDays: string[] =
+    Array.isArray(
+      product?.getAllAvailableProduct
+    )
+      ? product.getAllAvailableProduct.map(
+        (
+          day: AvailableProduct
+        ) =>
+          day.dayAvailable
+      )
+      : []
 
-  /**
-     * Updates stock management state
-     * @param {boolean} newState - The new value of manageStock
-     */
-  const updateStockState = useCallback(async (newState: boolean) => {
-    const response = await updateManageStock({ pId, manageStock: newState })
-    const notifyUpdateResult = (success: boolean, message: string) => {
-      sendNotification({
-        title: success ? 'Exitoso' : 'Error',
-        description: message,
-        backgroundColor: success ? 'success' : 'error'
-      })
-    }
-    notifyUpdateResult(response.success, response.message)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pId, updateManageStock])
+  const handleDeleteProduct =
+    useCallback(
+      (
+        selectedProduct: ProductFood
+      ): void => {
+        handleDelete(
+          selectedProduct
+        )
 
-  /**
-     * Toggles checkStock and updates it
-     */
-  const handleCheckStock = () => {
-    setCheckStock((prev) => {
-      const newState = !prev
-      updateStockState(newState)
-      return newState
-    })
-  }
-  const propsUploadProductImage = useImageUploaderProduct({
-    sendNotification
-  })
-  const { image } = propsUploadProductImage
+        /**
+         * Preserve existing behavior:
+         * product modal remains active while
+         * delete flow is executed.
+         */
+        handleClick(1)
+      },
+      [
+        handleClick,
+        handleDelete
+      ]
+    )
 
-  const [updateImageProducts] = useSetImageProducts()
-
-  const handleUpdateImageProduct = async () => {
-    const response = await updateImageProducts({
-      pId,
-      image
-    })
-
-    const { message, success } = response?.data?.editProductFoods || {}
-    sendNotification({
-      title: 'Exitoso',
-      description: message,
-      backgroundColor: success ? 'success' : 'warning'
-    })
-  }
   const productProps = {
     dataExtra,
     handleCheckStock,
     checkStock,
     setAlertModal,
-    propsExtra: propsExtra,
-    tag: product.getOneTags || {},
+    propsExtra,
+    tag:
+      product?.getOneTags ||
+      {},
     dataOptional,
     loading,
     days,
-    dissertProps: dissertProps,
-    modal: modal,
-    nameStore: nameStore,
-    pId: pId,
+    dissertProps,
+    modal,
+    nameStore,
+    pId,
     ProBarCode,
-    pName: pName,
-    ProDescription: ProDescription,
-    ProDescuento: ProDescuento,
+    pName,
+    ProDescription,
+    ProDescuento,
     ProImage,
-    ProPrice: ProPrice,
+    ProPrice,
     selectedDays,
-    showDessert: showDessert,
-    store: store,
+    showDessert,
+    store,
     storeName,
     propsUploadProductImage,
     handleUpdateImageProduct,
-    handleDelete: handleDeleteProduct,
-    onHideDessert: () => { return setShowDessert(!showDessert) },
-    setModal: handleOpenModalAdditional,
-    setShowDessert: () => { return setShowDessert(!showDessert) }
+    handleDelete:
+      handleDeleteProduct,
+    onHideDessert:
+      (): void => {
+        setShowDessert(
+          (previous) =>
+            !previous
+        )
+      },
+    setModal:
+      (): void => {
+        setModal(
+          (previous) =>
+            !previous
+        )
+      },
+    setShowDessert:
+      (): void => {
+        setShowDessert(
+          (previous) =>
+            !previous
+        )
+      }
   }
 
-  const defaultObserverOptions = {
+  const defaultObserverOptions:
+    IntersectionObserverInit = {
     root: null,
     threshold: 0.1,
     rootMargin: '200px'
   }
 
-  const { onScreen } = useIntersectionObserver({
-    el: ref,
-    active: true,
-    options: defaultObserverOptions,
-    disconnect: true,
-    onEnter: () => {
-      try {
-        const long = totalCount
-        if (onScreen && (onScreen && moreCatProduct < long) && !loadingCatProd) {
-          setMoreCaProduct(s => { return s + 50 })
-          fetchMore({
-            variables: { max: moreCatProduct, min: 0 },
-            updateQuery: (prevResult: unknown, { fetchMoreResult }: {
-              fetchMoreResult: {
-                getCatProductsWithProduct: { catProductsWithProduct: unknown[]; totalCount: number }
-              }
-            }) => {
-              // Check if fetchMoreResult is null or undefined
-              if (!fetchMoreResult) {
-                return prevResult
-              }
+  const { onScreen } =
+    useIntersectionObserver({
+      el: ref,
+      active: true,
+      options:
+        defaultObserverOptions,
+      disconnect: true,
+      onEnter: (): void => {
+        try {
+          const currentTotal =
+            totalCount
 
-              // Check if the catProductsWithProduct field is an array
-              const catProductsWithProduct = fetchMoreResult?.getCatProductsWithProduct?.catProductsWithProduct
-              if (!Array.isArray(catProductsWithProduct)) {
-                return prevResult
-              }
+          if (
+            onScreen &&
+            moreCatProduct <
+              currentTotal &&
+            !loadingCatProd
+          ) {
+            setMoreCaProduct(
+              (current) =>
+                current + 50
+            )
 
-              // Check if totalCount is a number and not NaN
-              const totalCount = fetchMoreResult?.getCatProductsWithProduct?.totalCount
-              if (typeof totalCount !== 'number' || Number.isNaN(totalCount)) {
-                return prevResult
-              }
-              const validateArray = Array.isArray(fetchMoreResult.getCatProductsWithProduct.catProductsWithProduct)
-              if (!fetchMoreResult && !validateArray) { return prevResult }
-              return {
-                getCatProductsWithProduct: {
-                  getCatProductsWithProduct: [...fetchMoreResult.getCatProductsWithProduct.catProductsWithProduct],
-                  totalCount: totalCount
+            fetchMore({
+              variables: {
+                max:
+                  moreCatProduct,
+                min: 0
+              },
+              updateQuery: (
+                prevResult: unknown,
+                {
+                  fetchMoreResult
+                }: {
+                  fetchMoreResult?:
+                    FetchMoreResult
+                }
+              ) => {
+                if (
+                  !fetchMoreResult
+                ) {
+                  return prevResult
+                }
+
+                const
+                  catProductsWithProduct =
+                    fetchMoreResult
+                      .getCatProductsWithProduct
+                      ?.catProductsWithProduct
+
+                const
+                  fetchedTotalCount =
+                    fetchMoreResult
+                      .getCatProductsWithProduct
+                      ?.totalCount
+
+                if (
+                  !Array.isArray(
+                    catProductsWithProduct
+                  )
+                ) {
+                  return prevResult
+                }
+
+                if (
+                  typeof fetchedTotalCount !==
+                    'number' ||
+                  Number.isNaN(
+                    fetchedTotalCount
+                  )
+                ) {
+                  return prevResult
+                }
+
+                return {
+                  getCatProductsWithProduct:
+                    {
+                      catProductsWithProduct,
+                      totalCount:
+                        fetchedTotalCount
+                    }
                 }
               }
-            }
-          })
-        }
-      } catch (error) {
-        interface ErrorType {
-          graphQLErrors?: unknown[];
-          message?: string;
-        }
-        const err = error as ErrorType
-        const errors = {
-          errors: err?.graphQLErrors || []
-        }
+            })
+          }
+        } catch (error) {
+          const err =
+            error as GraphQLError
 
-        const responseError = errorHandler(errors)
+          const responseError =
+            errorHandler({
+              errors:
+                err?.graphQLErrors ||
+                []
+            })
 
-        if (err?.message === 'Token expired' || responseError) {
-          onClickLogout({
-            redirect: true
-          })
+          if (
+            err?.message ===
+              'Token expired' ||
+            responseError
+          ) {
+            onClickLogout({
+              redirect: true
+            })
+          }
         }
       }
-    }
-  })
+    })
 
-  const handleChange = (value: string) => {
-    setSearchQuery(value)
-  }
+  /**
+   * Updates product search text.
+   *
+   * @param {string} value - Search value.
+   * @returns {void}
+   */
+  const handleSearchChange =
+    useCallback(
+      (
+        value: string
+      ): void => {
+        setSearchQuery(
+          value
+        )
+      },
+      []
+    )
 
+  const categoriesWithProduct =
+    useMemo(() => {
+      const normalizedSearch =
+        searchQuery.trim()
 
-  const categoriesWithProduct = useMemo(() => {
-    if (searchQuery.trim() === '') {
-      return data
-    }
-    return getCategoriesWithProduct(data, searchQuery)
+      if (
+        !normalizedSearch
+      ) {
+        return data
+      }
 
-  }, [data, searchQuery])
+      return getCategoriesWithProduct(
+        data,
+        normalizedSearch
+      )
+    }, [
+      data,
+      searchQuery
+    ])
 
-  const component = {
-    1: <ProductView {...productProps} />,
+  const component:
+    Record<
+      ModalKey,
+      React.ReactNode
+    > = {
+    1: (
+      <ProductView
+        {...productProps}
+      />
+    ),
     2: <Categories />,
     3: <Product />,
-    4: <UploadFilesProducts handleClick={handleClick} />,
+    4: (
+      <UploadFilesProducts
+        handleClick={
+          handleClick
+        }
+      />
+    ),
     5: <TableSeating />
   }
 
-  const placeholder = 'Buscar productos'
-  const justifyContent = 'normal'
-  const center = Boolean(isMobile)
+  const currentModalKey =
+    isModalKey(show)
+      ? show
+      : null
+
+  const currentModalTitle =
+    currentModalKey === 3
+      ? `Producto ${
+          product?.pName ?? ''
+        }`
+      : currentModalKey
+        ? MODAL_TITLE[
+            currentModalKey
+          ]
+        : ''
+
+  const modalProps = {
+    footer: false,
+    header: true,
+    modal: true,
+    padding: 0,
+    show:
+      currentModalKey !==
+      null,
+    title:
+      currentModalTitle,
+    size:
+      MODAL_SIZES.large,
+    zIndex:
+      getGlobalStyle(
+        '--z-index-modal'
+      ),
+    onCancel:
+      handleCloseModal,
+    onHide:
+      handleCloseModal
+  }
+
+  const isMobileOrTablet =
+    Boolean(isMobile)
+
+  const placeholder =
+    'Buscar productos'
+
   return (
     <div
-      className={`${styles.wrapper} ${center ? styles.center : ''}`}
-      style={{ justifyContent: justifyContent || 'normal' }}
+      className={`${
+        styles.wrapper
+      } ${
+        isMobileOrTablet
+          ? styles.center
+          : ''
+      }`}
+      style={{
+        justifyContent:
+          'normal'
+      }}
     >
       <AwesomeModal
         customHeight='30%'
         footer={false}
         header={true}
-        onHide={() => { return setAlertModal(false) }}
-        padding={getGlobalStyle('--spacing-lg')}
-        show={alertModal && show === 1}
+        onHide={() => {
+          setAlertModal(
+            false
+          )
+        }}
+        padding={getGlobalStyle(
+          '--spacing-lg'
+        )}
+        show={
+          alertModal &&
+          currentModalKey === 1
+        }
         size='40%'
         title='¿Eliminar este producto?'
-        zIndex={getGlobalStyle('--z-index-99999')}
+        zIndex={getGlobalStyle(
+          '--z-index-99999'
+        )}
       >
-        <AlertInfo message='Si eliminas el producto no aparecerá en tus productos y en tu inventario.' type='warning' />
+        <AlertInfo
+          message='Si eliminas el producto no aparecerá en tus productos y en tu inventario.'
+          type='warning'
+        />
+
         <Row>
           <RippleButton
-            margin={getGlobalStyle('--spacing-md')}
+            margin={getGlobalStyle(
+              '--spacing-md'
+            )}
             onClick={() => {
-              return setAlertModal(false)
+              setAlertModal(
+                false
+              )
             }}
           >
             Cancelar
-          </RippleButton >
+          </RippleButton>
+
           <RippleButton
-            loading={loadingDeleteProduct}
-            margin={getGlobalStyle('--spacing-md')}
+            loading={
+              loadingDeleteProduct
+            }
+            margin={getGlobalStyle(
+              '--spacing-md'
+            )}
             onClick={() => {
-              return handleDelete({ pId, pState: 1 })
+              handleDelete({
+                pId,
+                pState: 1
+              })
             }}
           >
             Confirmar
           </RippleButton>
         </Row>
       </AwesomeModal>
-      <div className={styles.container}>
+
+      <div
+        className={
+          styles.container
+        }
+      >
         <Banner
           isMobile={isMobile}
           isTablet={isTablet}
           store={store}
         />
-        <ButtonsAction handle={handleActionClick} />
-        <div style={{ marginTop: 20 }} />
-        <SearchBar
-          handleChange={(value) => handleChange(value)}
-          padding='10px'
-          placeholder={placeholder}
+
+        <ButtonsAction
+          handle={
+            handleActionClick
+          }
         />
-        <div style={{ marginTop: 20 }} />
+
+        <div
+          style={{
+            marginTop: 20
+          }}
+        />
+
+        <SearchBar
+          handleChange={
+            handleSearchChange
+          }
+          padding='10px'
+          placeholder={
+            placeholder
+          }
+        />
+
+        <div
+          style={{
+            marginTop: 20
+          }}
+        />
+
         <StickyBoundaryCategories
-          data={categoriesWithProduct}
-          handleGetOneProduct={handleProduct}
-          loadingCatProd={loadingCatProd}
+          data={
+            categoriesWithProduct
+          }
+          handleGetOneProduct={
+            handleProduct
+          }
+          loadingCatProd={
+            loadingCatProd
+          }
           reference={ref}
-          sendNotification={sendNotification}
+          sendNotification={
+            sendNotification
+          }
         />
       </div>
-      <AwesomeModal {...modalProps} >
-        {show && component[show]}
+
+      <AwesomeModal
+        {...modalProps}
+      >
+        {currentModalKey
+          ? component[
+              currentModalKey
+            ]
+          : null}
       </AwesomeModal>
     </div>
   )
 }
-
-Store.propTypes = {
-
-}
-
-

@@ -2,7 +2,6 @@
 import { useFormatDate } from 'npm-pkg-hook'
 import {
     Button,
-    ConnectorBoardExample,
     Icon,
     Section,
     StatusBadge,
@@ -31,7 +30,6 @@ export const ListOrders: React.FC<IListOrders> = ({
     if (!orders?.length) { return null }
     return (
         <div>
-            <ConnectorBoardExample />
             <Table
                 pointer={false}
                 data={orders}

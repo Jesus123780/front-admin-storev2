@@ -45,8 +45,11 @@ import {
   LateralModal,
   Orders,
   Overline,
-  Plan
+  Plan,
+  Portal,
+  Toast
 } from 'pkg-components'
+import { ToastItem, ToastPosition } from 'pkg-components/stories/molecules/Toast'
 import React, {
   useContext,
   useEffect,
@@ -101,7 +104,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setSalesOpen,
     toggleModal,
     modalsLector,
-    theme, 
+    theme,
     toggleTheme,
     deleteToast,
     setShowComponentModal,
@@ -393,6 +396,30 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       />
 
       <AlertBox err={error} />
+          <Toast
+            toastList={messagesToast.map((toast) => ({
+              id: toast.id,
+              title: String(toast.title ?? ''),
+              description: String(toast.description ?? ''),
+              backgroundColor: toast.backgroundColor,
+              position: toast.position,
+              createdAt: toast.createdAt,
+              sequence: toast.sequence
+            }))}
+            autoDelete
+            autoDeleteTime={5000}
+            maxVisible={5}
+            stackOffsetY={15}
+            stackScaleStep={0.025}
+            exitAnimationDuration={250}
+            exitStagger={100}
+            visibleCounter={false}
+            showProgress
+            dismissOnClick={false}
+            stackHoverLift={false}
+            usePortal
+            deleteToast={deleteToast}
+          />
       <main className={`${styles.main} ${pathname === '/' ? styles.noAside : ''} ${isCollapsedMenu ? styles.collapsed_main : ''}`}>
         <Header
           count={count}

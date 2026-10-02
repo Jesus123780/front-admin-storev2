@@ -1,0 +1,566 @@
+.page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 24px 16px 48px;
+  box-sizing: border-box;
+  background: #f5f6f8;
+}
+
+.ticketWrapper {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+/* ========================================
+   TICKET
+======================================== */
+
+.ticket {
+  position: relative;
+  width: 100%;
+  max-width: 390px;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 28px 24px 22px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #1f2937;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace;
+
+  box-shadow:
+    0 20px 45px rgba(15, 23, 42, 0.08),
+    0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+/* ========================================
+   HEADER
+======================================== */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.logoWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 12px;
+  overflow: hidden;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+.logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.storeName {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.storeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  max-width: 100%;
+  margin-top: 8px;
+
+  color: #6b7280;
+
+  font-size: 10px;
+  line-height: 1.5;
+
+  word-break: break-word;
+}
+
+/* ========================================
+   REFERENCIA
+======================================== */
+
+.reference {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-top: 18px;
+  padding: 12px 14px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+
+  background: #f9fafb;
+}
+
+.referenceLabel {
+  color: #9ca3af;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.referenceCode {
+  margin-top: 3px;
+
+  color: #111827;
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.referenceDate {
+  margin-top: 3px;
+
+  color: #6b7280;
+
+  font-size: 9px;
+}
+
+/* ========================================
+   CLIENTE
+======================================== */
+
+.clientBox {
+  margin-top: 14px;
+  padding: 12px;
+
+  border-radius: 8px;
+
+  background: #f8fafc;
+}
+
+.sectionTitle {
+  margin-bottom: 8px;
+
+  color: #374151;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.clientGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.clientItem {
+  display: flex;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.clientItem span {
+  color: #9ca3af;
+}
+
+.clientItem strong {
+  max-width: 65%;
+
+  color: #374151;
+
+  font-weight: 600;
+  text-align: right;
+
+  word-break: break-word;
+}
+
+/* ========================================
+   DIVIDER
+======================================== */
+
+.divider {
+  width: 100%;
+  margin: 16px 0;
+
+  border-top: 1px dashed #d1d5db;
+}
+
+/* ========================================
+   TÍTULO
+======================================== */
+
+.ticketTitle {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin: 4px 0 14px;
+}
+
+.ticketTitle h2 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+
+  white-space: nowrap;
+}
+
+.ticketTitleLine {
+  flex: 1;
+
+  height: 1px;
+
+  background: #e5e7eb;
+}
+
+/* ========================================
+   PRODUCTOS
+======================================== */
+
+.products {
+  width: 100%;
+}
+
+.tableHead,
+.productRow,
+.extraRow {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(28px, 0.6fr)
+    minmax(48px, 1fr)
+    minmax(52px, 1fr);
+
+  gap: 6px;
+
+  align-items: start;
+}
+
+.tableHead {
+  padding-bottom: 7px;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  color: #9ca3af;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tableHead span:not(:first-child) {
+  text-align: right;
+}
+
+.tableBody {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  margin-top: 9px;
+}
+
+.productRow {
+  color: #374151;
+
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.description {
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+
+  text-align: left;
+}
+
+.number {
+  text-align: right;
+
+  font-variant-numeric: tabular-nums;
+
+  white-space: nowrap;
+}
+
+.productRow .number:last-child {
+  color: #111827;
+
+  font-weight: 700;
+}
+
+/* ========================================
+   EXTRAS
+======================================== */
+
+.extraRow {
+  color: #6b7280;
+
+  font-size: 9px;
+}
+
+.extraRow .description {
+  padding-left: 8px;
+}
+
+.extraIndicator {
+  display: inline-block;
+
+  margin-right: 3px;
+
+  color: #9ca3af;
+
+  font-weight: 700;
+}
+
+.optionalRow {
+  padding: 2px 0 0 8px;
+
+  color: #4b5563;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.free {
+  color: #6b7280;
+
+  font-size: 8px;
+  font-style: italic;
+
+  text-align: right;
+}
+
+/* ========================================
+   RESUMEN
+======================================== */
+
+.summary {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.summaryRow,
+.totalRow,
+.paymentMethod {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.summaryRow {
+  color: #6b7280;
+
+  font-size: 10px;
+}
+
+.summaryRow span:last-child {
+  color: #374151;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.totalRow {
+  padding: 11px 0;
+
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+
+  color: #111827;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.totalRow strong {
+  font-size: 16px;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.paymentMethod {
+  margin-top: 2px;
+
+  color: #9ca3af;
+
+  font-size: 9px;
+}
+
+.paymentMethod strong {
+  color: #4b5563;
+
+  font-weight: 600;
+
+  text-transform: capitalize;
+}
+
+/* ========================================
+   FOOTER
+======================================== */
+
+.footer {
+  padding-top: 18px;
+
+  text-align: center;
+}
+
+.thanks {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.footerMessage {
+  margin: 5px 0 0;
+
+  color: #9ca3af;
+
+  font-size: 8px;
+}
+
+/* ========================================
+   BORDE DENTADO
+======================================== */
+
+.zigzag {
+  position: absolute;
+
+  right: 0;
+  bottom: -1px;
+  left: 0;
+
+  height: 7px;
+
+  background:
+    linear-gradient(
+      135deg,
+      transparent 50%,
+      #f5f6f8 50%
+    )
+    0 0 / 10px 10px repeat-x,
+
+    linear-gradient(
+      45deg,
+      transparent 50%,
+      #f5f6f8 50%
+    )
+    5px 0 / 10px 10px repeat-x;
+}
+
+/* ========================================
+   ACCIONES
+======================================== */
+
+.actionFooter {
+  display: flex;
+  justify-content: center;
+
+  margin-top: 20px;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 480px) {
+  .page {
+    padding: 12px 8px 32px;
+  }
+
+  .ticket {
+    max-width: 100%;
+
+    padding: 24px 16px 20px;
+
+    border-radius: 4px;
+  }
+
+  .tableHead,
+  .productRow,
+  .extraRow {
+    grid-template-columns:
+      minmax(0, 1.8fr)
+      minmax(24px, 0.55fr)
+      minmax(44px, 0.9fr)
+      minmax(48px, 0.9fr);
+
+    gap: 4px;
+  }
+}
+
+/* ========================================
+   PRINT
+======================================== */
+
+@media print {
+  .page {
+    padding: 0;
+
+    background: #ffffff;
+  }
+
+  .ticketWrapper {
+    width: 100%;
+  }
+
+  .ticket {
+    max-width: none;
+
+    border-radius: 0;
+
+    box-shadow: none;
+  }
+
+  .actionFooter {
+    display: none;
+  }
+
+  .logoWrapper {
+    border: none;
+  }
+}

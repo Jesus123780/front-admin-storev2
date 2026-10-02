@@ -3,7 +3,6 @@
 import {
   AwesomeModal,
   Column,
-  getGlobalStyle,
   LoaderSubItem,
   numberFormat,
   QuantityButton,
@@ -15,6 +14,7 @@ import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/const
 
 import { ExtrasProductsItems } from '@/container/product/extras/ExtrasProductsItems'
 
+import { useModalLayer } from '../modalLayers'
 import styles from './style.module.css'
 
 export const SubItems = ({
@@ -59,6 +59,7 @@ export const SubItems = ({
     ProQuantity: ''
   }
   const showQuantity = false
+  const zIndex = useModalLayer(Boolean(modalItem))
   return (
     <AwesomeModal
       borderRadius='4px'
@@ -68,6 +69,7 @@ export const SubItems = ({
       footer={false}
       header={true}
       height='60vh'
+      zIndex={zIndex}
       onCancel={() => {
         return false
       }}
@@ -80,8 +82,6 @@ export const SubItems = ({
       size={MODAL_SIZES.medium}
       sizeIconClose='30px'
       title='Listado de sub productos'
-      
-      zIndex={getGlobalStyle('--z-index-modal')}
     >
       <Column className={styles.container}>
         <Column className={styles.header}>

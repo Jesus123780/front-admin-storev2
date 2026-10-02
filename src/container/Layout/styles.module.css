@@ -38,6 +38,13 @@
   background-color: var(--color-neutral-gray-white);
 }
 
+.toastContainer {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: var(--z-index-toast);
+}
+
 @media (max-width: 960px) {
   .main {
     grid-template-columns: 0% auto 0% 0%;

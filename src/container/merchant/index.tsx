@@ -270,10 +270,18 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
   return (
     <>
       <Toast
-        autoDelete={true}
-        autoDeleteTime={9000}
-        position={ToastPosition['top-right']}
-        toastList={messagesToast as unknown as ToastItem[]}
+        toastList={messagesToast.map((toast) => ({
+          id: toast.id,
+          title: String(toast.title ?? ''),
+          description: String(toast.description ?? ''),
+          backgroundColor: toast.backgroundColor,
+          position: toast.position,
+          createdAt: toast.createdAt,
+          sequence: toast.sequence
+        }))}
+        autoDelete
+        autoDeleteTime={5000}
+        position={ToastPosition['bottom-left']}
         deleteToast={deleteToast}
       />
       <div className={styles.wrapper}>

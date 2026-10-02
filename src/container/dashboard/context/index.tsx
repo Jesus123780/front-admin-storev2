@@ -177,10 +177,23 @@ const buildGridComponentFromPlacement = ({
 };
 
 const mapDashboardComponent = (component: DashboardComponent): GridComponent => {
+  const rawCoordinates = (component.coordinates ?? {}) as Record<string, unknown>
+
+  // The component key must match a key in COMPONENT_MAP (e.g. "Goal", "DishStore").
+  // In the DB seed that value lives in `coordinates.name` (and `coordinates.id`),
+  // NOT in `title` (which is the localized label like "Meta del día").
   const componentKey =
-    (component.coordinates as Record<string, unknown>)?.componentKey as string | undefined
-    ?? component.coordinates.title
+    (rawCoordinates.componentKey as string | undefined)
+    ?? (component.coordinates?.name as string | undefined)
+    ?? (component.coordinates?.id as string | undefined)
     ?? undefined;
+
+  // Instance identifier the backend recognizes: `update`/`delete` match by `name`,
+  // which in the seed equals `coordinates.name` / `coordinates.id`.
+  const instanceId =
+    (component.coordinates?.name as string | undefined)
+    ?? (component.coordinates?.id as string | undefined)
+    ?? component.id;
 
   const coords: GridCoordinates = {
     x: component.coordinates?.x ?? 0,
@@ -190,17 +203,17 @@ const mapDashboardComponent = (component: DashboardComponent): GridComponent => 
   };
 
   return {
-    id: component.coordinates.id,
+    id: instanceId,
     key: componentKey,
     componentKey,
-    title: component.coordinates.title ?? '',
-    moved: component.coordinates.moved ?? false,
-    static: component.coordinates.static ?? false,
+    title: component.coordinates?.title ?? '',
+    moved: component.coordinates?.moved ?? false,
+    static: component.coordinates?.static ?? false,
     x: coords.x,
     y: coords.y,
     w: coords.w,
     h: coords.h,
-    component: buildComponentPayload(componentKey, coords, component.coordinates.id),
+    component: buildComponentPayload(componentKey, coords, instanceId),
   };
 };
 
