@@ -112,7 +112,7 @@ export const Categories = ({ isDragDisabled = true }) => {
                         catProductsWithProduct: updatedCatProductsWithProduct,
                         totalCount: dataOld.totalCount
                       }
-                    } catch (error) {
+                    } catch {
                       setShowCategories(false)
                       return dataOld
                     }

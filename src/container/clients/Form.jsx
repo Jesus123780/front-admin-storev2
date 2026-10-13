@@ -150,7 +150,6 @@ export const FormClients = ({
           <InputHooks
             error={errorForm?.clientName}
             info='El nombre del cliente es requerido'
-            letters
             marginBottom={getGlobalStyle('--spacing-2xl')}
             name='clientName'
             onChange={handleChange}
@@ -166,7 +165,6 @@ export const FormClients = ({
           <InputHooks
             error={errorForm?.clientLastName}
             info='El apellido del cliente es opcional'
-            letters
             marginBottom={getGlobalStyle('--spacing-2xl')}
             name='clientLastName'
             onChange={handleChange}

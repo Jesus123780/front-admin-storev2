@@ -8,6 +8,7 @@ import {
   InputHooks,
   NewSelect,
   QuantityButton,
+  Text,
   ToggleSwitch
 } from 'pkg-components'
 import PropTypes from 'prop-types'
@@ -49,6 +50,7 @@ export const FormProduct = ({
   return (
     <Column as='form'>
       <InputHooks
+        tabIndex={0}
         error={errors.names}
         info='Nombre del producto que se mostrará en la tienda'
         name='names'
@@ -61,6 +63,7 @@ export const FormProduct = ({
       />
       <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
       <AmountInput
+        tabIndex={1}
         allowDecimals={true}
         decimalSeparator=','
         decimalsLimit={2}
@@ -81,26 +84,29 @@ export const FormProduct = ({
         value={values?.ProPrice}
       />
       <AmountInput
+        tabIndex={2}
         allowDecimals={true}
         decimalSeparator=','
         decimalsLimit={2}
         disabled={false}
         groupSeparator='.'
-        label='Precio del descuento'
+        label='Precio anterior'
         name='ProDescuento'
         onValueChange={(value) => {
           handleChange({
             target: {
               name: 'ProDescuento',
-              value: value
+              value
             }
           })
         }}
         placeholder='$0,00'
         prefix='$'
         value={values?.ProDescuento}
-
       />
+      <Text as='p' size='sm'>
+        Ingresa el precio que tenía el producto antes de aplicar el descuento.
+      </Text>
       <Checkbox
         checked={disableFree}
         id='checkboxF'
@@ -108,7 +114,9 @@ export const FormProduct = ({
         name='desc'
         onChange={handleCheckFreeShipping}
       />
+      <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
       <AmountInput
+        tabIndex={3}
         allowDecimals={true}
         decimalSeparator=','
         decimalsLimit={2}
@@ -128,22 +136,30 @@ export const FormProduct = ({
         prefix='$'
         value={values?.ValueDelivery}
       />
+      <Text as='p' size='sm'>
+        Valor que se cobrará al cliente por el servicio de domicilio.
+      </Text>
       <>
         <ToggleSwitch
           checked={checkStock}
           id='stock'
           name='stock'
           disabled={false}
-          label='Gestionado por stock'
+          label='Controlar disponibilidad por stock'
           onChange={() => {
             return handleCheckStock()
           }}
           style={{ marginBottom: getGlobalStyle('--spacing-2xl') }}
           successColor='green'
         />
+
         {checkStock && (
           <>
-            <AlertInfo message='Stock limitado disponible del producto' type='warning' />
+            <AlertInfo
+              message='Define la cantidad disponible del producto para controlar sus existencias.'
+              type='warning'
+            />
+
             <QuantityButton
               handleDecrement={() => {
                 return handleDecreaseStock()
@@ -159,6 +175,7 @@ export const FormProduct = ({
 
       <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
       <NewSelect
+        tabIndex={4}
         action={true}
         error={errors.carProId}
         handleClickAction={() => {
@@ -176,6 +193,7 @@ export const FormProduct = ({
       />
       <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
       <InputHooks
+        tabIndex={5}
         error={errors.ProDescription}
         info='Descripción del producto que se mostrará en la tienda'
         name='ProDescription'

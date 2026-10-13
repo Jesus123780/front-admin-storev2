@@ -340,12 +340,12 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
 
         // Step 3: COMPLEMENTS
         if (active === STEPS.COMPLEMENTS) {
-            setActive(STEPS.DISPONIBILITY)
+            setActive(STEPS.AVAILABILITY)
             return
         }
 
-        // Step 4: DISPONIBILITY
-        if (active === STEPS.DISPONIBILITY) {
+        // Step 4: AVAILABILITY
+        if (active === STEPS.AVAILABILITY) {
             const input = createFormInput()
 
             if (check.noAvailability && input.length === 0) {
@@ -625,6 +625,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             setData={setData}
             setTitle={setTitle}
             title={title}
+            sendNotification={sendNotification}
         />,
         2: <div style={{ flexDirection: 'column', display: 'flex' }}>
             <Button

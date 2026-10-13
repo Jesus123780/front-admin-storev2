@@ -485,6 +485,7 @@ export const CreateSales = ({
         useAmountInput={useAmountInput}
         values={values}
         handleAddAllProductsToCart={handleAddAllProductsToCart}
+        sendNotification={sendNotification}
         {...filterProps}
       />
       <SubItems {...modalItems} />
@@ -505,6 +506,7 @@ export const CreateSales = ({
         customHeight='auto'
         padding={getGlobalStyle('--spacing-sm')}
         zIndex={commentZIndex}
+        sendNotification={sendNotification}
       >
         <Column alignItems='center' justifyContent='space-between'>
           <CardProductSimple

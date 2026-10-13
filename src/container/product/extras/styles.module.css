@@ -1,0 +1,266 @@
+.container {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   ITEM
+========================================================= */
+
+.item {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 12px 14px;
+
+  box-sizing: border-box;
+
+  background: var(--color-base-white);
+
+  border: 1px solid var(--color-neutral-gray-silver);
+
+  border-radius: var(--border-radius-sm);
+
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.item:hover {
+  border-color: var(--color-text-inactive);
+
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================================================
+   EDITING
+========================================================= */
+
+.itemEditing {
+  border-color: rgba(234, 29, 44, 0.18);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(234, 29, 44, 0.025),
+      transparent
+    );
+}
+
+/* =========================================================
+   INFO
+========================================================= */
+
+.info {
+  min-width: 0;
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+/* =========================================================
+   NAME
+========================================================= */
+
+.nameWrapper {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.title {
+  margin: 0;
+
+  min-width: 0;
+
+  color: var(--color-text-primary);
+
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unitPrice {
+  color: var(--color-text-inactive);
+
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.25;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   PRICE
+========================================================= */
+
+.priceWrapper {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: baseline;
+
+  gap: 4px;
+}
+
+.price {
+  color: var(--color-text-primary);
+
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.priceFree {
+  color: var(--color-text-success);
+
+  font-weight: 700;
+}
+
+.priceSuffix {
+  color: var(--color-text-inactive);
+
+  font-size: 10px;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.actions {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  min-width: max-content;
+}
+
+/* =========================================================
+   DELETE BUTTON
+========================================================= */
+
+.deleteButton {
+  width: 38px;
+  height: 38px;
+
+  min-width: 38px;
+  min-height: 38px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--border-radius-xs);
+
+  transition:
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.deleteButton:hover {
+  background-color: rgba(234, 29, 44, 0.08);
+
+  transform: translateY(-1px);
+}
+
+.deleteButton:active {
+  transform: scale(0.94);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .item {
+    gap: 10px;
+
+    padding: 11px 12px;
+  }
+
+  .info {
+    gap: 10px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+
+  .price {
+    font-size: 14px;
+  }
+
+  .unitPrice {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .item {
+    align-items: flex-start;
+  }
+
+  .info {
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 6px;
+  }
+
+  .priceWrapper {
+    align-self: flex-start;
+  }
+
+  .actions {
+    align-self: center;
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .item,
+  .deleteButton {
+    transition: none;
+  }
+}
