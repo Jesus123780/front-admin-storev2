@@ -162,7 +162,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "next:build": "next build",
-    "next:dev": "node build/start.dev.js",
+    "next:dev": "node electron/src/start.next-dev.js",
     "next:lint": "next lint",
     "next:start": "next start",
     "postinstall": "electron-builder install-app-deps",

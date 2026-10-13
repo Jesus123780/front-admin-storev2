@@ -34,6 +34,7 @@ export const ListOrderStatusTypes = ({
                     droppableId='droppable-status-types'
                     isCombineEnabled={false}
                     ignoreContainerClipping={false}
+                    isDropDisabled={false}
                 >
                     {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps}>

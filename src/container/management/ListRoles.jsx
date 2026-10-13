@@ -1,7 +1,8 @@
 import {
   useCheckboxState,
   useRemoveRoles,
-  useUpdateRolesPriority} from 'npm-pkg-hook'
+  useUpdateRolesPriority
+} from 'npm-pkg-hook'
 import {
   Button,
   CheckboxCube,
@@ -14,7 +15,8 @@ import {
   Pagination,
   Row,
   Section,
-  Table} from 'pkg-components'
+  Table
+} from 'pkg-components'
 import PropTypes from 'prop-types'
 import React, { useContext, useEffect, useMemo, useState } from 'react'
 
@@ -42,7 +44,7 @@ export function ListRoles({
   } = useCheckboxState(roleIds, [])
   // HANDLES
   const handleOnDragEnd = (result) => {
-    if (!result.destination) {return}
+    if (!result.destination) { return }
 
     // Crear una copia de la lista de roles
     const reorderedItems = Array.from(roleList)
@@ -78,7 +80,7 @@ export function ListRoles({
     }
   }
   const handleRemoveRoles = () => {
-    if (checkedItems.size === 0) {return}
+    if (checkedItems.size === 0) { return }
     const checkedItemsArray = [...checkedItems]
     removeRoles({ roleIds: checkedItemsArray })
     setRoleList(prevState => { return prevState.filter(role => { return !checkedItemsArray.includes(role.idRole) }) })
@@ -98,7 +100,11 @@ export function ListRoles({
   return (
     <div>
       <DragDropContext onDragEnd={handleOnDragEnd}>
-        <Droppable droppableId='droppable'>
+        <Droppable droppableId='droppable'
+          isDropDisabled={false}
+          isCombineEnabled={false}
+          ignoreContainerClipping={false}
+        >
           {(provided) => {
             return (
               <div

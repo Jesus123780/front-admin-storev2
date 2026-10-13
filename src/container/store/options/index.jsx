@@ -55,6 +55,7 @@ export const ButtonsAction = ({ handle = (number, name, bool) => { return { numb
 
   return (
     <div className={styles.Wrapper_options}>
+
       {buttonsData.map((button, index) => {
         return (
           <Button

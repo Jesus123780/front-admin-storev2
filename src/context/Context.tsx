@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -6,9 +7,7 @@ import {
   useSearchParams
 } from 'next/navigation'
 import { useTheme } from 'npm-pkg-hook'
-import {
-  ContainerToastProps
-} from 'pkg-components/stories/molecules/AlertBox/types'
+import { ContainerToastProps } from 'pkg-components/stories/molecules/AlertBox/types'
 import {
   createContext,
   Dispatch,
@@ -84,28 +83,18 @@ export interface AppContextState {
     opts?: Partial<ToastMessage>
   ) => void
 
-  setIsOpenOrder:
-    Dispatch<SetStateAction<boolean>>
-  setCollapsed:
-    Dispatch<SetStateAction<boolean>>
-  setCountPedido:
-    Dispatch<SetStateAction<number>>
-  setHidden:
-    Dispatch<SetStateAction<boolean>>
-  setIsSession:
-    Dispatch<SetStateAction<unknown>>
-  setMessagesToast:
-    Dispatch<SetStateAction<ToastMessage[]>>
+  setIsOpenOrder: Dispatch<SetStateAction<boolean>>
+  setCollapsed: Dispatch<SetStateAction<boolean>>
+  setCountPedido: Dispatch<SetStateAction<number>>
+  setHidden: Dispatch<SetStateAction<boolean>>
+  setIsSession: Dispatch<SetStateAction<unknown>>
+  setMessagesToast: Dispatch<SetStateAction<ToastMessage[]>>
   setSalesOpen: (value?: boolean) => void
-  setSelectedStore:
-    Dispatch<SetStateAction<unknown | null>>
-  setShowComponentModal:
-    (index: number) => void
-  setStatus:
-    Dispatch<SetStateAction<string>>
+  setSelectedStore: Dispatch<SetStateAction<unknown | null>>
+  setShowComponentModal: (index: number) => void
+  setStatus: Dispatch<SetStateAction<string>>
   deleteToast: (id: string) => void
-  setAlertBox:
-    (err: ContainerToastProps | null) => void
+  setAlertBox: (err: ContainerToastProps | null) => void
 }
 
 /**
@@ -126,8 +115,7 @@ const initialStateContext: AppContextState = {
   salesOpen: false,
   selectedStore: null,
   show: null,
-  showModalComponent:
-    Object.values(MENU_OPTIONS)[0] as number | false,
+  showModalComponent: Object.values(MENU_OPTIONS)[0] as number | false,
   status: 'close',
 
   handleClick: () => {},
@@ -176,10 +164,9 @@ const initialStateContext: AppContextState = {
   setAlertBox: () => {}
 }
 
-export const Context =
-  createContext<AppContextState>(
-    initialStateContext
-  )
+export const Context = createContext<AppContextState>(
+  initialStateContext
+)
 
 interface ProviderProps {
   children: React.ReactNode
@@ -192,9 +179,7 @@ interface ProviderProps {
  * @param props.children React children.
  * @returns Provider tree.
  */
-const Provider = ({
-  children
-}: ProviderProps) => {
+const Provider = ({ children }: ProviderProps) => {
   const {
     toggleTheme,
     initTheme,
@@ -203,8 +188,7 @@ const Provider = ({
 
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams =
-    useSearchParams()
+  const searchParams = useSearchParams()
 
   const [
     isOpenOrder,
@@ -224,9 +208,7 @@ const Provider = ({
   const [
     error,
     setError
-  ] = useState<ContainerToastProps | null>(
-    null
-  )
+  ] = useState<ContainerToastProps | null>(null)
 
   const [
     hidden,
@@ -289,21 +271,16 @@ const Provider = ({
    * This value must not be derived from array length because
    * the array can be capped and items can be removed.
    */
-  const toastSequenceRef =
-    useRef<number>(0)
+  const toastSequenceRef = useRef<number>(0)
 
   /**
    * Electron detection.
    */
   useEffect(() => {
     if (
-      typeof globalThis.window !==
-        'undefined' &&
-      typeof navigator !==
-        'undefined' &&
-      /Electron/.test(
-        navigator.userAgent
-      )
+      typeof globalThis.window !== 'undefined' &&
+      typeof navigator !== 'undefined' &&
+      /Electron/.test(navigator.userAgent)
     ) {
       setIsElectron(true)
     } else {
@@ -322,13 +299,12 @@ const Provider = ({
   /**
    * Auth state.
    */
-  const authData =
-    useMemo(
-      () => ({
-        isSession
-      }),
-      [isSession]
-    )
+  const authData = useMemo(
+    () => ({
+      isSession
+    }),
+    [isSession]
+  )
 
   /**
    * Toggles QR/barcode modals.
@@ -337,11 +313,8 @@ const Provider = ({
    */
   const toggleModal = useCallback(
     (index: number) => {
-      setModalsLector(
-        (previous) =>
-          previous === index
-            ? false
-            : index
+      setModalsLector((previous) =>
+        previous === index ? false : index
       )
     },
     []
@@ -352,86 +325,64 @@ const Provider = ({
    *
    * @param index Modal identifier.
    */
-  const handleMenuLateral =
-    useCallback(
-      (index: number) => {
-        setShowComponentModal(
-          (previous) =>
-            previous === index
-              ? false
-              : index
-        )
-      },
-      []
-    )
+  const handleMenuLateral = useCallback(
+    (index: number) => {
+      setShowComponentModal((previous) =>
+        previous === index ? false : index
+      )
+    },
+    []
+  )
 
   /**
    * Handles general section clicks.
    *
    * @param index Section index.
    */
-  const handleClick =
-    useCallback(
-      (index: number) => {
-        const food =
-          searchParams?.get?.(
-            'food'
-          )
+  const handleClick = useCallback(
+    (index: number) => {
+      const food = searchParams?.get?.('food')
 
-        if (food) {
-          const newParams =
-            new URLSearchParams(
-              searchParams.toString()
-            )
-
-          newParams.delete('food')
-
-          const queryStr =
-            newParams.toString()
-
-          const url = queryStr
-            ? `${pathname}?${queryStr}`
-            : pathname || '/'
-
-          router.push(url)
-        }
-
-        setShow(
-          (previous) =>
-            previous === index
-              ? false
-              : index
+      if (food) {
+        const newParams = new URLSearchParams(
+          searchParams.toString()
         )
-      },
-      [
-        pathname,
-        router,
-        searchParams
-      ]
-    )
+
+        newParams.delete('food')
+
+        const queryStr = newParams.toString()
+
+        const url = queryStr
+          ? `${pathname}?${queryStr}`
+          : pathname || '/'
+
+        router.push(url)
+      }
+
+      setShow((previous) =>
+        previous === index ? false : index
+      )
+    },
+    [pathname, router, searchParams]
+  )
 
   /**
    * Deletes toast by id.
    *
    * @param id Toast identifier.
    */
-  const deleteToast =
-    useCallback(
-      (id: string) => {
-        if (!id) {
-          return
-        }
+  const deleteToast = useCallback(
+    (id: string) => {
+      if (!id) {
+        return
+      }
 
-        setMessagesToast(
-          (previous) =>
-            previous.filter(
-              (toast) =>
-                toast.id !== id
-            )
-        )
-      },
-      []
-    )
+      setMessagesToast((previous) =>
+        previous.filter((toast) => toast.id !== id)
+      )
+    },
+    []
+  )
 
   /**
    * Adds a toast notification.
@@ -441,157 +392,125 @@ const Provider = ({
    * 1. A timestamp.
    * 2. A monotonic sequence.
    *
-   * That gives the Toast component a deterministic
+   * This gives the Toast component a deterministic
    * chronological ordering even after items are removed.
    *
    * @param opts Notification options.
    */
-  const sendNotification =
-    useCallback(
-      (
-        opts: Partial<ToastMessage> = {}
-      ) => {
-        const id =
-          globalThis?.crypto !==
-            undefined &&
-          globalThis.crypto
-            .randomUUID !==
-            undefined
-            ? globalThis.crypto.randomUUID()
-            : `${Date.now()}-${Math.random()
-                .toString(36)
-                .slice(2, 9)}`
+  const sendNotification = useCallback(
+    (opts: Partial<ToastMessage> = {}) => {
+      const id =
+        typeof globalThis.crypto !== 'undefined' &&
+        typeof globalThis.crypto.randomUUID === 'function'
+          ? globalThis.crypto.randomUUID()
+          : `${Date.now()}-${Math.random()
+              .toString(36)
+              .slice(2, 9)}`
 
-        const createdAt =
-          Date.now()
+      const createdAt = Date.now()
+      const sequence = toastSequenceRef.current++
 
-        const sequence =
-          toastSequenceRef.current++
+      const newMsg: ToastMessage = {
+        id,
 
-        const newMsg: ToastMessage = {
-          id,
+        title: String(opts.title ?? ''),
 
-          title: String(
-            opts.title ?? ''
-          ),
+        description: String(opts.description ?? ''),
 
-          description: String(
-            opts.description ?? ''
-          ),
+        backgroundColor: opts.backgroundColor ?? '',
 
-          backgroundColor:
-            opts.backgroundColor ??
-            '',
+        position: opts.position ?? 'bottom-left',
 
-          position:
-            opts.position ??
-            'bottom-left',
+        createdAt,
 
-          createdAt,
+        sequence
+      }
 
-          sequence
+      setMessagesToast((previous) => {
+        const next = [...previous]
+
+        /**
+         * Preserve the original maximum
+         * of 10 notifications.
+         */
+        if (next.length >= 10) {
+          next.shift()
         }
 
-        setMessagesToast(
-          (previous) => {
-            const next =
-              [...previous]
-
-            /**
-             * Preserve the original maximum
-             * of 10 notifications.
-             */
-            if (next.length >= 10) {
-              next.shift()
-            }
-
-            return [
-              ...next,
-              newMsg
-            ]
-          }
-        )
-      },
-      []
-    )
+        return [...next, newMsg]
+      })
+    },
+    []
+  )
 
   /**
    * Opens/closes sales and keeps the URL synchronized.
    *
+   * IMPORTANT:
+   * Do not execute router.push inside a state updater.
+   * React can evaluate state updater functions while rendering,
+   * and navigation inside them can cause:
+   *
+   * "Cannot update a component (Router) while rendering
+   * a different component (Provider)".
+   *
+   * Calculate the next value first, update the state,
+   * and perform navigation separately.
+   *
    * @param value Optional forced state.
    */
-  const setSalesOpen =
-    useCallback(
-      (value?: boolean) => {
-        setSalesOpenModal(
-          (previous) => {
-            const next =
-              typeof value ===
-              'boolean'
-                ? value
-                : !previous
+  const setSalesOpen = useCallback(
+    (value?: boolean) => {
+      const next =
+        typeof value === 'boolean'
+          ? value
+          : !salesOpen
 
-            const newParams =
-              new URLSearchParams(
-                searchParams?.toString() ||
-                  ''
-              )
+      // Update React state without side effects in an updater.
+      setSalesOpenModal(next)
 
-            if (next) {
-              newParams.set(
-                'saleOpen',
-                'true'
-              )
-            } else {
-              newParams.delete(
-                'saleOpen'
-              )
-            }
+      // Build the URL independently of the state update.
+      const newParams = new URLSearchParams(
+        searchParams?.toString() || ''
+      )
 
-            const queryStr =
-              newParams.toString()
+      if (next) {
+        newParams.set('saleOpen', 'true')
+      } else {
+        newParams.delete('saleOpen')
+      }
 
-            const url = queryStr
-              ? `${pathname}?${queryStr}`
-              : pathname || '/'
+      const queryStr = newParams.toString()
 
-            router.push(url)
+      const url = queryStr
+        ? `${pathname}?${queryStr}`
+        : pathname || '/'
 
-            return next
-          }
-        )
-      },
-      [
-        pathname,
-        router,
-        searchParams
-      ]
-    )
+      // Navigation takes place outside the state updater.
+      router.push(url)
+    },
+    [
+      pathname,
+      router,
+      searchParams,
+      salesOpen
+    ]
+  )
 
   /**
    * Synchronizes sales state with URL.
    */
   useEffect(() => {
-    if (
-      searchParams?.get?.(
-        'sale'
-      ) === 'true' ||
-      searchParams?.get?.(
-        'saleOpen'
-      ) === 'true'
-    ) {
-      setSalesOpenModal(true)
-    } else {
-      setSalesOpenModal(false)
-    }
+    const isSaleOpen =
+      searchParams?.get('sale') === 'true' ||
+      searchParams?.get('saleOpen') === 'true'
+
+    setSalesOpenModal(isSaleOpen)
 
     setMenu(false)
     setCollapsed(false)
     setStatus('close')
-  }, [
-    pathname,
-    searchParams
-  ])
+  }, [pathname, searchParams])
 
   /**
    * Clears AlertBox after configured duration.
@@ -601,104 +520,97 @@ const Provider = ({
       return
     }
 
-    const timeout =
-      globalThis.setTimeout(
-        () => setError(null),
-        error.duration ?? 3000
-      )
+    const timeout = globalThis.setTimeout(
+      () => setError(null),
+      error.duration ?? 3000
+    )
 
-    return () =>
-      globalThis.clearTimeout(
-        timeout
-      )
+    return () => {
+      globalThis.clearTimeout(timeout)
+    }
   }, [error])
 
   /**
    * Memoized context value.
    */
-  const value =
-    useMemo<AppContextState>(
-      () => ({
-        authData,
-        isElectron,
-        collapsed,
-        countPedido,
-        error,
-        hidden,
-        isSession,
-        menu,
-        messagesToast,
-        salesOpen,
-        selectedStore,
-        isOpenOrder,
-        show,
-        showModalComponent,
-        theme,
-        status,
-        modalsLector,
+  const value = useMemo<AppContextState>(
+    () => ({
+      authData,
+      isElectron,
+      collapsed,
+      countPedido,
+      error,
+      hidden,
+      isSession,
+      menu,
+      messagesToast,
+      salesOpen,
+      selectedStore,
+      isOpenOrder,
+      show,
+      showModalComponent,
+      theme,
+      status,
+      modalsLector,
 
-        handleClick,
-        toggleTheme,
-        toggleModal,
+      handleClick,
+      toggleTheme,
+      toggleModal,
 
-        handleMenu: (
-          index: number | false
-        ) => {
-          setMenu(
-            (previous) =>
-              previous === index
-                ? false
-                : index
-          )
-        },
+      handleMenu: (index: number | false) => {
+        setMenu((previous) =>
+          previous === index ? false : index
+        )
+      },
 
-        sendNotification,
+      sendNotification,
 
-        setIsOpenOrder,
-        setCollapsed,
-        setCountPedido,
-        setHidden,
-        setIsSession,
-        setMessagesToast,
-        setSalesOpen,
-        setSelectedStore,
-        setShowComponentModal:
-          handleMenuLateral,
-        setStatus,
+      setIsOpenOrder,
+      setCollapsed,
+      setCountPedido,
+      setHidden,
+      setIsSession,
+      setMessagesToast,
+      setSalesOpen,
+      setSelectedStore,
 
-        deleteToast,
+      setShowComponentModal: handleMenuLateral,
 
-        setAlertBox:
-          (err) =>
-            setError(err)
-      }),
-      [
-        authData,
-        isElectron,
-        collapsed,
-        countPedido,
-        error,
-        hidden,
-        isSession,
-        menu,
-        messagesToast,
-        salesOpen,
-        selectedStore,
-        isOpenOrder,
-        show,
-        showModalComponent,
-        theme,
-        status,
-        modalsLector,
-        handleClick,
-        toggleTheme,
-        toggleModal,
-        sendNotification,
-        setSalesOpen,
-        handleMenuLateral,
-        deleteToast
-      ]
-    )
+      setStatus,
+
+      deleteToast,
+
+      setAlertBox: (err: ContainerToastProps | null) => {
+        setError(err)
+      }
+    }),
+    [
+      authData,
+      isElectron,
+      collapsed,
+      countPedido,
+      error,
+      hidden,
+      isSession,
+      menu,
+      messagesToast,
+      salesOpen,
+      selectedStore,
+      isOpenOrder,
+      show,
+      showModalComponent,
+      theme,
+      status,
+      modalsLector,
+      handleClick,
+      toggleTheme,
+      toggleModal,
+      sendNotification,
+      setSalesOpen,
+      handleMenuLateral,
+      deleteToast
+    ]
+  )
 
   return (
     <Context.Provider value={value}>
@@ -712,8 +624,7 @@ const Provider = ({
  *
  * @returns Application context.
  */
-const useAuth = () =>
-  useContext(Context)
+const useAuth = () => useContext(Context)
 
 export {
   Provider as default,

@@ -9,6 +9,7 @@ import {
   useGetAllPaymentMethods,
   useGetClients,
   usePrintSaleTicket,
+  usePushNotifications,
   // useReactToPrint,
   useSales,
   useStore,
@@ -76,6 +77,31 @@ export const CreateSales = ({
   const [dataStore] = useStore()
   const [storeTables] = useStoreTables()
 
+  // Web Push: only the subscription flag and the server-send action are needed
+  // here to notify when a sale is registered from this screen.
+  const {
+    isSubscribed,
+    onClickShowLocalNotification
+  } = usePushNotifications()
+
+  // Guards against sending a duplicate push for the same sale code if
+  // onSaleSuccess fires more than once for a single registration.
+  const notifiedSaleCodesRef = useRef(new Set())
+
+  // Holds the latest push sender so the stable onSaleSuccess callback (captured
+  // once by useSales) always runs against current subscription state, avoiding
+  // a stale closure.
+  const notifyNewSaleRef = useRef(() => { })
+  notifyNewSaleRef.current = (saleCode) => {
+    if (!isSubscribed || !saleCode) {
+      return
+    }
+    if (notifiedSaleCodesRef.current.has(saleCode)) {
+      return
+    }
+    notifiedSaleCodesRef.current.add(saleCode)
+  }
+
   const onCloseModalSale = () => {
     setMessagesToast([])
     setSalesOpen(false)
@@ -139,8 +165,18 @@ export const CreateSales = ({
     onSaleSuccess: (payload) => {
       // Sale registered successfully: the hook already closed the invoice/print
       // modal. Present the Success modal via our explicit signal.
-      if (payload?.code) {setSaleSuccess(payload)}
-      
+      if (payload?.code) {
+        onClickShowLocalNotification({
+          title: 'Nueva venta',
+          description: `Venta ${payload.code}`,
+          url: `/orders/${encodeURIComponent(payload.code)}`,
+          tag: `sale-${payload.code}`
+        })
+        setSaleSuccess(payload)
+        // Fire the OS-level Web Push deep-linking to the order detail.
+        notifyNewSaleRef.current(payload.code)
+
+      }
     }
   })
   const restPropsSliderCategory = {
@@ -419,10 +455,11 @@ export const CreateSales = ({
   const commentZIndex = useModalLayer(Boolean(openCommentModal))
 
   const filterProps = {
-      activeFilter,
-      setActiveFilter,
-      dataFilter
+    activeFilter,
+    setActiveFilter,
+    dataFilter
   }
+
   return (
     <>
       <SuccessSaleModal

@@ -3,7 +3,6 @@
 import { useApolloClient } from '@apollo/client'
 import Head from 'next/head'
 import {
-  useParams,
   usePathname,
   useRouter,
   useSearchParams
@@ -21,10 +20,8 @@ import {
   useManageQueryParams,
   useMobile,
   useModules,
-  // useModules,
   usePosition,
   usePushNotifications,
-  useScrollColor,
   useScrollHook,
   useStore,
   useSubscriptionValidation,
@@ -46,13 +43,13 @@ import {
   Orders,
   Overline,
   Plan,
-  Portal,
   Toast
 } from 'pkg-components'
-import { ToastItem, ToastPosition } from 'pkg-components/stories/molecules/Toast'
 import React, {
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState
 } from 'react'
 
@@ -65,7 +62,6 @@ import { useDevServerStatus } from '../orders/view/hooks'
 import { Product } from '../product'
 import { ScheduleTimings } from '../schedule'
 import { Footer } from './Footer/index'
-// import useSound from 'use-sound'
 import { heights, widths } from './helpers'
 import styles from './styles.module.css'
 
@@ -79,13 +75,23 @@ interface MemoLayoutProps {
   }
 }
 
+interface CheckoutCookie {
+  name: string
+  value: string | undefined
+}
+
+interface DragResult {
+  destination: { index: number } | null
+  source: { index: number }
+}
+
 export const MemoLayout: React.FC<MemoLayoutProps> = ({
   children,
   watch,
   settings
-}: MemoLayoutProps) => {
-  const location = useRouter()
-  const pathname = usePathname()
+}) => {
+  const router = useRouter()
+  const pathname = usePathname() || '/'
   const searchParams = useSearchParams()
 
   const {
@@ -102,16 +108,16 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setCollapsed,
     setIsOpenOrder,
     setSalesOpen,
-    toggleModal,
-    modalsLector,
     theme,
     toggleTheme,
     deleteToast,
     setShowComponentModal,
     setStatus
   } = useContext(Context)
+
   const dataLocation = usePosition(watch, settings)
-  useManageQueryParams({ router: location, searchParams: searchParams })
+  useManageQueryParams({ router, searchParams })
+
   const [dataUser] = useUser()
   const [modulesOrder, setModulesOrder] = useState<unknown[]>([])
   const [updateModulesOrder] = useUpdateModuleOrder()
@@ -122,57 +128,111 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       setModulesOrder(modules)
     }
   })
+
   const [dataStore] = useStore()
+  const idStore = dataStore?.idStore ?? ''
   const [count, { loading: loadingCount }] = useTotalSales()
   const style = useScrollHook()
-  const { scrollNav } = useScrollColor()
   const [isCollapsedMenu, setIsCollapsedMenu] = useState(false)
   const { isMobile, isTablet } = useMobile({
     callback: ({ isMobile }: { isMobile: boolean }) => {
-      return setIsCollapsedMenu(isMobile ? false : isCollapsedMenu)
+      setIsCollapsedMenu(isMobile ? false : isCollapsedMenu)
     }
   })
 
   const { onClickLogout } = useLogout({})
-  // const [play] = useSound('/sounds/notification.mp3')
+
+  // Push notifications: one hook instance shared with Header -> Options.
+  const {
+    userConsent,
+    pushNotificationSupported,
+    userSubscription,
+    pushServerSubscriptionId,
+    isSubscribed,
+    onClickAskUserPermission,
+    onClickSubscribeToPushNotification,
+    onClickSendSubscriptionToPushServer,
+    onClickSendNotification,
+    onClickEnablePushNotifications,
+    error: errorPush,
+    loading: loadingPush
+  } = usePushNotifications()
 
   useEffect(() => {
-    const { latitude, longitude } = dataLocation ?? {
-      latitude: null,
-      longitude: null
+    if (typeof window !== 'undefined') {
+      const { latitude, longitude } = dataLocation ?? {
+        latitude: null,
+        longitude: null
+      }
+
+      if (latitude != null && longitude != null) {
+        window.localStorage.setItem('latitude', String(latitude))
+        window.localStorage.setItem('longitude', String(longitude))
+        window.localStorage.setItem('location', JSON.stringify(dataLocation))
+      }
     }
-    if (latitude) {
-      globalThis.localStorage.setItem('latitude', latitude)
-      globalThis.localStorage.setItem('longitude', longitude)
-      globalThis.localStorage.setItem('location', JSON.stringify(dataLocation))
-    }
+
     setAlertBox({ message: '', color: 'success' })
+    // This effect intentionally runs once for initial layout setup.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  }, []);
+  const playNotificationSound = useCallback(() => {
+    // Add your sound playback here if required.
+  }, [])
 
-  const playNotificationSound = () => {
-    // play()
-  }
-
-  const handleNewMessage = () => {
+  const handleNewMessage = useCallback(() => {
     playNotificationSound()
-  }
+  }, [playNotificationSound])
+
   const [countOrders, setCountOrders] = useState(0)
   const client = useApolloClient()
-  const idStore = dataStore?.idStore ?? ''
   const [orders, { handleNewOrder }] = useManageNewOrder({
     playNotificationSound,
     setCountOrders,
     setIsOpenOrder,
     idStore,
     client,
+    // Internal app toast notification, not a Web Push request.
     sendNotification,
     setAlertBox
   })
-  newMessageSubscription(idStore, handleNewMessage)
-  newStoreOrderSubscription(idStore, handleNewOrder)
 
-  const [connectionStatus, setConnectionStatus] = useState('initial')
+  // Tracks orders already pushed to avoid duplicate Web Push notifications
+  // when the subscription re-delivers the same event (reconnections/retries).
+  const notifiedOrdersRef = useRef<Set<string>>(new Set())
+
+  // Fires a Web Push notification for a new sale, deep-linking to the order
+  // detail (/orders/{pCodeRef}). The in-app toast is still handled by
+  // handleNewOrder; this only adds the OS-level push via the shared hook.
+  const notifyNewOrderPush = useCallback((pCodeRef: string): void => {
+    if (!isSubscribed || !pCodeRef) {
+      return
+    }
+    if (notifiedOrdersRef.current.has(pCodeRef)) {
+      return
+    }
+    notifiedOrdersRef.current.add(pCodeRef)
+
+    void onClickSendNotification({
+      title: 'Nueva venta',
+      description: `Pedido ${pCodeRef}`,
+      url: `/orders/${encodeURIComponent(pCodeRef)}`,
+      tag: `order-${pCodeRef}`
+    })
+  }, [isSubscribed, onClickSendNotification])
+
+  // Wraps the existing handler so a single subscription event drives both the
+  // in-app order management and the Web Push notification.
+  const handleIncomingOrder = useCallback((order: { id: string; idStore: string; pCodeRef: string }): void => {
+    handleNewOrder(order)
+    notifyNewOrderPush(order?.pCodeRef)
+  }, [handleNewOrder, notifyNewOrderPush])
+
+  newMessageSubscription(idStore, handleNewMessage)
+  newStoreOrderSubscription(idStore, handleIncomingOrder)
+
+  const [connectionStatus, setConnectionStatus] = useState<boolean | 'initial'>('initial')
   const statusConnection = connectionStatus
     ? 'Conexión a internet restablecida.'
     : 'Conexión a internet perdida.'
@@ -180,58 +240,50 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   useConnection({ setConnectionStatus })
 
   useEffect(() => {
-    if (connectionStatus === 'initial') { return }
-    if (connectionStatus) {
-      setTimeout(() => {
-        setConnectionStatus('initial')
-      }, 3500)
-    }
+    if (connectionStatus === 'initial') return
 
+    const timeoutId = window.setTimeout(() => {
+      setConnectionStatus('initial')
+    }, 3500)
+
+    // Keep this as an in-app toast; it does not send a Web Push notification.
     sendNotification({
       title: 'Wifi',
       description: statusConnection,
       backgroundColor: connectionStatus ? 'success' : 'warning'
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connectionStatus])
 
-  /**
-   * Closes the lateral menu and performs additional actions.
-   */
-  const onCloseLateralMenu = () => {
+    return () => window.clearTimeout(timeoutId)
+    // sendNotification is supplied by Context and treated as the app's toast action.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectionStatus, statusConnection])
+
+  const onCloseLateralMenu = useCallback(() => {
     setShowComponentModal(false)
-  }
+  }, [setShowComponentModal])
 
   const components: Record<number, JSX.Element> = {
-    1: <ScheduleTimings isChart={true} />,
+    1: <ScheduleTimings isChart />,
     2: <Clients />,
     3: <Product />,
-    4: <Categories isDragDisabled={true} />
+    4: <Categories isDragDisabled />
   }
 
-  const {
-    userConsent,
-    pushNotificationSupported,
-    onClickAskUserPermission,
-    error: errorPush,
-    loading: loadingPush
-  } = usePushNotifications()
-
-  const handleOpenMenu = (): null => {
+  const handleOpenMenu = (): void => {
     setCollapsed(!collapsed)
     setStatus(collapsed ? 'open' : 'close')
-    return null
   }
 
-  const handleViewOrder = (pCodeRef: string) => {
+  const handleViewOrder = (pCodeRef: string): void => {
     setIsOpenOrder(false)
-    location.push(`/pedidos?saleId=${encodeURIComponent(pCodeRef)}`)
+    router.push(`/pedidos?saleId=${encodeURIComponent(pCodeRef)}`)
   }
 
   const [openDeliveryTime, setOpenDeliveryTime] = useState(false)
-  const handleOpenDeliveryTime = () => {
-    setOpenDeliveryTime(!openDeliveryTime)
-  }
+  const handleOpenDeliveryTime = useCallback(() => {
+    setOpenDeliveryTime(previous => !previous)
+  }, [])
+
   const deliveryTimeMinutes = dataStore?.deliveryTimeMinutes
   const { deliveryTime, handleDeliveryTimeChange } = useDeliveryTime({
     initialTime: `${deliveryTimeMinutes}`
@@ -239,11 +291,15 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   const { createDeliveryTime, loading: loadingDeliveryTime } = useCreateDeliveryTime({
     sendNotification
   })
-  const handleSetIsOpenOrder = () => {
-    setIsOpenOrder(!isOpenOrder)
+
+  // Accept an explicit state from Header/Options, while preserving toggle behavior
+  // for existing callers such as the Orders panel.
+  const handleSetIsOpenOrder = (open?: boolean): void => {
+    setIsOpenOrder(typeof open === 'boolean' ? open : !isOpenOrder)
   }
+
   const {
-    loading,
+    loading: loadingSubscription,
     subscriptionData,
     daysRemaining
   } = useSubscriptionValidation(idStore)
@@ -253,29 +309,29 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     if (subscriptionData && daysRemaining < 0) {
       setIsSubscriptionExpired(process.env.NODE_ENV !== 'development')
     }
-    if (subscriptionData === null && loading === false) {
+    if (subscriptionData === null && loadingSubscription === false) {
       setIsSubscriptionExpired(process.env.NODE_ENV !== 'development')
     }
-  }, [daysRemaining, subscriptionData, location, loading])
+  }, [daysRemaining, subscriptionData, loadingSubscription])
 
   const title = `(${countOrders}) ${process.env.BUSINESS_TITLE}`
-
   const version = packageJson.version
 
-  const sendCookieValuesAsQueryParams = (cookies, url) => {
+  const sendCookieValuesAsQueryParams = (
+    cookies: CheckoutCookie[],
+    url: string
+  ): void => {
     try {
       if (!Array.isArray(cookies)) {
         throw new TypeError('Input should be an array of cookies.')
       }
 
-      // Construct the query parameter string
-      const queryParams = cookies.map(cookie => { return `${encodeURIComponent(cookie.name)}=${encodeURIComponent(cookie.value)}` }).join('&')
+      const queryParams = cookies
+        .map(cookie => `${encodeURIComponent(cookie.name)}=${encodeURIComponent(cookie.value ?? '')}`)
+        .join('&')
 
-      // Construct the final URL with query parameters
-      const finalUrl = `${url}?${queryParams}`
-
-      // Redirect to the final URL
-      globalThis.location.href = finalUrl
+      const separator = url.includes('?') ? '&' : '?'
+      window.location.href = `${url}${separator}${queryParams}`
     } catch {
       sendNotification({
         title: 'Error',
@@ -285,100 +341,89 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     }
   }
 
-  const handleRedirectToCheckout = async () => {
+  const handleRedirectToCheckout = async (): Promise<void> => {
     const token = Cookies.get('session')
     const usuario = Cookies.get('usuario')
-    const cookies = [
-      {
-        name: 'restaurant',
-        value: idStore
-      },
-      {
-        name: 'session',
-        value: token
-      },
-      {
-        name: 'usuario',
-        value: usuario
-      }
+    const cookies: CheckoutCookie[] = [
+      { name: 'restaurant', value: idStore },
+      { name: 'session', value: token },
+      { name: 'usuario', value: usuario }
     ]
-    const url = `${process.env.URL_WEB_CHECKOUT}/`
-    sendCookieValuesAsQueryParams(cookies, url)
+
+    const checkoutUrl = process.env.URL_WEB_CHECKOUT
+    if (!checkoutUrl) {
+      sendNotification({
+        title: 'Error',
+        description: 'No está configurada la URL de Checkout.',
+        backgroundColor: 'warning'
+      })
+      return
+    }
+
+    sendCookieValuesAsQueryParams(cookies, `${checkoutUrl.replace(/\/$/, '')}/`)
   }
+
   const showModal = false
 
-  useParams<{ name?: string[] }>()
+  const onDragEnd = async (result: unknown): Promise<void> => {
+    const { destination, source } = result as DragResult
+    if (!destination || destination.index === source.index) return
 
-  // customHeights is not used
-  const onDragEnd = async (result: unknown) => {
-    const { destination, source } = result as { destination: { index: number } | null, source: { index: number } };
+    const reorderedModules = Array.from(modulesOrder)
+    const [removed] = reorderedModules.splice(source.index, 1)
+    if (removed === undefined) return
+    reorderedModules.splice(destination.index, 0, removed)
 
-    // Si no se ha movido el ítem (destino es null o es el mismo), no hacer nada
-    if (!destination || destination.index === source.index) { return; }
+    const updatedModules = reorderedModules.map((module, index) => ({
+      ...(typeof module === 'object' && module !== null ? module : {}),
+      mPriority: index + 1
+    }))
 
-    // Reordenar los módulos
-    const reorderedModules = Array.from(modulesOrder);
-
-    // Sacar el módulo que se está moviendo
-    const [removed] = reorderedModules.splice(source.index, 1);
-
-    // Insertar el módulo en su nueva posición
-    reorderedModules.splice(destination.index, 0, removed);
-
-    // Ajustar las prioridades
-    const updatedModules = reorderedModules.map((_module, index) => {
-      return {
-        // ...module,
-        mPriority: index + 1  // La prioridad se asigna según la nueva posición en el arreglo
-      };
-    });
-    setModulesOrder(updatedModules);
-    // Actualizamos el estado con el nuevo orden y prioridades
+    setModulesOrder(updatedModules)
     await updateModulesOrder(updatedModules)
-  };
-
-
-  const handleCollapsedMenu = () => {
-    setIsCollapsedMenu(!isCollapsedMenu)
   }
+
+  const handleCollapsedMenu = (): void => {
+    setIsCollapsedMenu(previous => !previous)
+  }
+
   const { connected } = useDevServerStatus()
+
   return (
     <>
       <Head>
         <title>{countOrders > 0 ? title : process.env.BUSINESS_TITLE}</title>
       </Head>
-      {showModal && <AwesomeModal
-        customHeight='calc(100vh - 140px)'
-        footer={false}
-        height='calc(100vh - 140px)'
-        onCancel={() => {
-          setIsSubscriptionExpired(false)
-        }}
-        onConfirm={() => {
-          setIsSubscriptionExpired(false)
-        }}
-        onHide={() => {
-          setIsSubscriptionExpired(false)
-        }}
-        show={isSubscriptionExpired}
-        size='medium'
-        zIndex={getGlobalStyle('--z-index-high')}
-      >
-        {process.env.NODE_ENV == 'development' && <Plan
-          onRedirectTo={handleRedirectToCheckout}
-          paymentMethodCards={paymentMethodCards}
-          storeImage='/images/3dstore.png'
-        />}
-      </AwesomeModal>
-      }
+
+      {showModal && (
+        <AwesomeModal
+          customHeight='calc(100vh - 140px)'
+          footer={false}
+          height='calc(100vh - 140px)'
+          onCancel={() => setIsSubscriptionExpired(false)}
+          onConfirm={() => setIsSubscriptionExpired(false)}
+          onHide={() => setIsSubscriptionExpired(false)}
+          show={isSubscriptionExpired}
+          size='medium'
+          zIndex={getGlobalStyle('--z-index-high')}
+        >
+          {process.env.NODE_ENV === 'development' && (
+            <Plan
+              onRedirectTo={handleRedirectToCheckout}
+              paymentMethodCards={paymentMethodCards}
+              storeImage='/images/3dstore.png'
+            />
+          )}
+        </AwesomeModal>
+      )}
+
       <Overline
         bgColor='rgba(119, 119, 119, 0.306)'
-        onClick={() => {
-          return setIsOpenOrder()
-        }}
+        onClick={() => setIsOpenOrder()}
         show={isOpenOrder}
         zIndex={getGlobalStyle('--z-index-99999')}
       />
+
       <DeliveryTime
         createDeliveryTime={createDeliveryTime}
         deliveryTime={deliveryTime}
@@ -387,6 +432,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
         loading={loadingDeliveryTime}
         setDeliveryTimeOpen={handleOpenDeliveryTime}
       />
+
       <Orders
         deliveryTimeMinutes={deliveryTimeMinutes}
         handleSetIsOpenOrder={handleSetIsOpenOrder}
@@ -396,30 +442,32 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       />
 
       <AlertBox err={error} />
-          <Toast
-            toastList={messagesToast.map((toast) => ({
-              id: toast.id,
-              title: String(toast.title ?? ''),
-              description: String(toast.description ?? ''),
-              backgroundColor: toast.backgroundColor,
-              position: toast.position,
-              createdAt: toast.createdAt,
-              sequence: toast.sequence
-            }))}
-            autoDelete
-            autoDeleteTime={5000}
-            maxVisible={5}
-            stackOffsetY={15}
-            stackScaleStep={0.025}
-            exitAnimationDuration={250}
-            exitStagger={100}
-            visibleCounter={false}
-            showProgress
-            dismissOnClick={false}
-            stackHoverLift={false}
-            usePortal
-            deleteToast={deleteToast}
-          />
+
+      <Toast
+        toastList={messagesToast.map(toast => ({
+          id: toast.id,
+          title: String(toast.title ?? ''),
+          description: String(toast.description ?? ''),
+          backgroundColor: toast.backgroundColor,
+          position: toast.position,
+          createdAt: toast.createdAt,
+          sequence: toast.sequence
+        }))}
+        autoDelete
+        autoDeleteTime={5000}
+        maxVisible={5}
+        stackOffsetY={15}
+        stackScaleStep={0.025}
+        exitAnimationDuration={250}
+        exitStagger={100}
+        visibleCounter={false}
+        showProgress
+        dismissOnClick={false}
+        stackHoverLift={false}
+        usePortal
+        deleteToast={deleteToast}
+      />
+
       <main className={`${styles.main} ${pathname === '/' ? styles.noAside : ''} ${isCollapsedMenu ? styles.collapsed_main : ''}`}>
         <Header
           count={count}
@@ -427,19 +475,23 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           errorPush={errorPush}
           handleOpenMenu={handleOpenMenu}
           isMobile={isMobile}
-          isOpenOrder={isOpenOrder}
           loadingCount={loadingCount}
           loadingPush={loadingPush}
-          location={location}
+          location={router}
           onClickAskUserPermission={onClickAskUserPermission}
+          onClickSubscribeToPushNotification={onClickSubscribeToPushNotification}
+          onClickSendSubscriptionToPushServer={onClickSendSubscriptionToPushServer}
+          onClickSendNotification={onClickSendNotification}
+          onClickEnablePushNotifications={onClickEnablePushNotifications}
           onClickLogout={onClickLogout}
           pushNotificationSupported={pushNotificationSupported}
+          pushServerSubscriptionId={pushServerSubscriptionId}
+          userConsent={userConsent}
+          userSubscription={userSubscription}
           salesOpen={salesOpen}
-          scrollNav={scrollNav}
           setIsOpenOrder={handleSetIsOpenOrder}
           setSalesOpen={setSalesOpen}
           style={style}
-          userConsent={userConsent}
           theme={theme}
           toggleTheme={toggleTheme}
         />
@@ -466,6 +518,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           setShowComponentModal={setShowComponentModal}
           version={version}
         />
+
         <div
           style={{
             backgroundColor: getGlobalStyle('--color-neutral-gray-white'),
@@ -478,15 +531,18 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           {children}
           <CreateSales setShow={setSalesOpen} show={salesOpen} />
         </div>
+
         <Footer />
+
         <div style={{ gridArea: 'right' }} className={styles.area_right_container}>
           <LateralModal
             handleClose={onCloseLateralMenu}
             open={Boolean(showModalComponent)}
             style={{
               zIndex: getGlobalStyle('--z-index-modal'),
-              width:
-                isTablet ? '100%' : widths[showModalComponent as keyof typeof widths],
+              width: isTablet
+                ? '100%'
+                : widths[showModalComponent as keyof typeof widths],
               height: heights[showModalComponent as keyof typeof heights]
             } as React.CSSProperties}
             direction='right'
@@ -494,9 +550,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
             <Button
               border='none'
               className={styles.button_lateral_close}
-              onClick={() => {
-                return onCloseLateralMenu()
-              }}
+              onClick={onCloseLateralMenu}
             >
               <Icon
                 icon='IconCancel'
@@ -512,11 +566,6 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   )
 }
 
-/* MemoLayout.propTypes = {
-  children: PropTypes.any,
-  settings: PropTypes.any,
-  watch: PropTypes.any
-} */
 export const Layout = React.memo(MemoLayout)
 
 interface LayoutWithAlertProps {

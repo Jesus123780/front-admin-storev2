@@ -29,178 +29,170 @@ import {
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import PropTypes from 'prop-types'
-import React, {
-  useContext,
-  useEffect,
-  useState
-} from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 
 import { Context } from '../../context/Context'
 import { autocompleteStoreSchedules } from './helpers'
 
 export const ScheduleTimings = ({ isChart = false }) => {
-  // STATES
   const { setAlertBox } = useContext(Context)
   const [openStoreEveryDay, setOpenStoreEveryDay] = useState(false)
   const [data, { loading: lsc }] = useSchedules({ schDay: 1 })
   const [showTiming, setShowTiming] = useState(1)
   const [showModalTiming, setShowModalTiming] = useState(false)
-  // HOOKS
+
   const { handleHourPmAM } = useFormatDate({})
   const { onClickLogout } = useLogout({})
   const { isMobile } = useMobile()
   const [setStoreSchedule, { loading }] = useCreateSchedules()
-
   const [handleSetStoreSchedule, { loading: loadingSchEday }] = useSetScheduleOpenAll()
   const [dataStore, { loading: loadingStore }] = useStore()
-  // EFFECTS
+
   useEffect(() => {
     if (dataStore && !loadingStore) {
-      setOpenStoreEveryDay(dataStore?.scheduleOpenAll)
+      setOpenStoreEveryDay(Boolean(dataStore?.scheduleOpenAll))
     }
   }, [dataStore, loadingStore])
 
   const handleSetStoreScheduleEveryDay = () => {
-    if (loadingStore || loadingSchEday) {return}
-    setOpenStoreEveryDay(!openStoreEveryDay)
-    handleSetStoreSchedule(!openStoreEveryDay)
+    if (loadingStore || loadingSchEday) return
+
+    const nextValue = !openStoreEveryDay
+    setOpenStoreEveryDay(nextValue)
+    handleSetStoreSchedule(nextValue)
   }
+
   const [values, setValues] = useState({
     endTime: null,
     startTime: null
   })
 
-  const { startTime, endTime } = values ?? {
-    startTime: null,
-    endTime: null
+  const { startTime, endTime } = values
+
+  const handleClick = (dayNumber, schedule) => {
+    const validDay = Number.isNaN(dayNumber) ? 0 : dayNumber
+    setShowTiming(validDay)
+
+    const daySchedule = Array.isArray(data)
+      ? data.find((day) => day?.schDay === dayNumber)
+      : null
+
+    setValues((currentValues) => ({
+      ...currentValues,
+      endTime: schedule?.schHoEnd || daySchedule?.schHoEnd || null,
+      startTime: schedule?.schHoSta || daySchedule?.schHoSta || null
+    }))
+    setShowModalTiming((current) => !current)
   }
 
-  const handleClick = (n, s) => {
-    if (Number.isNaN(n)) {
-      setShowTiming(0)
-    } else {
-      setShowTiming(n)
-    }
-    const day = Array.isArray(data) ? data.find(day => { return day?.schDay === n }) : null
-    const schHoEnd = s?.schHoEnd || day?.schHoEnd
-    const schHoSta = s?.schHoSta || day?.schHoSta
-
-    setValues({
-      ...values,
-      endTime: schHoEnd,
-      startTime: schHoSta
-    })
-    setShowModalTiming(!showModalTiming)
-  }
-
-  const handleChange = e => {
-    const { name, value } = e.target
-    setValues({
-      ...values,
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setValues((currentValues) => ({
+      ...currentValues,
       [name]: value
-    })
+    }))
   }
 
-  function sumHours(hora1, hora2) {
-    const [hora1Horas, hora1Minutos] = hora1.split(':').map(Number)
-    const [hora2Horas, hora2Minutos] = hora2.split(':').map(Number)
+  function sumHours(hourOne, hourTwo) {
+    const [hoursOne, minutesOne] = hourOne.split(':').map(Number)
+    const [hoursTwo, minutesTwo] = hourTwo.split(':').map(Number)
 
-    let sumaHour = hora1Horas + hora2Horas
-    let sumMinutes = hora1Minutos + hora2Minutos
+    let sumHour = hoursOne + hoursTwo
+    let sumMinutes = minutesOne + minutesTwo
 
     if (sumMinutes >= 60) {
       sumMinutes -= 60
-      sumaHour++
+      sumHour++
     }
 
-    if (sumaHour >= 24) {
-      sumaHour -= 24
+    if (sumHour >= 24) {
+      sumHour -= 24
     }
 
-    const horaSumada = `${String(sumaHour).padStart(2, '0')}:${String(sumMinutes).padStart(2, '0')}`
-    return horaSumada
+    return `${String(sumHour).padStart(2, '0')}:${String(sumMinutes).padStart(2, '0')}`
   }
-  function isLessThanOneHour(hora1, hora2) {
-    const suma = sumHours(hora1, hora2)
-    const [sumaHour, sumMinutes] = suma.split(':').map(Number)
-    const totalMinutos = (sumaHour * 60) + sumMinutes
 
-    if (totalMinutos < 60) {
-      return true // La suma de las horas es menor a una hora
-    } 
-    return false // La suma de las horas es igual o mayor a una hora
-    
+  function isLessThanOneHour(hourOne, hourTwo) {
+    const sum = sumHours(hourOne, hourTwo)
+    const [sumHour, sumMinutes] = sum.split(':').map(Number)
+    const totalMinutes = (sumHour * 60) + sumMinutes
+    return totalMinutes < 60
   }
-  const handleForm = (e) => {
-    e.preventDefault()
-    if (loading || lsc) {return}
 
-     
-    if (!startTime || !endTime) {return setAlertBox({ message: 'Llena todos los campos' })}
+  const handleForm = async (event) => {
+    event.preventDefault()
+    if (loading || lsc) return
+
+    if (!startTime || !endTime) {
+      setAlertBox({ message: 'Llena todos los campos' })
+      return
+    }
 
     const startHour = convertToMilitaryTime(startTime)
     const endHour = convertToMilitaryTime(endTime)
-    // Comparar solo las horas y minutos
-    if (startHour === endHour) {
-       
-      return setAlertBox({ message: 'Error, la hora de salida no debe ser igual a la hora final' })
 
+    if (startHour === endHour) {
+      setAlertBox({ message: 'Error, la hora de salida no debe ser igual a la hora final' })
+      return
     }
+
     if (startHour > endHour) {
-       
-      return setAlertBox({ message: 'Error, la hora de salida debe ser mayor que la de entrada' })
+      setAlertBox({ message: 'Error, la hora de salida debe ser mayor que la de entrada' })
+      return
     }
+
     if (isLessThanOneHour(startTime, endTime)) {
-       
-      return setAlertBox({ message: 'Error, el horario debe ser mayor a una hora' })
+      setAlertBox({ message: 'Error, el horario debe ser mayor a una hora' })
+      return
     }
-    setStoreSchedule({
-      variables: {
-        input: {
-          schHoSta: startTime,
-          schHoEnd: endTime,
-          schState: 1,
-          schDay: showTiming
-        }
-      }, update(cache) {
-        cache.modify({
-          fields: {
-            getStoreSchedules(dataOld = []) {
-              return cache.writeQuery({ query: GET_SCHEDULE_STORE, data: dataOld })
-            },
-            getOneStoreSchedules(dataOld = []) {
-              return cache.writeQuery({ query: GET_ONE_SCHEDULE_STORE, data: dataOld })
-            }
+
+    try {
+      // Do not call cache.writeQuery from inside cache.modify. The modifier
+      // receives a field value (an array), while writeQuery expects an object
+      // shaped like { getStoreSchedules: [...] }. Refetch the active schedule
+      // queries instead, preserving each query's original variables.
+      const response = await setStoreSchedule({
+        variables: {
+          input: {
+            schHoSta: startTime,
+            schHoEnd: endTime,
+            schState: 1,
+            schDay: showTiming
           }
-        })
+        },
+        refetchQueries: [GET_SCHEDULE_STORE, GET_ONE_SCHEDULE_STORE],
+        awaitRefetchQueries: true
+      })
+
+      const result = response?.data?.setStoreSchedule
+      if (result?.message) {
+        setAlertBox({ message: result.message })
       }
-    }).then((res) => {
-      if (res?.data?.setStoreSchedule?.message) {
-        setAlertBox({ message: res?.data?.setStoreSchedule?.message })
-      }
-      const label = 'El restaurante no existe'
-      if (res?.data?.setStoreSchedule?.message === label) {
-        setAlertBox({ message: label })
+
+      const restaurantNotFoundMessage = 'El restaurante no existe'
+      if (result?.message === restaurantNotFoundMessage) {
+        setAlertBox({ message: restaurantNotFoundMessage })
         onClickLogout({ redirect: true })
       }
-      setShowModalTiming(!showModalTiming)
-      setValues({
-        endTime: null,
-        startTime: null
+
+      if (result?.success) {
+        setShowModalTiming(false)
+        setValues({ endTime: null, startTime: null })
+      }
+    } catch (error) {
+      setAlertBox({
+        message: error instanceof Error ? error.message : 'No fue posible guardar el horario'
       })
-    })
+    }
   }
 
   const { days } = useScheduleData(data)
 
   useEffect(() => {
     if (!showTiming) {
-      const date = new Date()
-      const currentDay = Number(date.getDay())
-      setShowTiming(currentDay)
+      setShowTiming(Number(new Date().getDay()))
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [showTiming])
 
   const inlineStyle = {
     overflow: 'hidden',
@@ -208,16 +200,16 @@ export const ScheduleTimings = ({ isChart = false }) => {
     margin: '0 auto',
     maxWidth: getGlobalStyle('--width-max-desktop')
   }
+
   const [active, setActive] = useState(0)
   const [overActive, setOverActive] = useState(0)
 
   const handleOverActive = (index) => {
     setOverActive(index)
   }
-  const steps = [
-    'Horarios',
-    'Con Horarios'
-  ]
+
+  const steps = ['Horarios', 'Con Horarios']
+
   return (
     <div style={inlineStyle}>
       <div style={{ width: '60%' }}>
@@ -229,47 +221,41 @@ export const ScheduleTimings = ({ isChart = false }) => {
           steps={steps}
         />
       </div>
-      <div style={{ margin: '0 1.25rem' }} >
-        <div
-          style={{
-            width: '90%'
-          }}
-        >
+
+      <div style={{ margin: '0 1.25rem' }}>
+        <div style={{ width: '90%' }}>
           <AlertInfo
-            message={active === 1 
-              ? 'Puedes marcar que el restaurante esta abierto las 24h' 
-              : 'Aquí puedes crear tus horarios de atención para programar tus actividades.'} 
+            message={active === 1
+              ? 'Puedes marcar que el restaurante esta abierto las 24h'
+              : 'Aquí puedes crear tus horarios de atención para programar tus actividades.'}
             type='warning'
           />
         </div>
-        {Boolean(active === 1) 
-        && <Checkbox
-          checked={openStoreEveryDay}
-          id='checkboxF'
-          label={openStoreEveryDay ? 'Abierto todos los días' : 'Con Horarios'}
-          name='desc'
-          onChange={handleSetStoreScheduleEveryDay}
-        />
-        }
-      </div>
-      {active === 0 && 
-      <div
-        style={{ 
-          width: '100%',
-          overflow: 'hidden'
-        }}
-      >
-        <ScheduleLinearWeekly
-          handleClick={handleClick}
-          handleHourPmAM={handleHourPmAM}
-          isMobile={isChart || isMobile}
-          openStoreEveryDay={openStoreEveryDay}
-          schedules={autocompleteStoreSchedules(data)}
-          style={openStoreEveryDay ? { filter: 'grayscale(1)' } : {}}
-        />
+
+        {active === 1 && (
+          <Checkbox
+            checked={openStoreEveryDay}
+            id='checkboxF'
+            label={openStoreEveryDay ? 'Abierto todos los días' : 'Con Horarios'}
+            name='desc'
+            onChange={handleSetStoreScheduleEveryDay}
+          />
+        )}
       </div>
 
-      }
+      {active === 0 && (
+        <div style={{ width: '100%', overflow: 'hidden' }}>
+          <ScheduleLinearWeekly
+            handleClick={handleClick}
+            handleHourPmAM={handleHourPmAM}
+            isMobile={isChart || isMobile}
+            openStoreEveryDay={openStoreEveryDay}
+            schedules={autocompleteStoreSchedules(data)}
+            style={openStoreEveryDay ? { filter: 'grayscale(1)' } : {}}
+          />
+        </div>
+      )}
+
       <AwesomeModal
         borderRadius='10px'
         btnCancel={true}
@@ -278,18 +264,15 @@ export const ScheduleTimings = ({ isChart = false }) => {
         footer={false}
         header={true}
         height='400px'
-        onCancel={() => { return setShowModalTiming(!showModalTiming) }}
+        onCancel={() => setShowModalTiming((current) => !current)}
         onHide={() => {
-          setValues({
-            endTime: null,
-            startTime: null
-          })
-          setShowModalTiming(!showModalTiming)
+          setValues({ endTime: null, startTime: null })
+          setShowModalTiming(false)
         }}
         padding='25px'
         show={showModalTiming}
         size={MODAL_SIZES.small}
-        title={days[showTiming]}
+        title={days?.[showTiming]}
         zIndex={getGlobalStyle('--z-index-99999')}
       >
         <form
@@ -306,32 +289,22 @@ export const ScheduleTimings = ({ isChart = false }) => {
             <AlertInfo message='Crea el horario de la tienda' type='warning' />
             <Row justifyContent='space-between'>
               <Column>
-                <Text>
-                  Hora inicial
-                </Text>
+                <Text>Hora inicial</Text>
                 <InputTimeHours
-                  onSelected={(time) => {
-                    handleChange({ target: {
-                      name: 'startTime',
-                      value: time
-                    } })
-                  }}
+                  onSelected={(time) => handleChange({
+                    target: { name: 'startTime', value: time }
+                  })}
                   times={timeSuggestions}
                   value={values.startTime || ''}
                   width='200px'
                 />
               </Column>
               <Column>
-                <Text>
-                  Hora final
-                </Text>
+                <Text>Hora final</Text>
                 <InputTimeHours
-                  onSelected={(time) => {
-                    handleChange({ target: {
-                      name: 'endTime',
-                      value: time
-                    } })
-                  }}
+                  onSelected={(time) => handleChange({
+                    target: { name: 'endTime', value: time }
+                  })}
                   times={timeSuggestions}
                   value={values.endTime || ''}
                   width='200px'
@@ -339,12 +312,11 @@ export const ScheduleTimings = ({ isChart = false }) => {
               </Column>
             </Row>
           </div>
-          
-          <RippleButton disabled={!endTime || !startTime} type='submit'>
+
+          <RippleButton disabled={!endTime || !startTime || loading} type='submit'>
             {loading ? 'Cargando...' : 'Guardar'}
           </RippleButton>
         </form>
-
       </AwesomeModal>
     </div>
   )

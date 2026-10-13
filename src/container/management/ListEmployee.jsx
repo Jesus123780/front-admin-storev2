@@ -1,6 +1,6 @@
 'use client'
 
-import { useCheckboxState,useEmployee } from 'npm-pkg-hook'
+import { useCheckboxState, useEmployee } from 'npm-pkg-hook'
 import {
   CheckboxCube,
   Column,
@@ -35,7 +35,7 @@ export const ListEmployee = ({
   } = useCheckboxState(roleIds, [])
 
   const handleOnDragEnd = (result) => {
-    if (!result.destination) {return}
+    if (!result.destination) { return }
 
     // Crear una copia de la lista de roles
     const reorderedItems = Array.from(employee)
@@ -85,8 +85,12 @@ export const ListEmployee = ({
   return (
     <Column
     >
-      <DragDropContext onDragEnd={handleOnDragEnd}>
-        <Droppable droppableId='droppable_employee'>
+      <DragDropContext onDragEnd={handleOnDragEnd}>¨
+        <Droppable droppableId='droppable_employee'
+          isDropDisabled={false}
+          isCombineEnabled={false}
+          ignoreContainerClipping={false}
+        >
           {(provided) => {
             return (
               <div
