@@ -1,4 +1,4 @@
-import clsx from 'clsx'
+
 import {
   EColor,
   Icon,
@@ -64,10 +64,9 @@ const Items = ({
         return (
           <article
             key={extra?.exPid ?? index}
-            className={clsx(
-              styles.item,
-              editing && styles.itemEditing
-            )}
+            className={`${styles.item} ${
+              editing ? styles.itemEditing : ''
+            }`.trim()}
           >
             <div className={styles.info}>
               <div className={styles.nameWrapper}>
@@ -88,10 +87,9 @@ const Items = ({
 
               <div className={styles.priceWrapper}>
                 <span
-                  className={clsx(
-                    styles.price,
-                    isFree && styles.priceFree
-                  )}
+                  className={`${styles.price} ${
+                    isFree ? styles.priceFree : ''
+                  }`.trim()}
                 >
                   {isFree
                     ? 'Gratis'
@@ -109,7 +107,9 @@ const Items = ({
             <div className={styles.actions}>
               {editing ? (
                 <RippleButton
-                  aria-label={`Eliminar ${extra?.extraName || 'complemento'}`}
+                  aria-label={`Eliminar ${
+                    extra?.extraName || 'complemento'
+                  }`}
                   bgColor='transparent'
                   margin='0'
                   onClick={handleRemoveItem}

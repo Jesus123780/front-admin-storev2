@@ -11,6 +11,7 @@ import Context from '@/context/Context'
 // import StyledComponentsRegistry from '@/utils/registry'
 import Auth from '../../apollo/Auth'
 import ApolloClientProvider from './providers/ApolloProvider'
+import QueryProvider from './providers/QueryProvider'
 
 const ROUTES_WITHOUT_LAYOUT = new Set([
   ROUTES.index,
@@ -73,27 +74,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       />
 
       <body>
-        <div id='portal' />
-        <ProgressBar progress={progress} hidden={hidden} />
-        {isMounted
-          && (
+        <QueryProvider>
+          <div id="portal" />
+          <ProgressBar progress={progress} hidden={hidden} />
+
+          {isMounted && (
             <Context>
-              {/* <BarcodeScanner /> */}
-              {/* <StyledComponentsRegistry> */}
-                <ApolloClientProvider>
-                  <Auth>
-                    {ROUTES_WITHOUT_LAYOUT.has(pathname)
-                      ? children
-                      : <MemoLayout>
-                        {children}
-                      </MemoLayout>
-                    }
-                  </Auth>
-                </ApolloClientProvider>
-              {/* </StyledComponentsRegistry> */}
+              <ApolloClientProvider>
+                <Auth>
+                  {ROUTES_WITHOUT_LAYOUT.has(pathname)
+                    ? children
+                    : <MemoLayout>{children}</MemoLayout>}
+                </Auth>
+              </ApolloClientProvider>
             </Context>
-          )
-        }
+          )}
+        </QueryProvider>
       </body>
     </html>
   )

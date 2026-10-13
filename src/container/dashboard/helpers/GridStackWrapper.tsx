@@ -1,6 +1,8 @@
 'use client';
 
-import { useCreateDashboardComponent, useDeleteDashboardComponent, useUpdateDashboardComponent } from 'npm-pkg-hook';
+import {
+ useCreateDashboardComponent, useDeleteDashboardComponent, useUpdateDashboardComponent 
+} from 'npm-pkg-hook';
 import {
     Button,
     Divider,
@@ -35,6 +37,7 @@ import { Reports } from '@/container/reports';
 import { ScheduleTimings } from '@/container/schedule';
 import { TableSeating } from '@/container/seating';
 import { TeamStore } from '@/container/TeamStore';
+import WhatsAppDashboard from '@/container/whatsapp/components/WhatsAppDashboard';
 import { Context } from '@/context/Context';
 
 import { Loading } from '../components';
@@ -68,6 +71,7 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<Record<string, un
     SalesDay,
     ChatStatistic,
     TeamStore,
+    WhatsAppDashboard,
     Devices,
     Categories,
     Clients: Clients as React.ComponentType<Record<string, unknown>>,

@@ -1,10 +1,23 @@
-import { dirname } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import process from 'node:process'
 
 /** ESM __dirname workaround */
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+
+/**
+ * Paquetes que DEBEN resolverse a una única copia dentro del node_modules
+ * de esta app. Al trabajar con `npm link` (npm-pkg-hook, pkg-components son
+ * symlinks), el resolver de webpack encontraría la copia anidada del paquete
+ * linkeado, generando dos instancias del mismo módulo. Para React y para
+ * librerías basadas en React Context (como @tanstack/react-query) eso rompe
+ * la propagación del contexto (ej: "No QueryClient set").
+ */
+const singletonModules = [
+  '@tanstack/react-query',
+  '@tanstack/query-core',
+]
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -30,6 +43,21 @@ const nextConfig = {
   compiler: {
     reactRemoveProperties: true,
     styledComponents: true,
+  },
+
+  webpack: (config) => {
+    config.resolve = config.resolve || {}
+    config.resolve.alias = config.resolve.alias || {}
+
+    for (const moduleName of singletonModules) {
+      config.resolve.alias[moduleName] = join(
+        __dirname,
+        'node_modules',
+        moduleName,
+      )
+    }
+
+    return config
   }
 }
 
