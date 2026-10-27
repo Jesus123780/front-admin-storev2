@@ -26,7 +26,7 @@ import {
   Text
 } from 'pkg-components'
 import React, {
-  useContext, 
+  useContext,
   useEffect,
   useLayoutEffect
 } from 'react'
@@ -470,31 +470,41 @@ export const Login: React.FC<ILogin> = ({ googleLoaded = false }) => {
             onAutoLoadFinished={() => {
               stop()
             }}
-            render={({ onClick, disabled }) => (
-              <Button
-                color='black'
-                styles={{
-                  borderRadius: getGlobalStyle('--border-radius-2xs'),
-                  border: 'none',
-                  padding: getGlobalStyle('--spacing-xl'),
-                  boxShadow: getGlobalStyle('--box-shadow-sm'),
-                  color: getGlobalStyle('--color-neutral-black')
-                }}
-                onClick={() => {
-                  onClick()
-                  start()
-                }}
-                disabled={disabled}
-                type='button'
-              >
-                <Icon icon='IconGoogleFullColor' size={30} />
-                {loading
-                  ? <LoadingButton color={getGlobalStyle('--color-primary-red')} />
-                  : 'Continuar con Google'
-                }
-                <div style={{ width: 'min-content' }} />
-              </Button>
-            )}
+            render={({ onClick, disabled }) => {
+
+              return (
+                <Button
+                  color='black'
+                  styles={{
+                    borderRadius: getGlobalStyle('--border-radius-2xs'),
+                    border: 'none',
+                    padding: getGlobalStyle('--spacing-xl'),
+                    boxShadow: getGlobalStyle('--box-shadow-sm'),
+                    color: getGlobalStyle('--color-neutral-black')
+                  }}
+                  onClick={() => {
+                    if (disabled) {
+                      return sendNotification({
+                        title: 'Alerta',
+                        description: 'Aun no esta listo... espera un momento o recarga la pagina',
+                        backgroundColor: 'warning'
+                      })
+                    }
+                    onClick()
+                    start()
+                  }}
+                  disabled={disabled}
+                  type='button'
+                >
+                  <Icon icon='IconGoogleFullColor' size={30} />
+                  {loading
+                    ? <LoadingButton color={getGlobalStyle('--color-primary-red')} />
+                    : 'Continuar con Google'
+                  }
+                  <div style={{ width: 'min-content' }} />
+                </Button>
+              )
+            }}
           />
         )}
         <Divider marginTop={getGlobalStyle('--spacing-xl')} />

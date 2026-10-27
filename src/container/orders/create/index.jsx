@@ -234,11 +234,13 @@ export const CreateSales = ({
   function updateProductQuantity(quantityChange) {
     try {
       const item = getProductById(product?.PRODUCT.pId)
-      const OurProduct = getProductById(product?.PRODUCT?.pId)
+      // Use the unitPrice stored on the cart item, not catalog ProPrice.
+      // Catalog ProPrice may differ after a discount is applied.
+      const unitPrice = item?.unitPrice ?? item?.ProPrice ?? 0
       setProd({
         ...item,
         ProQuantity: item.ProQuantity + quantityChange,
-        ProPrice: (item.ProQuantity + quantityChange) * OurProduct?.ProPrice
+        ProPrice: Math.max(0, (item.ProQuantity + quantityChange) * unitPrice)
       })
       if (quantityChange < 0) {
         dispatch({ type: 'REMOVE_PRODUCT', payload: prod ?? product?.PRODUCT })

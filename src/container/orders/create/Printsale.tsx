@@ -4,7 +4,6 @@ import {
   useFormatDate,
   useStore
 } from 'npm-pkg-hook'
-
 import {
   getGlobalStyle,
   Icon,
@@ -12,10 +11,7 @@ import {
   numberFormat,
   RippleButton
 } from 'pkg-components'
-
 import React, { useEffect, useState } from 'react'
-
-import { Ticket as TemplateTicket } from './Ticket'
 
 import styles from './Prints.module.css'
 

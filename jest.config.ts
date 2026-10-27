@@ -18,9 +18,12 @@ const config: Config = {
     // 👇 assets
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js',
 
-    // 👇 FORZAR UNA SOLA COPIA DE REACT
+    // 👇 FORZAR UNA SOLA COPIA DE REACT (incluyendo jsx-runtime y jsx-dev-runtime)
     '^react$': path.resolve(__dirname, 'node_modules/react'),
+    '^react/jsx-runtime$': path.resolve(__dirname, 'node_modules/react/jsx-runtime'),
+    '^react/jsx-dev-runtime$': path.resolve(__dirname, 'node_modules/react/jsx-dev-runtime'),
     '^react-dom$': path.resolve(__dirname, 'node_modules/react-dom'),
+    '^react-dom/(.*)$': path.resolve(__dirname, 'node_modules/react-dom/$1'),
 
     // 👇 MOCKS de swiper
     '^swiper$': '<rootDir>/__mocks__/swiper/swiper.js',
