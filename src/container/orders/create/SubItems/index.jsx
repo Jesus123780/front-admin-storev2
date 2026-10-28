@@ -35,7 +35,6 @@ export const SubItems = ({
   handleIncrement = () => {
     return
   },
-  sumExtraProducts,
   setModalItem = (boolean) => {
     return boolean
   },
@@ -60,6 +59,26 @@ export const SubItems = ({
   }
   const showQuantity = false
   const zIndex = useModalLayer(Boolean(modalItem))
+  // The `sumExtraProducts` value provided by the sales hook is a hardcoded
+  // sentinel (19999999) and does not reflect the user's current selection, so
+  // we compute the real total of selected extras locally using the same price
+  // logic as <Items />. Free items (price 0 with no quantity) are excluded.
+  const computedSumExtra = (dataExtra || []).reduce((total, extra) => {
+    const quantity = Number(extra?.quantity) || 0
+    if (quantity === 0) {
+      return total
+    }
+    const extraPrice = Number(extra?.extraPrice) || 0
+    const newExtraPrice = extra?.newExtraPrice
+    const hasNewPrice =
+      newExtraPrice !== null &&
+      newExtraPrice !== undefined &&
+      newExtraPrice !== ''
+    const linePrice = hasNewPrice
+      ? Number(newExtraPrice) || 0
+      : extraPrice * quantity
+    return total + linePrice
+  }, 0)
   return (
     <AwesomeModal
       borderRadius='4px'
@@ -133,7 +152,7 @@ export const SubItems = ({
             }}
           >
               Agregar
-            {!!sumExtraProducts && `${numberFormat(sumExtraProducts ??  0)}`}
+            {computedSumExtra > 0 && `${numberFormat(computedSumExtra)}`}
           </RippleButton>
         </Row>
       </Column>

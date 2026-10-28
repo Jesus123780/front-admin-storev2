@@ -10,6 +10,8 @@ import {
 import PropTypes from 'prop-types'
 import React from 'react'
 
+import styles from './styles.module.css'
+
 export const Optional = ({
   editing,
   loading = false,
@@ -33,16 +35,16 @@ export const Optional = ({
   const { handleAddOptional } = handlersPropsOptional || {}
 
   return (
-    <div>
+    <div className={styles.optionalContainer}>
       {dataOptional?.length > 0 && dataOptional?.map((x, i) => {
         return (
-          <div key={x.opExPid}>
-            <div>
-              <div>
-                <p className='garnish-choices__title'>{x.OptionalProName}</p>
-                {!!x.numbersOptionalOnly && <p className='garnish-choices__title-desc'>Escoge hasta {x.numbersOptionalOnly} opciones.</p>}
+          <div key={x.opExPid} className={styles.optionalGroup}>
+            <div className={styles.optionalGroupHeader}>
+              <div className={styles.optionalGroupTitleWrapper}>
+                <p className={styles.optionalGroupTitle}>{x.OptionalProName}</p>
+                {!!x.numbersOptionalOnly && <p className={styles.optionalGroupTitleDesc}>Escoge hasta {x.numbersOptionalOnly} opciones.</p>}
               </div>
-              <div className='garnish-choices'>
+              <div className={styles.optionalGroupBadge}>
                 <Icon
                   icon='IconMiniCheck'
                   color={getGlobalStyle('--color-icons-success')}
@@ -55,10 +57,10 @@ export const Optional = ({
             {
               x?.ExtProductFoodsSubOptionalAll?.map((z, index) => {
                 return (
-                  <div key={z.opSubExPid}>
-                    <div>
-                      <h3 className='title_card'>{z?.OptionalSubProName}</h3>
-                      <h3 className='title_card'>Item: {index + 1}</h3>
+                  <div key={z.opSubExPid} className={styles.optionalOption}>
+                    <div className={styles.optionalOptionInfo}>
+                      <h3 className={styles.optionalOptionName}>{z?.OptionalSubProName}</h3>
+                      <h3 className={styles.optionalOptionIndex}>Item: {index + 1}</h3>
                     </div>
                     {editing &&
                       <Button

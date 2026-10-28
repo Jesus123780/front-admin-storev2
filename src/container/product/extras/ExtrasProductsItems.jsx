@@ -10,6 +10,7 @@ import React from 'react'
 
 import Items from './Items'
 import { Optional } from './Optional'
+import styles from './styles.module.css'
 
 /**
  * Component to render extra products and their options.
@@ -77,12 +78,12 @@ export const ExtrasProductsItems = ({
     <Column>
       {dataExtra?.length > 0 &&
     <div>
-      <div>
-        <div>
-          <p className='garnish-choices__title'>
+      <div className={styles.complementsHeader}>
+        <div className={styles.complementsTitleWrapper}>
+          <p className={styles.complementsTitle}>
             Complementos
           </p>
-          <p className='garnish-choices__title-desc'>
+          <p className={styles.complementsTitleDesc}>
             Ingresa tus opciones.
           </p>
         </div>

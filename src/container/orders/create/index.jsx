@@ -17,6 +17,7 @@ import {
 } from 'npm-pkg-hook'
 import {
   AwesomeModal,
+  Button,
   CardProductSimple,
   Column,
   Divider,
@@ -155,7 +156,25 @@ export const CreateSales = ({
     handleChangeFilter,
     setValues,
     handleChangeCheck,
-    code
+    code,
+    handleSavePendingOrder,
+
+    // Estado de las órdenes.
+    pendingOrders,
+    activePendingOrders,
+    pendingOrdersCount,
+    activePendingOrderId,
+    isPendingOrdersReady,
+    canPersistPendingOrders,
+
+    // Acciones.
+    handleResumePendingOrder,
+    removePendingOrder,
+    updatePendingOrder,
+    updatePendingStatus,
+    clearPendingOrders,
+    persistPendingOrder,
+    searchPendingOrders
   } = useSales({
     disabled: false,
     router,
@@ -481,6 +500,24 @@ export const CreateSales = ({
 
       <ModalSales {...restPropsSalesModal} />
       <GenerateSalesPkg
+        // Guardar una venta pendiente.
+        handleSavePendingOrder={(details) => handleSavePendingOrder(details)}
+
+        // Datos que se mostrarán en el listado.
+        pendingOrders={activePendingOrders}
+        pendingOrdersCount={pendingOrdersCount}
+        totalStoredOrdersCount={pendingOrders.length}
+        isPendingOrdersReady={isPendingOrdersReady}
+        canPersistPendingOrders={canPersistPendingOrders}
+
+        // Acciones disponibles sobre cada orden.
+        handleResumePendingOrder={handleResumePendingOrder}
+        handleRemovePendingOrder={removePendingOrder}
+        handleUpdatePendingOrder={updatePendingOrder}
+        handleUpdatePendingStatus={updatePendingStatus}
+        handleClearPendingOrders={clearPendingOrders}
+        handlePersistPendingOrder={persistPendingOrder}
+        searchPendingOrders={searchPendingOrders}
         client={client}
         dataFilter={dataFilter}
         currentPage={currentPage}
@@ -578,34 +615,34 @@ export const CreateSales = ({
           />
           <Divider marginTop={getGlobalStyle('--spacing-xl')} />
           <Row style={{ justifyContent: 'space-between' }}>
-            <RippleButton
-              onClick={() => {
-                return dispatch({
-                  type: 'PUT_COMMENT',
-                  payload: oneProductToComment?.pId
-                })
-              }}
-              radius='0.3125rem'
-              widthButton={existComment ? '45%' : '100%'}
-            >
-              {!existComment ? 'Dejar comentario' : 'Actualizar'}
-            </RippleButton>
-            <Divider marginTop={getGlobalStyle('--spacing-xs')} />
             {existComment && (
-              <RippleButton
-                onClick={() => {
-                  return handleRemoveValue({
+              <Button
+                onClick={() =>
+                  handleRemoveValue({
                     name: 'comment',
                     pId: oneProductToComment?.pId
                   })
-                }}
-                radius='0.3125rem'
-                widthButton={existComment ? '45%' : '100%'}
-
+                }
               >
                 Eliminar
-              </RippleButton>
+              </Button>
             )}
+
+            <Button
+              primary
+              disabled={!values.comment}
+              onClick={() =>
+                dispatch({
+                  type: 'PUT_COMMENT',
+                  payload: oneProductToComment?.pId
+                })
+              }
+              styles={{
+                width: !existComment ? '100%' : 'min-content'
+              }}
+            >
+              {existComment ? 'Actualizar' : 'Dejar comentario'}
+            </Button>
           </Row>
         </Column>
       </AwesomeModal>
