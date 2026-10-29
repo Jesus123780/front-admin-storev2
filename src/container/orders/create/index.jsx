@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import {
+  buildFilterVariables,
   generateStoreURL,
   useAmountInput,
   useFilterConfigs,
@@ -158,6 +159,10 @@ export const CreateSales = ({
     handleChangeCheck,
     code,
     handleSavePendingOrder,
+
+    // Filtros del modal (reusables).
+    handleApplyFilters,
+    handleClearFilters,
 
     // Estado de las órdenes.
     pendingOrders,
@@ -475,10 +480,19 @@ export const CreateSales = ({
   const [activeFilter, setActiveFilter] = useState(0)
   const commentZIndex = useModalLayer(Boolean(openCommentModal))
 
+  // Traduce la selección del modal (groupId → Set de ids) a variables de query
+  // genéricas y ejecuta la búsqueda real de productos.
+  const onApplyFilters = (selection) => {
+    const variables = buildFilterVariables(dataFilter ?? [], selection ?? {})
+    handleApplyFilters(variables)
+  }
+
   const filterProps = {
     activeFilter,
     setActiveFilter,
-    dataFilter
+    dataFilter,
+    onApplyFilters,
+    onClearFilters: handleClearFilters
   }
 
   return (
