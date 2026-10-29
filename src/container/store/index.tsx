@@ -50,12 +50,13 @@ import { Product } from '../product'
 import { ProductView } from '../product/view/product'
 import { TableSeating } from '../seating'
 import { Banner } from './banner'
+import { DeleteStore } from './deleteStore'
 import { ButtonsAction } from './options/index'
 import { StickyBoundaryCategories } from './StickyBoundaryCategories'
 
 import styles from './styles.module.css'
 
-type ModalKey = 1 | 2 | 3 | 4 | 5
+type ModalKey = 1 | 2 | 3 | 4 | 5 | 6
 
 type ModalQuery =
   | 'food'
@@ -63,6 +64,7 @@ type ModalQuery =
   | 'product'
   | 'upload_product_file'
   | 'create_table_store'
+  | 'delete_store'
 
 type HandleActionClickResult = {
   number: ModalKey
@@ -102,7 +104,8 @@ const MODAL_QUERY: Record<ModalKey, ModalQuery> = {
   2: 'categories',
   3: 'product',
   4: 'upload_product_file',
-  5: 'create_table_store'
+  5: 'create_table_store',
+  6: 'delete_store'
 }
 
 const MODAL_TITLE: Record<ModalKey, string> = {
@@ -110,10 +113,32 @@ const MODAL_TITLE: Record<ModalKey, string> = {
   2: 'Categorías',
   3: 'Producto',
   4: 'Crear multiples productos',
-  5: 'Crear mesas'
+  5: 'Crear mesas',
+  6: 'Eliminar comercio'
 }
 
-const MODAL_KEYS: ModalKey[] = [1, 2, 3, 4, 5]
+/**
+ * Tamaño del modal por cada modal key.
+ * Cualquier key no listada aquí usa `MODAL_SIZES.large` por defecto.
+ */
+const MODAL_SIZE: Record<ModalKey, string> = {
+  1: MODAL_SIZES.large,
+  2: MODAL_SIZES.large,
+  3: MODAL_SIZES.large,
+  4: MODAL_SIZES.large,
+  5: MODAL_SIZES.large,
+  6: MODAL_SIZES.medium
+}
+
+/**
+ * Alto personalizado del modal por cada modal key.
+ * Las keys no listadas aquí dejan `customHeight` sin definir (alto por defecto).
+ */
+const MODAL_HEIGHT: Partial<Record<ModalKey, string>> = {
+  6: 'auto'
+}
+
+const MODAL_KEYS: ModalKey[] = [1, 2, 3, 4, 5, 6]
 
 /**
  * Modal queries whose values must always be normalized to `true`.
@@ -125,7 +150,8 @@ const BOOLEAN_MODAL_QUERIES = new Set<ModalQuery>([
   'categories',
   'product',
   'upload_product_file',
-  'create_table_store'
+  'create_table_store',
+  'delete_store'
 ])
 
 /**
@@ -1225,7 +1251,8 @@ export const Store: React.FC = () => {
         }
       />
     ),
-    5: <TableSeating />
+    5: <TableSeating />,
+    6: <DeleteStore />
   }
 
   const currentModalKey =
@@ -1248,14 +1275,24 @@ export const Store: React.FC = () => {
     footer: false,
     header: true,
     modal: true,
-    padding: 0,
+    padding: 10,
     show:
       currentModalKey !==
       null,
     title:
       currentModalTitle,
     size:
-      MODAL_SIZES.large,
+      currentModalKey
+        ? MODAL_SIZE[
+            currentModalKey
+          ]
+        : MODAL_SIZES.large,
+    customHeight:
+      currentModalKey
+        ? MODAL_HEIGHT[
+            currentModalKey
+          ]
+        : undefined,
     zIndex:
       getGlobalStyle(
         '--z-index-modal'

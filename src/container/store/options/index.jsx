@@ -50,6 +50,17 @@ export const ButtonsAction = ({ handle = (number, name, bool) => { return { numb
       style: {
         minWidth: '200px'
       }
+    },
+    {
+
+      label: 'Eliminar comercio',
+      icon: 'IconDelete',
+      onClick: () => { return handle(6, 'delete_store', true) },
+      style: {
+        minWidth: '200px',
+        color: getGlobalStyle('--color-feedback-error-dark'),
+        border: `1px solid ${getGlobalStyle('--color-feedback-error-dark')}`
+      }
     }
   ]
 

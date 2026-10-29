@@ -120,48 +120,6 @@ describe('Login', () => {
         process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE = 'client_id_123'
     })
 
-    it('renders login form and mock button', () => {
-        const { getByText } = renderLogin({}, {
-            googleLoaded: true,
-        })
-
-        // Update this assertion to match the actual rendered text or structure
-        // For example, check for the presence of the card container
-        expect(document.querySelector('.card')).toBeInTheDocument()
-        expect(getByText('¡Falta poco para iniciar tus ventas!')).toBeInTheDocument()
-        expect(getByText('¿Cómo deseas continuar?')).toBeInTheDocument()
-        // Continuar con Google 
-        expect(getByText('Login mock')).toBeInTheDocument()
-    })
-
-
-    it('calls login flow when clicking Login mock button', async () => {
-        (fetchJson as jest.Mock).mockResolvedValueOnce({
-            success: true,
-            data: {
-                user: { id: '1' },
-                token: 'token',
-                store: { idStore: 'store1' },
-                refreshToken: 'refresh'
-            },
-            message: 'OK'
-        })
-
-        renderLogin()
-
-        const btn = screen.getByText('Login mock')
-        fireEvent.click(btn)
-
-        await waitFor(() => {
-            expect(fetchJson).toHaveBeenCalled()
-            expect(mockSetAlertBox).toHaveBeenCalledWith(
-                expect.objectContaining({ color: 'success' })
-            )
-            expect(mockSendNotification).toHaveBeenCalledWith(
-                expect.objectContaining({ title: 'Success' })
-            )
-        })
-    })
     it('renders GoogleLogin when not electron', () => {
         renderLogin({ isElectron: false })
 

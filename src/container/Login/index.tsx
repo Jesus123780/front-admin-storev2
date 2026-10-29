@@ -48,6 +48,9 @@ const BACKEND_URL =
 const TERMS_URL = process.env.NEXT_PUBLIC_TERMS_URL
 const PRIVACY_URL = process.env.NEXT_PUBLIC_PRIVACY_URL
 
+/** Enables the mock login button only in local development. */
+const ENABLE_LOGIN_MOCK = process.env.NODE_ENV === 'development'
+
 interface LoginProps {
   googleLoaded?: boolean
 
@@ -1107,6 +1110,30 @@ export const Login: React.FC<LoginProps> = ({
                 </Button>
               )}
             />
+          )}
+
+          {ENABLE_LOGIN_MOCK && (
+            <button
+              className={styles.btn_close}
+              type='button'
+              disabled={isLoading}
+              onClick={() => {
+                void responseGoogle({
+                  user: {
+                    name: 'test',
+                    username: 'test',
+                    lastName: 'test',
+                    email: 'test@gmail.com',
+                    id: 'test',
+                    image: '',
+                    imageUrl: '',
+                    locationFormat: []
+                  }
+                })
+              }}
+            >
+              {isLoading ? <LoadingButton /> : 'Login mock (DEV)'}
+            </button>
           )}
 
           {!GOOGLE_CLIENT_ID && !isElectron && (
