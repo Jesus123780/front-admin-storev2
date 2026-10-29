@@ -1,8 +1,6 @@
-// components/Login.tsx
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import {
   Cookies,
   encryptSession,
@@ -17,7 +15,6 @@ import {
 import {
   Button,
   Column,
-  Divider,
   getGlobalStyle,
   GoogleLogin,
   Icon,
@@ -26,9 +23,11 @@ import {
   Text
 } from 'pkg-components'
 import React, {
+  useCallback,
   useContext,
   useEffect,
-  useLayoutEffect
+  useRef,
+  useState
 } from 'react'
 
 import { getDeviceId } from '../../../apollo/getDeviceId'
@@ -38,506 +37,1155 @@ import { decodeToken, getUserFromToken } from '../../utils'
 import styles from './styles.module.css'
 
 const EXPIRED_MESSAGE = 'Session expired, refresh needed'
+const AUTH_ENDPOINT = '/api/auth'
+const ELECTRON_AUTH_TIMEOUT_MS = 180_000
+const SESSION_COOKIE_NAME =
+  process.env.NEXT_PUBLIC_SESSION_NAME || 'session_name'
+const GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE || ''
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_URL_BACK_SERVER?.replace(/\/+$/, '') || ''
+const TERMS_URL = process.env.NEXT_PUBLIC_TERMS_URL
+const PRIVACY_URL = process.env.NEXT_PUBLIC_PRIVACY_URL
 
-interface ILogin {
+interface LoginProps {
   googleLoaded?: boolean
+
+  /**
+   * Enables the optional Google One Tap prompt.
+   * Disabled by default to avoid competing login prompts.
+   */
+  enableGoogleOneTap?: boolean
 }
 
-export const Login: React.FC<ILogin> = ({ googleLoaded = false }) => {
-  const router = useRouter()
+interface AuthUser {
+  name?: string
+  username?: string
+  lastName?: string
+  email: string
+  id?: string
+  image?: string
+  imageUrl?: string
+  locationFormat?: unknown[]
+}
+
+interface UserPayload {
+  user: AuthUser
+}
+
+interface LoginApiUser {
+  id?: string | number
+}
+
+interface LoginApiStore {
+  idStore?: string | number | null
+}
+
+interface LoginApiData {
+  user?: LoginApiUser
+  token?: string
+  refreshToken?: string
+  store?: LoginApiStore
+}
+
+interface LoginApiResponse {
+  success?: boolean
+  ok?: boolean
+  message?: string
+  data?: LoginApiData
+}
+
+interface GoogleLoginProfile {
+  name?: string
+  email?: string
+  familyName?: string
+  googleId?: string
+  imageUrl?: string
+}
+
+interface GoogleLoginResult {
+  profileObj?: GoogleLoginProfile
+  tokenId?: string
+}
+
+interface GoogleClaims {
+  name?: string
+  family_name?: string
+  email?: string
+  sub?: string
+  picture?: string
+}
+
+interface GoogleCredentialResponse {
+  credential?: string
+}
+
+interface GoogleIdentityApi {
+  initialize: (config: {
+    client_id: string
+    callback: (response: GoogleCredentialResponse) => void
+    auto_select: boolean
+  }) => void
+  prompt: () => void
+  cancel?: () => void
+}
+
+interface GoogleIdentityGlobal {
+  accounts?: {
+    id?: GoogleIdentityApi
+  }
+}
+
+interface ElectronUserInfo {
+  name?: string
+  email?: string
+  sub?: string
+  picture?: string
+}
+
+interface ElectronAuthPayload {
+  user_info?: ElectronUserInfo
+}
+
+type ElectronListener = (
+  event: unknown,
+  payload?: unknown
+) => void
+
+interface ElectronIpcRenderer {
+  invoke: (
+    channel: string,
+    ...args: unknown[]
+  ) => Promise<unknown>
+  on: (
+    channel: string,
+    listener: ElectronListener
+  ) => void
+  removeListener: (
+    channel: string,
+    listener: ElectronListener
+  ) => void
+}
+
+/**
+ * Returns a normalized identifier from a string or numeric value.
+ *
+ * @param {unknown} value - Identifier to normalize.
+ * @returns {string} Normalized identifier or an empty string.
+ */
+const normalizeIdentifier = (value: unknown): string => {
+  if (typeof value === 'string') {
+    return value.trim()
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value)
+  }
+
+  return ''
+}
+
+/**
+ * Returns a user-friendly error message.
+ *
+ * @param {unknown} error - Original error.
+ * @returns {string} Safe message to display to the user.
+ */
+const getFriendlyErrorMessage = (error: unknown): string => {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : ''
+
+  if (
+    /failed to fetch|fetch failed|networkerror|network error|load failed/i.test(
+      message
+    )
+  ) {
+    return 'No pudimos conectar con el servidor. Verifica tu conexión e inténtalo nuevamente.'
+  }
+
+  if (/invalid user payload/i.test(message)) {
+    return 'Google no devolvió los datos necesarios para iniciar sesión. Inténtalo nuevamente.'
+  }
+
+  if (/invalid login response structure/i.test(message)) {
+    return 'El servidor devolvió una respuesta inesperada. Inténtalo nuevamente.'
+  }
+
+  if (/authentication timed out/i.test(message)) {
+    return 'La autenticación tardó demasiado. Inténtalo nuevamente.'
+  }
+
+  if (/backend url is not configured/i.test(message)) {
+    return 'El servicio de autenticación no está configurado correctamente.'
+  }
+
+  return message || 'Ocurrió un error al iniciar sesión. Inténtalo nuevamente.'
+}
+
+/**
+ * Gets the Electron IPC bridge when the application runs in Electron.
+ *
+ * @returns {ElectronIpcRenderer | undefined} Available IPC bridge.
+ */
+const getElectronIpcRenderer = ():
+  | ElectronIpcRenderer
+  | undefined => {
+  if (typeof window === 'undefined') {
+    return undefined
+  }
+
+  const electronWindow = window as unknown as {
+    electron?: {
+      ipcRenderer?: ElectronIpcRenderer
+    }
+  }
+
+  return electronWindow.electron?.ipcRenderer
+}
+
+/**
+ * Returns the Google Identity Services API when available.
+ *
+ * @returns {GoogleIdentityApi | undefined} Google Identity API.
+ */
+const getGoogleIdentityApi = ():
+  | GoogleIdentityApi
+  | undefined => {
+  if (typeof window === 'undefined') {
+    return undefined
+  }
+
+  const googleWindow = window as unknown as {
+    google?: GoogleIdentityGlobal
+  }
+
+  return googleWindow.google?.accounts?.id
+}
+
+/**
+ * Login component for web and Electron applications.
+ *
+ * Features:
+ * - Centralized Google login handling.
+ * - Duplicate authentication prevention.
+ * - Consistent loading feedback.
+ * - Expired session cleanup.
+ * - Electron authentication timeout and cancellation handling.
+ * - Optional Google One Tap integration.
+ *
+ * @param {LoginProps} props - Login configuration.
+ * @returns {JSX.Element} Login interface.
+ */
+export const Login: React.FC<LoginProps> = ({
+  googleLoaded = false,
+  enableGoogleOneTap = false
+}) => {
   const [handleRegisterDeviceUser] = useRegisterDeviceUser()
   const { setAlertBox, isElectron, sendNotification } = useContext(Context)
   const { onClickLogout } = useLogout()
   const [handleSession] = useSetSession()
 
-  // useLoading: configurable
-  const {
-    loading,
-    wrap,
-    start,
-    stop
-  } = useLoading({ delayMs: 120, minDurationMs: 350 })
+  const { loading, wrap } = useLoading({
+    delayMs: 120,
+    minDurationMs: 350
+  })
+
+  const [electronAuthPending, setElectronAuthPending] =
+    useState(false)
+
+  const loginInProgressRef = useRef(false)
+  const electronAuthTimeoutRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isLoading = loading || electronAuthPending
 
   /**
-   * Centralized login flow used by google callbacks.
-   * It does NOT manipulate UI loading directly; we rely on wrapping the call with loading.wrap
+   * Clears the Electron authentication timeout.
+   *
+   * @returns {void}
    */
-  interface UserPayload {
-    user: {
-      name: string
-      username?: string
-      lastName?: string
-      email: string
-      id?: string
-      image?: string
-      imageUrl?: string
-      locationFormat?: unknown[]
-      useragent?: string | null
+  const clearElectronAuthTimeout = useCallback(() => {
+    if (electronAuthTimeoutRef.current !== null) {
+      clearTimeout(electronAuthTimeoutRef.current)
+      electronAuthTimeoutRef.current = null
     }
-  }
+  }, [])
 
-  const doLoginFlow = async (userPayload: UserPayload) => {
-    // Validate input quickly
-    if (!userPayload?.user?.email) {
-      throw new Error('Invalid user payload')
-    }
-    const { user } = userPayload
-    const device = await getDeviceId()
-    const body = {
-      name: user.name,
-      username: user.username ?? user.name,
-      lastName: user.lastName ?? user.name,
-      email: user.email,
-      password: user.id ?? '',
-      locationFormat: user.locationFormat ?? [],
-      useragent: globalThis?.navigator?.userAgent ?? null,
-      deviceId: device,
-      imageUrl: user.imageUrl ?? user.image
-    }
+  /**
+   * Displays a consistent authentication error.
+   *
+   * @param {unknown} error - Original error.
+   * @returns {void}
+   */
+  const notifyLoginError = useCallback(
+    (error: unknown) => {
+      const message = getFriendlyErrorMessage(error)
 
-    const requestLogin = await fetchJson(
-      `${process.env.NEXT_PUBLIC_URL_BACK_SERVER}/api/auth`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        credentials: 'include'
+      setAlertBox({
+        message,
+        color: 'error'
+      })
+
+      sendNotification({
+        title: 'No fue posible iniciar sesión',
+        description: message,
+        backgroundColor: 'error'
+      })
+    },
+    [sendNotification, setAlertBox]
+  )
+
+  /**
+   * Sends the login request and establishes the application session.
+   *
+   * The API payload remains compatible with the existing backend contract.
+   *
+   * @param {UserPayload} payload - Authenticated user profile.
+   * @returns {Promise<void>} Resolves after session setup and navigation.
+   */
+  const doLoginFlow = useCallback(
+    async (payload: UserPayload): Promise<void> => {
+      const user = payload?.user
+
+      const email = user?.email?.trim()
+      const userId = normalizeIdentifier(user?.id)
+
+      if (!email || !userId) {
+        throw new Error('Invalid user payload')
       }
-    )
 
-    if (!requestLogin?.success && !requestLogin?.ok) {
-      // prefer server message
-      throw new Error(requestLogin?.message || 'Failed to fetch authentication.')
-    }
+      if (!BACKEND_URL) {
+        throw new Error('Backend URL is not configured')
+      }
 
-    const { user: userResp, token, store, refreshToken } = requestLogin.data ?? {}
-    if (!userResp || !token) {
-      throw new Error('Invalid login response structure.')
-    }
+      const deviceId = await getDeviceId()
 
-    const encryptedData = encryptSession(JSON.stringify(requestLogin.data))
+      if (!deviceId) {
+        throw new Error(
+          'No pudimos identificar este dispositivo. Inténtalo nuevamente.'
+        )
+      }
 
-    setAlertBox({ message: requestLogin.message, color: 'success' })
-    sendNotification({
-      title: 'Success',
-      description: 'Iniciaste sesión correctamente',
-      backgroundColor: 'success'
-    })
+      const name =
+        user.name?.trim() || email.split('@')[0] || 'Usuario'
 
-    const cookiesDefault = [
-      { name: 'restaurant', value: store?.idStore },
-      { name: 'usuario', value: userResp?.id },
-      { name: 'session', value: token },
-      { name: process.env.NEXT_PUBLIC_SESSION_NAME || 'session_name', value: encryptedData }
-    ]
-    await handleSession({ cookies: cookiesDefault })
+      const body = {
+        name,
+        username: user.username?.trim() || name,
+        lastName: user.lastName?.trim() || name,
+        email,
+        // Preserved for compatibility with the current backend.
+        // This value must never be treated as proof of Google identity.
+        password: userId,
+        locationFormat: user.locationFormat ?? [],
+        useragent:
+          typeof navigator !== 'undefined'
+            ? navigator.userAgent
+            : null,
+        deviceId,
+        imageUrl: user.imageUrl ?? user.image ?? ''
+      }
 
-    if (store?.idStore) {
-      const cookiesToSave = [
-        { name: 'merchant', value: store.idStore },
-        { name: 'usuario', value: userResp?.id },
-        { name: 'session', value: token },
-        { name: 'refreshToken', value: refreshToken }
+      const requestLogin = await fetchJson(
+        `${BACKEND_URL}${AUTH_ENDPOINT}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body),
+          credentials: 'include'
+        }
+      ) as LoginApiResponse
+
+      const successfulResponse =
+        requestLogin?.success === true ||
+        (
+          requestLogin?.success !== false &&
+          requestLogin?.ok === true
+        )
+
+      if (!successfulResponse) {
+        throw new Error(
+          requestLogin?.message ||
+          'No fue posible validar tus credenciales.'
+        )
+      }
+
+      const responseData = requestLogin.data
+      const userResponse = responseData?.user
+      const token = normalizeIdentifier(responseData?.token)
+      const authenticatedUserId = normalizeIdentifier(userResponse?.id)
+
+      if (!userResponse || !token || !authenticatedUserId) {
+        throw new Error('Invalid login response structure')
+      }
+
+      const storeId = normalizeIdentifier(
+        responseData?.store?.idStore
+      )
+
+      const refreshToken = normalizeIdentifier(
+        responseData?.refreshToken
+      )
+
+      const encryptedData = encryptSession(
+        JSON.stringify(responseData)
+      )
+
+      if (!encryptedData) {
+        throw new Error(
+          'No fue posible preparar la sesión del usuario.'
+        )
+      }
+
+      /*
+       * Save the session in one operation to avoid partial session state.
+       * Empty values also prevent stale merchant/store identifiers from
+       * surviving a subsequent login without a store.
+       */
+      const cookies = [
+        {
+          name: 'restaurant',
+          value: storeId
+        },
+        {
+          name: 'merchant',
+          value: storeId
+        },
+        {
+          name: 'usuario',
+          value: authenticatedUserId
+        },
+        {
+          name: 'session',
+          value: token
+        },
+        {
+          name: 'refreshToken',
+          value: refreshToken
+        },
+        {
+          name: SESSION_COOKIE_NAME,
+          value: encryptedData
+        }
       ]
-      await handleSession({ cookies: cookiesToSave })
-      if (typeof handleRegisterDeviceUser === 'function') {
-        await handleRegisterDeviceUser({ deviceId: device })
+
+      await handleSession({ cookies })
+
+      /*
+       * Device registration is supplementary. A device-registration
+       * failure should not invalidate an otherwise successful login.
+       */
+      try {
+        if (typeof handleRegisterDeviceUser === 'function') {
+          await handleRegisterDeviceUser({ deviceId })
+        }
+      } catch {
+        // Continue because the session has already been established.
       }
-      stop()
-      // hard redirect to ensure session pick-up
-      globalThis.location.href = `${globalThis.location.origin}/dashboard`
+
+      const destination = storeId
+        ? '/dashboard'
+        : '/merchant'
+
+      window.location.assign(destination)
+    },
+    [handleRegisterDeviceUser, handleSession]
+  )
+
+  /**
+   * Processes Google authentication while preventing concurrent logins.
+   *
+   * @param {UserPayload} payload - Google user profile.
+   * @returns {Promise<void>} Authentication result.
+   */
+  const responseGoogle = useCallback(
+    async (payload: UserPayload): Promise<void> => {
+      if (loginInProgressRef.current) {
+        return
+      }
+
+      loginInProgressRef.current = true
+
+      clearElectronAuthTimeout()
+      setElectronAuthPending(false)
+
+      try {
+        await wrap(async () => {
+          await doLoginFlow(payload)
+        })
+      } catch (error) {
+        notifyLoginError(error)
+      } finally {
+        loginInProgressRef.current = false
+        setElectronAuthPending(false)
+      }
+    },
+    [
+      clearElectronAuthTimeout,
+      doLoginFlow,
+      notifyLoginError,
+      wrap
+    ]
+  )
+
+  /**
+   * Validates a Google Identity Services credential response.
+   *
+   * @param {GoogleCredentialResponse} response - Google credential response.
+   * @returns {Promise<void>} Credential processing result.
+   */
+  const handleGoogleCredential = useCallback(
+    async (
+      response: GoogleCredentialResponse
+    ): Promise<void> => {
+      try {
+        if (!response?.credential) {
+          throw new Error(
+            'Google no devolvió una credencial válida.'
+          )
+        }
+
+        const claims = decodeToken(
+          response.credential
+        ) as GoogleClaims
+
+        if (!claims?.email || !claims?.sub) {
+          throw new Error(
+            'Google no devolvió los datos necesarios para iniciar sesión.'
+          )
+        }
+
+        const userName =
+          claims.name || claims.email.split('@')[0]
+
+        await responseGoogle({
+          user: {
+            name: userName,
+            username: userName,
+            lastName: claims.family_name || userName,
+            email: claims.email,
+            id: claims.sub,
+            image: claims.picture,
+            imageUrl: claims.picture,
+            locationFormat: []
+          }
+        })
+      } catch (error) {
+        notifyLoginError(error)
+      }
+    },
+    [notifyLoginError, responseGoogle]
+  )
+
+  /**
+   * Initiates Google authentication in Electron.
+   *
+   * @returns {Promise<void>} Authentication initiation result.
+   */
+  const handleElectronGoogleLogin = useCallback(
+    async (): Promise<void> => {
+      if (isLoading || loginInProgressRef.current) {
+        return
+      }
+
+      const ipcRenderer = getElectronIpcRenderer()
+
+      if (
+        !ipcRenderer ||
+        typeof ipcRenderer.invoke !== 'function'
+      ) {
+        notifyLoginError(
+          new Error(
+            'No se pudo iniciar la autenticación en esta aplicación.'
+          )
+        )
+
+        return
+      }
+
+      clearElectronAuthTimeout()
+      setElectronAuthPending(true)
+
+      setAlertBox({
+        message:
+          'Abre el navegador, selecciona tu cuenta de Google y completa la autenticación.'
+      })
+
+      sendNotification({
+        title: 'Iniciando sesión',
+        description:
+          'Completa el proceso de autenticación en el navegador.',
+        backgroundColor: 'warning'
+      })
+
+      electronAuthTimeoutRef.current = setTimeout(() => {
+        electronAuthTimeoutRef.current = null
+        setElectronAuthPending(false)
+
+        const message =
+          'La autenticación tardó demasiado. Inténtalo nuevamente.'
+
+        setAlertBox({
+          message,
+          color: 'error'
+        })
+
+        sendNotification({
+          title: 'Tiempo de espera agotado',
+          description: message,
+          backgroundColor: 'warning'
+        })
+      }, ELECTRON_AUTH_TIMEOUT_MS)
+
+      try {
+        await ipcRenderer.invoke('start-google-auth')
+      } catch (error) {
+        clearElectronAuthTimeout()
+        setElectronAuthPending(false)
+        notifyLoginError(error)
+      }
+    },
+    [
+      clearElectronAuthTimeout,
+      isLoading,
+      notifyLoginError,
+      sendNotification,
+      setAlertBox
+    ]
+  )
+
+  /**
+   * Clears an expired session and redirects to the login page.
+   *
+   * @returns {Promise<void>} Session cleanup result.
+   */
+  const clearExpiredSession = useCallback(
+    async (): Promise<void> => {
+      try {
+        if (typeof onClickLogout === 'function') {
+          await onClickLogout({ redirect: false })
+        }
+
+        await signOutAuth({
+          redirect: true,
+          callbackUrl: ROUTES.index,
+          reload: false
+        })
+      } catch {
+        setAlertBox({
+          message:
+            'Ocurrió un error al cerrar la sesión. Intenta nuevamente.',
+          color: 'error'
+        })
+      }
+    },
+    [onClickLogout, setAlertBox]
+  )
+
+  /**
+   * Validates an existing session once when the component mounts.
+   *
+   * @returns {void} Starts session validation.
+   */
+  useEffect(() => {
+    let isActive = true
+
+    const validateSession = async (): Promise<void> => {
+      const sessionToken = Cookies.get('session')
+
+      if (!sessionToken) {
+        return
+      }
+
+      try {
+        if (isTokenExpired(sessionToken)) {
+          if (isActive) {
+            await clearExpiredSession()
+          }
+
+          return
+        }
+
+        const result = await getUserFromToken(sessionToken)
+
+        if (
+          isActive &&
+          result?.message === EXPIRED_MESSAGE
+        ) {
+          await clearExpiredSession()
+        }
+      } catch {
+        if (isActive) {
+          setAlertBox({
+            message:
+              'No fue posible validar la sesión existente. Puedes intentar iniciar sesión nuevamente.',
+            color: 'error'
+          })
+        }
+      }
+    }
+
+    void validateSession()
+
+    return () => {
+      isActive = false
+    }
+  }, [clearExpiredSession, setAlertBox])
+
+  /**
+   * Registers Electron authentication listeners and removes them
+   * when the component unmounts.
+   *
+   * @returns {void | (() => void)} Listener cleanup.
+   */
+  useEffect(() => {
+    if (!isElectron) {
       return
     }
 
-    stop()
-    globalThis.location.href = `${globalThis.location.origin}/merchant`
-  }
+    const ipcRenderer = getElectronIpcRenderer()
 
-  // Wrap calls where you previously used setLoading(true)
-  const responseGoogle = async (response: UserPayload) => {
-    // call the centralized flow wrapped with loading
-    return await wrap(async () => {
-      try {
-        await doLoginFlow(response)
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Error al iniciar sesión'
-        setAlertBox({ message, color: 'error' })
-        sendNotification({
-          title: 'Error',
-          description: message,
-          backgroundColor: 'error'
-        })
-        throw err
-      }
-    })
-  }
-
-  // Removed unused responseGoogleLegacy function
-
-  const handleLogin = async (type: string) => {
-    if (type === 'login-google') {
-      setAlertBox({ message: 'Iniciando sesión con Google, abre tu navegador y selecciona un perfil' })
-      interface ElectronIpcRendererInvoke {
-        invoke(channel: string, ...args: unknown[]): Promise<unknown>
-      }
-      interface ElectronWindowInvoke {
-        electron?: {
-          ipcRenderer?: ElectronIpcRendererInvoke
-        }
-      }
-      const win = globalThis as unknown as { window?: ElectronWindowInvoke }
-      if (win.window !== undefined && win.window.electron) {
-        sendNotification({
-          title: 'Iniciando sesión',
-          description: 'Abre tu navegador y selecciona un perfil',
-          backgroundColor: 'success'
-        })
-        if (win.window.electron.ipcRenderer && typeof win.window.electron.ipcRenderer.invoke === 'function') {
-          win.window.electron.ipcRenderer.invoke('start-google-auth')
-        } else {
-          sendNotification({
-            title: 'Error',
-            description: 'No se pudo iniciar sesión con Google, por favor intenta de nuevo',
-            backgroundColor: 'error'
-          })
-        }
-      }
+    if (
+      !ipcRenderer ||
+      typeof ipcRenderer.on !== 'function' ||
+      typeof ipcRenderer.removeListener !== 'function'
+    ) {
+      return
     }
-  }
 
-  // logout flow: use loading.wrap for async parts
-  const handleLogout = async () => {
-    const jwtSession = Cookies.get('session')
-    if (!jwtSession) { return }
-    return await wrap(async () => {
-      try {
-        const { message } = await getUserFromToken(jwtSession)
-        const sessionExpired = message === EXPIRED_MESSAGE
-        if (sessionExpired) {
-          if (typeof onClickLogout === 'function') {
-            await onClickLogout({ redirect: false })
-          }
-          await signOutAuth({
-            redirect: true,
-            callbackUrl: ROUTES.index,
-            reload: false
-          }).catch(() => {
-            setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
-          })
-        }
-      } catch (err) {
-        if (err instanceof Error) {
-          setAlertBox({ message: 'Ocurrió un error al cerrar sesión', color: 'error' })
-        }
-        setAlertBox({ message: 'Ocurrió un error al cerrar sesión', color: 'error' })
-      }
-    })
-  }
-
-  useEffect(() => {
-    if (googleLoaded && (globalThis).google) {
-      handleLogout();
-      // @ts-expect-error Google accounts id API types are not available in TypeScript
-      globalThis.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string,
-        callback: async (response: { credential: string }) => {
-          const { credential } = response
-          if (credential) {
-            const data = decodeToken(credential)
-            const session = {
-              user: {
-                name: data.name,
-                username: data.name,
-                lastName: data.name,
-                email: data.email,
-                id: data.sub,
-                image: data.picture
-              }
-            }
-            // wrap call to display loader properly
-            await responseGoogle(session)
-          }
-        },
-        auto_select: true
-        // @ts-expect-error Google accounts id API types are not available in TypeScript
-      }); (globalThis).google.accounts.id.prompt()
+    const resetElectronAuthentication = (): void => {
+      clearElectronAuthTimeout()
+      setElectronAuthPending(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [googleLoaded, router])
 
-  useLayoutEffect(() => {
-    handleLogout()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    const successListener: ElectronListener = (
+      _event,
+      payload
+    ) => {
+      const eventData = payload as
+        | ElectronAuthPayload
+        | undefined
 
-  useEffect(() => {
-    const ironSession = Cookies.get(String(process.env.NEXT_PUBLIC_SESSION_NAME))
-    const jwtSession = Cookies.get('session')
-    const expired = isTokenExpired(jwtSession)
-    if (expired && jwtSession) {
-      onClickLogout({ redirect: false })
-      signOutAuth({
-        redirect: true,
-        callbackUrl: ROUTES.index,
-        reload: false
-      }).catch(() => {
-        setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
+      const userInfo = eventData?.user_info
+
+      if (
+        !userInfo?.email ||
+        !userInfo?.sub
+      ) {
+        resetElectronAuthentication()
+
+        notifyLoginError(
+          new Error(
+            'La autenticación no devolvió los datos necesarios del usuario.'
+          )
+        )
+
+        return
+      }
+
+      const userName =
+        userInfo.name ||
+        userInfo.email.split('@')[0]
+
+      void responseGoogle({
+        user: {
+          name: userName,
+          username: userName,
+          lastName: userName,
+          email: userInfo.email,
+          id: userInfo.sub,
+          image: userInfo.picture,
+          imageUrl: userInfo.picture,
+          locationFormat: []
+        }
       })
     }
-    if (ironSession) { return }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
+    const errorListener: ElectronListener = () => {
+      resetElectronAuthentication()
+
+      notifyLoginError(
+        new Error(
+          'No se pudo completar el inicio de sesión con Google.'
+        )
+      )
+    }
+
+    const cancelledListener: ElectronListener = () => {
+      resetElectronAuthentication()
+
+      sendNotification({
+        title: 'Inicio de sesión cancelado',
+        description:
+          'Puedes volver a intentarlo cuando quieras.',
+        backgroundColor: 'warning'
+      })
+    }
+
+    ipcRenderer.on(
+      'google-auth-success',
+      successListener
+    )
+
+    ipcRenderer.on(
+      'google-auth-error',
+      errorListener
+    )
+
+    ipcRenderer.on(
+      'google-auth-cancelled',
+      cancelledListener
+    )
+
+    return () => {
+      ipcRenderer.removeListener(
+        'google-auth-success',
+        successListener
+      )
+
+      ipcRenderer.removeListener(
+        'google-auth-error',
+        errorListener
+      )
+
+      ipcRenderer.removeListener(
+        'google-auth-cancelled',
+        cancelledListener
+      )
+
+      clearElectronAuthTimeout()
+    }
+  }, [
+    clearElectronAuthTimeout,
+    isElectron,
+    notifyLoginError,
+    responseGoogle,
+    sendNotification
+  ])
+
+  /**
+   * Initializes the optional Google One Tap flow.
+   *
+   * One Tap is opt-in because the page already exposes an explicit
+   * Google sign-in button.
+   *
+   * @returns {void | (() => void)} Identity prompt cleanup.
+   */
   useEffect(() => {
-    interface ElectronIpcRenderer {
-      on(channel: string, listener: (...args: object[]) => void): void
-      removeListener(channel: string, listener: (...args: object[]) => void): void
+    if (
+      isElectron ||
+      !enableGoogleOneTap ||
+      !googleLoaded ||
+      !GOOGLE_CLIENT_ID
+    ) {
+      return
     }
-    interface ElectronWindow {
-      electron?: {
-        ipcRenderer?: ElectronIpcRenderer
-      }
-    }
-    const win = globalThis as unknown as { window?: ElectronWindow }
-    if (win.window !== undefined && win.window.electron) {
-      const listener = async (_event: unknown, data: {
-        user_info: {
-          name: string
-          email: string
-          sub: string
-          picture: string
-        }
-      }) => {
-        const { user_info } = data || {}
-        const session = {
-          user: {
-            name: user_info.name,
-            username: user_info.name,
-            lastName: user_info.name,
-            email: user_info.email,
-            id: user_info.sub,
-            image: user_info.picture,
-            imageUrl: user_info.picture
-          }
-        }
-        // wrap so loader shows while we process
-        await responseGoogle(session)
-      }
-      const errorListener = () => {
-        setAlertBox({ message: 'Error al iniciar sesión con Google' })
-        sendNotification({
-          title: 'Error',
-          description: 'No se pudo iniciar sesión con Google, por favor intenta de nuevo',
-          backgroundColor: 'error'
-        })
-      }
 
-      if (win.window.electron && win.window.electron.ipcRenderer && typeof win.window.electron.ipcRenderer.on === 'function') {
-        // @ts-expect-error Google accounts id API types are not available in TypeScript
-        win.window.electron.ipcRenderer.on('google-auth-success', listener)
-        win.window.electron.ipcRenderer.on('google-auth-error', errorListener)
-      }
+    const googleIdentity = getGoogleIdentityApi()
 
-      return () => {
-        // @ts-expect-error Google accounts id API types are not available in TypeScript
-        if (win.window.electron && win.window.electron.ipcRenderer && typeof win.window.electron.ipcRenderer.removeListener === 'function') {
-          // @ts-expect-error Google accounts id API types are not available in TypeScript
-          win.window.electron.ipcRenderer.removeListener('google-auth-success', listener)
-          // @ts-expect-error Google accounts id API types are not available in TypeScript
-          win.window.electron.ipcRenderer.removeListener('google-auth-error', errorListener)
-        }
-      }
+    if (!googleIdentity) {
+      return
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+
+    googleIdentity.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: (response) => {
+        void handleGoogleCredential(response)
+      },
+      auto_select: false
+    })
+
+    googleIdentity.prompt()
+
+    return () => {
+      googleIdentity.cancel?.()
+    }
+  }, [
+    enableGoogleOneTap,
+    googleLoaded,
+    handleGoogleCredential,
+    isElectron
+  ])
+
+  /**
+   * Handles the legacy Google login button response.
+   *
+   * @param {unknown} response - Response from the GoogleLogin component.
+   * @returns {Promise<void>} Authentication result.
+   */
+  const handleWebGoogleSuccess = async (
+    response: unknown
+  ): Promise<void> => {
+    const googleResponse =
+      response as GoogleLoginResult
+
+    const profile = googleResponse?.profileObj
+
+    const email = profile?.email?.trim()
+    const googleId = normalizeIdentifier(
+      profile?.googleId
+    )
+
+    if (!email || !googleId) {
+      notifyLoginError(
+        new Error(
+          'Google no devolvió los datos necesarios para iniciar sesión.'
+        )
+      )
+
+      return
+    }
+
+    const name =
+      profile?.name?.trim() ||
+      email.split('@')[0]
+
+    await responseGoogle({
+      user: {
+        name,
+        username: name,
+        lastName: profile?.familyName || name,
+        email,
+        id: googleId,
+        image: profile?.imageUrl,
+        imageUrl: profile?.imageUrl,
+        locationFormat: []
+      }
+    })
+  }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card} />
-      <Column as='form' className={styles.form_login}>
-        <Text size='xxl' color='gray-dark'>
-          ¡Falta poco para iniciar tus ventas!
-        </Text>
-        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-        <Text size='xl'>¿Cómo deseas continuar?</Text>
-        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
+    <main className={styles.container}>
+      <div
+        className={styles.card}
+        aria-hidden='true'
+      />
 
-        {/* Mock buttons: use wrap when calling responseGoogle */}
-        <button
-          className={styles.btn_close}
-          type='button'
-          onClick={() =>
-            wrap(async () =>
-              responseGoogle({
-                user: {
-                  name: 'test',
-                  username: 'test',
-                  lastName: 'test',
-                  email: 'test@gmail.com',
-                  id: 'test',
-                  image: 'test',
-                  locationFormat: [],
-                  useragent: globalThis?.navigator?.userAgent ?? null,
-                  imageUrl: 'test'
-                }
-              })
-            )
-          }
-        >
-          Login mock
-        </button>
-
-        {isElectron && (
-          <Button
-            border='none'
-            styles={{
-              borderRadius: getGlobalStyle('--border-radius-2xs'),
-              border: 'none',
-              padding: getGlobalStyle('--spacing-xl'),
-              boxShadow: getGlobalStyle('--box-shadow-sm')
-            }}
-            onClick={async () =>
-              wrap(async () => {
-                await onClickLogout({ redirect: false })
-                await signOutAuth({
-                  redirect: true,
-                  callbackUrl: ROUTES.index,
-                  reload: false
-                }).catch(() => {
-                  setAlertBox({ message: 'Ocurrió un error al cerrar sesión' })
-                })
-                return handleLogin('login-google')
-              })
-            }
-            type='button'
+      <Column
+        as='section'
+        className={styles.form_login}
+      >
+        <header className={styles.intro}>
+          <Text
+            size='xxl'
+            color='gray-dark'
           >
-            <Icon icon='IconGoogleFullColor' size={30} />
-            {loading ? (
-              <LoadingButton />
-            ) : (
-              'Continuar con Google'
-            )}
-            <div style={{ width: 'min-content' }} />
-          </Button>
-        )}
+            ¡Falta poco para iniciar tus ventas!
+          </Text>
 
-        {!isElectron && (
-          <GoogleLogin
-            clientId={process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE as string}
-            onSuccess={(e) =>
-              wrap(async () => {
-                const { profileObj } = e || {}
-                const {
-                  name,
-                  email,
-                  familyName,
-                  googleId,
-                  imageUrl
-                } = profileObj || {}
-                const data = {
-                  user: {
-                    name,
-                    username: name,
-                    lastName: familyName,
-                    email,
-                    id: googleId,
-                    image: imageUrl,
-                    locationFormat: [],
-                    useragent: globalThis?.navigator?.userAgent ?? null,
-                    imageUrl
-                  }
+          <Text
+            size='sm'
+            color='gray-dark'
+          >
+            Accede a tu cuenta para administrar tu negocio y
+            comenzar a vender.
+          </Text>
+        </header>
+
+        <div className={styles.login_section}>
+          <Text
+            size='xl'
+            color='gray-dark'
+          >
+            ¿Cómo deseas continuar?
+          </Text>
+
+          {isElectron ? (
+            <Button
+              border='none'
+              disabled={isLoading}
+              styles={{
+                width: '100%',
+                minHeight: '52px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: getGlobalStyle('--spacing-md'),
+                borderRadius: getGlobalStyle('--border-radius-2xs'),
+                padding: getGlobalStyle('--spacing-xl'),
+                boxShadow: getGlobalStyle('--box-shadow-sm'),
+                color: getGlobalStyle('--color-neutral-black')
+              }}
+              onClick={() => {
+                void handleElectronGoogleLogin()
+              }}
+              type='button'
+            >
+              <Icon
+                icon='IconGoogleFullColor'
+                size={26}
+              />
+
+              {isLoading ? (
+                <LoadingButton />
+              ) : (
+                'Continuar con Google'
+              )}
+              <div style={{ width: 'min-content', opacity: 0 }}>.</div>
+            </Button>
+          ) : (
+            <GoogleLogin
+              clientId={GOOGLE_CLIENT_ID}
+              onSuccess={(response) => {
+                void handleWebGoogleSuccess(response)
+              }}
+              onFailure={(error) => {
+                const authError = error as {
+                  error?: string
+                } | null
+
+                if (
+                  authError?.error === 'popup_closed_by_user' ||
+                  authError?.error === 'user_cancelled'
+                ) {
+                  return
                 }
-                await responseGoogle(data)
-              })
-            }
-            onFailure={(e) => {
-              if ((e as { error?: string }).error) {
-                setAlertBox({ message: `Error al iniciar sesión con Google: ${(e as { error?: string }).error}` })
-              }
-              stop()
-            }}
-            onPopupClosed={(e: string) => {
-              if (e !== 'user') {
-                return null
-              }
-              sendNotification({
-                title: 'Login cancelled',
-                description: 'Please try again or choose another sign-in method.',
-                backgroundColor: 'warning'
-              })
-              stop()
-            }}
-            onAutoLoadFinished={() => {
-              stop()
-            }}
-            render={({ onClick, disabled }) => {
 
-              return (
+                notifyLoginError(error)
+              }}
+              onPopupClosed={(reason: string) => {
+                if (reason !== 'user') {
+                  return
+                }
+
+                sendNotification({
+                  title: 'Inicio de sesión cancelado',
+                  description:
+                    'Puedes volver a intentarlo cuando quieras.',
+                  backgroundColor: 'warning'
+                })
+              }}
+              render={({ onClick, disabled }) => (
                 <Button
                   color='black'
+                  disabled={
+                    disabled ||
+                    isLoading ||
+                    !GOOGLE_CLIENT_ID
+                  }
                   styles={{
+                    width: '100%',
+                    minHeight: '52px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: getGlobalStyle('--spacing-md'),
                     borderRadius: getGlobalStyle('--border-radius-2xs'),
-                    border: 'none',
                     padding: getGlobalStyle('--spacing-xl'),
                     boxShadow: getGlobalStyle('--box-shadow-sm'),
                     color: getGlobalStyle('--color-neutral-black')
                   }}
                   onClick={() => {
-                    if (disabled) {
-                      return sendNotification({
-                        title: 'Alerta',
-                        description: 'Aun no esta listo... espera un momento o recarga la pagina',
-                        backgroundColor: 'warning'
-                      })
+                    if (disabled || isLoading) {
+                      return
                     }
+
                     onClick()
-                    start()
                   }}
-                  disabled={disabled}
                   type='button'
                 >
-                  <Icon icon='IconGoogleFullColor' size={30} />
-                  {loading
-                    ? <LoadingButton color={getGlobalStyle('--color-primary-red')} />
-                    : 'Continuar con Google'
-                  }
-                  <div style={{ width: 'min-content' }} />
+                  <Icon
+                    icon='IconGoogleFullColor'
+                    size={26}
+                  />
+
+                  {loading ? (
+                    <LoadingButton
+                      color={getGlobalStyle('--color-primary-red')}
+                    />
+                  ) : (
+                    'Continuar con Google'
+                  )}
+                  <div style={{ width: 'min-content', opacity: 0 }}>.</div>
+
                 </Button>
-              )
-            }}
-          />
-        )}
-        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-        <Text align='center'>
-          {pkg?.version ?? ''}
-        </Text>
-        <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-        <Text size='sm' color='gray-dark'>
-          Al continuar, aceptas los{' '}
-          <Link
-            href='#'
-            target='_blank'
-            rel='noopener noreferrer'
-            style={{
-              color: getGlobalStyle('--color-text-secondary')
-            }}
-          >
-            Términos y Condiciones
-          </Link>{' '}
-          y la{' '}
-          <Link
-            href='#'
-            target='_blank'
-            rel='noopener noreferrer'
-            style={{
-              color: getGlobalStyle('--color-text-secondary')
-            }}
-          >
-            Política de Privacidad
-          </Link>{' '}
-          del sotware.
-        </Text>
+              )}
+            />
+          )}
+
+          {!GOOGLE_CLIENT_ID && !isElectron && (
+            <p
+              className={styles.configuration_message}
+              role='alert'
+            >
+              El inicio de sesión con Google no está configurado.
+              Contacta al administrador.
+            </p>
+          )}
+
+          {electronAuthPending && (
+            <p
+              className={styles.login_status}
+              role='status'
+              aria-live='polite'
+            >
+              Esperando la confirmación de Google...
+            </p>
+          )}
+
+          {loading && (
+            <p
+              className={styles.login_status}
+              role='status'
+              aria-live='polite'
+            >
+              Verificando tus credenciales...
+            </p>
+          )}
+        </div>
+
+        <footer className={styles.footer}>
+          <span className={styles.version}>
+            Versión {pkg?.version ?? ''}
+          </span>
+
+          <p className={styles.legal}>
+            Al continuar, aceptas los{' '}
+
+            {TERMS_URL ? (
+              <Link
+                href={TERMS_URL}
+                target='_blank'
+                rel='noopener noreferrer'
+                className={styles.legal_link}
+              >
+                Términos y Condiciones
+              </Link>
+            ) : (
+              <span className={styles.legal_unavailable}>
+                Términos y Condiciones
+              </span>
+            )}
+
+            {' '}y la{' '}
+
+            {PRIVACY_URL ? (
+              <Link
+                href={PRIVACY_URL}
+                target='_blank'
+                rel='noopener noreferrer'
+                className={styles.legal_link}
+              >
+                Política de Privacidad
+              </Link>
+            ) : (
+              <span className={styles.legal_unavailable}>
+                Política de Privacidad
+              </span>
+            )}
+
+            {' '}del software.
+          </p>
+        </footer>
       </Column>
-    </div>
+    </main>
   )
 }
+
+export default Login
