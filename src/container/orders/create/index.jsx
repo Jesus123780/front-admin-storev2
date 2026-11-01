@@ -159,6 +159,11 @@ export const CreateSales = ({
     code,
     handleSavePendingOrder,
 
+    // Filtros del modal (reusables): traducen la selección a variables de la
+    // query de productos y re-consultan el listado.
+    handleApplyFilters,
+    handleClearFilters,
+
     // Estado de las órdenes.
     pendingOrders,
     activePendingOrders,
@@ -471,14 +476,37 @@ export const CreateSales = ({
     }
   })
 
-  const { data: dataFilter } = useFilterConfigs()
+  const { data: dataFilter, buildVariables } = useFilterConfigs()
   const [activeFilter, setActiveFilter] = useState(0)
   const commentZIndex = useModalLayer(Boolean(openCommentModal))
+
+  /**
+   * Aplica los filtros seleccionados en el modal: traduce la selección
+   * (groupId → Set de value ids) en variables de la query de productos usando
+   * `buildVariables` de useFilterConfigs y las envía a useSales, que re-consulta
+   * el listado. Es genérico: cualquier filtro nuevo definido en el backend
+   * funciona sin cambios aquí.
+   *
+   * @param {Record<string, Set<string>>} selection - Selección cruda del viewer.
+   */
+  const handleApplyFiltersFromModal = (selection) => {
+    const variables = buildVariables(selection ?? {})
+    handleApplyFilters(variables)
+  }
+
+  /**
+   * Limpia todos los filtros aplicados y recarga la lista completa.
+   */
+  const handleClearFiltersFromModal = () => {
+    handleClearFilters()
+  }
 
   const filterProps = {
     activeFilter,
     setActiveFilter,
-    dataFilter
+    dataFilter,
+    onApplyFilters: handleApplyFiltersFromModal,
+    onClearFilters: handleClearFiltersFromModal
   }
 
   return (
@@ -519,7 +547,6 @@ export const CreateSales = ({
         handlePersistPendingOrder={persistPendingOrder}
         searchPendingOrders={searchPendingOrders}
         client={client}
-        dataFilter={dataFilter}
         currentPage={currentPage}
         data={data}
         dataClientes={dataClientes}

@@ -18,6 +18,16 @@ const config: Config = {
     // 👇 assets
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js',
 
+    // 👇 FORZAR next/* A LA COPIA DEL ADMIN
+    // pkg-components vive fuera de este proyecto y hace `import 'next/link'`.
+    // Al resolverse desde pkg-components, Jest no encuentra `next` (solo está
+    // instalado aquí). Mapear a este node_modules evita el fallo
+    // "Cannot find module 'next/link'".
+    '^next/link$': path.resolve(__dirname, 'node_modules/next/link.js'),
+    '^next/navigation$': path.resolve(__dirname, 'node_modules/next/navigation.js'),
+    '^next/image$': path.resolve(__dirname, 'node_modules/next/image.js'),
+    '^next/router$': path.resolve(__dirname, 'node_modules/next/router.js'),
+
     // 👇 FORZAR UNA SOLA COPIA DE REACT (incluyendo jsx-runtime y jsx-dev-runtime)
     '^react$': path.resolve(__dirname, 'node_modules/react'),
     '^react/jsx-runtime$': path.resolve(__dirname, 'node_modules/react/jsx-runtime'),

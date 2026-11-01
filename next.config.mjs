@@ -15,6 +15,8 @@ const __dirname = dirname(__filename)
  * la propagación del contexto (ej: "No QueryClient set").
  */
 const singletonModules = [
+  '@apollo/client',
+  'graphql',
   '@tanstack/react-query',
   '@tanstack/query-core',
 ]
