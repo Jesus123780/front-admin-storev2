@@ -1,9 +1,13 @@
+'use client'
+
 import React from 'react'
 
-const history = () => {
+import { InventoryC } from '@/container/inventory'
+
+const InventoryHistory = () => {
   return (
-    <div>history</div>
+    <InventoryC />
   )
 }
 
-export default history
+export default InventoryHistory

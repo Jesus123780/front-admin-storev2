@@ -1,4 +1,5 @@
 'use client'
+'use client'
 
 import {
   useStockMovements,
@@ -6,20 +7,21 @@ import {
   useTotalProductsInStock,
   useTotalProductsSold as useTotalSalesSold,
   useTotalProductsSolded,
-  useWeeklyStockMovement} from 'npm-pkg-hook'
-import { 
-  Column, 
-  getGlobalStyle, 
-  Icon, 
-  numberFormat, 
-  Row, 
-  StockMovementsChart, 
+  useWeeklyStockMovement
+} from 'npm-pkg-hook'
+import {
+  Column,
+  getGlobalStyle,
+  Icon,
+  numberFormat,
+  StockMovementsChart,
   Text
 } from 'pkg-components'
 import { useEffect, useState } from 'react'
 
 import { ReportGrid } from './ReportGrid'
 import styles from './styles.module.css'
+import { TopProductsList } from './TopProducts'
 
 export const InventoryC = () => {
   const [stocksMovements] = useStockMovements()
@@ -39,6 +41,14 @@ export const InventoryC = () => {
     }
   }, [])
 
+  const weeklyMovements = Array.isArray(weeklyStockMovement)
+    ? weeklyStockMovement
+    : []
+
+  const visibleWeeklyMovements = weeklyMovements.filter((item) => {
+    return item?.weekStart !== null && item?.weekStart !== undefined
+  })
+
   const data = [
     {
       label: 'Valor total de ventas',
@@ -47,13 +57,13 @@ export const InventoryC = () => {
       icon: {
         icon: 'IconUpTrend',
         color: getGlobalStyle('--color-icons-success'),
-        size: 40
+        size: 28
       },
       className: styles.div1
     },
     {
       label: 'Total ventas concluidas',
-      value: numberFormat(totalSales, {
+      value: numberFormat(totalSales ?? 0, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
         style: 'decimal'
@@ -61,27 +71,27 @@ export const InventoryC = () => {
       icon: {
         icon: 'IconUpTrend',
         color: getGlobalStyle('--color-icons-success'),
-        size: 40
+        size: 28
       },
       className: styles.div2
     },
     {
       label: 'Productos en inventario',
-      value: totalProductsInStock,
+      value: totalProductsInStock ?? 0,
       icon: {
         icon: 'IconInventory',
         color: getGlobalStyle('--color-icons-warning'),
-        size: 40
+        size: 28
       },
       className: styles.div3
     },
     {
       label: 'Productos vendidos',
-      value: totalProductSold,
+      value: totalProductSold ?? 0,
       icon: {
         icon: 'IconSales',
-        color: getGlobalStyle('--color-icons-primary'),
-        size: 40
+        color: getGlobalStyle('--color-icons-secondary'),
+        size: 28
       },
       className: styles.div4
     }
@@ -96,56 +106,85 @@ export const InventoryC = () => {
         title='Entradas y Salidas de Inventario por día'
         width={screenWidth}
       />
-      <div className={styles.muvements_weks}>
-        <Row>
-          {weeklyStockMovement.map((item, index) => {
-            const percentage = item.percentageChange
-            const isPositive = parseFloat(percentage) > 0
-            const isNA = percentage === 'N/A'
-            const isNotDate = item.weekStart === null
-            if (isNotDate) {return null}
+      <section aria-label='Variación semanal de inventario' className={styles.muvements_weks}>
+        <Column className={styles.weeklyHeader} gap='xs'>
+          <Text as='h2' className={styles.weeklyTitle} size='xl' weight={700}>
+            Movimiento semanal
+          </Text>
+          <Text as='p' className={styles.weeklySubtitle} size='md'>
+            Comparativa de variación respecto a la semana anterior
+          </Text>
+        </Column>
 
-            const weekStartDate = new Date(item.weekStart)
-            const weekEndDate = new Date(weekStartDate)
-            weekEndDate.setDate(weekStartDate.getDate() + 6)
-
-            const formatDate = (date) => { return date.toLocaleDateString('es-ES', { day: '2-digit' }) }
-            const weekRange = weekStartDate.getMonth() === weekEndDate.getMonth()
-              ? `${formatDate(weekStartDate)} al ${formatDate(weekEndDate)} ${weekEndDate.toLocaleDateString('es-ES', { month: 'long' })}`
-              : `${formatDate(weekStartDate)} ${weekStartDate.toLocaleDateString('es-ES', { month: 'long' })} al ${formatDate(weekEndDate)} ${weekEndDate.toLocaleDateString('es-ES', { month: 'long' })}`
-
-            return (
-              <Column className={styles.card} key={index}>
-                <p>{weekRange}</p>
-                <p>
-                  {isNA ? (
-                    <Text className={styles.percentageNa}>Sin datos</Text>
-                  ) : isPositive ? (
-                    <Text className={styles.percentagePositive} size='lg'>
-                      <Icon
-                        color={getGlobalStyle('--color-icons-success')}
-                        icon='IconUpRightArrow'
-                        size={20}
-                      />{' '}
-                      Subió {percentage}%
-                    </Text>
-                  ) : (
-                    <Text className={styles.percentageNegative} size='lg'>
-                      <Icon
-                        color={getGlobalStyle('--color-icons-error')}
-                        icon='IconDownRightArrow'
-                        size={20}
-                      />{' '}
-                      Bajó {Math.abs(percentage)}%
-                    </Text>
-                  )}
-                </p>
-              </Column>
+        {visibleWeeklyMovements.length === 0
+          ? (
+            <div className={styles.emptyState}>
+              <Icon
+                color={getGlobalStyle('--color-icons-gray-light')}
+                icon='IconInventory'
+                size={32}
+              />
+              <Text as='p' className={styles.emptyStateText} size='md'>
+                Aún no hay movimientos semanales para mostrar.
+              </Text>
+            </div>
             )
-          })}
-        </Row>
+          : (
+            <div className={styles.weeklyGrid}>
+              {visibleWeeklyMovements.map((item, index) => {
+                const percentage = item.percentageChange
+                const isNA = percentage === 'N/A'
+                const numericPercentage = parseFloat(percentage)
+                const isPositive = !isNA && numericPercentage > 0
 
-      </div>
+                const weekStartDate = new Date(item.weekStart)
+                const weekEndDate = new Date(weekStartDate)
+                weekEndDate.setDate(weekStartDate.getDate() + 6)
+
+                const formatDay = (date) => { return date.toLocaleDateString('es-ES', { day: '2-digit' }) }
+                const formatMonth = (date) => { return date.toLocaleDateString('es-ES', { month: 'long' }) }
+                const weekRange = weekStartDate.getMonth() === weekEndDate.getMonth()
+                  ? `${formatDay(weekStartDate)} al ${formatDay(weekEndDate)} ${formatMonth(weekEndDate)}`
+                  : `${formatDay(weekStartDate)} ${formatMonth(weekStartDate)} al ${formatDay(weekEndDate)} ${formatMonth(weekEndDate)}`
+
+                return (
+                  <Column className={styles.card} gap='sm' key={index}>
+                    <Text as='p' className={styles.weekRange} size='sm' weight={600}>
+                      {weekRange}
+                    </Text>
+                    {isNA
+                      ? (
+                        <Text as='p' className={styles.percentageNa} size='md' weight={600}>
+                          Sin datos
+                        </Text>
+                        )
+                      : (
+                        <Text
+                          as='p'
+                          className={`${styles.percentageRow} ${isPositive ? styles.percentagePositive : styles.percentageNegative}`}
+                          size='lg'
+                          weight={700}
+                        >
+                          <Icon
+                            color={isPositive
+                              ? getGlobalStyle('--color-icons-success')
+                              : getGlobalStyle('--color-icons-error')}
+                            icon={isPositive ? 'IconUpRightArrow' : 'IconDownRightArrow'}
+                            size={20}
+                          />
+                          {isPositive
+                            ? `Subió ${numericPercentage}%`
+                            : `Bajó ${Math.abs(numericPercentage)}%`}
+                        </Text>
+                        )}
+                  </Column>
+                )
+              })}
+            </div>
+            )}
+      </section>
+
+      <TopProductsList className={styles.top} />
     </div>
   )
 }

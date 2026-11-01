@@ -1,12 +1,22 @@
-import React from 'react'
-// import { Orders } from '../../container/orders'
+'use client'
 
-const sales = () => {
+import { Column, getGlobalStyle } from 'pkg-components'
+import React from 'react'
+
+import { ChatStatistic } from '@/container/ChatStatistic'
+
+const Sales = () => {
   return (
-     <>
-     sdsa
-     </>
+    <Column
+      style={{
+        maxWidth: getGlobalStyle('--width-max-desktop'),
+        margin: '0 auto',
+        padding: getGlobalStyle('--spacing-md')
+      }}
+    >
+      <ChatStatistic />
+    </Column>
   )
 }
 
-export default sales
+export default Sales

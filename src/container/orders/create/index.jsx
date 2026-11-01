@@ -476,6 +476,24 @@ export const CreateSales = ({
     }
   })
 
+  // Selecciona "Efectivo" por defecto en cuanto cargan los métodos de pago y
+  // aún no hay ninguno elegido. Esto resalta la tarjeta y, sobre todo, deja
+  // `data.payId` poblado para que se envíe correctamente al backend aunque el
+  // usuario no toque la selección. Si no existe "Efectivo", cae al primero.
+  useEffect(() => {
+    if (data?.payId || paymentMethods.length === 0) {
+      return
+    }
+    const defaultMethod =
+      paymentMethods.find((method) => {
+        return method.name?.toLowerCase().trim() === 'efectivo'
+      }) ?? paymentMethods[0]
+    if (defaultMethod?.id) {
+      dispatch({ type: 'PAYMENT_METHOD', payload: defaultMethod.id })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentMethodsData, data?.payId])
+
   const { data: dataFilter, buildVariables } = useFilterConfigs()
   const [activeFilter, setActiveFilter] = useState(0)
   const commentZIndex = useModalLayer(Boolean(openCommentModal))
