@@ -1,24 +1,22 @@
 .parent {
   display: grid;
-  gap: var(--spacing-2xl);
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-template-areas:
     'kpi1 kpi2 kpi3 kpi4'
     'chart chart chart chart'
     'weekly weekly weekly weekly'
     'top top top top';
-  margin-inline: auto;
+  gap: var(--spacing-2xl);
   width: 100%;
   max-width: var(--width-max-desktop);
+  margin-inline: auto;
   padding: var(--spacing-xl);
 }
 
-.parent > div {
-  min-height: 0;
+.parent > * {
   min-width: 0;
 }
 
-/* KPI cards area mapping (consumed by ReportGrid items) */
 .div1 { grid-area: kpi1; }
 .div2 { grid-area: kpi2; }
 .div3 { grid-area: kpi3; }
@@ -27,20 +25,17 @@
 .graphics {
   grid-area: chart;
   width: 100%;
+  min-width: 0;
   overflow: hidden;
-  background-color: var(--color-background-white);
   border: var(--border-width-xs) solid var(--color-neutral-gray);
   border-radius: var(--border-radius-md);
+  background-color: var(--color-background-white);
   box-shadow: var(--box-shadow-2xs);
 }
 
-/* Weekly stock movement section */
-.muvements_weks {
+.weeklySection {
   grid-area: weekly;
-}
-
-.top {
-  grid-area: top;
+  min-width: 0;
 }
 
 .weeklyHeader {
@@ -57,23 +52,25 @@
 
 .weeklyGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: var(--spacing-xl);
 }
 
-.card {
+.weekCard {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+  min-width: 0;
   padding: var(--spacing-xl);
   border: var(--border-width-xs) solid var(--color-neutral-gray);
   border-radius: var(--border-radius-md);
   background-color: var(--color-background-white);
   box-shadow: var(--box-shadow-2xs);
-  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
-.card:hover {
+.weekCard:hover {
   transform: translateY(-2px);
   border-color: var(--color-neutral-gray-silver);
   box-shadow: var(--box-shadow-lg);
@@ -88,6 +85,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
+  min-height: 1.5rem;
 }
 
 .percentagePositive {
@@ -98,13 +96,17 @@
   color: var(--color-text-error);
 }
 
+.percentageNeutral {
+  color: var(--color-text-gray-light);
+}
+
 .percentageNa {
   color: var(--color-text-inactive);
 }
 
-/* Empty state */
 .emptyState {
   display: flex;
+  min-height: 10rem;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -117,10 +119,15 @@
 }
 
 .emptyStateText {
+  max-width: 28rem;
   color: var(--color-text-gray-light);
 }
 
-/* ------- Responsive ------- */
+.top {
+  grid-area: top;
+  min-width: 0;
+}
+
 @media (max-width: 1024px) {
   .parent {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -145,22 +152,26 @@
       'chart'
       'weekly'
       'top';
-    padding: var(--spacing-lg);
     gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
   }
 
   .weeklyGrid {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--spacing-lg);
   }
+
+  .weekCard {
+    padding: var(--spacing-lg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card {
+  .weekCard {
     transition: none;
   }
 
-  .card:hover {
+  .weekCard:hover {
     transform: none;
   }
 }

@@ -1,12 +1,11 @@
 'use client'
-'use client'
 
 import {
   useStockMovements,
   useTotalAllSales,
   useTotalProductsInStock,
-  useTotalProductsSold as useTotalSalesSold,
   useTotalProductsSolded,
+  useTotalSales,
   useWeeklyStockMovement
 } from 'npm-pkg-hook'
 import {
@@ -23,22 +22,86 @@ import { ReportGrid } from './ReportGrid'
 import styles from './styles.module.css'
 import { TopProductsList } from './TopProducts'
 
+const NUMBER_FORMAT_OPTIONS = {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+  style: 'decimal'
+}
+
+/**
+ * Formats a date using the Spanish (Colombia) locale.
+ *
+ * @param {Date} date - Date to format.
+ * @param {Intl.DateTimeFormatOptions} options - Formatting options.
+ * @returns {string} Formatted date part.
+ */
+const formatDatePart = (date, options) => {
+  return new Intl.DateTimeFormat('es-CO', options).format(date)
+}
+
+/**
+ * Builds a readable date range for a seven-day inventory week.
+ *
+ * @param {string | number | Date} weekStart - First day of the week.
+ * @returns {string} Formatted weekly range or an empty string for invalid dates.
+ */
+const getWeekRange = (weekStart) => {
+  const startDate = new Date(weekStart)
+
+  if (Number.isNaN(startDate.getTime())) return ''
+
+  const endDate = new Date(startDate)
+  endDate.setDate(endDate.getDate() + 6)
+
+  const startDay = formatDatePart(startDate, { day: '2-digit' })
+  const endDay = formatDatePart(endDate, { day: '2-digit' })
+  const startMonth = formatDatePart(startDate, { month: 'long' })
+  const endMonth = formatDatePart(endDate, { month: 'long' })
+
+  if (startDate.getMonth() === endDate.getMonth()) {
+    return `${startDay} al ${endDay} ${endMonth}`
+  }
+
+  return `${startDay} ${startMonth} al ${endDay} ${endMonth}`
+}
+
+/**
+ * Normalizes an API percentage value into a finite number.
+ *
+ * @param {string | number | null | undefined} value - Raw percentage value.
+ * @returns {number | null} Parsed percentage or null when unavailable.
+ */
+const parsePercentage = (value) => {
+  if (value === null || value === undefined || value === 'N/A') return null
+
+  const parsedValue = typeof value === 'number'
+    ? value
+    : Number.parseFloat(String(value).replace('%', '').trim())
+
+  return Number.isFinite(parsedValue) ? parsedValue : null
+}
+
+/**
+ * Inventory dashboard with sales KPIs, stock movement charts and product ranking.
+ *
+ * @returns {JSX.Element} Inventory dashboard.
+ */
 export const InventoryC = () => {
   const [stocksMovements] = useStockMovements()
   const [weeklyStockMovement] = useWeeklyStockMovement()
-  const [totalSales] = useTotalSalesSold()
+  const [totalSales] = useTotalSales()
   const [totalProductsInStock] = useTotalProductsInStock()
   const [totalProductSold] = useTotalProductsSolded()
   const [totalAllSales] = useTotalAllSales()
   const [screenWidth, setScreenWidth] = useState(0)
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setScreenWidth(window.innerWidth)
-      const handleResize = () => { return setScreenWidth(window.innerWidth) }
-      window.addEventListener('resize', handleResize)
-      return () => { return window.removeEventListener('resize', handleResize) }
-    }
+    const updateScreenWidth = () => setScreenWidth(window.innerWidth)
+
+    updateScreenWidth()
+    window.addEventListener('resize', updateScreenWidth, { passive: true })
+
+    return () => window.removeEventListener('resize', updateScreenWidth)
   }, [])
 
   const weeklyMovements = Array.isArray(weeklyStockMovement)
@@ -46,7 +109,9 @@ export const InventoryC = () => {
     : []
 
   const visibleWeeklyMovements = weeklyMovements.filter((item) => {
-    return item?.weekStart !== null && item?.weekStart !== undefined
+    return item?.weekStart !== null &&
+      item?.weekStart !== undefined &&
+      !Number.isNaN(new Date(item.weekStart).getTime())
   })
 
   const data = [
@@ -63,11 +128,7 @@ export const InventoryC = () => {
     },
     {
       label: 'Total ventas concluidas',
-      value: numberFormat(totalSales ?? 0, {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-        style: 'decimal'
-      }),
+      value: numberFormat(totalSales ?? 0, NUMBER_FORMAT_OPTIONS),
       icon: {
         icon: 'IconUpTrend',
         color: getGlobalStyle('--color-icons-success'),
@@ -100,13 +161,18 @@ export const InventoryC = () => {
   return (
     <div className={styles.parent}>
       <ReportGrid data={data} />
+
       <StockMovementsChart
         chartData={stocksMovements}
         className={styles.graphics}
         title='Entradas y Salidas de Inventario por día'
         width={screenWidth}
       />
-      <section aria-label='Variación semanal de inventario' className={styles.muvements_weks}>
+
+      <section
+        aria-label='Variación semanal de inventario'
+        className={styles.weeklySection}
+      >
         <Column className={styles.weeklyHeader} gap='xs'>
           <Text as='h2' className={styles.weeklyTitle} size='xl' weight={700}>
             Movimiento semanal
@@ -131,51 +197,65 @@ export const InventoryC = () => {
             )
           : (
             <div className={styles.weeklyGrid}>
-              {visibleWeeklyMovements.map((item, index) => {
-                const percentage = item.percentageChange
-                const isNA = percentage === 'N/A'
-                const numericPercentage = parseFloat(percentage)
-                const isPositive = !isNA && numericPercentage > 0
-
-                const weekStartDate = new Date(item.weekStart)
-                const weekEndDate = new Date(weekStartDate)
-                weekEndDate.setDate(weekStartDate.getDate() + 6)
-
-                const formatDay = (date) => { return date.toLocaleDateString('es-ES', { day: '2-digit' }) }
-                const formatMonth = (date) => { return date.toLocaleDateString('es-ES', { month: 'long' }) }
-                const weekRange = weekStartDate.getMonth() === weekEndDate.getMonth()
-                  ? `${formatDay(weekStartDate)} al ${formatDay(weekEndDate)} ${formatMonth(weekEndDate)}`
-                  : `${formatDay(weekStartDate)} ${formatMonth(weekStartDate)} al ${formatDay(weekEndDate)} ${formatMonth(weekEndDate)}`
+              {visibleWeeklyMovements.map((item) => {
+                const percentage = parsePercentage(item.percentageChange)
+                const isPositive = percentage !== null && percentage > 0
+                const isNegative = percentage !== null && percentage < 0
+                const isNeutral = percentage === 0
+                const weekRange = getWeekRange(item.weekStart)
 
                 return (
-                  <Column className={styles.card} gap='sm' key={index}>
+                  <Column
+                    className={styles.weekCard}
+                    gap='sm'
+                    key={String(item.weekStart)}
+                  >
                     <Text as='p' className={styles.weekRange} size='sm' weight={600}>
                       {weekRange}
                     </Text>
-                    {isNA
+
+                    {percentage === null
                       ? (
                         <Text as='p' className={styles.percentageNa} size='md' weight={600}>
                           Sin datos
                         </Text>
                         )
                       : (
-                        <Text
-                          as='p'
-                          className={`${styles.percentageRow} ${isPositive ? styles.percentagePositive : styles.percentageNegative}`}
-                          size='lg'
-                          weight={700}
+                        <div
+                          aria-label={
+                            isPositive
+                              ? `Subió ${percentage}%`
+                              : isNegative
+                                ? `Bajó ${Math.abs(percentage)}%`
+                                : 'Sin variación'
+                          }
+                          className={`${styles.percentageRow} ${
+                            isPositive
+                              ? styles.percentagePositive
+                              : isNegative
+                                ? styles.percentageNegative
+                                : styles.percentageNeutral
+                          }`}
                         >
-                          <Icon
-                            color={isPositive
-                              ? getGlobalStyle('--color-icons-success')
-                              : getGlobalStyle('--color-icons-error')}
-                            icon={isPositive ? 'IconUpRightArrow' : 'IconDownRightArrow'}
-                            size={20}
-                          />
-                          {isPositive
-                            ? `Subió ${numericPercentage}%`
-                            : `Bajó ${Math.abs(numericPercentage)}%`}
-                        </Text>
+                          {!isNeutral && (
+                            <Icon
+                              color={getGlobalStyle(
+                                isPositive
+                                  ? '--color-icons-success'
+                                  : '--color-icons-error'
+                              )}
+                              icon={isPositive ? 'IconUpRightArrow' : 'IconDownRightArrow'}
+                              size={20}
+                            />
+                          )}
+                          <Text as='span' size='lg' weight={700}>
+                            {isPositive
+                              ? `Subió ${percentage}%`
+                              : isNegative
+                                ? `Bajó ${Math.abs(percentage)}%`
+                                : 'Sin variación'}
+                          </Text>
+                        </div>
                         )}
                   </Column>
                 )
