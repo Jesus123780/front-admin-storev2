@@ -2,9 +2,7 @@
 
 import {
   Column,
-  Divider,
-  getGlobalStyle,
-  Text
+  getGlobalStyle
 } from 'pkg-components'
 import React from 'react'
 
@@ -19,13 +17,6 @@ const AnalyticsExport = () => {
         padding: getGlobalStyle('--spacing-md')
       }}
     >
-      <Text as='h2' size='3xl' weight='semibold'>
-        Exportar reportes
-      </Text>
-      <Text as='p' size='md'>
-        Selecciona el tipo de reporte que deseas descargar.
-      </Text>
-      <Divider marginTop={getGlobalStyle('--spacing-xl')} />
       <ReportDownloadsPanel />
     </Column>
   )
