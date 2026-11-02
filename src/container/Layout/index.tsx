@@ -27,6 +27,7 @@ import {
   useSubscriptionValidation,
   useTotalSales,
   useUpdateModuleOrder,
+  useUpsertGoal,
   useUser,
   version as logicalVersion
 } from 'npm-pkg-hook'
@@ -37,6 +38,7 @@ import {
   Button,
   DeliveryTime,
   getGlobalStyle,
+  GoalModal,
   Header,
   Icon,
   LateralModal,
@@ -283,6 +285,12 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   const handleOpenDeliveryTime = useCallback(() => {
     setOpenDeliveryTime(previous => !previous)
   }, [])
+  // Explicit close: the AwesomeModal invokes both onCancel and onHide on a
+  // single close action, so a toggle would flip the state twice and re-open
+  // the modal. Forcing it to false keeps the close idempotent.
+  const handleCloseDeliveryTime = useCallback(() => {
+    setOpenDeliveryTime(false)
+  }, [])
 
   const deliveryTimeMinutes = dataStore?.deliveryTimeMinutes
   const { deliveryTime, handleDeliveryTimeChange } = useDeliveryTime({
@@ -291,6 +299,32 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   const { createDeliveryTime, loading: loadingDeliveryTime } = useCreateDeliveryTime({
     sendNotification
   })
+
+  // Metas del día (dailyGoal)
+  const [openGoal, setOpenGoal] = useState(false)
+  const handleOpenGoal = useCallback(() => {
+    setOpenGoal(previous => !previous)
+  }, [])
+  // Explicit close: AwesomeModal fires both onCancel and onHide on a single
+  // close action, so a toggle would flip the state twice and re-open it.
+  const handleCloseGoal = useCallback(() => {
+    setOpenGoal(false)
+  }, [])
+  const [goalValue, setGoalValue] = useState('')
+  const [upsertGoalMutation, { loading: loadingGoal }] = useUpsertGoal({
+    sendNotification
+  })
+  useEffect(() => {
+    if (dataStore?.dailyGoal != null) {
+      setGoalValue(`${dataStore.dailyGoal}`)
+    }
+  }, [dataStore?.dailyGoal])
+  const handleUpsertGoal = (value: string): void => {
+    upsertGoalMutation({
+      idStore: idStore,
+      dailyGoal: Number(value)
+    })
+  }
 
   // Accept an explicit state from Header/Options, while preserving toggle behavior
   // for existing callers such as the Orders panel.
@@ -430,7 +464,16 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
         handleDeliveryTimeChange={handleDeliveryTimeChange}
         isOpen={openDeliveryTime}
         loading={loadingDeliveryTime}
-        setDeliveryTimeOpen={handleOpenDeliveryTime}
+        setDeliveryTimeOpen={handleCloseDeliveryTime}
+      />
+
+      <GoalModal
+        dailyGoal={goalValue}
+        handleGoalChange={setGoalValue}
+        isOpen={openGoal}
+        loading={loadingGoal}
+        setGoalOpen={handleCloseGoal}
+        upsertGoal={handleUpsertGoal}
       />
 
       <Orders
@@ -504,6 +547,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
           handleCollapsedMenu={handleCollapsedMenu}
           handleClick={handleClick}
           handleOpenDeliveryTime={handleOpenDeliveryTime}
+          handleOpenGoal={handleOpenGoal}
           isElectron={isElectron}
           connected={connected}
           isMobile={isMobile}

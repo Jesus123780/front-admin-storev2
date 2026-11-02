@@ -65,7 +65,7 @@ export const Goal = () => {
                         groupSeparator='.'
                         label='Monto de meta diaria *'
                         name='dailyGoal'
-                        placeholder={numberFormat(dataForm?.dailyGoal)}
+                        placeholder={numberFormat(dataForm?.dailyGoal) ?? 0}
                         onValueChange={(value) => {
                             handleChange({
                                 target: {

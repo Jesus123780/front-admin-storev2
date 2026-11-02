@@ -23,7 +23,6 @@ export const ChatStatisticMemo = () => {
     handleChangeYear,
     chartType
   } = useChartData({})
-
   const showFilter = years?.length > 0
 
   const onChartTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {

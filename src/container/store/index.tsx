@@ -50,6 +50,7 @@ import { Product } from '../product'
 import { ProductView } from '../product/view/product'
 import { TableSeating } from '../seating'
 import { Banner } from './banner'
+import { DeleteStore } from './deleteStore'
 import { ButtonsAction } from './options/index'
 import { StickyBoundaryCategories } from './StickyBoundaryCategories'
 
@@ -207,6 +208,9 @@ export const Store: React.FC = () => {
     useState<boolean>(false)
 
   const [modal, setModal] =
+    useState<boolean>(false)
+
+  const [showDeleteStore, setShowDeleteStore] =
     useState<boolean>(false)
 
   const [searchQuery, setSearchQuery] =
@@ -1361,6 +1365,9 @@ export const Store: React.FC = () => {
           handle={
             handleActionClick
           }
+          onDeleteStore={() => {
+            setShowDeleteStore(true)
+          }}
         />
 
         <div
@@ -1400,7 +1407,35 @@ export const Store: React.FC = () => {
             sendNotification
           }
         />
+
       </div>
+
+      <AwesomeModal
+        customHeight='auto'
+        footer={false}
+        header={true}
+        height='auto'
+        onCancel={() => {
+          setShowDeleteStore(false)
+        }}
+        onHide={() => {
+          setShowDeleteStore(false)
+        }}
+        padding={getGlobalStyle('--spacing-2xl')}
+        show={showDeleteStore}
+        size='min(560px, calc(100vw - 24px))'
+        title='Eliminar comercio definitivamente'
+        zIndex={getGlobalStyle('--z-index-modal')}
+      >
+        <DeleteStore
+          onCancel={() => {
+            setShowDeleteStore(false)
+          }}
+          onDeleted={() => {
+            setShowDeleteStore(false)
+          }}
+        />
+      </AwesomeModal>
 
       <AwesomeModal
         {...modalProps}

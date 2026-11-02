@@ -13,7 +13,10 @@ import { MENU_OPTIONS } from '@/context/helpers'
 import { Context } from '../../../context/Context'
 import styles from './styles.module.css'
 
-export const ButtonsAction = ({ handle = (number, name, bool) => { return { number, name, bool } } }) => {
+export const ButtonsAction = ({
+  handle = (number, name, bool) => { return { number, name, bool } },
+  onDeleteStore = () => {}
+}) => {
   const { setShowComponentModal } = useContext(Context)
 
   const buttonsData = [
@@ -49,6 +52,17 @@ export const ButtonsAction = ({ handle = (number, name, bool) => { return { numb
       onClick: () => { return handle(5, 'categories', true) },
       style: {
         minWidth: '200px'
+      }
+    },
+    {
+
+      label: 'Eliminar comercio',
+      icon: 'IconDelete',
+      onClick: () => { return onDeleteStore() },
+      style: {
+        minWidth: '200px',
+        color: getGlobalStyle('--color-primary-red'),
+        border: `1px solid ${getGlobalStyle('--color-primary-red')}`
       }
     }
   ]
@@ -92,5 +106,6 @@ export const ButtonsAction = ({ handle = (number, name, bool) => { return { numb
 
 
 ButtonsAction.propTypes = {
-  handle: PropTypes.func
+  handle: PropTypes.func,
+  onDeleteStore: PropTypes.func
 }

@@ -9,11 +9,10 @@ import React from 'react'
 
 export const SalesDay = () => {
     const [data, { loading }] = useGetSalesAmountToday()
-
     return (
         <Column style={{ height: 'min-content', padding: getGlobalStyle('--spacing-md') }}>
             <Text size='lg' weight='normal'>
-                Ventas del dia: {(data?.total && !loading) && <CounterAnimation number={data?.total ?? 0} size='2rem' />}
+                Ventas del dia: {!loading && <CounterAnimation number={data?.total ?? 0} size='2rem' />}
             </Text>
         </Column>
     )
