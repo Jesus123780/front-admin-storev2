@@ -47,6 +47,7 @@ export const Update = ({ id = '' } = { id: null }) => {
   const [modal, setModal] = useState(false)
   const [updateManageStock] = useUpdateManageStock()
   const [updateImageProducts] = useSetImageProducts()
+  const [updateImageLoading, setUpdateImageLoading] = useState(false)
   const { setAlertBox, sendNotification } = useContext(Context)
 
   const [handleChange, handleSubmit, setDataValue, { dataForm, errorForm }] = useFormTools({
@@ -345,17 +346,15 @@ export const Update = ({ id = '' } = { id: null }) => {
           // }
         })
           .then((response: EditProductFoodsResponse) => {
+            // The success/error alert is raised by useEditProduct's onCompleted
+            // handler (single source of truth), so we don't duplicate it here.
             if (response?.data?.editProductFoods?.success) {
-              updateImageProducts({
-                pId: id,
-                image
-              })
-              const { message, success } = response?.data?.editProductFoods || {}
-              sendNotification({
-                title: 'Exitoso',
-                description: message,
-                backgroundColor: success ? 'success' : 'warning'
-              })
+              // If the user selected a new image, upload it too. Fire-and-forget
+              // with its own error handling so a failed image upload does not
+              // mask the successful product update.
+              if (image) {
+                void handleUpdateImageProduct()
+              }
             }
           })
           .catch((response: EditProductFoodsResponse) => {
@@ -400,7 +399,53 @@ export const Update = ({ id = '' } = { id: null }) => {
    const propsUploadProductImage = useImageUploaderProduct({
     sendNotification
   })
-  const { image } = propsUploadProductImage
+  const { image, preview } = propsUploadProductImage
+
+  // Already-saved image for this product (filename stored in DB). Served by the
+  // Next.js route `/api/images/[filename]`, which reads from the same folder the
+  // backend writes to (PATH_EXTERNAL_OS).
+  const savedProImage: string = dataProduct?.ProImage ?? ''
+  const savedImageSrc = savedProImage && !savedProImage.startsWith('/images/')
+    ? `/api/images/${savedProImage}`
+    : '/images/placeholder-image.webp'
+
+  // What the preview card shows: the freshly selected/cropped image (base64)
+  // if the user just picked one, otherwise the image already saved on disk.
+  const previewSrc = preview || savedImageSrc
+
+  /**
+   * Upload the currently selected product image via the GraphQL `setImageProducts`
+   * mutation (multipart upload). Uses the File produced by the image uploader hook.
+   */
+  const handleUpdateImageProduct = async () => {
+    if (!image) {
+      sendNotification({
+        title: 'Selecciona una imagen',
+        description: 'Primero elige o arrastra una imagen para el producto.',
+        backgroundColor: 'warning'
+      })
+      return
+    }
+
+    setUpdateImageLoading(true)
+    try {
+      const response = await updateImageProducts({ pId: id, image })
+      const { success, message } = response?.data?.setImageProducts ?? {}
+      sendNotification({
+        title: success ? 'Imagen actualizada' : 'No se pudo actualizar',
+        description: message ?? (success ? 'La imagen del producto se actualizó.' : 'Error al actualizar la imagen.'),
+        backgroundColor: success ? 'success' : 'error'
+      })
+    } catch (err) {
+      sendNotification({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Error al actualizar la imagen del producto.',
+        backgroundColor: 'error'
+      })
+    } finally {
+      setUpdateImageLoading(false)
+    }
+  }
 
   return (
     <div className={styles.content}>
@@ -443,7 +488,6 @@ export const Update = ({ id = '' } = { id: null }) => {
         </AwesomeModal>
         <>
           <Form
-            alt={alt}
             dataForm={dataForm}
             errorForm={errorForm}
             fileInputRef={fileInputRef}
@@ -453,7 +497,6 @@ export const Update = ({ id = '' } = { id: null }) => {
             loading={loading}
             propsImageEdit={propsUploadProductImage}
             onFileInputChange={onFileInputChange}
-            onTargetClick={onTargetClick}
             src={src}
           />
           <>
@@ -473,9 +516,19 @@ export const Update = ({ id = '' } = { id: null }) => {
                   return setAlertModal(true)
                 }}
                 {...dataForm}
-                ProImage={src}
+                ProImage={previewSrc}
 
               />
+              <Button
+                primary={true}
+                loading={updateImageLoading}
+                styles={{ marginTop: getGlobalStyle('--spacing-lg') }}
+                onClick={() => {
+                  return handleUpdateImageProduct()
+                }}
+              >
+                Guardar imagen
+              </Button>
               <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
               {ProBarCode !== null && (
                 <Column>

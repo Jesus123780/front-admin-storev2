@@ -2,7 +2,10 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 
-const baseImagePath = path.join(os.homedir(), 'app_data') // ajusta si hace falta
+// Mirror the backend storage location. The API server saves product images to
+// `os.homedir()/PATH_EXTERNAL_OS` (default `app_data`). Reading the same env var
+// here keeps save and serve in sync even if the folder is reconfigured.
+const baseImagePath = path.join(os.homedir(), process.env.PATH_EXTERNAL_OS || 'app_data')
 const publicPlaceholderPath = path.join(process.cwd(), 'public', 'images', 'placeholder-image.webp')
 
 /**

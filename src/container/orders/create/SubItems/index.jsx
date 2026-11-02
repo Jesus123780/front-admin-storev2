@@ -47,6 +47,9 @@ export const SubItems = ({
   handleIncrementExtra = () => {
     return
   },
+  handleRemoveExtra = () => {
+    return
+  },
   handleUpdateAllExtra = () => {
     return
   }
@@ -118,6 +121,7 @@ export const SubItems = ({
               handleAddOptional={handleAddOptional}
               handleDecrementExtra={handleDecrementExtra}
               handleIncrementExtra={handleIncrementExtra}
+              handleRemoveExtra={handleRemoveExtra}
               modal={false}
               pId={pId}
               setModal={() => {

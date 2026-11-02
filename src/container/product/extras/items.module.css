@@ -1,0 +1,221 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  background: var(--color-base-white);
+  border: 1px solid var(--color-neutral-gray-silver);
+  border-radius: var(--border-radius-sm);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+  animation: item-enter 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.itemEditing {
+  border-style: dashed;
+}
+
+.itemAdded {
+  border-color: var(--color-text-success);
+  background-color: color-mix(
+    in srgb,
+    var(--color-text-success) 4%,
+    var(--color-base-white)
+  );
+}
+
+.info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.nameWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.unitPrice {
+  color: var(--color-text-inactive);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.priceWrapper {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  min-width: max-content;
+}
+
+.price {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.priceFree {
+  color: var(--color-text-success);
+}
+
+.priceSuffix {
+  color: var(--color-text-inactive);
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  gap: 6px;
+  min-width: 0;
+}
+
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-xs);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.deleteButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.actions :focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover {
+    border-color: var(--color-text-inactive);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.055);
+    transform: translateY(-1px);
+  }
+
+  .itemAdded:hover {
+    border-color: var(--color-text-success);
+  }
+
+  .deleteButton:not(:disabled):hover {
+    background-color: color-mix(
+      in srgb,
+      var(--color-text-primary) 7%,
+      transparent
+    );
+  }
+}
+
+.deleteButton:not(:disabled):active {
+  transform: scale(0.94);
+}
+
+@media (max-width: 600px) {
+  .item {
+    gap: 10px;
+    padding: 11px 12px;
+  }
+
+  .info {
+    gap: 10px;
+  }
+
+  .title,
+  .price {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 420px) {
+  .item {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .info {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .priceWrapper {
+    justify-content: flex-start;
+  }
+
+  .actions {
+    gap: 4px;
+  }
+}
+
+@keyframes item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item,
+  .deleteButton {
+    animation: none;
+    transition: none;
+  }
+
+  .item:hover,
+  .deleteButton:not(:disabled):active {
+    transform: none;
+  }
+}

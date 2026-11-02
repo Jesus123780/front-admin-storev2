@@ -1,0 +1,156 @@
+.optionalContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.optionalGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.optionalGroupHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  background: var(--color-base-white);
+  border: 1px solid var(--color-neutral-gray-silver);
+  border-radius: var(--border-radius-sm);
+}
+
+.optionalGroupTitleWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.optionalGroupTitle {
+  margin: 0;
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.optionalGroupTitleDesc {
+  margin: 0;
+  color: var(--color-text-inactive);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.optionalGroupMeta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  min-width: 0;
+}
+
+.optionalGroupBadge {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.optionalLoading {
+  color: var(--color-text-inactive);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.optionalOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  background: var(--color-base-white);
+  border: 1px solid var(--color-neutral-gray-silver);
+  border-radius: var(--border-radius-sm);
+  transition: border-color 180ms ease;
+}
+
+.optionalOption:hover {
+  border-color: var(--color-text-inactive);
+}
+
+.optionalOption:focus-within {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+.optionalOptionInfo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.optionalOptionName {
+  margin: 0;
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.optionalOptionIndex {
+  margin: 0;
+  color: var(--color-text-inactive);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+@media (max-width: 480px) {
+  .optionalGroupHeader {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: flex-start;
+    padding: 10px 12px;
+  }
+
+  .optionalGroupMeta {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .optionalOption {
+    gap: 10px;
+    padding: 11px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .optionalOption {
+    transition: none;
+  }
+}

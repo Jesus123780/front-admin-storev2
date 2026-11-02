@@ -1,11 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { generateStoreURL } from 'npm-pkg-hook'
 import {
   AmountInput,
-  Column,
   Divider,
   getGlobalStyle,
   ImageProductEdit,
@@ -16,7 +14,6 @@ import React from 'react'
 
 interface FormProps {
   alt?: string
-  src?: string
   loading?: boolean
   errorForm?: {
     ProDescription?: boolean
@@ -48,12 +45,9 @@ interface FormProps {
   handleChange?: (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void
-  onTargetClick?: (event: React.MouseEvent<HTMLImageElement>) => void
 }
 
 export const FormMemo: React.FC<FormProps> = ({
-  alt = '',
-  src = '',
   loading = false,
   propsImageEdit,
   errorForm = {
@@ -77,7 +71,6 @@ export const FormMemo: React.FC<FormProps> = ({
     idStore: '',
     storeName: ''
   },
-  fileInputRef,
   dataForm = {
     ProDescription: '',
     ProDescuento: '',
@@ -85,10 +78,8 @@ export const FormMemo: React.FC<FormProps> = ({
     ValueDelivery: '',
     pName: ''
   },
-  onFileInputChange = (event) => { return event },
   handleForm = (event) => { return event },
-  handleChange = () => { return },
-  onTargetClick = (event) => { return event }
+  handleChange = () => { return }
 }) => {
   const {
     city,
@@ -110,24 +101,6 @@ export const FormMemo: React.FC<FormProps> = ({
 
   return (
     <form onSubmit={(e) => { return handleForm(e) }}>
-      <Column>
-        <Image
-          alt={alt}
-          height={320}
-          objectFit='contain'
-          onClick={(e) => { return onTargetClick(e) }}
-          src={src}
-          width={400}
-        />
-        <input
-          style={{ display: 'none' }}
-          accept='.jpg, .png'
-          id='iFile'
-          onChange={(event) => { return onFileInputChange(event) }}
-          ref={fileInputRef}
-          type='file'
-        />
-      </Column>
       <ImageProductEdit {...propsImageEdit} />
       <InputHooks
         error={errorForm?.pName}
@@ -227,4 +200,5 @@ export const FormMemo: React.FC<FormProps> = ({
     </form>
   )
 }
+
 export const Form = React.memo(FormMemo)

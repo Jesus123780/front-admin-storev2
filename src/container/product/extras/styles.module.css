@@ -64,6 +64,19 @@
     );
 }
 
+/* Visual cue for a complement that is currently added to the product
+   (quantity >= 1). Helps the POS operator scan the selection at a glance. */
+.itemAdded {
+  border-color: var(--color-feedback-success-dark, #0a7d33);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(10, 125, 51, 0.04),
+      transparent
+    );
+}
+
 /* =========================================================
    INFO
 ========================================================= */
@@ -167,6 +180,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+
+  gap: 4px;
 
   min-width: max-content;
 }

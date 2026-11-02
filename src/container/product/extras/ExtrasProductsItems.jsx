@@ -59,11 +59,13 @@ export const ExtrasProductsItems = ({
   const {
     handleAddOptional,
     handleIncrementExtra,
-    handleDecrementExtra
+    handleDecrementExtra,
+    handleRemoveExtra
   } = props || {
     handleAddOptional: () => { return },
     handleIncrementExtra: () => { return },
-    handleDecrementExtra: () => { return } 
+    handleDecrementExtra: () => { return },
+    handleRemoveExtra: () => { return }
   }
 
   const handlersPropsOptional = {
@@ -99,6 +101,7 @@ export const ExtrasProductsItems = ({
         editing={editing}
         handleDecrementExtra={handleDecrementExtra}
         handleIncrementExtra={handleIncrementExtra}
+        handleRemoveExtra={handleRemoveExtra}
         {...propsExtra}
       />
     </div>
@@ -124,10 +127,12 @@ ExtrasProductsItems.propTypes = {
   disabled: PropTypes.bool,
   editing: PropTypes.bool,
   modal: PropTypes.any,
+  handleRemoveExtra: PropTypes.func,
   props: PropTypes.shape({
     handleAddOptional: PropTypes.func,
     handleIncrementExtra: PropTypes.func,
-    handleDecrementExtra: PropTypes.func
+    handleDecrementExtra: PropTypes.func,
+    handleRemoveExtra: PropTypes.func
   }),
   propsExtra: PropTypes.shape({
     LineItems: PropTypes.shape({
