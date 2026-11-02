@@ -435,7 +435,7 @@ export const SalesByCategoryChart = ({
           </Text>
           {hasCategories && (
             <Text as='span' className={styles.subtitle} size='sm'>
-              {formatNumber(slices.length)} categorías en el periodo
+              {slices?.length} categorías en el periodo
             </Text>
           )}
         </div>

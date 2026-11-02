@@ -437,7 +437,7 @@ export const Update = ({ id = '' } = { id: null }) => {
                 return handleClickDelete()
               }}
             >
-              Confirmar
+              Eliminar
             </Button>
           </Row>
         </AwesomeModal>

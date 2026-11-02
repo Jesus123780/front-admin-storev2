@@ -646,91 +646,162 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 </div>
 
                 <div className={styles.product_tags}>
-                    <Row>
+                    <Row className={styles.tags_header}>
+                        <Icon
+                            icon='IconTag'
+                            size={24}
+                            color={getGlobalStyle('--color-icons-black')}
+                        />
+
                         <Text
-                            size='3xl'
+                            size='2xl'
                             styles={{
-                                '-webkitLineClamp': 2,
                                 color: getGlobalStyle('--color-text-black'),
-                                lineHeight: '1.5rem',
-                                marginBottom: '9px',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
+                                fontWeight: getGlobalStyle('--font-weight-bold')
                             }}
                         >
                             Tags
                         </Text>
+                    </Row>
 
-                        <Icon
-                            icon='IconTag'
-                            size={30}
-                            color={getGlobalStyle('--color-icons-black')}
+                    <Text
+                        size='sm'
+                        styles={{ color: getGlobalStyle('--color-text-gray-light') }}
+                    >
+                        Los tags ayudan a tus clientes a encontrar este producto
+                        más rápido.
+                    </Text>
+
+                    {/* Paso 1: crear tags nuevos */}
+                    <div className={styles.tags_section}>
+                        <Text
+                            size='md'
+                            styles={{
+                                color: getGlobalStyle('--color-text-black'),
+                                fontWeight: getGlobalStyle('--font-weight-semibold')
+                            }}
+                        >
+                            1. Escribe un tag y presiona Enter o +
+                        </Text>
+
+                        <InputTags
+                            disabled={false}
+                            update={true}
+                            repeatTag={false}
+                            setTags={setNewTags}
+                            loading={loadingTags}
+                            tags={newTags}
+                            registerTags={() => registerTags(newTags ?? [])}
+                            sendNotification={sendNotification}
                         />
-                    </Row>
 
-                    <InputTags
-                        disabled={false}
-                        update={true}
-                        repeatTag={false}
-                        setTags={setNewTags}
-                        loading={loadingTags}
-                        tags={newTags}
-                        registerTags={() => registerTags(newTags ?? [])}
-                        sendNotification={sendNotification}
-                    />
+                        <Text
+                            size='sm'
+                            styles={{ color: getGlobalStyle('--color-text-gray-light') }}
+                        >
+                            {newTags?.length
+                                ? 'Al presionar Enter se guardan automáticamente.'
+                                : 'Ejemplos: oferta, nuevo, vegano.'}
+                        </Text>
+                    </div>
 
-                    <Divider
-                        marginTop={getGlobalStyle('--spacing-sm')}
-                    />
+                    {/* Paso 2: tags ya guardados que se pueden reutilizar */}
+                    {Array.isArray(dataTags) && dataTags.length > 0 && (
+                        <div className={styles.tags_section}>
+                            <Text
+                                size='md'
+                                styles={{
+                                    color: getGlobalStyle('--color-text-black'),
+                                    fontWeight: getGlobalStyle('--font-weight-semibold')
+                                }}
+                            >
+                                2. Reutiliza un tag guardado
+                            </Text>
 
-                    <Row className={styles.tags_list}>
-                        {Array.isArray(dataTags) &&
-                            dataTags.map((tag) => (
-                                <Row
-                                    key={tag.id}
-                                    className={styles.contain_tag_list}
-                                >
-                                    <Button
-                                        onClick={() =>
-                                            handleAddTag(tag.id, tag.tag)
-                                        }
-                                        border='none'
-                                        borderRadius='0'
-                                        padding='0'
-                                    >
-                                        <Tag label={tag.tag}>
-                                            <Icon
-                                                icon='IconTag'
-                                                size={20}
-                                                color={getGlobalStyle('--color-icons-white')}
-                                            />
-                                        </Tag>
-                                    </Button>
+                            <Text
+                                size='sm'
+                                styles={{ color: getGlobalStyle('--color-text-gray-light') }}
+                            >
+                                Toca un tag para seleccionarlo. Usa la X para
+                                eliminarlo definitivamente.
+                            </Text>
 
-                                    <Button
-                                        onClick={() => handleRemoveTag(tag)}
-                                        border='none'
-                                        styles={{
-                                            backgroundColor: getGlobalStyle('--color-primary-pink-light'),
-                                            opacity: getGlobalStyle('--opacity-75')
-                                        }}
-                                        borderRadius='5px'
-                                        padding='0'
-                                    >
-                                        <Icon
-                                            color={getGlobalStyle('--color-icons-primary')}
-                                            icon='IconCancel'
-                                        />
-                                    </Button>
-                                </Row>
-                            ))}
-                    </Row>
+                            <Row className={styles.tags_list}>
+                                {dataTags.map((tag) => {
+                                    const isSelected = tags?.id === tag.id
 
+                                    return (
+                                        <div
+                                            key={tag.id}
+                                            className={`${styles.contain_tag_list} ${isSelected ? styles.tag_selected : ''}`}
+                                        >
+                                            <Button
+                                                onClick={() =>
+                                                    handleAddTag(tag.id, tag.tag)
+                                                }
+                                                border='none'
+                                                borderRadius='0'
+                                                padding='0'
+                                                title={
+                                                    isSelected
+                                                        ? 'Quitar selección'
+                                                        : 'Seleccionar tag'
+                                                }
+                                            >
+                                                <Tag label={tag.tag}>
+                                                    <Icon
+                                                        icon={isSelected ? 'IconSuccess' : 'IconTag'}
+                                                        size={16}
+                                                        color={getGlobalStyle('--color-icons-white')}
+                                                    />
+                                                </Tag>
+                                            </Button>
+
+                                            <Button
+                                                onClick={() => handleRemoveTag(tag)}
+                                                border='none'
+                                                styles={{
+                                                    backgroundColor: getGlobalStyle('--color-primary-pink-light'),
+                                                    opacity: getGlobalStyle('--opacity-75')
+                                                }}
+                                                borderRadius={getGlobalStyle('--border-radius-2xs')}
+                                                padding='0'
+                                                title='Eliminar tag'
+                                            >
+                                                <Icon
+                                                    color={getGlobalStyle('--color-icons-primary')}
+                                                    icon='IconCancel'
+                                                    size={16}
+                                                />
+                                            </Button>
+                                        </div>
+                                    )
+                                })}
+                            </Row>
+                        </div>
+                    )}
+
+                    {/* Tag seleccionado */}
                     {Boolean(tags?.tag) && (
-                        <>
-                            <Text size='3xl'>Tag seleccionado</Text>
-                            <Tag label={tags.tag} />
-                        </>
+                        <div className={styles.tag_selected_box}>
+                            <Text
+                                size='sm'
+                                styles={{ color: getGlobalStyle('--color-text-gray-light') }}
+                            >
+                                Tag seleccionado
+                            </Text>
+
+                            <Tag
+                                label={tags.tag}
+                                backgroundColor='green'
+                            >
+                                <Icon
+                                    icon='IconSuccess'
+                                    size={16}
+                                    color={getGlobalStyle('--color-icons-white')}
+                                />
+                            </Tag>
+                        </div>
                     )}
                 </div>
 

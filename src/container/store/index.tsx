@@ -1345,7 +1345,7 @@ export const Store: React.FC = () => {
               })
             }}
           >
-            Confirmar
+            Eliminar
           </RippleButton>
         </Row>
       </AwesomeModal>

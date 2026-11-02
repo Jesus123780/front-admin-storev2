@@ -127,7 +127,7 @@ export const SetupSchedule = ({
               return handleDeleteSchedule(selectedDay.schDay)
             }}
           >
-            Confirmar
+            Eliminar
           </RippleButton>
         </Row>
       </AwesomeModal>

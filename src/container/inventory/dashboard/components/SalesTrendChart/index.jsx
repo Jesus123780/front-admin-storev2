@@ -24,6 +24,7 @@ import styles from './styles.module.css'
 
 const VIEWBOX_W = 720
 const VIEWBOX_H = 260
+
 const PADDING = {
   top: 24,
   right: 20,
@@ -149,7 +150,7 @@ const granularityLabel = (granularity) => {
  */
 const ordersLabel = (count) => {
   const safe = Number.isFinite(Number(count)) ? Number(count) : 0
-  return `${formatNumber(safe)} ${safe === 1 ? 'pedido' : 'pedidos'}`
+  return `${safe} ${safe === 1 ? 'pedido' : 'pedidos'}`
 }
 
 /**

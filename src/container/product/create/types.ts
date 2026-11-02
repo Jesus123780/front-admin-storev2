@@ -23,12 +23,25 @@ export interface FoodComponentMemoProps {
     onTargetClick?: (e: React.MouseEvent) => void
     search?: string
     tagsProps?: {
+        /** Saved tags rendered as reusable chips. */
         dataTags: { id: string; tag: string }[]
-        handleAddTag: (id: string, tag: string) => void
+        /** Selects/unselects a saved tag. Returns whether a tag stays selected. */
+        handleAddTag: (id: string, tag: string) => boolean | void
+        /** Permanently deletes a saved tag. */
+        handleRemoveTag: (tag: { id: string; tag: string }) => void | Promise<void>
+        /** Currently selected saved tag. */
         tags: {
             tag: string
-            id: number
+            id: string
         }
+        /** Draft tags being created but not yet saved. */
+        newTags: string[]
+        /** Updates the draft tag list. */
+        setNewTags: (tags: string[]) => void
+        /** Persists the draft tags in bulk. */
+        registerTags: (tags?: string[]) => void | Promise<void>
+        /** Bulk-register loading state. */
+        loadingTags?: boolean
     }
     setActive: React.Dispatch<React.SetStateAction<number>>
     setName: (name: string) => void
