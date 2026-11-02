@@ -27,6 +27,7 @@ import React, {
 
 import { Categories } from '@/container/categories';
 import { ChatStatistic } from '@/container/ChatStatistic';
+import { SalesByCategoryChart } from '@/container/inventory/dashboard/components/SalesByCategoryChart';
 import { Clients } from '@/container/clients';
 import { Devices } from '@/container/Devices';
 import { DishStore } from '@/container/main/components/main.dishStore';
@@ -78,6 +79,7 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<Record<string, un
     Reports: Reports as React.ComponentType<Record<string, unknown>>,
     ScheduleTimings: ScheduleTimings as React.ComponentType<Record<string, unknown>>,
     TableSeating: TableSeating as React.ComponentType<Record<string, unknown>>,
+    SalesByCategory: SalesByCategoryChart as React.ComponentType<Record<string, unknown>>,
 };
 
 interface ControlledGridProps {

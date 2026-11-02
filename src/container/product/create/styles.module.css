@@ -3,20 +3,43 @@
    ========================================================= */
 
 .food_component {
-    display: flex;
-    flex-direction: column;
+    position: relative;
+
+    /* `.food_component` IS the scroll container. The step actions footer uses
+       `position: sticky; bottom: 0` against it, so the footer stays visible at
+       the bottom no matter how the hosting LateralModal resolves its height
+       (web vs. Electron) — the previous flex approach left the footer below the
+       drawer's bottom edge. */
+    display: block;
 
     width: 100%;
-    height: calc(100vh - 85px);
-    height: calc(100dvh - 85px);
+    height: 100%;
+    max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 80px);
 
     min-width: 0;
     min-height: 0;
 
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 
     background-color: var(--color-base-white);
     box-sizing: border-box;
+}
+
+/* =========================================================
+   STEP HEADER (sticky top)
+   ========================================================= */
+
+.header_steps_sticky {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+
+    width: 100%;
+
+    background-color: var(--color-base-white);
 }
 
 /* =========================================================
@@ -25,20 +48,12 @@
 
 .container_steps {
     display: flex;
-    flex: 1 1 auto;
     flex-direction: column;
 
     width: 100%;
     min-width: 0;
-    min-height: 0;
 
     border-bottom: 0.5px solid var(--color-neutral-gray);
-
-    overflow-x: hidden;
-    overflow-y: auto;
-
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
 
     box-sizing: border-box;
 }
@@ -48,7 +63,11 @@
    ========================================================= */
 
 .container_steps_actions {
-    position: relative;
+    /* Sticky to the bottom of the component as a resilient fallback: even if the
+       height chain ever leaves the component slightly taller than the drawer,
+       the footer stays pinned and visible instead of scrolling out of view. */
+    position: sticky;
+    bottom: 0;
     z-index: 5;
 
     display: flex;
@@ -61,10 +80,14 @@
     width: 100%;
     min-width: 0;
 
+    /* Guarantee a visible, tappable footer height. */
+    min-height: 56px;
+
     padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
 
     background-color: var(--color-base-white);
     border-top: 1px solid var(--color-neutral-gray);
+    box-shadow: 0 -2px 8px rgb(0 0 0 / 4%);
 
     box-sizing: border-box;
 }
@@ -306,8 +329,9 @@
 
 @media (max-width: 768px) {
     .food_component {
-        height: calc(100vh - 64px);
-        height: calc(100dvh - 64px);
+        height: 100%;
+        max-height: calc(100vh - 64px);
+        max-height: calc(100dvh - 64px);
     }
 
     .availability_options {

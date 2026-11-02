@@ -967,10 +967,12 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     />
                 </AwesomeModal>
 
-                <HeaderSteps
-                    active={active}
-                    steps={titleHeaders}
-                />
+                <div className={styles.header_steps_sticky}>
+                    <HeaderSteps
+                        active={active}
+                        steps={titleHeaders}
+                    />
+                </div>
 
                 <main className={styles.container_steps}>
                     {components[active]}

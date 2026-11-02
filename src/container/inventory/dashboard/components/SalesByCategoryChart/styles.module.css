@@ -1,0 +1,757 @@
+/* =========================================================
+   PANEL
+   ========================================================= */
+
+.panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-2xl);
+  overflow: hidden;
+  border: var(--border-width-xs) solid var(--color-neutral-gray);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-background-white);
+  box-shadow: var(--box-shadow-2xs);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  min-width: 0;
+}
+
+.headerContent {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.title {
+  color: var(--color-text-black);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.subtitle,
+.legendCount {
+  color: var(--color-text-gray-light);
+}
+
+.refreshIndicator {
+  width: 0.625rem;
+  height: 0.625rem;
+  flex: 0 0 0.625rem;
+  margin-top: 0.45rem;
+  border: 2px solid var(--color-primary-pink-light);
+  border-top-color: var(--color-primary-red2);
+  border-radius: var(--border-radius-full);
+  animation: refreshSpin 700ms linear infinite;
+}
+
+/* =========================================================
+   DONUT CHART
+   ========================================================= */
+
+.chartArea {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 15.5rem;
+  padding: var(--spacing-lg) 0;
+  isolation: isolate;
+}
+
+.chartArea::before {
+  position: absolute;
+  z-index: -1;
+  width: 13.75rem;
+  height: 13.75rem;
+  border-radius: var(--border-radius-full);
+  background: radial-gradient(
+    circle,
+    var(--color-neutral-gray-white) 0%,
+    var(--color-base-transparent) 72%
+  );
+  content: '';
+  pointer-events: none;
+}
+
+.donutWrap {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 13.75rem;
+  height: 13.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  animation: donutEntrance 680ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+.donut {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(0deg);
+}
+
+.track {
+  fill: none;
+  stroke: var(--color-neutral-gray-light);
+  stroke-width: 18;
+}
+
+.arc {
+  cursor: pointer;
+  opacity: 0;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  transition:
+    stroke-width 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 180ms ease,
+    opacity 180ms ease;
+  animation:
+    arcReveal 920ms cubic-bezier(0.18, 0.78, 0.22, 1) var(--arc-delay, 0ms) forwards;
+}
+
+.arc:hover,
+.arcActive {
+  filter: drop-shadow(0 2px 5px rgba(40, 40, 40, 0.18));
+}
+
+.arc:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 3px var(--color-primary-red2));
+}
+
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-3xl);
+  text-align: center;
+  pointer-events: none;
+}
+
+.centerCaption {
+  color: var(--color-text-gray-light);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wider);
+  line-height: var(--line-height-md);
+}
+
+.centerValue {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  max-width: 100%;
+  color: var(--color-text-black);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.centerSymbol {
+  color: inherit;
+}
+
+.centerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid var(--color-feedback-success-dark);
+  border-radius: var(--border-radius-full);
+  background-color: var(--color-feedback-success-dark);
+  box-shadow: var(--box-shadow-2xs);
+  color: var(--color-text-white);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-md);
+  animation: badgeEntrance 480ms 380ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.centerEmpty {
+  color: var(--color-text-gray-light);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+/* =========================================================
+   CORNER LABELS
+   ========================================================= */
+
+.cornerLabel {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  max-width: 34%;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: labelEntrance 460ms ease both;
+}
+
+.cornerActive {
+  transform: scale(1.045);
+}
+
+.cornerName {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--spacing-sm);
+  overflow: hidden;
+  color: var(--color-text-gray-light);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cornerDot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 0.5rem;
+  border-radius: var(--border-radius-full);
+  box-shadow: 0 0 0 3px var(--color-neutral-gray-white);
+}
+
+.cornerValue {
+  color: var(--color-text-black);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-md);
+}
+
+.cornerValue small {
+  color: var(--color-text-gray-light);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+}
+
+.topLeft {
+  top: var(--spacing-md);
+  left: 0;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.topRight {
+  top: var(--spacing-md);
+  right: 0;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.bottomLeft {
+  bottom: var(--spacing-md);
+  left: 0;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.bottomRight {
+  right: 0;
+  bottom: var(--spacing-md);
+  align-items: flex-end;
+  text-align: right;
+}
+
+.topRight .cornerName,
+.bottomRight .cornerName {
+  flex-direction: row-reverse;
+}
+
+/* =========================================================
+   LEGEND
+   ========================================================= */
+
+.legendHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  min-width: 0;
+  padding-top: var(--spacing-sm);
+}
+
+.legendTitle {
+  color: var(--color-text-black);
+}
+
+.legend {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  min-width: 0;
+  border-radius: var(--border-radius-xs);
+  animation: legendEntrance 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--item-index, 0) * 45ms);
+}
+
+.legendButton {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.625rem;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-xs);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 160ms ease;
+}
+
+.legendButton:hover {
+  background-color: var(--color-background-gray-light);
+  transform: translateX(2px);
+}
+
+.legendButton:focus-visible {
+  outline: none;
+  border-color: var(--color-primary-red2);
+  box-shadow: 0 0 0 2px var(--color-primary-red-bg);
+}
+
+.legendButton,
+.legendButton[aria-pressed='true'] {
+  border-color: var(--color-neutral-gray);
+  background-color: var(--color-background-gray-light);
+  box-shadow: inset 2px 0 0 var(--color-primary-red2);
+}
+
+.dot {
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  flex: 0 0 0.625rem;
+  border-radius: var(--border-radius-full);
+  box-shadow: 0 0 0 3px var(--color-neutral-gray-white);
+}
+
+.legendName {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-black);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legendMetrics {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  white-space: nowrap;
+}
+
+.legendValue {
+  color: var(--color-text-black);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.legendPct {
+  min-width: 3.75rem;
+  color: var(--color-text-gray-light);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.moreButton {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 0;
+  border-radius: var(--border-radius-full);
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.moreButton:focus-visible {
+  outline: 2px solid var(--color-primary-red2);
+  outline-offset: 2px;
+}
+
+.moreChevron {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 180ms ease;
+}
+
+.moreChevronOpen {
+  transform: rotate(225deg) translate(-1px, -1px);
+}
+
+/* =========================================================
+   LOADING / EMPTY STATES
+   ========================================================= */
+
+.skeleton {
+  width: 100%;
+  height: 15rem;
+  border-radius: var(--border-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-loaders-background) 25%,
+    var(--color-loaders-fore-ground) 37%,
+    var(--color-loaders-background) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+.empty {
+  display: flex;
+  min-height: 14rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-2xl);
+  text-align: center;
+  animation: emptyEntrance 500ms ease both;
+}
+
+.emptyIcon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border-radius: var(--border-radius-full);
+  background-color: var(--color-neutral-gray-white);
+}
+
+.emptyTitle {
+  color: var(--color-text-black);
+}
+
+.emptyText {
+  max-width: 22rem;
+  color: var(--color-text-gray-light);
+  line-height: var(--line-height-lg);
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes arcReveal {
+  from {
+    stroke-dashoffset: 1;
+    opacity: 0.25;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes donutEntrance {
+  from {
+    opacity: 0;
+    transform: scale(0.88) rotate(-8deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes badgeEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.88);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes labelEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes legendEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes emptyEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes refreshSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* =========================================================
+   RESPONSIVE / ACCESSIBILITY
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .panel {
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+  }
+
+  .chartArea {
+    min-height: 14rem;
+  }
+
+  .donutWrap {
+    width: 12.5rem;
+    height: 12.5rem;
+  }
+
+  .cornerLabel {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .panel {
+    padding: var(--spacing-lg);
+  }
+
+  .legendButton {
+    gap: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+    padding-left: var(--spacing-sm);
+  }
+
+  .legendMetrics {
+    gap: var(--spacing-xs);
+  }
+
+  .legendValue {
+    font-size: var(--font-size-xs);
+  }
+
+  .legendPct {
+    min-width: 3.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refreshIndicator,
+  .arc,
+  .donutWrap,
+  .centerBadge,
+  .cornerLabel,
+  .legendItem,
+  .skeleton,
+  .empty {
+    animation: none;
+  }
+
+  .arc {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transition: none;
+  }
+
+  .cornerLabel,
+  .legendButton,
+  .moreButton,
+  .moreChevron {
+    transition: none;
+  }
+}
+
+/* =========================================================
+   SOFT ROUNDED DESIGN — VISUAL REFINEMENT
+   ========================================================= */
+
+/* Main card */
+.panel {
+  border-radius: var(--border-radius-lg);
+  border-color: var(--color-neutral-gray);
+  box-shadow:
+    0 2px 5px rgba(27, 33, 56, 0.025),
+    0 8px 24px rgba(27, 33, 56, 0.045);
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+/* Donut background */
+.chartArea::before {
+  border-radius: var(--border-radius-full);
+}
+
+/* Center badge */
+.centerBadge {
+  border-radius: var(--border-radius-full);
+  box-shadow:
+    0 2px 5px rgba(80, 167, 115, 0.12),
+    0 4px 12px rgba(80, 167, 115, 0.08);
+}
+
+/* Legend container */
+.legendItem {
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+/* Legend interactive surface */
+.legendButton {
+  border-radius: var(--border-radius-md);
+  border-color: transparent;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 200ms ease;
+}
+
+.legendButton:hover {
+  border-color: var(--color-neutral-gray);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-neutral-gray-white);
+  box-shadow: 0 3px 10px rgba(27, 33, 56, 0.045);
+  transform: translateY(-1px);
+}
+
+.legendActive .legendButton,
+.legendButton[aria-pressed='true'] {
+  border-color: var(--color-neutral-gray);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-background-gray-light);
+  box-shadow:
+    inset 3px 0 0 var(--color-primary-red2),
+    0 2px 8px rgba(27, 33, 56, 0.035);
+}
+
+/* Expand / collapse */
+.moreButton {
+  border-radius: var(--border-radius-full);
+  transition:
+    background-color 220ms ease,
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 220ms ease;
+}
+
+.moreButton:hover {
+  background-color: var(--color-primary-red-bg);
+  box-shadow: 0 3px 10px rgba(192, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Loading state */
+.skeleton {
+  border-radius: var(--border-radius-md);
+}
+
+/* Empty state */
+.emptyIcon {
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 3px 12px rgba(27, 33, 56, 0.035);
+}
+
+/* Accessibility */
+.legendButton:focus-visible {
+  border-radius: var(--border-radius-md);
+  outline: 2px solid var(--color-primary-red2);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* Responsive consistency */
+@media (max-width: 520px) {
+  .panel {
+    border-radius: var(--border-radius-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .legendButton,
+  .moreButton {
+    transition: none;
+  }
+}

@@ -1,11 +1,6 @@
 .parent {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-areas:
-    'kpi1 kpi2 kpi3 kpi4'
-    'chart chart chart chart'
-    'weekly weekly weekly weekly'
-    'top top top top';
+  display: flex;
+  flex-direction: column;
   gap: var(--spacing-2xl);
   width: 100%;
   max-width: var(--width-max-desktop);
@@ -17,161 +12,45 @@
   min-width: 0;
 }
 
-.div1 { grid-area: kpi1; }
-.div2 { grid-area: kpi2; }
-.div3 { grid-area: kpi3; }
-.div4 { grid-area: kpi4; }
-
-.graphics {
-  grid-area: chart;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  border: var(--border-width-xs) solid var(--color-neutral-gray);
-  border-radius: var(--border-radius-md);
-  background-color: var(--color-background-white);
-  box-shadow: var(--box-shadow-2xs);
-}
-
-.weeklySection {
-  grid-area: weekly;
+.toolbar {
+  display: flex;
   min-width: 0;
 }
 
-.weeklyHeader {
-  margin-bottom: var(--spacing-xl);
-}
-
-.weeklyTitle {
-  color: var(--color-text-black);
-}
-
-.weeklySubtitle {
-  color: var(--color-text-gray-light);
-}
-
-.weeklyGrid {
+/* Charts row: trend takes ~2fr, donut ~1fr on desktop. */
+.chartsRow {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  gap: var(--spacing-xl);
-}
-
-.weekCard {
-  display: flex;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--spacing-2xl);
   min-width: 0;
-  padding: var(--spacing-xl);
-  border: var(--border-width-xs) solid var(--color-neutral-gray);
-  border-radius: var(--border-radius-md);
-  background-color: var(--color-background-white);
-  box-shadow: var(--box-shadow-2xs);
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
 }
 
-.weekCard:hover {
-  transform: translateY(-2px);
-  border-color: var(--color-neutral-gray-silver);
-  box-shadow: var(--box-shadow-lg);
+.trend,
+.donut,
+.topProducts,
+.recentOrders {
+  min-width: 0;
 }
 
-.weekRange {
-  color: var(--color-text-gray-light);
-  text-transform: capitalize;
-}
-
-.percentageRow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  min-height: 1.5rem;
-}
-
-.percentagePositive {
-  color: var(--color-text-success);
-}
-
-.percentageNegative {
-  color: var(--color-text-error);
-}
-
-.percentageNeutral {
-  color: var(--color-text-gray-light);
-}
-
-.percentageNa {
-  color: var(--color-text-inactive);
-}
-
-.emptyState {
-  display: flex;
-  min-height: 10rem;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-4xl) var(--spacing-xl);
-  border: var(--border-width-xs) dashed var(--color-neutral-gray-silver);
-  border-radius: var(--border-radius-md);
-  background-color: var(--color-background-gray-light);
-  text-align: center;
-}
-
-.emptyStateText {
-  max-width: 28rem;
-  color: var(--color-text-gray-light);
-}
-
-.top {
-  grid-area: top;
+/* Lists row: top products ~1fr, recent orders ~1.6fr on desktop. */
+.listsRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: var(--spacing-2xl);
   min-width: 0;
 }
 
 @media (max-width: 1024px) {
-  .parent {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-      'kpi1 kpi2'
-      'kpi3 kpi4'
-      'chart chart'
-      'weekly weekly'
-      'top top';
+  .chartsRow,
+  .listsRow {
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--spacing-xl);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 560px) {
   .parent {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'kpi1'
-      'kpi2'
-      'kpi3'
-      'kpi4'
-      'chart'
-      'weekly'
-      'top';
-    gap: var(--spacing-lg);
+    gap: var(--spacing-xl);
     padding: var(--spacing-lg);
-  }
-
-  .weeklyGrid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--spacing-lg);
-  }
-
-  .weekCard {
-    padding: var(--spacing-lg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .weekCard {
-    transition: none;
-  }
-
-  .weekCard:hover {
-    transform: none;
   }
 }

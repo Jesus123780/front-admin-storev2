@@ -48,6 +48,22 @@ const BACKEND_URL =
 const TERMS_URL = process.env.NEXT_PUBLIC_TERMS_URL
 const PRIVACY_URL = process.env.NEXT_PUBLIC_PRIVACY_URL
 
+/**
+ * Indicates whether the app runs in a development environment.
+ * The quick-login button is only rendered when this is true, so it
+ * never ships to production builds.
+ */
+const IS_DEV = process.env.NODE_ENV === 'development'
+
+/**
+ * Mock credentials used by the development-only quick login.
+ * Values can be overridden through environment variables.
+ */
+const DEV_LOGIN_EMAIL =
+  process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL || 'dev@local.test'
+const DEV_LOGIN_ID =
+  process.env.NEXT_PUBLIC_DEV_LOGIN_ID || 'dev-user-local'
+
 interface LoginProps {
   googleLoaded?: boolean
 
@@ -960,6 +976,29 @@ export const Login: React.FC<LoginProps> = ({
     })
   }
 
+  /**
+   * Development-only quick login using mock credentials.
+   *
+   * Reuses the standard login flow so the resulting session is identical
+   * to a real login. Never rendered in production.
+   *
+   * @returns {Promise<void>} Authentication result.
+   */
+  const handleDevQuickLogin = async (): Promise<void> => {
+    const name = DEV_LOGIN_EMAIL.split('@')[0] || 'Usuario Dev'
+
+    await responseGoogle({
+      user: {
+        name,
+        username: name,
+        lastName: name,
+        email: DEV_LOGIN_EMAIL,
+        id: DEV_LOGIN_ID,
+        locationFormat: []
+      }
+    })
+  }
+
   return (
     <main className={styles.container}>
       <div
@@ -1137,6 +1176,36 @@ export const Login: React.FC<LoginProps> = ({
             >
               Verificando tus credenciales...
             </p>
+          )}
+
+          {IS_DEV && (
+            <Button
+              border='none'
+              disabled={isLoading}
+              styles={{
+                width: '100%',
+                minHeight: '52px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: getGlobalStyle('--spacing-md'),
+                borderRadius: getGlobalStyle('--border-radius-2xs'),
+                padding: getGlobalStyle('--spacing-xl'),
+                boxShadow: getGlobalStyle('--box-shadow-sm'),
+                backgroundColor: getGlobalStyle('--color-feedback-warning-light'),
+                color: getGlobalStyle('--color-neutral-black')
+              }}
+              onClick={() => {
+                void handleDevQuickLogin()
+              }}
+              type='button'
+            >
+              {isLoading ? (
+                <LoadingButton />
+              ) : (
+                'Ingreso rápido (DEV)'
+              )}
+            </Button>
           )}
         </div>
 

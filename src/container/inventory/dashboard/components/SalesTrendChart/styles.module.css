@@ -1,0 +1,167 @@
+.panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-2xl);
+  border: var(--border-width-xs) solid var(--color-neutral-gray);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-background-white);
+  box-shadow: var(--box-shadow-2xs);
+}
+
+.header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-xl);
+}
+
+.headerText { min-width: 0; }
+
+.title { color: var(--color-text-black); }
+
+.headerStats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-lg);
+  margin-top: var(--spacing-md);
+}
+
+.amount {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--color-text-black);
+  font-size: var(--font-size-5xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.amountSymbol { color: inherit; }
+.ordersCount { color: var(--color-text-gray-light); }
+
+.chartWrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.gridline {
+  stroke: var(--color-neutral-gray);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.axisLabel {
+  fill: var(--color-text-inactive);
+  font-size: 11px;
+}
+
+.line {
+  stroke-width: 2.5;
+}
+
+.activeLine {
+  stroke: var(--color-neutral-gray-silver);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.activeDot {
+  fill: var(--color-background-white);
+  stroke: var(--color-feedback-success-dark);
+  stroke-width: 3;
+}
+
+.hotspot {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.hotspot:focus-visible {
+  outline: var(--border-width-lg) solid var(--color-feedback-success-dark);
+  outline-offset: -2px;
+}
+
+.axisX {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+  padding-left: 56px;
+  padding-right: 16px;
+  margin-top: var(--spacing-sm);
+}
+
+.axisXLabel {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-inactive);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-xs);
+  background-color: var(--color-feedback-success-dark);
+  color: var(--color-text-white);
+  box-shadow: var(--box-shadow-lg);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.tooltipDate { color: rgba(255, 255, 255, 0.85); text-transform: capitalize; }
+.tooltipValue { color: var(--color-text-white); }
+.tooltipMeta { color: rgba(255, 255, 255, 0.85); }
+
+.skeleton {
+  width: 100%;
+  height: 260px;
+  border-radius: var(--border-radius-sm);
+  background: linear-gradient(90deg, var(--color-loaders-background) 25%, var(--color-loaders-fore-ground) 37%, var(--color-loaders-background) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+.empty {
+  display: flex;
+  min-height: 15rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  text-align: center;
+}
+
+.emptyText {
+  max-width: 24rem;
+  color: var(--color-text-gray-light);
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
