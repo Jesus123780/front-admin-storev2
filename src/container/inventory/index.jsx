@@ -91,7 +91,7 @@ export const InventoryC = ({ timezone = DEFAULT_TIMEZONE, currency = DEFAULT_CUR
         </div>
       </div>
 
-      <InventoryPerformance key={`inv-${refreshKey}`} />
+      <InventoryPerformance filter={filter} key={`inv-${refreshKey}`} />
     </div>
   )
 }

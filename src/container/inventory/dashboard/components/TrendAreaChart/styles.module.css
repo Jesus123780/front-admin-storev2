@@ -1,0 +1,319 @@
+/* =========================================================
+   CHART WRAPPER
+   ========================================================= */
+
+.chartWrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding-top: var(--spacing-sm);
+  animation: chartEntrance 700ms 100ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* =========================================================
+   GRID / AXES
+   ========================================================= */
+
+.gridline {
+  stroke: var(--color-neutral-gray);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  opacity: 0.8;
+}
+
+.axisLabel {
+  fill: var(--color-text-inactive);
+  font-family: var(--font-family-sans);
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+}
+
+/* =========================================================
+   AREA / LINE
+   ========================================================= */
+
+.area {
+  opacity: 0;
+  animation: areaReveal 1150ms 400ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  animation: lineReveal 900ms 250ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* =========================================================
+   INTERACTION
+   ========================================================= */
+
+.activeLine {
+  stroke: var(--color-neutral-gray-silver);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.9;
+}
+
+.activeDot {
+  fill: var(--color-background-white);
+  stroke-width: 3;
+}
+
+.hotspot {
+  fill: transparent;
+  cursor: crosshair;
+  outline: none;
+}
+
+.hotspot:focus-visible {
+  fill: var(--color-primary-red-bg);
+  fill-opacity: 0.2;
+  stroke: var(--color-neutral-gray-silver);
+  stroke-opacity: 0.6;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+/* =========================================================
+   X AXIS
+   ========================================================= */
+
+.axisX {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+  padding-left: 9.1667%;
+  padding-right: 2.7778%;
+  margin-top: var(--spacing-sm);
+}
+
+.axisXLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-inactive);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   TOOLTIP
+   ========================================================= */
+
+.tooltip {
+  position: absolute;
+  top: var(--spacing-md);
+  left: 0;
+  z-index: var(--z-index-10);
+  display: flex;
+  min-width: 9.5rem;
+  max-width: min(15rem, 82%);
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md) var(--spacing-lg);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-feedback-success-dark);
+  box-shadow:
+    0 5px 12px rgba(27, 33, 56, 0.12),
+    0 2px 4px rgba(27, 33, 56, 0.08);
+  color: var(--color-text-white);
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translateX(var(--tooltip-offset, -50%));
+  animation: tooltipEntrance 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.tooltipDate {
+  color: rgba(255, 255, 255, 0.82);
+  text-transform: capitalize;
+}
+
+.tooltipRows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.tooltipRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.tooltipDot {
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  flex: 0 0 0.625rem;
+  border-radius: var(--border-radius-full);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.tooltipLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.86);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tooltipValue {
+  color: var(--color-text-white);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
+
+.empty {
+  display: flex;
+  min-height: 15rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-2xl);
+  text-align: center;
+  animation: emptyEntrance 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.emptyIcon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border-radius: var(--border-radius-lg);
+  background-color: var(--color-neutral-gray-white);
+}
+
+.emptyText {
+  max-width: 24rem;
+  color: var(--color-text-gray-light);
+  line-height: var(--line-height-lg);
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes chartEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes areaReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lineReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tooltipEntrance {
+  from {
+    opacity: 0;
+    transform:
+      translateX(var(--tooltip-offset, -50%))
+      translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateX(var(--tooltip-offset, -50%))
+      translateY(0);
+  }
+}
+
+@keyframes emptyEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .axisXLabel {
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .chartWrap {
+    padding-top: var(--spacing-md);
+  }
+
+  .tooltip {
+    min-width: 8.5rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .chartWrap,
+  .area,
+  .line,
+  .tooltip,
+  .empty {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .area,
+  .line {
+    opacity: 1;
+  }
+}

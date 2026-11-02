@@ -1,13 +1,21 @@
+/* =========================================================
+   PANEL
+   ========================================================= */
+
 .panel {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: var(--spacing-xl);
   padding: var(--spacing-2xl);
+  overflow: hidden;
   border: var(--border-width-xs) solid var(--color-neutral-gray);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-lg);
   background-color: var(--color-background-white);
-  box-shadow: var(--box-shadow-2xs);
+  box-shadow:
+    0 2px 5px rgba(27, 33, 56, 0.025),
+    0 8px 24px rgba(27, 33, 56, 0.045);
+  animation: panelEntrance 550ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .header {
@@ -18,9 +26,14 @@
   gap: var(--spacing-xl);
 }
 
-.headerText { min-width: 0; }
+.headerText {
+  min-width: 0;
+}
 
-.title { color: var(--color-text-black); }
+.title {
+  color: var(--color-text-black);
+  letter-spacing: var(--letter-spacing-tight);
+}
 
 .headerStats {
   display: flex;
@@ -28,6 +41,7 @@
   flex-wrap: wrap;
   gap: var(--spacing-sm) var(--spacing-lg);
   margin-top: var(--spacing-md);
+  animation: statsEntrance 550ms 100ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .amount {
@@ -38,15 +52,68 @@
   font-size: var(--font-size-5xl);
   font-weight: var(--font-weight-bold);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-.amountSymbol { color: inherit; }
-.ordersCount { color: var(--color-text-gray-light); }
+.amountSymbol {
+  color: inherit;
+}
+
+.ordersCount {
+  color: var(--color-text-gray-light);
+}
+
+.headerSub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-lg);
+  margin-top: var(--spacing-sm);
+}
+
+.headerSubItem {
+  color: var(--color-text-gray-light);
+}
+
+.headerSubItem strong {
+  color: var(--color-text-black);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.granularityTag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius-full);
+  background-color: var(--color-background-white-ice);
+  color: var(--color-text-success);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.refreshIndicator {
+  width: 0.625rem;
+  height: 0.625rem;
+  flex: 0 0 0.625rem;
+  margin-top: 0.45rem;
+  border: 2px solid var(--color-primary-pink-light);
+  border-top-color: var(--color-primary-red2);
+  border-radius: var(--border-radius-full);
+  animation: refreshSpin 700ms linear infinite;
+}
+
+/* =========================================================
+   CHART WRAPPER
+   ========================================================= */
 
 .chartWrap {
   position: relative;
   width: 100%;
   min-width: 0;
+  overflow: hidden;
+  padding-top: var(--spacing-sm);
+  animation: chartEntrance 700ms 100ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .svg {
@@ -56,25 +123,126 @@
   overflow: visible;
 }
 
+/* =========================================================
+   GRID / AXES
+   ========================================================= */
+
+.grid {
+  pointer-events: none;
+}
+
+.gridRow {
+  opacity: 0;
+  animation: gridEntrance 450ms cubic-bezier(0.2, 0.8, 0.2, 1)
+    var(--grid-delay, 200ms) forwards;
+}
+
 .gridline {
   stroke: var(--color-neutral-gray);
   stroke-width: 1;
-  stroke-dasharray: 3 4;
+  stroke-dasharray: 3 5;
+  opacity: 0.8;
 }
 
 .axisLabel {
   fill: var(--color-text-inactive);
+  font-family: var(--font-family-sans);
   font-size: 11px;
+  font-weight: var(--font-weight-medium);
+}
+
+/* =========================================================
+   AREA / LINE / ENDPOINT
+   ========================================================= */
+
+/*
+ * The line itself is rendered at its full geometry. The clip-path rectangle
+ * reveals it horizontally, avoiding stroke-dash length and rounding issues.
+ */
+.area {
+  opacity: 0;
+  animation: areaReveal 1150ms 400ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .line {
-  stroke-width: 2.5;
+  fill: none;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 2px rgba(80, 167, 115, 0.12));
+}
+
+/* Animated rectangle inside the SVG clipPath. */
+.revealMask {
+  transform: scaleX(0);
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: revealSeries 1900ms 120ms cubic-bezier(0.22, 0.75, 0.25, 1) both;
+}
+
+/* Final endpoint shares the same reveal mask as the line. */
+.endPoint {
+  pointer-events: none;
+}
+
+.endPointHalo {
+  fill: var(--color-feedback-success-dark);
+  fill-opacity: 0.14;
+  stroke: none;
+}
+
+.endPointCore {
+  fill: var(--color-background-white);
+  stroke: var(--color-feedback-success-dark);
+  stroke-width: 3;
+  filter: drop-shadow(0 1px 3px rgba(80, 167, 115, 0.18));
+}
+
+/* Single-point fallback. */
+.singlePoint {
+  fill: var(--color-background-white);
+  stroke: var(--color-feedback-success-dark);
+  stroke-width: 3;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pointEntrance 500ms 250ms cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+}
+
+/* =========================================================
+   INTERACTION
+   ========================================================= */
+
+.hotspot {
+  fill: transparent;
+  cursor: crosshair;
+  outline: none;
+}
+
+.hotspot:focus-visible {
+  fill: var(--color-primary-red-bg);
+  fill-opacity: 0.2;
+  stroke: var(--color-feedback-success-dark);
+  stroke-opacity: 0.5;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.activeIndicator {
+  animation: activeIndicatorEntrance 180ms ease both;
 }
 
 .activeLine {
   stroke: var(--color-neutral-gray-silver);
   stroke-width: 1;
-  stroke-dasharray: 2 3;
+  stroke-dasharray: 3 4;
+  opacity: 0.9;
+}
+
+.activeHalo {
+  fill: var(--color-feedback-success-dark);
+  fill-opacity: 0.14;
+  stroke: none;
 }
 
 .activeDot {
@@ -83,64 +251,111 @@
   stroke-width: 3;
 }
 
-.hotspot {
-  fill: transparent;
-  cursor: pointer;
-}
-
-.hotspot:focus-visible {
-  outline: var(--border-width-lg) solid var(--color-feedback-success-dark);
-  outline-offset: -2px;
-}
+/* =========================================================
+   X AXIS
+   ========================================================= */
 
 .axisX {
   display: flex;
   justify-content: space-between;
   gap: var(--spacing-xs);
-  padding-left: 56px;
-  padding-right: 16px;
+  padding-left: 9.1667%;
+  padding-right: 2.7778%;
   margin-top: var(--spacing-sm);
 }
 
 .axisXLabel {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
   color: var(--color-text-inactive);
   font-size: var(--font-size-sm);
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+/* =========================================================
+   TOOLTIP
+   ========================================================= */
 
 .tooltip {
   position: absolute;
-  top: 0;
-  transform: translateX(-50%);
+  top: var(--spacing-md);
+  left: 0;
+  z-index: var(--z-index-10);
   display: flex;
+  min-width: 8.5rem;
+  max-width: min(14rem, 80%);
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-xs);
   padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--border-radius-xs);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--border-radius-md);
   background-color: var(--color-feedback-success-dark);
+  box-shadow:
+    0 5px 12px rgba(27, 33, 56, 0.12),
+    0 2px 4px rgba(27, 33, 56, 0.08);
   color: var(--color-text-white);
-  box-shadow: var(--box-shadow-lg);
   pointer-events: none;
   white-space: nowrap;
+  transform: translateX(var(--tooltip-offset, -50%));
+  animation: tooltipEntrance 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.tooltipDate { color: rgba(255, 255, 255, 0.85); text-transform: capitalize; }
-.tooltipValue { color: var(--color-text-white); }
-.tooltipMeta { color: rgba(255, 255, 255, 0.85); }
+.tooltipDate {
+  color: rgba(255, 255, 255, 0.82);
+  text-transform: capitalize;
+}
+
+.tooltipValue {
+  color: var(--color-text-white);
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltipMeta {
+  color: rgba(255, 255, 255, 0.82);
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltipRows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 2px;
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.tooltipRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
 
 .skeleton {
   width: 100%;
   height: 260px;
-  border-radius: var(--border-radius-sm);
-  background: linear-gradient(90deg, var(--color-loaders-background) 25%, var(--color-loaders-fore-ground) 37%, var(--color-loaders-background) 63%);
+  border-radius: var(--border-radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-loaders-background) 25%,
+    var(--color-loaders-fore-ground) 37%,
+    var(--color-loaders-background) 63%
+  );
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
 
 .empty {
   display: flex;
@@ -149,19 +364,252 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-md);
+  padding: var(--spacing-2xl);
   text-align: center;
+  animation: emptyEntrance 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.emptyIcon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border-radius: var(--border-radius-lg);
+  background-color: var(--color-neutral-gray-white);
+}
+
+.emptyTitle {
+  color: var(--color-text-black);
 }
 
 .emptyText {
   max-width: 24rem;
   color: var(--color-text-gray-light);
+  line-height: var(--line-height-lg);
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes panelEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes statsEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chartEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gridEntrance {
+  from {
+    opacity: 0;
+    transform: translateX(-5px);
+  }
+
+  to {
+    opacity: 0.8;
+    transform: translateX(0);
+  }
+}
+
+/* Reveal the complete plot width, including the final endpoint marker. */
+@keyframes revealSeries {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes areaReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pointEntrance {
+  from {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes activeIndicatorEntrance {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tooltipEntrance {
+  from {
+    opacity: 0;
+    transform:
+      translateX(var(--tooltip-offset, -50%))
+      translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateX(var(--tooltip-offset, -50%))
+      translateY(0);
+  }
+}
+
+@keyframes emptyEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes refreshSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: 100% 50%; }
-  100% { background-position: 0 50%; }
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0 50%;
+  }
 }
 
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .panel {
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-md);
+  }
+
+  .amount {
+    font-size: var(--font-size-3xl);
+  }
+
+  .axisX {
+    padding-left: 9.1667%;
+    padding-right: 2.7778%;
+  }
+
+  .axisXLabel {
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .panel {
+    padding: var(--spacing-lg);
+  }
+
+  .headerStats {
+    gap: var(--spacing-xs) var(--spacing-md);
+  }
+
+  .amount {
+    font-size: var(--font-size-2xl);
+  }
+
+  .chartWrap {
+    padding-top: var(--spacing-md);
+  }
+
+  .tooltip {
+    min-width: 7.5rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
-  .skeleton { animation: none; }
+  .panel,
+  .headerStats,
+  .chartWrap,
+  .gridRow,
+  .revealMask,
+  .area,
+  .singlePoint,
+  .activeIndicator,
+  .tooltip,
+  .skeleton,
+  .empty,
+  .refreshIndicator {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .gridRow {
+    opacity: 0.8;
+  }
+
+  .revealMask {
+    transform: none;
+  }
+
+  .area {
+    opacity: 1;
+  }
+
+  .singlePoint {
+    opacity: 1;
+    transform: none;
+  }
 }

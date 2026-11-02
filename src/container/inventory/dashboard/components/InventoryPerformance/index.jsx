@@ -5,27 +5,19 @@ import {
   useTotalAllSales,
   useTotalProductsInStock,
   useTotalProductsSolded,
-  useTotalSales,
   useWeeklyStockMovement
 } from 'npm-pkg-hook'
 import {
   Column,
   getGlobalStyle,
   Icon,
-  numberFormat,
-  StockMovementsChart,
   Text
 } from 'pkg-components'
-import { useEffect, useState } from 'react'
+import PropTypes from 'prop-types'
 
 import { ReportGrid } from '../../../ReportGrid'
+import { StockMovementsChart } from '../StockMovementsChart'
 import styles from './styles.module.css'
-
-const NUMBER_FORMAT_OPTIONS = {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-  style: 'decimal'
-}
 
 /**
  * Formats a date part using the Spanish (Colombia) locale.
@@ -75,28 +67,22 @@ const parsePercentage = (value) => {
 }
 
 /**
- * Inventory performance section. Preserves the original inventory metrics and
- * charts (stock in/out, weekly variation, product ranking source) with clearer
- * labels. Its data is independent from the commercial period filter because the
- * underlying hooks aggregate over their own inventory windows.
+ * Inventory performance section. Preserves the original inventory metrics
+ * (weekly variation, product ranking source, KPIs) and renders stock movements
+ * through the shared SVG {@link StockMovementsChart}, which now reacts to the
+ * dashboard period filter: the selected range is forwarded to
+ * `useStockMovements` so entradas, salidas y ajustes reflect that window.
  *
+ * @param {object} [props] - Component props.
+ * @param {object} [props.filter] - DashboardFilterInput from the period filter.
  * @returns {JSX.Element} The inventory performance section.
  */
-export const InventoryPerformance = () => {
-  const [stocksMovements] = useStockMovements()
+export const InventoryPerformance = ({ filter }) => {
+  const [stocksMovements] = useStockMovements(filter)
   const [weeklyStockMovement] = useWeeklyStockMovement()
-  const [totalSales] = useTotalSales()
   const [totalProductsInStock] = useTotalProductsInStock()
   const [totalProductSold] = useTotalProductsSolded()
   const [totalAllSales] = useTotalAllSales()
-  const [screenWidth, setScreenWidth] = useState(0)
-
-  useEffect(() => {
-    const updateScreenWidth = () => setScreenWidth(window.innerWidth)
-    updateScreenWidth()
-    window.addEventListener('resize', updateScreenWidth, { passive: true })
-    return () => window.removeEventListener('resize', updateScreenWidth)
-  }, [])
 
   const weeklyMovements = Array.isArray(weeklyStockMovement) ? weeklyStockMovement : []
   const visibleWeeklyMovements = weeklyMovements.filter((item) => {
@@ -110,11 +96,6 @@ export const InventoryPerformance = () => {
       label: 'Valor total de ventas concluidas',
       value: totalAllSales ?? 0,
       numberformat: true,
-      icon: { icon: 'IconUpTrend', color: getGlobalStyle('--color-icons-success'), size: 28 }
-    },
-    {
-      label: 'Pedidos concluidos',
-      value: numberFormat(totalSales ?? 0, NUMBER_FORMAT_OPTIONS),
       icon: { icon: 'IconUpTrend', color: getGlobalStyle('--color-icons-success'), size: 28 }
     },
     {
@@ -147,8 +128,8 @@ export const InventoryPerformance = () => {
       <StockMovementsChart
         chartData={stocksMovements}
         className={styles.graphics}
+        timezone={filter?.timezone}
         title='Entradas y Salidas de Inventario por día'
-        width={screenWidth}
       />
 
       <div aria-label='Variación semanal de inventario' className={styles.weeklySection}>
@@ -232,4 +213,8 @@ export const InventoryPerformance = () => {
       </div>
     </section>
   )
+}
+
+InventoryPerformance.propTypes = {
+  filter: PropTypes.object
 }

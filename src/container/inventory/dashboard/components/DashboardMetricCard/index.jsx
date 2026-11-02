@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  CounterAnimation, getGlobalStyle, Icon, KpiSparkChart, Text
+  CounterAnimation, getGlobalStyle, Icon, KpiSparkChart, Row, Text
 } from 'pkg-components'
 import PropTypes from 'prop-types'
 
@@ -96,6 +96,7 @@ export const DashboardMetricCard = ({
         </Text>
       </header>
 
+<Row>
       <div className={styles.value}>
         {isCurrency && (
           <Text as='span' className={styles.currencySymbol} size='2xl' weight={700}>
@@ -119,6 +120,8 @@ export const DashboardMetricCard = ({
           topColor={spark.topColor}
         />
       </div>
+</Row>
+
 
       <footer className={styles.footer}>
         <span
