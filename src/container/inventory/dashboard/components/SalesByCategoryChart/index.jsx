@@ -72,8 +72,8 @@ const CORNER_SLOTS = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
  * @returns {number} A finite non-negative number.
  */
 const toFiniteNumber = (value) => {
-  if (typeof value === 'number') return Number.isFinite(value) ? value : NaN
-  if (typeof value !== 'string' || value.trim() === '') return NaN
+  if (typeof value === 'number') {return Number.isFinite(value) ? value : NaN}
+  if (typeof value !== 'string' || value.trim() === '') {return NaN}
 
   const parsed = Number(value)
 
@@ -138,7 +138,7 @@ const sumPrecisely = (values) => {
  * @returns {Array<object>} Normalized category slices.
  */
 const normalizeSlices = (input) => {
-  if (!Array.isArray(input)) return []
+  if (!Array.isArray(input)) {return []}
 
   return input.reduce((result, slice, index) => {
     if (!slice || typeof slice !== 'object' || Array.isArray(slice)) {
@@ -155,7 +155,7 @@ const normalizeSlices = (input) => {
       : 'Categoría sin nombre'
 
     // Ignore only records that carry neither identity nor useful metrics.
-    if (!categoryId && revenue === 0 && units === 0) return result
+    if (!categoryId && revenue === 0 && units === 0) {return result}
 
     result.push({
       key: categoryId ?? `${categoryName}-${index}`,
@@ -221,7 +221,7 @@ const getChartSlices = (slices, maxSegments) => {
     .filter((slice) => slice.revenue > 0)
     .sort((a, b) => b.revenue - a.revenue || a.sourceIndex - b.sourceIndex)
 
-  if (ranked.length <= maxSegments) return ranked
+  if (ranked.length <= maxSegments) {return ranked}
 
   const visibleCount = Math.max(1, maxSegments - 1)
   const visible = ranked.slice(0, visibleCount)
@@ -254,7 +254,7 @@ const getChartSlices = (slices, maxSegments) => {
  * @returns {Array<object>} Slices enriched with exact SVG arc geometry.
  */
 const buildDonutArcs = (slices, total, { radius, gapSize }) => {
-  if (total <= 0 || slices.length === 0) return []
+  if (total <= 0 || slices.length === 0) {return []}
 
   if (slices.length === 1) {
     return [{ ...slices[0], isFullCircle: true, hasArc: true }]
@@ -333,11 +333,12 @@ export const SalesByCategoryChart = ({
   // the widget works both inside InventoryC (with a shared filter) and
   // standalone on the dashboard.
   const resolvedFilter = useMemo(() => {
-    const isPeriodFilter = filter != null &&
+    const isPeriodFilter = filter !== null &&
+      filter !== undefined &&
       typeof filter === 'object' &&
       ('preset' in filter || 'from' in filter || 'referenceDate' in filter || 'startAt' in filter)
 
-    if (isPeriodFilter) return filter
+    if (isPeriodFilter) {return filter}
 
     return buildPeriodFilter({
       preset: 'day',
@@ -501,7 +502,7 @@ export const SalesByCategoryChart = ({
                 />
 
                 {arcs.map((arc, index) => {
-                  if (!arc.hasArc) return null
+                  if (!arc.hasArc) {return null}
 
                   const commonProps = {
                     className: `${styles.arc} ${activeKey === arc.key ? styles.arcActive : ''}`,

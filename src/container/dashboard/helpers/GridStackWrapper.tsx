@@ -27,9 +27,9 @@ import React, {
 
 import { Categories } from '@/container/categories';
 import { ChatStatistic } from '@/container/ChatStatistic';
-import { SalesByCategoryChart } from '@/container/inventory/dashboard/components/SalesByCategoryChart';
 import { Clients } from '@/container/clients';
 import { Devices } from '@/container/Devices';
+import { SalesByCategoryChart } from '@/container/inventory/dashboard/components/SalesByCategoryChart';
 import { DishStore } from '@/container/main/components/main.dishStore';
 import { Goal } from '@/container/main/components/main.goal';
 import { QrCode } from '@/container/main/components/main.qr';
