@@ -1,6 +1,10 @@
 'use client'
 
-import { useChartData, useMobile } from 'npm-pkg-hook'
+import {
+ numberFormat, 
+ useChartData, 
+ useMobile 
+} from 'npm-pkg-hook'
 import {
   BarChat,
   HorizontalBarChart,
@@ -21,7 +25,9 @@ export const ChatStatisticMemo = () => {
     options,
     setChartType,
     handleChangeYear,
-    chartType
+    chartType,
+    trendColor,
+    summary
   } = useChartData({})
   const showFilter = years?.length > 0
 
@@ -64,11 +70,31 @@ export const ChatStatisticMemo = () => {
               )}
             </div>
 
+            {summary && (
+              <div className={styles.summary}>
+                <div className={styles.summaryCard}>
+                  <span className={styles.summaryLabel}>Total vendido</span>
+                  <span className={styles.summaryValue}>
+                    {numberFormat(summary.totalSales)}
+                  </span>
+                </div>
+
+                {summary.bestMonth && (
+                  <div className={styles.summaryCard}>
+                    <span className={styles.summaryLabel}>Mejor mes</span>
+                    <span className={styles.summaryValue}>
+                      {summary.bestMonth.label} · {numberFormat(summary.bestMonth.value)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className={styles.containChart}>
               {chartType === 'bar' ? (
-                <BarChat data={dataChart || []} options={options} />
+                <BarChat data={dataChart || []} options={options} color={trendColor} />
               ) : (
-                <HorizontalBarChart data={dataChart || []} options={options} />
+                <HorizontalBarChart data={dataChart || []} options={options} color={trendColor} />
               )}
             </div>
           </div>
