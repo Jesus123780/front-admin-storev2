@@ -183,6 +183,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         handleRemoveList,
         setTitle,
         loadingCreateSubDessert,
+        loadingEditSubOptional,
         title,
         setCheck,
         dataListIds,
@@ -191,6 +192,13 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         handleAdd,
         isCompleteRequired,
         removeOneItem,
+        editOneItem,
+        editOneExtra,
+        selectedItem,
+        selectedExtra,
+        openModalEditExtra,
+        setSelectedExtra,
+        setOpenModalEditExtra,
         handleAddList,
         handleCleanData,
         setData
@@ -821,16 +829,24 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             <OptionalExtraProducts
                 data={dataLines}
                 dataListIds={dataListIds}
+                editOneExtra={editOneExtra}
+                editOneItem={editOneItem}
                 handleAdd={handleAdd}
                 handleAddList={handleAddList}
                 handleChangeItems={handleChangeItems}
                 handleCheck={handleCheckDessert}
                 handleRemoveList={handleRemoveList}
                 loadingCreateSubDessert={loadingCreateSubDessert}
+                loadingEditSubOptional={loadingEditSubOptional}
+                openModalEditExtra={openModalEditExtra}
                 pId={pId}
                 removeOneItem={removeOneItem}
+                selectedExtra={selectedExtra}
+                selectedItem={selectedItem}
                 setCheck={setCheck}
                 setData={setData}
+                setOpenModalEditExtra={setOpenModalEditExtra}
+                setSelectedExtra={setSelectedExtra}
                 setTitle={setTitle}
                 title={title}
                 sendNotification={sendNotification}

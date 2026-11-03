@@ -185,7 +185,7 @@
     padding: var(--spacing-xs, 4px);
 
     border: var(--border-width-xs, 1px) solid transparent;
-    border-radius: var(--border-radius-full, 999px);
+    border-radius: var(--border-radius-xs, 999px);
 
     transition: transform 0.15s ease, border-color 0.15s ease,
         background-color 0.15s ease;

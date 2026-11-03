@@ -233,33 +233,41 @@ export const ProductView: React.FC<IProductViewProps> = ({
             </Text>
           </Column>
           <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-          <Text color='gray-dark' size='md'>
-            {ProDescription}
-          </Text>
-          <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-          <Row>
-            <Row>
+          <Column>
+            <Text color='gray-dark' size='md'>
+              {ProDescription}
+            </Text>
+
+            <Row style={{
+              flexWrap: 'wrap',
+              justifyContent: 'space-between'
+            }}>
               <Text
                 className={styles.text_prices}
                 color='default'
                 size='xxl'
+                as='h2'
+                style={{
+                  width: 'min-content'
+                }}
               >
                 {numberFormat(ProPrice)}
               </Text>
-              {Boolean(ProDescuento) &&
-                <PercentBadge
-                  baseValue={ProDescuento}
-                  compareValue={ProPrice}
-                  precision={0}
-                />
-              }
-            </Row>
-            <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
 
-            <Text className={[styles.text_prices, styles.text_prices__discount]} size='md'>
-              {numberFormat(ProDescuento)}
-            </Text>
-          </Row>
+              <Text className={[styles.text_prices, styles.text_prices__discount]} size='md'>
+                {numberFormat(ProDescuento)}
+              </Text>
+            </Row>
+
+            {Boolean(ProDescuento) &&
+              <PercentBadge
+                baseValue={ProDescuento}
+                compareValue={ProPrice}
+                precision={0}
+              />
+            }
+          </Column>
+
           <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           <div>
             {store && !!nameStore && (
@@ -276,6 +284,7 @@ export const ProductView: React.FC<IProductViewProps> = ({
             <label className='dish-observation-form__label'>
               ¿Algún comentario?
             </label>
+            <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           </div>
           <Column>
             {ProBarCode !== null && <BarCodes value={ProBarCode} />}
@@ -360,7 +369,6 @@ export const ProductView: React.FC<IProductViewProps> = ({
                 />
               </div>
               <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-
               <AlertInfo message='Estos son los días de la semana en que el producto estará disponible' type='warning' />
             </Column>
           ) : (

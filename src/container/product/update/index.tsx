@@ -220,8 +220,14 @@ export const Update = ({ id = '' } = { id: null }) => {
     handleChangeItems,
     handleAdd,
     isCompleteRequired,
+    loadingEditSubOptional,
     selectedItem,
+    selectedExtra,
+    openModalEditExtra,
+    setSelectedExtra,
+    setOpenModalEditExtra,
     editOneItem,
+    editOneExtra,
     removeOneItem,
     handleAddList,
     setData
@@ -242,10 +248,16 @@ export const Update = ({ id = '' } = { id: null }) => {
     handleChangeItems,
     handleAdd,
     isCompleteRequired,
+    loadingEditSubOptional,
     removeOneItem,
     handleAddList,
     selectedItem,
+    selectedExtra,
+    openModalEditExtra,
+    setSelectedExtra,
+    setOpenModalEditExtra,
     editOneItem,
+    editOneExtra,
     setData
   }
   const { handleDelete, loading: loadingDeleteProduct } = useDeleteProductsFood(
@@ -677,7 +689,9 @@ export const Update = ({ id = '' } = { id: null }) => {
                   pId={id}
                   propsExtra={propsExtra}
                   setModal={() => {
-                    return setModal(!modal)
+                    return setModal((prev)=> {
+                      return !prev
+                    })
                   }}
                 />
               )}

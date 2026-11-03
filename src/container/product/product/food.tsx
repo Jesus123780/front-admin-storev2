@@ -116,6 +116,7 @@ export const FoodComponentMemo = ({
     handleRemoveList,
     setTitle,
     loadingCreateSubDessert,
+    loadingEditSubOptional,
     title,
     setCheck,
     dataListIds,
@@ -124,6 +125,13 @@ export const FoodComponentMemo = ({
     handleAdd,
     isCompleteRequired,
     removeOneItem,
+    editOneItem,
+    editOneExtra,
+    selectedItem,
+    selectedExtra,
+    openModalEditExtra,
+    setSelectedExtra,
+    setOpenModalEditExtra,
     handleAddList,
     handleCleanData,
     setData
@@ -611,6 +619,8 @@ export const FoodComponentMemo = ({
             <OptionalExtraProducts
               data={dataLines}
               dataListIds={dataListIds}
+              editOneExtra={editOneExtra}
+              editOneItem={editOneItem}
               handleAdd={handleAdd}
               handleAddList={handleAddList}
               handleChangeItems={handleChangeItems}
@@ -618,10 +628,16 @@ export const FoodComponentMemo = ({
               handleRemoveList={handleRemoveList}
               isCustomSubOpExPid={true}
               loadingCreateSubDessert={loadingCreateSubDessert}
+              loadingEditSubOptional={loadingEditSubOptional}
+              openModalEditExtra={openModalEditExtra}
               pId={pId}
               removeOneItem={removeOneItem}
+              selectedExtra={selectedExtra}
+              selectedItem={selectedItem}
               setCheck={setCheck}
               setData={setData}
+              setOpenModalEditExtra={setOpenModalEditExtra}
+              setSelectedExtra={setSelectedExtra}
               setTitle={setTitle}
               title={title}
             />
