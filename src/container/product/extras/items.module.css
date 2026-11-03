@@ -1,3 +1,4 @@
+
 .container {
   display: flex;
   flex-direction: column;
@@ -29,16 +30,9 @@
   border: 1px solid var(--color-neutral-gray-silver);
   border-radius: var(--border-radius-sm);
 
-  transform: translate3d(0, var(--flip-y), 0);
-
-  transition:
-    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 280ms ease,
-    border-color 280ms ease,
-    box-shadow 280ms ease,
-    opacity 220ms ease;
-
-  animation: item-enter 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Sin animaciones automáticas */
+  transform: none;
+  animation: none;
 }
 
 .itemEditing {
@@ -95,8 +89,6 @@
   font-size: 11px;
   font-weight: 400;
   line-height: 1.35;
-
-  animation: subtle-enter 240ms ease both;
 }
 
 /* =========================================
@@ -154,19 +146,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
-  transform-origin: center;
-
-  transition:
-    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 220ms ease;
 }
 
 .deleteWrapper {
   display: flex;
   align-items: center;
-
-  animation: action-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .deleteButton {
@@ -183,11 +167,8 @@
   border: 1px solid transparent;
   border-radius: var(--border-radius-xs);
 
-  transition:
-    background-color 220ms ease,
-    border-color 220ms ease,
-    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 220ms ease;
+  /* Sin transición automática */
+  transition: none;
 }
 
 .deleteButton:disabled {
@@ -210,8 +191,6 @@
   font-size: 11px;
   font-weight: 500;
   line-height: 1.35;
-
-  animation: subtle-enter 260ms ease both;
 }
 
 .itemSoldOut {
@@ -223,17 +202,11 @@
     var(--color-base-white)
   );
 
-  transition:
-    opacity 280ms ease,
-    background-color 280ms ease,
-    border-color 280ms ease,
-    transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  border-color: var(--color-neutral-gray-silver);
 }
 
 .itemSoldOut .title {
   color: var(--color-text-inactive);
-
-  transition: color 220ms ease;
 }
 
 .soldOutBadge {
@@ -254,25 +227,20 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
   vertical-align: middle;
-
-  animation: badge-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* =========================================
    HOVER
 ========================================= */
 
+/*
+  Hover únicamente en dispositivos con mouse.
+  No hay desplazamientos ni transiciones.
+*/
+
 @media (hover: hover) and (pointer: fine) {
   .item:hover {
     border-color: var(--color-text-inactive);
-
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.055);
-
-    transform: translate3d(
-      0,
-      calc(var(--flip-y) - 1px),
-      0
-    );
   }
 
   .itemAdded:hover {
@@ -280,7 +248,7 @@
   }
 
   .itemSoldOut:hover {
-    opacity: 0.78;
+    opacity: 0.65;
   }
 
   .deleteButton:not(:disabled):hover {
@@ -292,58 +260,62 @@
   }
 }
 
+/* Efecto inmediato al presionar */
+
 .deleteButton:not(:disabled):active {
-  transform: scale(0.93);
+  transform: scale(0.97);
 }
 
 /* =========================================
-   ANIMATIONS
+   INLINE EDITOR
 ========================================= */
 
-@keyframes item-enter {
-  from {
-    opacity: 0;
-  }
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 
-  to {
-    opacity: 1;
-  }
+  min-width: 0;
+  width: 100%;
 }
 
-@keyframes subtle-enter {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
+.editorField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  min-width: 0;
 }
 
-@keyframes action-enter {
-  from {
-    opacity: 0;
-    transform: translateX(-5px) scale(0.95);
-  }
+.editorLabel {
+  color: var(--color-text-inactive);
 
-  to {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
-@keyframes badge-enter {
-  from {
-    opacity: 0;
-    transform: scale(0.92);
-  }
+.editorInput {
+  width: 100%;
+  box-sizing: border-box;
 
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  padding: 10px 12px;
+
+  border: 1px solid var(--color-neutral-gray-silver);
+  border-radius: var(--border-radius-xs);
+
+  background: var(--color-base-white);
+  color: var(--color-text-primary);
+
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.editorInput:focus-visible {
+  outline: 2px solid var(--color-primary-red);
+  outline-offset: 1px;
+
+  border-color: var(--color-primary-red);
 }
 
 /* =========================================
@@ -407,46 +379,8 @@
     transform: none !important;
     --flip-y: 0px;
   }
-}
 
-/* Inline editor for a complemento row (product edit screen). Shown when the
-   row is selected for editing; replaces the read-only name/price block. */
-.editor {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-  width: 100%;
-}
-
-.editorField {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.editorLabel {
-  color: var(--color-text-inactive);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.editorInput {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 10px 12px;
-  border: 1px solid var(--color-neutral-gray-silver);
-  border-radius: var(--border-radius-xs);
-  background: var(--color-base-white);
-  color: var(--color-text-primary);
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.editorInput:focus-visible {
-  outline: 2px solid var(--color-primary-red);
-  outline-offset: 1px;
-  border-color: var(--color-primary-red);
+  .deleteButton:not(:disabled):active {
+    transform: none;
+  }
 }

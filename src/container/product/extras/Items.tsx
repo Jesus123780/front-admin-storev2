@@ -6,6 +6,7 @@ import {
   numberFormat,
   QuantityButton,
   RippleButton,
+  Text,
   ToggleSwitch
 } from 'pkg-components'
 import React, {
@@ -332,12 +333,12 @@ const Items = <T extends ExtraItem = ExtraItem>({
                   </h3>
 
                   {managesStock && !isSoldOut && (
-                    <span
+                    <Text
                       className={styles.stockHint}
                       title='Stock disponible'
                     >
                       Disponibles: {availableStock}
-                    </span>
+                    </Text>
                   )}
 
                   {showUnitPrice && (

@@ -853,7 +853,7 @@ export const SalesTrendChart = ({
               <div className={styles.headerSub}>
                 {totalOrders > 0 && (
                   <Text as='span' className={styles.headerSubItem} size='sm'>
-                    Ticket prom.{' '}
+                    Promedio de ventas{' '}
                     <strong>
                       {formatCurrency(averageTicket(totalRevenue, totalOrders), { currency })}
                     </strong>
