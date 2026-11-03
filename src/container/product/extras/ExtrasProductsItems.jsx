@@ -5,7 +5,6 @@ import {
   getGlobalStyle, 
   Icon
 } from 'pkg-components'
-import PropTypes from 'prop-types'
 import React from 'react'
 
 import Items from './Items'
@@ -119,43 +118,5 @@ export const ExtrasProductsItems = ({
       }
     </Column >
   )
-}
-
-ExtrasProductsItems.propTypes = {
-  dataExtra: PropTypes.array,
-  dataOptional: PropTypes.array,
-  disabled: PropTypes.bool,
-  editing: PropTypes.bool,
-  modal: PropTypes.any,
-  handleRemoveExtra: PropTypes.func,
-  props: PropTypes.shape({
-    handleAddOptional: PropTypes.func,
-    handleIncrementExtra: PropTypes.func,
-    handleDecrementExtra: PropTypes.func,
-    handleRemoveExtra: PropTypes.func
-  }),
-  propsExtra: PropTypes.shape({
-    LineItems: PropTypes.shape({
-      Lines: PropTypes.array
-    }),
-    loading: PropTypes.bool,
-    modal: PropTypes.bool,
-    inputRefs: PropTypes.any,
-    pId: PropTypes.any,
-    selected: PropTypes.shape({
-      loading: PropTypes.bool,
-      exPid: PropTypes.any
-    }),
-    CleanLines: PropTypes.func,
-    handleAdd: PropTypes.func,
-    handleEdit: PropTypes.func,
-    handleFocusChange: PropTypes.func,
-    handleSelect: PropTypes.func,
-    handleLineChange: PropTypes.func,
-    handleRemove: PropTypes.func,
-    onSubmitUpdate: PropTypes.func,
-    setModal: PropTypes.func
-  }),
-  setModal: PropTypes.func
 }
 

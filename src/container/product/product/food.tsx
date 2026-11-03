@@ -318,10 +318,12 @@ export const FoodComponentMemo = ({
  * @returns {Array} - Un array de objetos con la información del producto y el día disponible.
  */
   const createFormInput = () => {
+    const productId = pId || food
+
     return selectedDays.map(day => {
       return {
         idStore: idStore,
-        pId: pId || food,
+        pId: productId,
         dayAvailable: day
       }
     })
@@ -332,14 +334,34 @@ export const FoodComponentMemo = ({
  * @param {Array} input - La entrada creada por createFormInput.
  */
   const handleRegisterAvailableProduct = async (input) => {
+    // El producto debe existir antes de registrar su disponibilidad.
+    // Sin un pId válido la mutación falla con un error de llave foránea.
+    const productId = pId || food
+
+    if (input.length > 0 && !productId) {
+      return sendNotification({
+        description: 'No encontramos el producto. Guarda primero los datos del producto antes de configurar su disponibilidad.',
+        title: 'Error',
+        backgroundColor: 'error'
+      })
+    }
+
     try {
       const response = await registerAvailableProduct({ variables: { input } })
-      const success = response?.data?.registerAvailableProduct?.success
-      if (success) {
+      const result = response?.data?.registerAvailableProduct
+      if (result?.success) {
         sendSuccessNotification()
       } else {
+        const detailedError = result?.errors
+          ?.map((error) => error?.message)
+          .filter(Boolean)
+          .join(' ')
+
         sendNotification({
-          description: 'Ha ocurrido un error al guardar los días disponibles',
+          description:
+            detailedError ||
+            result?.message ||
+            'Ha ocurrido un error al guardar los días disponibles',
           title: 'Error',
           backgroundColor: 'error'
         })

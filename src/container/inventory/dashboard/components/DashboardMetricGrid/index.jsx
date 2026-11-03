@@ -17,12 +17,11 @@ import styles from './styles.module.css'
  * @param {string} [props.currency] - ISO currency code for monetary KPIs.
  * @returns {JSX.Element} The KPI grid.
  */
-export const DashboardMetricGrid = ({ filter, currency }) => {
+export const DashboardMetricGrid = ({ filter, currency, periodLabel }) => {
   const [summary, { loading, error, refetch }] = useDashboardSummary(filter)
   const comparison = getComparisonLabel(filter?.preset)
   const currencySymbol = getCurrencySymbol(currency)
   const isInitialLoading = loading && !summary
-
   if (error && !summary) {
     return (
       <div className={styles.grid}>
@@ -41,7 +40,7 @@ export const DashboardMetricGrid = ({ filter, currency }) => {
         featured
         iconName='IconDollar'
         isCurrency
-        label='Ingresos totales'
+        label={`Ingresos totales - ${periodLabel}`}
         loading={isInitialLoading}
         metric={summary?.revenue}
         sparkline={summary?.revenueSparkline ?? []}

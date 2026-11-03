@@ -228,6 +228,7 @@ const ControlledGrid: FunctionComponent<ControlledGridProps> = ({
     }, [items]);
 
     const handleLayoutChange = (newLayout: GridStackLayoutItem[]): void => {
+        console.log({newLayout})
         if (!editMode || skipUpdate) {
             const mapped = localLayout.map((item) => {
                 const found = newLayout.find((l) => l.i === item.id);
@@ -582,6 +583,7 @@ export const GridStackWrapper: FunctionComponent = () => {
             }),
         [items]
     );
+
 
     if (loading) {
         return <Loading />;

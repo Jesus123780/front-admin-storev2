@@ -83,7 +83,7 @@ export const InventoryPerformance = ({ filter }) => {
   const [totalProductsInStock] = useTotalProductsInStock()
   const [totalProductSold] = useTotalProductsSolded()
   const [totalAllSales] = useTotalAllSales()
-  console.log(totalAllSales)
+
   const weeklyMovements = Array.isArray(weeklyStockMovement) ? weeklyStockMovement : []
   const visibleWeeklyMovements = weeklyMovements.filter((item) => {
     return item?.weekStart !== null &&

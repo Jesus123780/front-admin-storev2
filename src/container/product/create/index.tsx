@@ -70,9 +70,6 @@ interface AvailabilityCheck {
 
 /**
  * FoodComponentMemo manages the product creation and editing workflow.
- *
- * @param {FoodComponentMemoProps} props - Product form configuration and handlers.
- * @returns {JSX.Element} Product management interface.
  */
 export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     active,
@@ -120,7 +117,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     setShowMore,
     ...props
 }) => {
-    // Hooks
     const router = useRouter()
     const location = useRouter()
     const searchParams = useSearchParams()
@@ -149,9 +145,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     const [openAlertClose, setOpenAlertClose] = useState(false)
     const [openModalDessert, setOpenModalDessert] = useState(true)
 
-    const [dayConfigs, setDayConfigs] = useState<
-        Record<number, DayConfig>
-    >({})
+    const [dayConfigs, setDayConfigs] = useState<Record<number, DayConfig>>({})
 
     const {
         dataTags,
@@ -222,34 +216,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     }
 
     /**
-     * Closes the product workflow and clears its query parameters.
-     *
-     * @returns {void}
-     */
-    const cancelAll = () => {
-        setShowComponentModal(false)
-        handleClick(false)
-        setActive(STEPS.PRODUCT)
-        handleCleanQuery('food')
-        handleCleanQuery('product')
-    }
-
-    /**
-     * Opens or closes the category selector.
-     *
-     * @returns {void}
-     */
-    const handleShowCategories = () => {
-        setShowCategoryModal((previous) => !previous)
-    }
-
-    /**
      * Updates the start or end time for a specific day.
-     *
-     * @param {number} day - Day identifier.
-     * @param {'startTime' | 'endTime'} field - Time field to update.
-     * @param {string} value - Selected time.
-     * @returns {void}
      */
     const handleChangeAvailability = (
         day: number,
@@ -267,11 +234,11 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     }
 
     /**
-     * Updates the mutually exclusive availability settings.
+     * Keeps availability modes mutually exclusive and clears obsolete schedules.
      *
-     * @param {'availability' | 'noAvailability'} selectedOption - Selected setting.
-     * @param {boolean} checked - Whether the option is selected.
-     * @returns {void}
+     * Selecting "Siempre disponible" removes every selected day and its times.
+     * Unchecking "Horarios específicos" does the same, preventing stale schedule
+     * data from being sent when the form is saved.
      */
     const handleAvailabilityChange = (
         selectedOption: keyof AvailabilityCheck,
@@ -286,10 +253,18 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             nextState[selectedOption] = true
         }
 
+        const shouldClearSchedule =
+            (selectedOption === 'availability' && checked) ||
+            (selectedOption === 'noAvailability' && !checked)
+
+        if (shouldClearSchedule) {
+            handleCleanSelectedDays()
+            setDayConfigs({})
+        }
+
         setCheckAvailableDays(nextState)
     }
 
-    // Product form props
     const propsForm = {
         handleRegister,
         setName,
@@ -306,11 +281,10 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         stock,
         image,
         errors,
-        handleShowCategories,
+        handleShowCategories: () => setShowCategoryModal((previous) => !previous),
         ...props
     }
 
-    // Product listing props
     const propsListProducts = {
         onClickClear,
         data,
@@ -329,11 +303,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         ...props
     }
 
-    // Additional products
-    const [handleGetOneProduct, { dataExtra }] =
-        useGetOneProductsFood({
-            fetchOnlyProduct: false
-        })
+    const [handleGetOneProduct, { dataExtra }] = useGetOneProductsFood({
+        fetchOnlyProduct: false
+    })
 
     const {
         handleAdd: handleAddExtra,
@@ -366,7 +338,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         selected,
         pId,
         loading: l,
-        setModal: handleOpenModalDessert,
+        setModal: () => setOpenModalDessert(false),
         modal: openModalDessert,
         handleFocusChange,
         setLine,
@@ -375,9 +347,18 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     }
 
     /**
+     * Closes the product workflow and clears its query parameters.
+     */
+    const cancelAll = () => {
+        setShowComponentModal(false)
+        handleClick(false)
+        setActive(STEPS.PRODUCT)
+        handleCleanQuery('food')
+        handleCleanQuery('product')
+    }
+
+    /**
      * Loads the product associated with the current workflow.
-     *
-     * @returns {Promise<void | unknown>} Product loading result.
      */
     const handlerCreateDessert = async () => {
         if (!pId || !food) {
@@ -399,36 +380,38 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         })
     }
 
-    /**
-     * Creates the input expected by the availability mutation.
-     *
-     * @returns {Array<{
-     *   idStore: typeof idStore,
-     *   pId: typeof pId,
-     *   dayAvailable: number,
-     *   startDate: string | undefined,
-     *   endDate: string | undefined
-     * }>} Availability entries.
-     */
+    /** Creates the input expected by the availability mutation. */
     const createFormInput = () => {
+        const productId = pId || food
+
         return selectedDays.map((day: number) => ({
             idStore,
-            pId: pId || food,
+            pId: productId,
             dayAvailable: day,
             startDate: dayConfigs[day]?.startTime,
             endDate: dayConfigs[day]?.endTime
         }))
     }
 
-    /**
-     * Sends the availability mutation and handles its response.
-     *
-     * @param {ReturnType<typeof createFormInput>} input - Availability entries.
-     * @returns {Promise<void>} Mutation result handling.
-     */
+    /** Sends the availability mutation and handles its response. */
     const handleRegisterAvailableProduct = async (
         input: ReturnType<typeof createFormInput>
     ): Promise<void> => {
+        // El producto debe existir antes de registrar su disponibilidad.
+        // Sin un pId válido la mutación falla con un error de llave foránea.
+        const productId = pId || food
+
+        if (input.length > 0 && !productId) {
+            sendNotification({
+                description:
+                    'No encontramos el producto. Guarda primero los datos del producto antes de configurar su disponibilidad.',
+                title: 'Error',
+                backgroundColor: 'error'
+            })
+
+            return
+        }
+
         try {
             const response = await registerAvailableProduct({
                 variables: { input }
@@ -448,8 +431,15 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 return
             }
 
+            // El backend puede detallar la causa en `errors`.
+            const detailedError = result?.errors
+                ?.map((error) => error?.message)
+                .filter(Boolean)
+                .join(' ')
+
             const message =
-                result?.message ??
+                detailedError ||
+                result?.message ||
                 'Ha ocurrido un error al guardar los días disponibles.'
 
             sendNotification({
@@ -458,7 +448,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 backgroundColor: 'error'
             })
 
-            if (message === 'Session expired') {
+            if (result?.message === 'Session expired') {
                 await onClickLogout({ redirect: true })
 
                 setAlertBox({
@@ -476,11 +466,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         }
     }
 
-    /**
-     * Resets the form after successfully saving the product.
-     *
-     * @returns {void}
-     */
+    /** Resets the form after successfully saving the product. */
     const sendSuccessNotification = () => {
         setShowComponentModal(false)
         handleClick(false)
@@ -505,13 +491,8 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         })
     }
 
-    /**
-     * Processes the current workflow step.
-     *
-     * @returns {Promise<void>} Current step execution.
-     */
+    /** Processes the current workflow step. */
     const handlerSteps = async (): Promise<void> => {
-        // Step 1: Product details
         if (active === STEPS.PRODUCT) {
             const response = await handleRegister()
             const result = response?.data?.updateProductFoods
@@ -546,7 +527,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             return
         }
 
-        // Step 2: Optional products
         if (active === STEPS.DESSERTS) {
             if (!isCompleteRequired) {
                 sendNotification({
@@ -565,14 +545,23 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             return
         }
 
-        // Step 3: Complements
         if (active === STEPS.COMPLEMENTS) {
             setActive(STEPS.AVAILABILITY)
             return
         }
 
-        // Step 4: Availability
         if (active === STEPS.AVAILABILITY) {
+            if (!check.availability && !check.noAvailability) {
+                sendNotification({
+                    backgroundColor: 'warning',
+                    title: 'Alerta',
+                    description:
+                        'Selecciona cómo estará disponible el producto para continuar.'
+                })
+
+                return
+            }
+
             if (check.noAvailability && selectedDays.length === 0) {
                 sendNotification({
                     backgroundColor: 'warning',
@@ -584,17 +573,16 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 return
             }
 
-            const input = createFormInput()
+            // Siempre disponible = sin registros de horarios específicos.
+            // Horarios específicos = enviar únicamente los días configurados.
+            const input = check.noAvailability
+                ? createFormInput()
+                : []
 
             await handleRegisterAvailableProduct(input)
         }
     }
 
-    /**
-     * Continues the product creation workflow.
-     *
-     * @returns {Promise<void>} Current step result.
-     */
     const handleContinue = async (): Promise<void> => {
         await handlerSteps()
     }
@@ -618,12 +606,15 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         0: error,
         1: !isCompleteRequired,
         2: false,
-        3: check?.noAvailability && selectedDays.length === 0
+        3:
+            !check?.availability &&
+            (!check?.noAvailability || selectedDays.length === 0)
     }
 
     const asSaveAvailableProduct =
         active === STEPS.AVAILABILITY &&
-        selectedDays.length > 0
+        (Boolean(check?.availability) ||
+            (Boolean(check?.noAvailability) && selectedDays.length > 0))
 
     useEffect(() => {
         if (active === STEPS.COMPLEMENTS) {
@@ -633,7 +624,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         }
     }, [active])
 
-    // Workflow step components
     const components = {
         0: (
             <div className={styles.product_details}>
@@ -672,7 +662,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         más rápido.
                     </Text>
 
-                    {/* Paso 1: crear tags nuevos */}
                     <div className={styles.tags_section}>
                         <Text
                             size='md'
@@ -705,7 +694,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         </Text>
                     </div>
 
-                    {/* Paso 2: tags ya guardados que se pueden reutilizar */}
                     {Array.isArray(dataTags) && dataTags.length > 0 && (
                         <div className={styles.tags_section}>
                             <Text
@@ -781,7 +769,6 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         </div>
                     )}
 
-                    {/* Tag seleccionado */}
                     {Boolean(tags?.tag) && (
                         <div className={styles.tag_selected_box}>
                             <Text
@@ -820,8 +807,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         pId=''
                         tag={tags}
                         ProImage={
-                            preview ??
-                            '/images/dish-image-placeholder.png'
+                            preview ?? '/images/dish-image-placeholder.png'
                         }
                         pName={names}
                         ProPrice={values.ProPrice}
@@ -857,6 +843,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 <Button
                     onClick={handleOpenModalDessert}
                     primary
+                    width='min-content'
+                    iconName='IconBox'
+                    iconPosition='left'
                 >
                     Mostrar subproductos
                 </Button>
@@ -908,10 +897,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                             }}
                         />
 
-                        <Text
-                            size='sm'
-                            color='gray'
-                        >
+                        <Text size='sm' color='gray'>
                             Los clientes podrán comprar este producto sin
                             restricciones de días u horarios configurados
                             en esta sección.
@@ -932,10 +918,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                             }}
                         />
 
-                        <Text
-                            size='sm'
-                            color='gray'
-                        >
+                        <Text size='sm' color='gray'>
                             Define los días de la semana y las horas en
                             que estará disponible para tus clientes.
                         </Text>
@@ -945,17 +928,11 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 {check.noAvailability && (
                     <section className={styles.availability_schedule}>
                         <header className={styles.availability_schedule_header}>
-                            <Text
-                                size='xl'
-                                weight='bold'
-                            >
+                            <Text size='xl' weight='bold'>
                                 Días y horarios
                             </Text>
 
-                            <Text
-                                size='sm'
-                                color='gray'
-                            >
+                            <Text size='sm' color='gray'>
                                 Selecciona los días disponibles y configura
                                 la hora de inicio y finalización para cada
                                 día seleccionado.
@@ -976,10 +953,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         </div>
 
                         {selectedDays.length === 0 && (
-                            <Text
-                                size='sm'
-                                color='gray'
-                            >
+                            <Text size='sm' color='gray'>
                                 Aún no has seleccionado ningún día.
                             </Text>
                         )}
@@ -1025,17 +999,12 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     size={MODAL_SIZES.small}
                     zIndex={getGlobalStyle('--z-index-high')}
                 >
-                    <Text
-                        size='3xl'
-                        weight='extrabold'
-                    >
+                    <Text size='3xl' weight='extrabold'>
                         Es posible que el producto no contenga todos los
                         elementos necesarios.
                     </Text>
 
-                    <Divider
-                        marginTop={getGlobalStyle('--spacing-2xl')}
-                    />
+                    <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
                 </AwesomeModal>
 
                 <div className={styles.header_steps_sticky}>
@@ -1085,9 +1054,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         onClick={handleContinue}
                         primary
                     >
-                        {asSaveAvailableProduct
-                            ? 'Guardar'
-                            : 'Continuar'}
+                        {asSaveAvailableProduct ? 'Guardar' : 'Continuar'}
                     </Button>
                 </footer>
             </div>

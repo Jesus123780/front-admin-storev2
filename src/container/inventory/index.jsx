@@ -71,7 +71,7 @@ export const InventoryC = ({ timezone = DEFAULT_TIMEZONE, currency = DEFAULT_CUR
         />
       </div>
 
-      <DashboardMetricGrid currency={currency} filter={filter} key={`kpi-${refreshKey}`} />
+      <DashboardMetricGrid currency={currency} filter={filter} key={`kpi-${refreshKey}`} periodLabel={periodLabel} />
 
       <div className={styles.chartsRow}>
         <div className={styles.trend}>
