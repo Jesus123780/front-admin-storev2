@@ -94,6 +94,7 @@ export const StepOne = ({
   return (
     <div>
       <InputHooks
+        tabIndex={0}
         error={errorForm?.socialRaz}
         name='socialRaz'
         onChange={handleChange}
@@ -105,6 +106,8 @@ export const StepOne = ({
       />
       <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
       <InputHooks
+        tabIndex={1}
+
         error={errorForm?.documentIdentifier}
         name='documentIdentifier'
         onChange={(e) => {
@@ -120,6 +123,7 @@ export const StepOne = ({
       <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <InputHooks
+          tabIndex={2}
           error={errorForm?.nitStore}
           name='nitStore'
           numeric={true}
@@ -131,6 +135,7 @@ export const StepOne = ({
           step={1}
         />
         <InputHooks
+          tabIndex={3}
           disabled={true}
           name='nitStoreCheckDigit'
           onChange={handleChange}
@@ -142,6 +147,7 @@ export const StepOne = ({
       </div>
       <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
       <NewSelect
+        tabIndex={4}
         error={errorForm?.catStore as boolean}
         id='catStore'
         loading={loadingCatStore}
@@ -166,6 +172,7 @@ export const StepOne = ({
       </Text>
       <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
       <InputHooks
+        tabIndex={5}
         error={errorForm?.addressStore}
         name='addressStore'
         onBlur={handleBlur}
@@ -181,45 +188,58 @@ export const StepOne = ({
       <div>
         <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
         <NewSelect
+          tabIndex={6}
           error={errorForm?.countryId}
           id='cId'
+          step={1}
           loading={loadingCountries}
           name='countryId'
           onChange={(e) => handleChangeSearch(e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)}
           optionName='cName'
           options={countries}
+          required={true}
+
           title='Selecciona el país'
           value={values?.countryId}
         />
         <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
         <NewSelect
+          tabIndex={7}
           error={errorForm?.code_dId}
           id='code_dId'
           loading={loadingDepartments}
           name='code_dId'
+          step={1}
           onChange={(e) => handleChangeSearch(e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)}
           optionName='dName'
           options={departments}
+          required={true}
           title='Departamento'
           value={values?.code_dId}
         />
         <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
         <NewSelect
+          tabIndex={8}
           error={errorForm?.ctId}
           id='ctId'
+          step={1}
           loading={loadingCities}
           name='ctId'
           onChange={(e) => handleChangeSearch(e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)}
           optionName='cName'
+          required={true}
+
           options={cities ?? []}
           title='Ciudad'
           value={values?.ctId}
         />
         <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
         <NewSelect
+          tabIndex={9}
           error={errorForm?.rId}
           id='rId'
           name='rId'
+          step={1}
           onChange={(e) => handleChangeSearch(e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)}
           optionName='rName'
           options={road}
@@ -228,37 +248,45 @@ export const StepOne = ({
         />
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', padding: getGlobalStyle('--spacing-xs') }}>
           <InputHooks
+            tabIndex={10}
             error={errorForm?.neighborhoodStore}
             name='neighborhoodStore'
             onChange={handleChange}
             required
+            step={1}
             title='Barrio*'
             value={dataForm?.neighborhoodStore}
             width='45%'
           />
           <InputHooks
+            tabIndex={11}
             error={errorForm?.viaPrincipal}
             name='viaPrincipal'
             onChange={handleChange}
-            required
+            required={true}
+            step={1}
             title='Vía principal*'
             value={dataForm?.viaPrincipal}
             width='45%'
           />
           <InputHooks
+            tabIndex={12}
             error={errorForm?.secVia}
             name='secVia'
             onChange={handleChange}
             required
+            step={1}
             title='Vía secundaria*'
             value={dataForm?.secVia}
             width='45%'
           />
           <InputHooks
+            tabIndex={13}
             error={errorForm?.uLocation}
             name='uLocation'
             onChange={handleChange}
             required
+            step={1}
             title='Complemento*'
             value={dataForm?.uLocation}
             width='45%'

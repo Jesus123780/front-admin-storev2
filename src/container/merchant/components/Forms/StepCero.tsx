@@ -49,6 +49,7 @@ export const StepCero = ({
     <div>
       <div>
         <InputHooks
+          tabIndex={0}
           error={errorForm?.storeOwner}
           name='storeOwner'
           onChange={handleChange}
@@ -68,6 +69,8 @@ export const StepCero = ({
           value={dataForm?.storeName}
           width='100%'
           step={0}
+          tabIndex={1}
+
         />
         <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
         <InputHooks
@@ -80,10 +83,12 @@ export const StepCero = ({
           value={email ?? dataUser?.email}
           width='100%'
           step={0}
+
         />
         <PhoneInput
           name='uPhoNum'
           step={0}
+          tabIndex={2}
           error={Boolean(errorForm?.uPhoNum)}
           title='Número de teléfono *'
           value={dataForm?.uPhoNum}

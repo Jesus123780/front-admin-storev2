@@ -4,7 +4,6 @@ import {
   InputHooks, 
   PhoneInput
 } from 'pkg-components'
-import PropTypes from 'prop-types'
 import React from 'react'
 
 export const StepTow = ({
@@ -22,20 +21,7 @@ export const StepTow = ({
   handleChange = (e) => { return e }
 }) => {
 
-StepTow.propTypes = {
-  errorForm: PropTypes.shape({
-    emailStore: PropTypes.bool,
-    storePhone: PropTypes.bool,
-    username: PropTypes.bool
-  }),
-  dataForm: PropTypes.shape({
-    emailStore: PropTypes.string,
-    storePhone: PropTypes.string,
-    username: PropTypes.string
-  }),
-  isMobile: PropTypes.bool,
-  handleChange: PropTypes.func
-}
+
   return (
     <div>
         <InputHooks
@@ -47,6 +33,7 @@ StepTow.propTypes = {
           value={dataForm.username}
           width='100%'
           step={2}
+          tabIndex={0}
         />
         <Divider marginBottom={getGlobalStyle('--spacing-2xl')} />
         <InputHooks
@@ -59,9 +46,12 @@ StepTow.propTypes = {
           width='100%'
           required={true}
           step={2}
+          tabIndex={1}
+
         />
         <Divider marginBottom='0.625rem' />
         <PhoneInput
+          tabIndex={2}
           required={true}
           onChange={(value) => {
             const event = {

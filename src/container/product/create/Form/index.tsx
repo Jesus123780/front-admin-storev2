@@ -115,30 +115,33 @@ export const FormProduct = ({
         onChange={handleCheckFreeShipping}
       />
       <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-      <AmountInput
-        tabIndex={3}
-        allowDecimals={true}
-        decimalSeparator=','
-        decimalsLimit={2}
-        disabled={disableFree}
-        groupSeparator='.'
-        label='Precio del domicilio'
-        name='ValueDelivery'
-        onValueChange={(value) => {
-          handleChange({
-            target: {
-              name: 'ValueDelivery',
-              value: value
-            }
-          })
-        }}
-        placeholder='$0,00'
-        prefix='$'
-        value={values?.ValueDelivery}
-      />
+      {!disableFree &&
+        <AmountInput
+          tabIndex={3}
+          allowDecimals={true}
+          decimalSeparator=','
+          decimalsLimit={2}
+          disabled={disableFree}
+          groupSeparator='.'
+          label='Precio del domicilio'
+          name='ValueDelivery'
+          onValueChange={(value) => {
+            handleChange({
+              target: {
+                name: 'ValueDelivery',
+                value: value
+              }
+            })
+          }}
+          placeholder='$0,00'
+          prefix='$'
+          value={values?.ValueDelivery}
+        />
+      }
       <Text as='p' size='sm'>
         Valor que se cobrará al cliente por el servicio de domicilio.
       </Text>
+      <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
       <>
         <ToggleSwitch
           checked={checkStock}
@@ -186,7 +189,7 @@ export const FormProduct = ({
         onChange={handleChange}
         optionName='pName'
         options={dataCategoriesProducts || []}
-        required={false}
+        required={true}
         search={true}
         title='Categoría del producto'
         value={values?.carProId}

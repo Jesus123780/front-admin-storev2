@@ -7,7 +7,6 @@ import {
   useDeleteProductsFood,
   useImageUploaderProduct,
   useProductsFood,
-  useRegisterMultipleTags,
 } from 'npm-pkg-hook'
 import React, { useContext } from 'react'
 
@@ -49,6 +48,10 @@ export const Product = () => {
     handleCheckStock,
     stock,
     values,
+    // Robust create & persist flow (normalizes input, dedupes, never
+    // calls the mutation with an empty array).
+    handleRegisterDraftTags,
+    loadingRegisterTags: loadingTags,
     ...propsCreateProduct
   } = useCreateProduct({
     handleCloseCreateProduct,
@@ -56,18 +59,6 @@ export const Product = () => {
     router,
     sendNotification,
     setAlertBox
-  })
-
-  const [registerTags, { loading: loadingTags }] = useRegisterMultipleTags({
-    callback: (data: any) => {
-      const { success } = data ?? {
-        success: false
-      }
-      if (success) {
-        setNewTags([])
-      }
-      
-    }
   })
 
   const [productsFood, { loading, fetchMore }] = useProductsFood({
@@ -84,7 +75,7 @@ export const Product = () => {
 
   const tagsProps = {
     handleRegisterTags,
-    registerTags,
+    registerTags: handleRegisterDraftTags,
     handleAddTag,
     handleRemoveTag,
     loadingTags,

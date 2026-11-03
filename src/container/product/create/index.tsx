@@ -680,7 +680,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                             setTags={setNewTags}
                             loading={loadingTags}
                             tags={newTags}
-                            registerTags={() => registerTags(newTags ?? [])}
+                            registerTags={(value) => registerTags(value ?? '')}
                             sendNotification={sendNotification}
                         />
 
@@ -688,9 +688,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                             size='sm'
                             styles={{ color: getGlobalStyle('--color-text-gray-light') }}
                         >
-                            {newTags?.length
-                                ? 'Al presionar Enter se guardan automáticamente.'
-                                : 'Ejemplos: oferta, nuevo, vegano.'}
+                            {'Al presionar Enter o + se guardan automáticamente. Ejemplos: oferta, nuevo, vegano.'}
                         </Text>
                     </div>
 
@@ -811,8 +809,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         }
                         pName={names}
                         ProPrice={values.ProPrice}
-                        ProDescuento={values.ProDescuento}
+                        ProDescuento={values?.ProDescuento}
                         ProDescription={values.ProDescription}
+                        ValueDelivery={values.ValueDelivery}
                     />
                 </div>
             </div>

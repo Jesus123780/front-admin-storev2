@@ -38,9 +38,15 @@ export interface FoodComponentMemoProps {
         newTags: string[]
         /** Updates the draft tag list. */
         setNewTags: (tags: string[]) => void
-        /** Persists the draft tags in bulk. */
-        registerTags: (tags?: string[]) => void | Promise<void>
-        /** Bulk-register loading state. */
+        /**
+         * Creates and persists tag(s) in a single step.
+         *
+         * Accepts the current input value (string) so the input never
+         * depends on stale React state, or an array for bulk saves.
+         * Resolves to whether the operation succeeded.
+         */
+        registerTags: (value?: string | string[]) => void | boolean | Promise<void | boolean>
+        /** Register loading state. */
         loadingTags?: boolean
     }
     setActive: React.Dispatch<React.SetStateAction<number>>
