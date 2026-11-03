@@ -52,6 +52,7 @@ export const Banner = ({
         srcLogo: data?.Image ? `/api/images/${data.Image}` : srcLogo
       })
       setPreviewImg({
+        alt: '',
         src: data?.banner ? `/api/images/${data.banner}` : src
       })
     }

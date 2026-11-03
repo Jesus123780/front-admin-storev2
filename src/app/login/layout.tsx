@@ -15,7 +15,7 @@ export default function EmptyLayout({ children }: { children: React.ReactNode })
     const { messagesToast, error, deleteToast } = useContext(Context)
     return (
         <>
-            <AlertBox err={error as AlertContentProps} />
+            <AlertBox err={error as unknown as AlertContentProps} />
             <Portal selector='portal'>
                 <div style={{
                     position: 'fixed',
