@@ -564,7 +564,7 @@ export const SalesByCategoryChart = ({
               Detalle por categoría
             </Text>
             <Text as='span' className={styles.legendCount} size='xs'>
-              {formatNumber(slices.length)} registros
+              {slices?.length} registros
             </Text>
           </div>
 

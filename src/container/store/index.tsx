@@ -13,6 +13,7 @@ import {
   useLogout,
   useManageQueryParams,
   useMobile,
+  useRestockProduct,
   useSaveAvailableProduct,
   useSetImageProducts,
   useStore,
@@ -261,6 +262,9 @@ export const Store: React.FC = () => {
   const [updateManageStock] =
     useUpdateManageStock()
 
+  const [restockProduct] =
+    useRestockProduct()
+
   const [searchFilter] =
     useState<{
       gender: string[]
@@ -373,7 +377,8 @@ export const Store: React.FC = () => {
     ProDescuento,
     ProBarCode,
     ProDescription,
-    ProImage
+    ProImage,
+    stock: productStock
   } = product || {}
 
   const { storeName } =
@@ -859,6 +864,49 @@ export const Store: React.FC = () => {
       [updateStockState]
     )
 
+  /**
+   * Registers an inventory ENTRY (RESTOCK) for the shown product, raising its
+   * stock to `targetStock`. Only increases are applied; the backend ignores
+   * non-increasing targets (stock is never lowered from here).
+   *
+   * @param {number} targetStock - Absolute target stock to reach.
+   * @returns {Promise<boolean>} Whether the restock succeeded.
+   */
+  const handleRestockProduct =
+    useCallback(
+      async (
+        targetStock: number
+      ): Promise<boolean> => {
+        if (pId == null) {
+          return false
+        }
+        const response =
+          await restockProduct({
+            pId,
+            stock: targetStock
+          })
+        sendNotification({
+          title: response?.success
+            ? 'Exitoso'
+            : 'Error',
+          description:
+            response?.message ?? '',
+          backgroundColor:
+            response?.success
+              ? 'success'
+              : 'error'
+        })
+        return Boolean(
+          response?.success
+        )
+      },
+      [
+        pId,
+        restockProduct,
+        sendNotification
+      ]
+    )
+
   const propsUploadProductImage =
     useImageUploaderProduct({
       sendNotification
@@ -1007,6 +1055,8 @@ export const Store: React.FC = () => {
     dataExtra,
     handleCheckStock,
     checkStock,
+    currentStock: Number(productStock) || 0,
+    handleRestockProduct,
     setAlertModal,
     propsExtra,
     tag:

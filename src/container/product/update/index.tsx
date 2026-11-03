@@ -10,6 +10,7 @@ import {
   useFormTools,
   useGetOneProductsFood,
   useImageUploaderProduct,
+  useRestockProduct,
   useSetImageProducts,
   useUpdateManageStock
 } from 'npm-pkg-hook'
@@ -24,6 +25,8 @@ import {
   LoaderSubItem,
   MemoCardProductSimple,
   OptionalExtraProducts,
+  QuantityButton,
+  RippleButton,
   Row,
   Text,
   ToggleSwitch
@@ -46,6 +49,8 @@ export const Update = ({ id = '' } = { id: null }) => {
   // STATES
   const [modal, setModal] = useState(false)
   const [updateManageStock] = useUpdateManageStock()
+  const [restockProduct] = useRestockProduct()
+  const [restockLoading, setRestockLoading] = useState(false)
   const [updateImageProducts] = useSetImageProducts()
   const [updateImageLoading, setUpdateImageLoading] = useState(false)
   const { setAlertBox, sendNotification } = useContext(Context)
@@ -63,6 +68,38 @@ export const Update = ({ id = '' } = { id: null }) => {
   const [alertModal, setAlertModal] = useState(false)
 
   const [checkStock, setCheckStock] = useState(false)
+  // Current persisted stock and the target the operator wants to reach. The
+  // target can only be increased (restock/entry); it never goes below the
+  // current stock — same rule as product complements. Lowering stock must go
+  // through a sale or inventory adjustment.
+  const [currentStock, setCurrentStock] = useState(0)
+  const [targetStock, setTargetStock] = useState(0)
+
+  /**
+   * Registers an inventory ENTRY (RESTOCK) for the main product, raising its
+   * stock to `targetStock`. Only the positive difference is applied; the
+   * backend ignores non-increasing targets. Updates the local current stock on
+   * success so the UI stays in sync and the floor moves up.
+   */
+  const handleRestockProduct = async () => {
+    if (!id || targetStock <= currentStock) return
+    setRestockLoading(true)
+    try {
+      const response = await restockProduct({ pId: id, stock: targetStock })
+      sendNotification({
+        title: response?.success ? 'Exitoso' : 'Error',
+        description: response?.message ?? '',
+        backgroundColor: response?.success ? 'success' : 'error'
+      })
+      if (response?.success && response?.data) {
+        const newStock = Number(response.data.stock ?? targetStock)
+        setCurrentStock(newStock)
+        setTargetStock(newStock)
+      }
+    } finally {
+      setRestockLoading(false)
+    }
+  }
 
   /**
    * Updates stock management state
@@ -393,7 +430,10 @@ export const Update = ({ id = '' } = { id: null }) => {
     handleGetOneProduct({ pId: id })
     setDataValue(dataProduct || {})
     setCheckStock(dataProduct?.manageStock)
-     
+    const stock = Number(dataProduct?.stock) || 0
+    setCurrentStock(stock)
+    setTargetStock(stock)
+
   }, [id, router, dataProduct])
 
    const propsUploadProductImage = useImageUploaderProduct({
@@ -553,6 +593,38 @@ export const Update = ({ id = '' } = { id: null }) => {
                   style={{ marginBottom: getGlobalStyle('--spacing-2xl') }}
                   successColor='green'
                 />
+                {checkStock && (
+                  <Column style={{ gap: getGlobalStyle('--spacing-s'), marginBottom: getGlobalStyle('--spacing-2xl') }}>
+                    <Text as='span' size='sm'>
+                      {`Stock actual: ${currentStock}`}
+                    </Text>
+                    <AlertInfo
+                      message='Solo puedes aumentar el stock (entrada de inventario). Para disminuirlo usa una venta o un ajuste de inventario.'
+                      type='warning'
+                    />
+                    <Column alignItems='center' style={{ gap: getGlobalStyle('--spacing-m') }}>
+                      <QuantityButton
+                        handleDecrement={() => {
+                          // Never below the current (floor): only increases.
+                          setTargetStock((prev) => (prev > currentStock ? prev - 1 : currentStock))
+                        }}
+                        handleIncrement={() => {
+                          setTargetStock((prev) => (Number(prev) || currentStock) + 1)
+                        }}
+                        // Disable "-" once at the floor (current stock).
+                        showNegativeButton={targetStock <= currentStock}
+                        quantity={targetStock}
+                      />
+                      <RippleButton
+                        disabled={restockLoading || targetStock <= currentStock}
+                        onClick={handleRestockProduct}
+                        widthButton='min-content'
+                      >
+                        {`Agregar entrada (+${Math.max(targetStock - currentStock, 0)})`}
+                      </RippleButton>
+                    </Column>
+                  </Column>
+                )}
               </Column>
               <Column>
                 <Text

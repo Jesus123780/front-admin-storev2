@@ -18,12 +18,14 @@ import {
   numberFormat,
   OptionalExtraProducts,
   PercentBadge,
+  QuantityButton,
+  RippleButton,
   Row,
   Tag,
   Text,
   ToggleSwitch
 } from 'pkg-components'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
 import styles from './styles.module.css'
@@ -60,6 +62,13 @@ interface IProductViewProps {
   pId?: number | null
   ProBarCode?: string | null
   checkStock?: boolean
+  /** Current persisted stock of the product (floor for restock). */
+  currentStock?: number
+  /**
+   * Registers an inventory ENTRY (RESTOCK) raising stock to the target. Only
+   * increases are applied; the backend never lowers stock from here.
+   */
+  handleRestockProduct?: (targetStock: number) => Promise<boolean> | boolean
   handleUpdateImageProduct?: () => void
   handleCheckStock?: () => void
   dissertProps?: Parameters<typeof OptionalExtraProducts>[0]
@@ -111,6 +120,10 @@ export const ProductView: React.FC<IProductViewProps> = ({
   pId = null,
   ProBarCode = null,
   checkStock = false,
+  currentStock = 0,
+  handleRestockProduct = () => {
+    return false
+  },
   handleUpdateImageProduct = () => {
     return
   },
@@ -122,6 +135,24 @@ export const ProductView: React.FC<IProductViewProps> = ({
   ...props
 }) => {
   const router = useRouter()
+  // Local target the operator wants to reach. Starts at (and never goes below)
+  // the current stock — only increases are allowed (restock/entry).
+  const [targetStock, setTargetStock] = useState<number>(Number(currentStock) || 0)
+  const [restocking, setRestocking] = useState<boolean>(false)
+
+  useEffect(() => {
+    setTargetStock(Number(currentStock) || 0)
+  }, [currentStock])
+
+  const onRestock = async () => {
+    if (targetStock <= Number(currentStock)) return
+    setRestocking(true)
+    try {
+      await handleRestockProduct(targetStock)
+    } finally {
+      setRestocking(false)
+    }
+  }
   const {
     city,
     department,
@@ -260,6 +291,36 @@ export const ProductView: React.FC<IProductViewProps> = ({
               style={{ marginBottom: getGlobalStyle('--spacing-2xl') }}
               successColor='green'
             />
+            {checkStock && (
+              <Column style={{ gap: getGlobalStyle('--spacing-s'), marginBottom: getGlobalStyle('--spacing-2xl') }}>
+                <Text color='gray-dark' size='sm'>
+                  {`Stock actual: ${Number(currentStock) || 0}`}
+                </Text>
+                <AlertInfo
+                  message='Solo puedes aumentar el stock (entrada de inventario). Para disminuirlo usa una venta o un ajuste de inventario.'
+                  type='warning'
+                />
+                <Row alignItems='center' style={{ gap: getGlobalStyle('--spacing-m') }}>
+                  <QuantityButton
+                    handleDecrement={() => {
+                      setTargetStock((prev) => (prev > Number(currentStock) ? prev - 1 : Number(currentStock) || 0))
+                    }}
+                    handleIncrement={() => {
+                      setTargetStock((prev) => (Number(prev) || Number(currentStock) || 0) + 1)
+                    }}
+                    showNegativeButton={targetStock <= (Number(currentStock) || 0)}
+                    quantity={targetStock}
+                  />
+                  <RippleButton
+                    disabled={restocking || targetStock <= (Number(currentStock) || 0)}
+                    onClick={onRestock}
+                    widthButton='min-content'
+                  >
+                    {`Agregar entrada (+${Math.max(targetStock - (Number(currentStock) || 0), 0)})`}
+                  </RippleButton>
+                </Row>
+              </Column>
+            )}
           </Column>
           {tag?.nameTag !== null ? (
             <div>
