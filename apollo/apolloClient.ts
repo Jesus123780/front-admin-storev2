@@ -4,18 +4,28 @@ import type { ApolloClient as ApolloClientType, NormalizedCacheObject } from '@a
 import {
   ApolloClient,
   ApolloLink,
+  fromPromise,
   split
 } from '@apollo/client'
+import { onError } from '@apollo/client/link/error'
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { createUploadLink } from 'apollo-upload-client'
 import { createClient } from 'graphql-ws'
-import { Cookies, SERVICES } from 'npm-pkg-hook'
+import {
+  Cookies,
+  SERVICES
+} from 'npm-pkg-hook'
 import { useMemo } from 'react'
 
 import { cache } from './cache'
 import { removeDoubleQuotes } from './helpers'
 import { deepEqual, isPlainObject } from './helpers/apollo-client.helpers'
+import { isLoggedVar } from './helpers/is-logged-var'
+import {
+  getAccessToken,
+  refreshSession
+} from './helpers/session-token'
 import { typeDefs } from './schema'
 import { URL_ADMIN } from './urls'
 
@@ -29,7 +39,9 @@ let apolloClient: ApolloClientType<NormalizedCacheObject>
 const buildAuthHeaders = () => {
   try {
     if (globalThis.window !== undefined) {
-      const token = Cookies.get('session')
+      // Prefer the in-memory access token (kept fresh by proactive/reactive
+      // refresh); falls back to the session cookie after a reload.
+      const token = getAccessToken()
       const restaurant = removeDoubleQuotes(Cookies.get('restaurant'))
       return {
         authorization: token ? `Bearer ${token}` : 'Bearer',
@@ -44,7 +56,118 @@ const buildAuthHeaders = () => {
 }
 
 /**
- * 🔌 GraphQL over HTTP (queries & mutations)
+ * Standardized GraphQL error codes shared with the backend.
+ */
+const ERROR_CODES = {
+  SESSION_EXPIRED: 'SESSION_EXPIRED',
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+  FORBIDDEN: 'FORBIDDEN'
+} as const
+
+/**
+ * Extracts the GraphQL error code (uppercased) from an error entry.
+ */
+const getErrorCode = (error: { extensions?: { code?: unknown } }): string =>
+  String(error?.extensions?.code ?? '').toUpperCase()
+
+/**
+ * A refreshable error is ONLY an expired access token (SESSION_EXPIRED). An
+ * expired message without an explicit FORBIDDEN/UNAUTHENTICATED code is also
+ * treated as refreshable for backward compatibility with older responses.
+ */
+const isRefreshableError = (error: {
+  message?: string
+  extensions?: { code?: unknown }
+}): boolean => {
+  const code = getErrorCode(error)
+  if (code === ERROR_CODES.FORBIDDEN || code === ERROR_CODES.UNAUTHENTICATED) {
+    return false
+  }
+  if (code === ERROR_CODES.SESSION_EXPIRED) { return true }
+
+  const message = String(error?.message ?? '').toLowerCase()
+  return (
+    message.includes('session expired') ||
+    (message.includes('sesión') && message.includes('expir'))
+  )
+}
+
+/**
+ * A hard auth failure (invalid token / forbidden / unauthenticated) that must
+ * end the session without attempting a refresh.
+ */
+const isHardAuthError = (error: {
+  extensions?: { code?: unknown }
+}): boolean => {
+  const code = getErrorCode(error)
+  return code === ERROR_CODES.FORBIDDEN || code === ERROR_CODES.UNAUTHENTICATED
+}
+
+/**
+ * Marks the session as expired so the UI (Auth.tsx) performs the real logout.
+ * Guarded so a burst of errors only triggers it once.
+ */
+let isHandlingSessionExpiration = false
+const markSessionExpired = (message?: string): void => {
+  if (globalThis.window === undefined) { return }
+  if (isHandlingSessionExpiration) { return }
+  isHandlingSessionExpiration = true
+  isLoggedVar({
+    state: false,
+    expired: true,
+    message: message ?? 'La sesión ha expirado',
+    code: 403
+  })
+}
+
+/**
+ * 🚨 Error link: reactive token refresh.
+ *
+ * - SESSION_EXPIRED: refresh the access token (single-flight) and retry the
+ *   original operation transparently. If refresh fails, end the session.
+ * - FORBIDDEN / UNAUTHENTICATED: do NOT refresh; end the session.
+ *
+ * The refresh request itself is a plain fetch (see refreshSession), so it can
+ * never re-enter this GraphQL error link, preventing refresh retry loops.
+ */
+const errorLink = onError(({ graphQLErrors, operation, forward }) => {
+  if (!graphQLErrors?.length) { return }
+
+  const hardAuthError = graphQLErrors.find((err) => isHardAuthError(err))
+  if (hardAuthError) {
+    markSessionExpired(hardAuthError.message)
+    return
+  }
+
+  const refreshable = graphQLErrors.find((err) => isRefreshableError(err))
+  if (!refreshable) { return }
+
+  // Attempt a single-flight refresh, then retry the original operation with
+  // the updated Authorization header.
+  return fromPromise(
+    refreshSession().catch(() => null)
+  ).flatMap((newToken) => {
+    if (!newToken) {
+      // Refresh failed -> the refresh token is invalid/expired/revoked.
+      markSessionExpired('La sesión ha expirado')
+      // Returning an empty observable lets the original error propagate.
+      return fromPromise(Promise.resolve()).flatMap(() => forward(operation))
+    }
+
+    // Update the operation's Authorization header with the new access token.
+    operation.setContext((prev: { headers?: Record<string, string> }) => ({
+      headers: {
+        ...(prev?.headers ?? {}),
+        authorization: `Bearer ${newToken}`
+      }
+    }))
+
+    return forward(operation)
+  })
+})
+
+/**
+ *  GraphQL over HTTP (queries & mutations)
  */
 function createHttpLink(service: string) {
   let uri = `${process.env.NEXT_PUBLIC_URL_BACK_SERVER}/graphql`
@@ -114,7 +237,7 @@ function createApolloClient() {
   return new ApolloClient({
     ssrMode,
     connectToDevTools: true,
-    link: splitLink,
+    link: ApolloLink.from([errorLink, splitLink]),
     cache,
     typeDefs,
     defaultOptions: {

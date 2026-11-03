@@ -842,11 +842,11 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 <Button
                     onClick={handleOpenModalDessert}
                     primary
-                    width='min-content'
+                    width='max-content'
                     iconName='IconBox'
                     iconPosition='left'
                 >
-                    Mostrar subproductos
+                    Crear subproductos
                 </Button>
 
                 <ExtrasProductsItems

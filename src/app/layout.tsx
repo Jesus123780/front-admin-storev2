@@ -77,7 +77,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
           <div id="portal" />
           <ProgressBar progress={progress} hidden={hidden} />
-
           {isMounted && (
             <Context>
               <ApolloClientProvider>
