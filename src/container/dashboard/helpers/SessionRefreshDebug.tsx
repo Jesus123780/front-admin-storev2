@@ -1,7 +1,12 @@
 'use client'
 
 import { gql, useApolloClient } from '@apollo/client'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 
 import {
   forceExpiredAccessToken,
@@ -136,6 +141,18 @@ export const SessionRefreshDebug = () => {
     }
   }, [client, push, refreshStatus])
 
+  /**
+   * Installs an expired access token WITHOUT firing any query, so you can
+   * reload the page manually and observe the app bootstrap flow
+   * (verifySession -> refreshSession -> recover or end session).
+   */
+  const handleSetExpiredOnly = useCallback(() => {
+    const expired = forceExpiredAccessToken()
+    push(`Token EXPIRADO instalado (sin query): ${tokenTail(expired)}`, 'warn')
+    push('Ahora recarga la página (F5) para ver el flujo de arranque.', 'info')
+    refreshStatus()
+  }, [push, refreshStatus])
+
   /** Calls the proactive refresh path directly. */
   const handleRefreshNow = useCallback(async () => {
     setBusy(true)
@@ -193,6 +210,21 @@ export const SessionRefreshDebug = () => {
           }}
         >
           Forzar token expirado + query
+        </button>
+        <button
+          type="button"
+          onClick={handleSetExpiredOnly}
+          disabled={busy}
+          style={{
+            padding: '6px 10px',
+            cursor: busy ? 'not-allowed' : 'pointer',
+            background: '#B26A00',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 6
+          }}
+        >
+          Solo expirar token (recarga tú)
         </button>
         <button
           type="button"
