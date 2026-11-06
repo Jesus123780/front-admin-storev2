@@ -1,6 +1,11 @@
 'use client'
 
 import {
+  usePathname,
+  useRouter,
+  useSearchParams
+} from 'next/navigation'
+import {
   errorHandler,
   getCategoriesWithProduct,
   useCatWithProduct,
@@ -19,7 +24,6 @@ import {
   useStore,
   useUpdateManageStock
 } from 'npm-pkg-hook'
-
 import {
   AlertInfo,
   AwesomeModal,
@@ -28,10 +32,8 @@ import {
   Row,
   SearchBar
 } from 'pkg-components'
-
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import { ProductFood } from 'pkg-components/stories/pages/GenerateSales/types'
-
 import React, {
   useCallback,
   useContext,
@@ -41,24 +43,16 @@ import React, {
   useState
 } from 'react'
 
-import {
-  usePathname,
-  useRouter,
-  useSearchParams
-} from 'next/navigation'
-
 import { UploadFilesProducts } from '../../container/product/create/uploadFilesProducts'
 import { Context } from '../../context/Context'
 import { Categories } from '../categories'
 import { Product } from '../product'
 import { ProductView } from '../product/view/product'
 import { TableSeating } from '../seating'
-
 import { Banner } from './banner'
 import { DeleteStore } from './deleteStore'
 import { ButtonsAction } from './options/index'
 import { StickyBoundaryCategories } from './StickyBoundaryCategories'
-
 import styles from './styles.module.css'
 
 type ModalKey = 1 | 2 | 3 | 4 | 5
@@ -297,6 +291,8 @@ export const Store: React.FC = () => {
   const [store] =
     useStore()
 
+    const INITIAL_CATEGORY_LIMIT = 400
+
   const [
     data,
     {
@@ -306,7 +302,7 @@ export const Store: React.FC = () => {
     }
   ] = useCatWithProduct({
     search: '',
-    max: moreCatProduct,
+    max: INITIAL_CATEGORY_LIMIT,
     ...searchFilter
   })
 
@@ -382,8 +378,22 @@ export const Store: React.FC = () => {
     ProBarCode,
     ProDescription,
     ProImage,
-    stock: productStock
+    stock: productStock,
+    manageStock: productManageStock
   } = product || {}
+
+  /**
+   * Keeps the "Gestionado por stock" toggle in sync with the loaded
+   * product. This covers both opening the modal by click and reloading
+   * the page directly with `?food=<pId>`, where `handleProduct` never runs.
+   */
+  useEffect(() => {
+    if (pId == null) {
+      return
+    }
+
+    setCheckStock(Boolean(productManageStock))
+  }, [pId, productManageStock])
 
   const { storeName } =
     getStore || {}
@@ -900,48 +910,59 @@ export const Store: React.FC = () => {
    *
    * @returns {Promise<void>}
    */
-  const handleUpdateImageProduct =
-    useCallback(
-      async (): Promise<void> => {
-        if (pId == null) {
-          return
-        }
+const handleUpdateImageProduct = useCallback(
+  async (): Promise<void> => {
+    if (pId == null) return
 
-        const response =
-          await updateImageProducts({
-            pId,
-            image
-          })
-
-        const {
-          message,
-          success
-        } =
-          response?.data
-            ?.editProductFoods ||
-          {}
-
-        sendNotification({
-          title: 'Exitoso',
-          description:
-            message,
-          backgroundColor:
-            success
-              ? 'success'
-              : 'warning'
-        })
-      },
-      [
-        image,
+    try {
+      const response = await updateImageProducts({
         pId,
-        sendNotification,
-        updateImageProducts
-      ]
-    )
+        image
+      })
+
+      const result = response?.data?.setImageProducts
+
+      if (!result) {
+        sendNotification({
+          title: 'Error al actualizar la imagen',
+          description: 'No se recibió una respuesta válida del servidor.'
+        })
+
+        return
+      }
+
+      const { success, message } = result
+
+      sendNotification({
+        title: success
+          ? 'Imagen actualizada correctamente'
+          : 'No se pudo actualizar la imagen',
+        description: message || (
+          success
+            ? 'La imagen del producto fue actualizada.'
+            : 'Ocurrió un error al guardar la imagen.'
+        )
+      })
+    } catch (error) {
+      sendNotification({
+        title: 'Error al actualizar la imagen',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Ocurrió un error inesperado al actualizar la imagen.'
+      })
+    }
+  },
+  [
+    image,
+    pId,
+    sendNotification,
+    updateImageProducts
+  ]
+)
 
   const propsExtra = {
-    handleAdd:
-      handleAddExtra,
+    handleAdd: handleAddExtra,
     handleRemove,
     onSubmitUpdate,
     inputRefs,
@@ -1051,6 +1072,29 @@ export const Store: React.FC = () => {
     ProDescuento,
     ProImage,
     ProPrice,
+    // Propiedades adicionales del producto para que el modal
+    // "Ver productos" muestre toda la información disponible.
+    pCode: product?.pCode,
+    stock: productStock,
+    manageStock: product?.manageStock,
+    ProQuantity: product?.ProQuantity,
+    ProUniDisponibles: product?.ProUniDisponibles,
+    ProWeight: product?.ProWeight,
+    ProWidth: product?.ProWidth,
+    ProHeight: product?.ProHeight,
+    ProLength: product?.ProLength,
+    ProVoltaje: product?.ProVoltaje,
+    ValueDelivery: product?.ValueDelivery,
+    vat: product?.vat,
+    ProStar: product?.ProStar,
+    ProDelivery: product?.ProDelivery,
+    ProOutstanding: product?.ProOutstanding,
+    ProProtegido: product?.ProProtegido,
+    ProAssurance: product?.ProAssurance,
+    pState: product?.pState,
+    sTateLogistic: product?.sTateLogistic,
+    createdAt: product?.createdAt,
+    updatedAt: product?.updatedAt,
     selectedDays,
     showDessert,
     store,
@@ -1417,6 +1461,9 @@ export const Store: React.FC = () => {
         <StickyBoundaryCategories
           data={
             categoriesWithProduct
+          }
+          enablePagination={
+            searchQuery.trim() === ''
           }
           handleGetOneProduct={
             handleProduct

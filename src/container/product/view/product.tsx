@@ -64,6 +64,28 @@ interface IProductViewProps {
   checkStock?: boolean
   /** Current persisted stock of the product (floor for restock). */
   currentStock?: number
+  /** Additional product details shown in the "Ver productos" modal. */
+  pCode?: string | null
+  stock?: number | string | null
+  manageStock?: boolean | null
+  ProQuantity?: number | string | null
+  ProUniDisponibles?: string | null
+  ProWeight?: string | number | null
+  ProWidth?: string | number | null
+  ProHeight?: string | number | null
+  ProLength?: string | number | null
+  ProVoltaje?: string | null
+  ValueDelivery?: number | string | null
+  vat?: number | string | null
+  ProStar?: number | null
+  ProDelivery?: number | null
+  ProOutstanding?: number | null
+  ProProtegido?: number | null
+  ProAssurance?: string | null
+  pState?: number | null
+  sTateLogistic?: number | null
+  createdAt?: string | null
+  updatedAt?: string | null
   /**
    * Registers an inventory ENTRY (RESTOCK) raising stock to the target. Only
    * increases are applied; the backend never lowers stock from here.
@@ -121,6 +143,27 @@ export const ProductView: React.FC<IProductViewProps> = ({
   ProBarCode = null,
   checkStock = false,
   currentStock = 0,
+  pCode = null,
+  stock = null,
+  manageStock = null,
+  ProQuantity = null,
+  ProUniDisponibles = null,
+  ProWeight = null,
+  ProWidth = null,
+  ProHeight = null,
+  ProLength = null,
+  ProVoltaje = null,
+  ValueDelivery = null,
+  vat = null,
+  ProStar = null,
+  ProDelivery = null,
+  ProOutstanding = null,
+  ProProtegido = null,
+  ProAssurance = null,
+  pState = null,
+  sTateLogistic = null,
+  createdAt = null,
+  updatedAt = null,
   handleRestockProduct = () => {
     return false
   },
@@ -298,6 +341,71 @@ export const ProductView: React.FC<IProductViewProps> = ({
           </Column>
 
           <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+
+          {/* DETALLES DEL PRODUCTO */}
+          {(() => {
+            const formatState = (value?: number | null): string | null => {
+              if (value === null || value === undefined) { return null }
+              return Number(value) === 1 ? 'Sí' : 'No'
+            }
+
+            const details: Array<{ label: string, value: React.ReactNode }> = [
+              { label: 'Código', value: pCode },
+              {
+                label: 'Valor de envío',
+                value: ValueDelivery ? numberFormat(ValueDelivery) : null
+              },
+              {
+                label: 'IVA',
+                value: vat === null || vat === undefined ? null : `${vat}%`
+              },
+              { label: 'Calificación', value: ProStar },
+              { label: 'Envío disponible', value: formatState(ProDelivery) },
+              { label: 'Estado del producto', value: formatState(pState) },
+            ]
+
+            const visibleDetails = details.filter(({ value }) => {
+              return value !== null &&
+                value !== undefined &&
+                value !== '' &&
+                String(value).trim() !== ''
+            })
+
+            if (visibleDetails.length === 0) { return null }
+
+            return (
+              <Column style={{ gap: getGlobalStyle('--spacing-s') }}>
+                <Text color='black' size='xl' as='h3'>
+                  Detalles del producto
+                </Text>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                    gap: getGlobalStyle('--spacing-m')
+                  }}
+                >
+
+                  {visibleDetails.map(({ label, value }) => {
+                    return (
+                      <Column key={label} style={{ gap: '2px' }}>
+                        <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+                        <Text color='gray-light' size='sm'>
+                          {label}
+                        </Text>
+                        <Text color='gray-dark' size='md'>
+                          {String(value)}
+                        </Text>
+                      </Column>
+                    )
+                  })}
+                </div>
+              </Column>
+            )
+          })()}
+
+          <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           <div>
             {store && !!nameStore && (
               <Link
@@ -310,9 +418,16 @@ export const ProductView: React.FC<IProductViewProps> = ({
               </Link>
             )}
             <div className='dish-restaurant__divisor'></div>
-            <label className='dish-observation-form__label'>
-              ¿Algún comentario?
-            </label>
+            <Column>
+              <label className='dish-observation-form__label'>
+                ¿Algún comentario?
+              </label>
+              <label className='dish-observation-form__label'>
+                N/A
+              </label>
+
+            </Column>
+
             <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           </div>
           <Column>

@@ -448,7 +448,7 @@ export const Update = ({ id = '' } = { id: null }) => {
 
   }, [id, router, dataProduct])
 
-   const propsUploadProductImage = useImageUploaderProduct({
+  const propsUploadProductImage = useImageUploaderProduct({
     sendNotification
   })
   const { image, preview } = propsUploadProductImage
@@ -630,7 +630,8 @@ export const Update = ({ id = '' } = { id: null }) => {
                       <RippleButton
                         disabled={restockLoading || targetStock <= currentStock}
                         onClick={handleRestockProduct}
-                        widthButton='min-content'
+                        fullWidth={true}
+
                       >
                         {`Agregar entrada (+${Math.max(targetStock - currentStock, 0)})`}
                       </RippleButton>
@@ -689,7 +690,7 @@ export const Update = ({ id = '' } = { id: null }) => {
                   pId={id}
                   propsExtra={propsExtra}
                   setModal={() => {
-                    return setModal((prev)=> {
+                    return setModal((prev) => {
                       return !prev
                     })
                   }}

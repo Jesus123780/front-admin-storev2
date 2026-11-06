@@ -1,98 +1,175 @@
+
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
 
-// Mirror the backend storage location. The API server saves product images to
-// `os.homedir()/PATH_EXTERNAL_OS` (default `app_data`). Reading the same env var
-// here keeps save and serve in sync even if the folder is reconfigured.
-const baseImagePath = path.join(os.homedir(), process.env.PATH_EXTERNAL_OS || 'app_data')
-const publicPlaceholderPath = path.join(process.cwd(), 'public', 'images', 'placeholder-image.webp')
+// Mantener la misma ubicación donde el backend almacena las imágenes.
+const baseImagePath = path.resolve(
+  os.homedir(),
+  process.env.PATH_EXTERNAL_OS || 'app_data'
+)
+
+const publicPlaceholderPath = path.join(
+  process.cwd(),
+  'public',
+  'images',
+  'placeholder-image.webp'
+)
+
+const mimeMap: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.jfif': 'image/jpeg',
+  '.pjpeg': 'image/jpeg',
+  '.pjp': 'image/jpeg',
+  '.png': 'image/png',
+  '.apng': 'image/apng',
+  '.gif': 'image/gif',
+  '.bmp': 'image/bmp',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.cur': 'image/x-icon',
+  '.tif': 'image/tiff',
+  '.tiff': 'image/tiff',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif'
+}
+
+const allowedExtensions = new Set(Object.keys(mimeMap))
+
+// MIME por defecto cuando la extensión es válida pero no está mapeada.
+const defaultImageMime = 'application/octet-stream'
 
 /**
- * Serve an image from disk or the placeholder when anything fails.
- * @param {Request} _req Incoming request (unused).
- * @param {{ params?: Record<string,string> }} ctx Route context containing params.
- * @returns {Promise<Response>} Response with image bytes and proper headers.
+ * Decodifica un valor de URL de forma segura. Si el valor no está
+ * codificado o viene mal formado, devuelve el valor original en vez
+ * de lanzar una excepción.
  */
-export const GET = async (_req: Request, ctx: { params?: Record<string, string> }) => {
+const safeDecode = (value: string): string => {
   try {
-    const rawFilename = ctx?.params?.filename ?? ''
-    const filename = decodeURIComponent(String(rawFilename || '')).trim()
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
 
-    // quick sanitization: empty/null/"undefined"/"null" => fallback
-    if (!filename || filename === 'null' || filename === 'undefined') {
-      return servePlaceholder()
+// Next.js 15+: params es una Promise.
+interface RouteContext {
+  params: Promise<{
+    filename: string
+  }>
+}
+
+// Se necesita Node.js porque utilizamos fs.
+export const runtime = 'nodejs'
+
+export const GET = async (
+  _req: Request,
+  ctx: RouteContext
+): Promise<Response> => {
+  try {
+    // Resolver params antes de acceder a filename.
+    const { filename: rawFilename } = await ctx.params
+
+    // Next decodifica params, pero algunos nombres (con espacios o
+    // caracteres especiales) pueden llegar aún codificados o parcialmente.
+    // Decodificamos de forma segura para obtener el nombre real en disco.
+    const filename = safeDecode(String(rawFilename ?? '')).trim()
+
+    // Validar nombres vacíos o inválidos.
+    if (
+      !filename ||
+      filename === 'null' ||
+      filename === 'undefined'
+    ) {
+      return await servePlaceholder()
     }
 
-    // only allow safe filenames (no traversal)
-    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
-      return servePlaceholder()
+    // Evitar path traversal.
+    //
+    // Importante: no rechazamos por la simple presencia de "..", porque
+    // nombres válidos pueden contenerlo (ej: "archivo p. m..png").
+    // Solo bloqueamos separadores de ruta o segmentos "." / ".." reales.
+    const segments = filename.split(/[/\\]/)
+
+    if (
+      segments.length > 1 ||
+      segments.some((segment) => segment === '.' || segment === '..')
+    ) {
+      return await servePlaceholder()
     }
 
+    // Validar extensión.
     const ext = path.extname(filename).toLowerCase()
-    const allowedExts = new Set(['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'])
-    if (!allowedExts.has(ext)) { return servePlaceholder() }
 
-    const filePath = path.join(baseImagePath, filename)
-    const normalized = path.normalize(filePath)
-
-    // ensure the resolved path is inside baseImagePath (prevent path traversal)
-    if (!normalized.startsWith(path.normalize(baseImagePath + path.sep))) {
-      return servePlaceholder()
+    if (!allowedExtensions.has(ext)) {
+      return await servePlaceholder()
     }
 
-    // stat -> if not exists, fallback
-    await fs.promises.stat(normalized)
+    // Construir y normalizar la ruta.
+    const filePath = path.resolve(baseImagePath, filename)
 
-    // Stream the file (efficient for large images)
-    const stream = fs.createReadStream(normalized)
+    // Comprobar que el archivo permanece dentro del directorio permitido.
+    const relativePath = path.relative(baseImagePath, filePath)
 
-    const mimeMap: Record<string, string> = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.bmp': 'image/bmp',
-      '.webp': 'image/webp',
-      '.svg': 'image/svg+xml'
+    if (
+      !relativePath ||
+      relativePath.startsWith('..') ||
+      path.isAbsolute(relativePath)
+    ) {
+      return await servePlaceholder()
     }
+
+    // Verificar que el archivo existe y es un archivo regular.
+    const fileStats = await fs.promises.stat(filePath)
+
+    if (!fileStats.isFile()) {
+      return await servePlaceholder()
+    }
+
+    // Crear stream de lectura.
+    const stream = fs.createReadStream(filePath)
 
     const headers = new Headers({
-      'Content-Type': mimeMap[ext] || 'application/octet-stream',
-      // Cache aggressively for real images
+      'Content-Type': mimeMap[ext] || defaultImageMime,
       'Cache-Control': 'public, max-age=31536000, immutable'
     })
 
-    return new Response(stream as unknown as BodyInit, { status: 200, headers })
-  } catch (err) {
-    // any failure => return placeholder image (no JSON errors)
-    if (err instanceof Error) {
-      return servePlaceholder()
-    }
-    return servePlaceholder()
+    return new Response(stream as unknown as BodyInit, {
+      status: 200,
+      headers
+    })
+
+  } catch {
+    return await servePlaceholder()
   }
 }
 
 /**
- * Return the placeholder image as a Response.
- * If placeholder file missing, returns a 204 empty response to avoid JSON.
- * @returns {Promise<Response>}
+ * Retorna la imagen placeholder cuando el archivo solicitado
+ * no existe o sucede algún error.
  */
-const servePlaceholder = async (): Promise<Response | BodyInit> => {
+const servePlaceholder = async (): Promise<Response> => {
   try {
     await fs.promises.stat(publicPlaceholderPath)
+
     const stream = fs.createReadStream(publicPlaceholderPath)
+
     const headers = new Headers({
       'Content-Type': 'image/webp',
-      // shorter cache for placeholder so you can replace it in deployment if needed
       'Cache-Control': 'public, max-age=3600'
     })
-    return new Response(stream as unknown as BodyInit, { status: 200, headers })
-  } catch (e) {
-    // last-resort: nothing to serve, return empty 204 (no JSON)
-    if (e instanceof Error) {
-      return new Response(null, { status: 204 })
-    }
-    return new Response(null, { status: 204 })
+
+    return new Response(stream as unknown as BodyInit, {
+      status: 200,
+      headers
+    })
+
+  } catch {
+    return new Response(null, {
+      status: 204
+    })
   }
 }
