@@ -3,7 +3,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { generateStoreURL, useAvailableProductDays, useImageUploaderProduct } from 'npm-pkg-hook'
+import {
+  generateStoreURL,
+  timeSuggestions,
+  useAvailableProductDays,
+  useImageUploaderProduct,
+  useUpdateAvailableProductDays
+} from 'npm-pkg-hook'
 import {
   AlertInfo,
   AvailableDaysView,
@@ -11,6 +17,7 @@ import {
   BarCodes,
   Button,
   Column,
+  DaySelector,
   Divider,
   getGlobalStyle,
   ImageProductEdit,
@@ -41,6 +48,14 @@ interface IProductViewProps {
    * read-only weekly availability in the "Ver productos" modal.
    */
   availability?: Array<any>
+  /** Called after the availability schedule is updated (e.g. to refetch). */
+  onAvailabilityUpdated?: () => void
+  /** Optional notifier for success/error feedback. */
+  sendNotification?: (notification: {
+    title: string
+    description: string
+    backgroundColor: string
+  }) => void
   modal?: boolean
   loading?: boolean
   nameStore?: string
@@ -106,6 +121,8 @@ export const ProductView: React.FC<IProductViewProps> = ({
   dataExtra = [],
   dataOptional = [],
   availability = [],
+  onAvailabilityUpdated = () => {},
+  sendNotification = () => {},
   modal = false,
   loading = false,
   nameStore = '',
@@ -188,6 +205,66 @@ export const ProductView: React.FC<IProductViewProps> = ({
     availableToday,
     hasSchedule
   } = useAvailableProductDays({ records: availability })
+
+  // Edit mode for the weekly availability schedule.
+  const [isEditingAvailability, setIsEditingAvailability] = useState(false)
+  const {
+    selectedDays: editSelectedDays,
+    dayConfigs: editDayConfigs,
+    days: editableWeekDays,
+    loading: savingAvailability,
+    handleDaySelection: handleEditDaySelection,
+    handleChange: handleEditTimeChange,
+    reset: resetAvailabilityEdit,
+    save: saveAvailability
+  } = useUpdateAvailableProductDays({
+    pId: pId !== null && pId !== undefined ? String(pId) : null,
+    idStore: (store as { idStore?: string })?.idStore ?? null,
+    records: availability
+  })
+
+  /** Opens the inline editor, seeding it from the current schedule. */
+  const handleOpenAvailabilityEdit = () => {
+    resetAvailabilityEdit()
+    setIsEditingAvailability(true)
+  }
+
+  /** Discards changes and closes the editor. */
+  const handleCancelAvailabilityEdit = () => {
+    resetAvailabilityEdit()
+    setIsEditingAvailability(false)
+  }
+
+  /** Persists the schedule and reports the outcome to the parent. */
+  const handleSaveAvailability = async () => {
+    const result = await saveAvailability()
+
+    if (result?.success) {
+      sendNotification({
+        title: 'Éxito',
+        description:
+          result.message || 'Días disponibles actualizados correctamente.',
+        backgroundColor: 'success'
+      })
+      setIsEditingAvailability(false)
+      onAvailabilityUpdated()
+      return
+    }
+
+    const detailedError = result?.errors
+      ?.map((error: { message?: string }) => error?.message)
+      .filter(Boolean)
+      .join(' ')
+
+    sendNotification({
+      title: 'Error',
+      description:
+        detailedError ||
+        result?.message ||
+        'No fue posible actualizar los días disponibles.',
+      backgroundColor: 'error'
+    })
+  }
   // Local floor for the stock. It mirrors the persisted `currentStock`, but it
   // also moves up locally after a successful restock so the operator can never
   // go back below the newly reached stock even if the parent data hasn't
@@ -515,21 +592,56 @@ export const ProductView: React.FC<IProductViewProps> = ({
           <Text color='gray-dark' size='lg'>
             Días de la semana disponibles
           </Text>
-          <Column>
-            <AvailableDaysView
-              availableToday={availableToday}
-              days={availableDays}
-            />
-            {hasSchedule ? (
-              <>
-                <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-                <AlertInfo
-                  message='Estos son los días de la semana en que el producto estará disponible'
-                  type='warning'
-                />
-              </>
-            ) : null}
-          </Column>
+          {isEditingAvailability ? (
+            <Column>
+              <DaySelector
+                days={editableWeekDays}
+                dayConfigs={
+                  editDayConfigs as Record<number, { startTime: string, endTime: string }>
+                }
+                selectedDays={editSelectedDays}
+                handleDaySelection={handleEditDaySelection}
+                handleChange={handleEditTimeChange}
+                timeSuggestions={timeSuggestions}
+              />
+              <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+              <Row gap='sm'>
+                <Button
+                  primary
+                  disabled={savingAvailability}
+                  onClick={() => {
+                    void handleSaveAvailability()
+                  }}
+                >
+                  {savingAvailability ? 'Guardando...' : 'Guardar cambios'}
+                </Button>
+                <Button
+                  disabled={savingAvailability}
+                  onClick={handleCancelAvailabilityEdit}
+                >
+                  Cancelar
+                </Button>
+              </Row>
+            </Column>
+          ) : (
+            <Column>
+              <AvailableDaysView
+                availableToday={availableToday}
+                days={availableDays}
+                editable
+                onEdit={handleOpenAvailabilityEdit}
+              />
+              {hasSchedule ? (
+                <>
+                  <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+                  <AlertInfo
+                    message='Estos son los días de la semana en que el producto estará disponible'
+                    type='warning'
+                  />
+                </>
+              ) : null}
+            </Column>
+          )}
         </div>
       </div>
       <AwesomeModal

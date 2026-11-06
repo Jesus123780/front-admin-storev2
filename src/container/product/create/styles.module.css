@@ -5,12 +5,13 @@
 .food_component {
     position: relative;
 
-    /* `.food_component` IS the scroll container. The step actions footer uses
-       `position: sticky; bottom: 0` against it, so the footer stays visible at
-       the bottom no matter how the hosting LateralModal resolves its height
-       (web vs. Electron) — the previous flex approach left the footer below the
-       drawer's bottom edge. */
-    display: block;
+    /* `.food_component` is a flex column: a fixed sticky header, a single
+       scrollable content region (`.container_steps`) and a fixed footer
+       (`.container_steps_actions`). Only the middle region scrolls, so the
+       footer always sits at the bottom and reserves its own space — content
+       can never mount on top of it regardless of resolution. */
+    display: flex;
+    flex-direction: column;
 
     width: 100%;
     height: 100%;
@@ -20,8 +21,7 @@
     min-width: 0;
     min-height: 0;
 
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
     overscroll-behavior: contain;
 
     background-color: var(--color-base-white);
@@ -37,6 +37,9 @@
     top: 0;
     z-index: 6;
 
+    /* Fixed-size flex child: never shrinks, never scrolls away. */
+    flex: 0 0 auto;
+
     width: 100%;
 
     background-color: var(--color-base-white);
@@ -47,15 +50,22 @@
    ========================================================= */
 
 .container_steps {
+    /* The only scrollable region. Takes the remaining vertical space between
+       the header and the footer and scrolls its own overflow internally. */
+    flex: 1 1 auto;
+
     display: flex;
     flex-direction: column;
 
     width: 100%;
     min-width: 0;
+    min-height: 0;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 
     border-bottom: 0.5px solid var(--color-neutral-gray);
-
-    height: 100%;
 }
 
 /* =========================================================
@@ -63,15 +73,13 @@
    ========================================================= */
 
 .container_steps_actions {
-    /* Sticky to the bottom of the component as a resilient fallback: even if the
-       height chain ever leaves the component slightly taller than the drawer,
-       the footer stays pinned and visible instead of scrolling out of view. */
-    position: sticky;
-    bottom: 0;
+    /* Fixed footer: a non-shrinking flex child pinned below the scroll region.
+       Because it lives outside the scroll container it reserves its own space
+       and the step content can never render underneath it. */
+    flex: 0 0 auto;
     z-index: 5;
 
     display: flex;
-    flex: 0 0 auto;
     align-items: center;
     justify-content: space-between;
 

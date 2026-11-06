@@ -1109,6 +1109,13 @@ const handleUpdateImageProduct = useCallback(
     updatedAt: product?.updatedAt,
     selectedDays,
     availability,
+    sendNotification,
+    onAvailabilityUpdated: (): void => {
+      // Refetch the product so the modal and cards reflect the new schedule.
+      if (product?.pId !== null && product?.pId !== undefined) {
+        handleGetOneProduct({ pId: String(product.pId) })
+      }
+    },
     showDessert,
     store,
     storeName,
