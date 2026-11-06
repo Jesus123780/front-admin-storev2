@@ -830,12 +830,14 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 data={dataLines}
                 dataListIds={dataListIds}
                 editOneExtra={editOneExtra}
-                editOneItem={editOneItem}
+                editOneItem={(args) => {
+                    editOneItem({ ...args, isCustomSubOpExPid: true })
+                }}
                 handleAdd={handleAdd}
                 handleAddList={handleAddList}
                 handleChangeItems={handleChangeItems}
                 handleCheck={handleCheckDessert}
-                handleRemoveList={handleRemoveList}
+                handleRemoveList={handleRemoveList} // editOneItem
                 loadingCreateSubDessert={loadingCreateSubDessert}
                 loadingEditSubOptional={loadingEditSubOptional}
                 openModalEditExtra={openModalEditExtra}

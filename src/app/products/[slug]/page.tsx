@@ -5,6 +5,7 @@ import { ROUTES } from 'pkg-components'
 import React from 'react'
 
 import { Product } from '@/container/product'
+import { DisabledProductsContainer } from '@/container/product/disabled'
 import { Update } from '@/container/product/update'
 
 import NotFound from '../../not-found'
@@ -17,7 +18,7 @@ const ProductsPage = () => {
     const components = {
         products: <Product />,
         create: <Product />,
-        disabled: <Product />,
+        disabled: <DisabledProductsContainer />,
         edit: pId ? <Update id={pId} /> : <NotFound redirectTo={ROUTES.dashboard} />, 
         view: <Product />,
     }

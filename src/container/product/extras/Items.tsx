@@ -408,18 +408,18 @@ const Items = <T extends ExtraItem = ExtraItem>({
                     aria-label={`Eliminar ${
                       extra?.extraName || 'complemento'
                     }`}
-                    bgColor='transparent'
+                    bgColor={getGlobalStyle('--color-primary-pink-light')}
                     margin='0'
                     onClick={handleRemoveItem}
                     type='button'
                     widthButton='min-content'
-                    className={styles.deleteButton}
                   >
                     <Icon
                       icon='IconDelete'
                       color={EColor}
-                      size={22}
+                      size={25}
                     />
+                      
                   </RippleButton>
                 </>
               ) : (
