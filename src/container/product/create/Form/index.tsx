@@ -1,6 +1,7 @@
 import {
   AlertInfo,
   AmountInput,
+  BarCodes,
   Checkbox,
   Column,
   Divider,
@@ -33,7 +34,8 @@ export const FormProduct = ({
     ProDescuento: '',
     ProPrice: '',
     ValueDelivery: '',
-    carProId: ''
+    carProId: '',
+    ProBarCode: ''
   },
   stock = 1,
   checkStock = false,
@@ -207,6 +209,26 @@ export const FormProduct = ({
         as='textarea'
         value={values?.ProDescription}
       />
+      <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+      <InputHooks
+        tabIndex={6}
+        info='Código de barras EAN-13 (13 dígitos).'
+        name='ProBarCode'
+        onChange={handleChange}
+        required={false}
+        title='Código de barras (EAN-13)'
+        type='text'
+        value={values?.ProBarCode ?? ''}
+      />
+      <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+
+      <Text as='p' size='sm'>
+        Déjalo vacío para que el sistema genere un código de barras válido
+        automáticamente.
+      </Text>
+      {Boolean(values?.ProBarCode) && (
+        <BarCodes value={`${values?.ProBarCode ?? ''}`} />
+      )}
     </Column>
   )
 }
@@ -238,6 +260,7 @@ FormProduct.propTypes = {
     ProDescuento: PropTypes.string,
     ProPrice: PropTypes.string,
     ValueDelivery: PropTypes.string,
-    carProId: PropTypes.string
+    carProId: PropTypes.string,
+    ProBarCode: PropTypes.string
   })
 }

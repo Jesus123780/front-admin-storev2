@@ -21,6 +21,7 @@ import {
   CardProductSimple,
   Column,
   Divider,
+  FloatingScanButtons,
   generatePdfDocumentInvoice,
   GenerateSales as GenerateSalesPkg,
   getGlobalStyle,
@@ -39,6 +40,7 @@ import React, {
 } from 'react'
 
 import { Context } from '../../../context/Context'
+import { ModalScanner } from '../../ModalScanner'
 import { useModalLayer } from './modalLayers'
 import { ModalSales } from './ModalSales'
 import { SubItems } from './SubItems'
@@ -77,6 +79,9 @@ export const CreateSales = ({
   const router = useRouter()
   const [dataStore] = useStore()
   const [storeTables] = useStoreTables()
+
+  // Barcode scanning: camera modal visibility.
+  const [showScanner, setShowScanner] = useState(false)
 
   // Web Push: only the subscription flag and the server-send action are needed
   // here to notify when a sale is registered from this screen.
@@ -153,6 +158,7 @@ export const CreateSales = ({
     loadingExtraProduct,
     disabledModalItems,
     handleAddProduct,
+    handleAddProductByBarcode,
     datCat,
     handleChangeFilter,
     setValues,
@@ -204,6 +210,58 @@ export const CreateSales = ({
       }
     }
   })
+
+  // Keyboard-wedge scanner support. USB/Bluetooth barcode scanners behave like
+  // a keyboard: they "type" the code very fast and send Enter at the end. We
+  // buffer rapid keystrokes globally and, on Enter, resolve the product by its
+  // barcode and add it to the cart. Typing in an input/textarea is ignored so
+  // normal form entry is never hijacked.
+  const scanBufferRef = useRef({ chars: '', lastTime: 0 })
+  useEffect(() => {
+    const INTER_KEY_MS = 50 // scanners emit keys much faster than humans
+    const MIN_LENGTH = 6 // ignore short/accidental sequences
+
+    const handleKeyDown = (event) => {
+      const target = event.target
+      const tag = target?.tagName
+      const isEditable =
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT' ||
+        target?.isContentEditable
+      if (isEditable) return
+
+      const now = Date.now()
+      const buffer = scanBufferRef.current
+
+      // Reset the buffer if too much time passed since the last key (human typing).
+      if (now - buffer.lastTime > INTER_KEY_MS) {
+        buffer.chars = ''
+      }
+      buffer.lastTime = now
+
+      if (event.key === 'Enter') {
+        const code = buffer.chars.trim()
+        buffer.chars = ''
+        if (code.length >= MIN_LENGTH && typeof handleAddProductByBarcode === 'function') {
+          event.preventDefault()
+          handleAddProductByBarcode(code)
+        }
+        return
+      }
+
+      // Accept digits (and a few symbols some scanners emit). Ignore control keys.
+      if (event.key.length === 1 && /[0-9A-Za-z]/.test(event.key)) {
+        buffer.chars += event.key
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleAddProductByBarcode])
+
   const restPropsSliderCategory = {
     data: datCat,
     handleChangeCheck,
@@ -547,6 +605,19 @@ export const CreateSales = ({
       />
 
       <ModalSales {...restPropsSalesModal} />
+      <FloatingScanButtons
+        onOpenQRModal={() => setShowScanner(true)}
+        onOpenBarcodeModal={() => setShowScanner(true)}
+      />
+      <ModalScanner
+        show={showScanner}
+        onHide={() => setShowScanner(false)}
+        onScan={(code) => {
+          if (typeof handleAddProductByBarcode === 'function') {
+            handleAddProductByBarcode(code)
+          }
+        }}
+      />
       <GenerateSalesPkg
         // Guardar una venta pendiente.
         handleSavePendingOrder={(details) => handleSavePendingOrder(details)}

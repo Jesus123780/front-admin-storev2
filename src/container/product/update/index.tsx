@@ -17,11 +17,13 @@ import {
 import {
   AlertInfo,
   AwesomeModal,
+  BarCodes,
   Button,
   Column,
   Divider,
   getGlobalStyle,
   ImageQRCode,
+  InputHooks,
   LoaderSubItem,
   MemoCardProductSimple,
   OptionalExtraProducts,
@@ -279,6 +281,11 @@ export const Update = ({ id = '' } = { id: null }) => {
     ProBarCode: null
   }
 
+  // Barcode shown/edited in the form. Prefer what the operator is currently
+  // typing (dataForm), falling back to the product's saved barcode so the
+  // live preview and the EAN-13 renderer stay in sync.
+  const barCodeValue: string = `${(dataForm as DataForm)?.ProBarCode ?? ProBarCode ?? ''}`
+
   // HANDLESS
   interface OnFileInputChangeEvent extends React.ChangeEvent<HTMLInputElement> { }
 
@@ -319,6 +326,7 @@ export const Update = ({ id = '' } = { id: null }) => {
     ProOutstanding?: boolean
     ProDelivery?: boolean
     ProVoltaje?: string
+    ProBarCode?: string
     pState?: string
     sTateLogistic?: string
   }
@@ -357,6 +365,7 @@ export const Update = ({ id = '' } = { id: null }) => {
           ProOutstanding,
           ProDelivery,
           ProVoltaje,
+          ProBarCode: ProBarCodeForm,
           pState,
           sTateLogistic
         } = dataForm as DataForm || {}
@@ -381,6 +390,9 @@ export const Update = ({ id = '' } = { id: null }) => {
               ProOutstanding,
               ProDelivery,
               ProVoltaje,
+              // Only send the barcode when the operator actually typed one so an
+              // empty field never clears the product's existing barcode.
+              ...(ProBarCodeForm ? { ProBarCode: ProBarCodeForm } : {}),
               pState,
               sTateLogistic
             }
@@ -582,18 +594,24 @@ export const Update = ({ id = '' } = { id: null }) => {
                 Guardar imagen
               </Button>
               <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
-              {ProBarCode !== null && (
-                <Column>
-                  <Text
-                    as='h2'
-                    size='3xl'
-                    weight='bold'
-                  >
-                    Código de barras:
-                  </Text>
-                  {/* <BarCodes value={ProBarCode ?? ''} /> */}
-                </Column>
-              )}
+              <Column style={{ gap: getGlobalStyle('--spacing-m'), marginBottom: getGlobalStyle('--spacing-2xl') }}>
+                <Text
+                  as='h2'
+                  size='3xl'
+                  weight='bold'
+                >
+                  Código de barras:
+                </Text>
+                <InputHooks
+                  info='Código de barras EAN-13 (13 dígitos). Déjalo vacío para conservar el actual.'
+                  name='ProBarCode'
+                  onChange={handleChange}
+                  title='Código de barras (EAN-13)'
+                  value={barCodeValue}
+                  width='100%'
+                />
+                <BarCodes value={barCodeValue} />
+              </Column>
               <Column>
                 <ToggleSwitch
                   checked={checkStock}
