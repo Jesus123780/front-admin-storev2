@@ -19,6 +19,7 @@ import {
   useStore,
   useUpdateManageStock
 } from 'npm-pkg-hook'
+
 import {
   AlertInfo,
   AwesomeModal,
@@ -27,8 +28,10 @@ import {
   Row,
   SearchBar
 } from 'pkg-components'
+
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import { ProductFood } from 'pkg-components/stories/pages/GenerateSales/types'
+
 import React, {
   useCallback,
   useContext,
@@ -50,6 +53,7 @@ import { Categories } from '../categories'
 import { Product } from '../product'
 import { ProductView } from '../product/view/product'
 import { TableSeating } from '../seating'
+
 import { Banner } from './banner'
 import { DeleteStore } from './deleteStore'
 import { ButtonsAction } from './options/index'
@@ -320,7 +324,7 @@ export const Store: React.FC = () => {
 
   const {
     handleCheck:
-      handleCheckDessert,
+    handleCheckDessert,
     handleRemoveList,
     setTitle,
     title,
@@ -348,10 +352,10 @@ export const Store: React.FC = () => {
 
   const {
     handleAdd:
-      handleAddExtra,
+    handleAddExtra,
     handleRemove,
     handleSubmit:
-      onSubmitUpdate,
+    onSubmitUpdate,
     handleLineChange,
     loading: loadingExtra,
     handleFocusChange,
@@ -362,7 +366,7 @@ export const Store: React.FC = () => {
     LineItems,
     inputRefs,
     handleCleanLines:
-      cleanLines
+    cleanLines
   } = useDessertWithPrice({
     sendNotification,
     setAlertBox,
@@ -519,44 +523,40 @@ export const Store: React.FC = () => {
   /**
    * Closes the currently active modal.
    *
-   * Only the active modal query is removed.
-   * Other query parameters remain intact.
+   * Only removes the query associated with a modal
+   * that was explicitly opened by this component.
+   *
+   * This prevents AwesomeModal from removing the `food`
+   * query when invoking onHide during its initial mount
+   * while the modal is hidden.
+   *
+   * Repeated calls from onCancel and onHide are safe:
+   * after the first call, the active query is reset.
    *
    * @returns {void}
    */
   const handleCloseModal =
     useCallback(
       (): void => {
-        const currentParams =
-          new URLSearchParams(
-            searchParams.toString()
-          )
-
-        const activeModal =
-          getActiveModalFromParams(
-            currentParams
-          )
-
         const queryName =
-          activeModalQueryRef.current ??
-          activeModal?.name ??
-          null
+          activeModalQueryRef.current
 
-        if (queryName) {
-          removeQueryParam(
-            queryName
-          )
+        if (!queryName) {
+          return
         }
 
-        activeModalQueryRef.current =
-          null
+        // Evita ejecuciones duplicadas.
+        activeModalQueryRef.current = null
 
+        // Cierra el modal.
         handleClick(false)
+
+        // Elimina únicamente la query del modal activo.
+        removeQueryParam(queryName)
       },
       [
         handleClick,
-        removeQueryParam,
-        searchParams
+        removeQueryParam
       ]
     )
 
@@ -702,8 +702,7 @@ export const Store: React.FC = () => {
       return
     }
 
-    hasInitializedModalRef.current =
-      true
+    hasInitializedModalRef.current = true
 
     const params =
       new URLSearchParams(
@@ -711,9 +710,7 @@ export const Store: React.FC = () => {
       )
 
     const activeModal =
-      getActiveModalFromParams(
-        params
-      )
+      getActiveModalFromParams(params)
 
     if (!activeModal) {
       return
@@ -725,13 +722,10 @@ export const Store: React.FC = () => {
       value
     } = activeModal
 
-    activeModalQueryRef.current =
-      name
+    // Registrar el modal recuperado desde la URL.
+    activeModalQueryRef.current = name
 
-    /**
-     * Preserve the original product loading
-     * event when food is opened directly by URL.
-     */
+    // Recuperar el producto sin modificar su query.
     if (
       name === 'food' &&
       value
@@ -741,28 +735,10 @@ export const Store: React.FC = () => {
       })
     }
 
-    /**
-     * Preserve the original modal opening event.
-     */
+    // Abrir el modal.
     handleClick(number)
 
-    /**
-     * Normalize every boolean modal query.
-     *
-     * Examples:
-     *
-     * ?categories=anything
-     *        -> ?categories=true
-     *
-     * ?product=anything
-     *        -> ?product=true
-     *
-     * ?upload_product_file=anything
-     *        -> ?upload_product_file=true
-     *
-     * ?create_table_store=categories
-     *        -> ?create_table_store=true
-     */
+    // Normalizar únicamente las queries booleanas.
     const normalizedValue =
       normalizeModalQueryValue(
         name,
@@ -770,13 +746,9 @@ export const Store: React.FC = () => {
       )
 
     const currentValue =
-      String(
-        normalizedValue
-      )
+      String(normalizedValue)
 
-    if (
-      currentValue !== value
-    ) {
+    if (currentValue !== value) {
       params.set(
         name,
         currentValue
@@ -795,7 +767,6 @@ export const Store: React.FC = () => {
       )
     }
 
-    // Initial synchronization intentionally runs once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -865,9 +836,11 @@ export const Store: React.FC = () => {
     )
 
   /**
-   * Registers an inventory ENTRY (RESTOCK) for the shown product, raising its
-   * stock to `targetStock`. Only increases are applied; the backend ignores
-   * non-increasing targets (stock is never lowered from here).
+   * Registers an inventory ENTRY (RESTOCK) for the shown product,
+   * raising its stock to `targetStock`.
+   *
+   * Only increases are applied; the backend ignores
+   * non-increasing targets.
    *
    * @param {number} targetStock - Absolute target stock to reach.
    * @returns {Promise<boolean>} Whether the restock succeeded.
@@ -880,11 +853,13 @@ export const Store: React.FC = () => {
         if (pId == null) {
           return false
         }
+
         const response =
           await restockProduct({
             pId,
             stock: targetStock
           })
+
         sendNotification({
           title: response?.success
             ? 'Exitoso'
@@ -896,6 +871,7 @@ export const Store: React.FC = () => {
               ? 'success'
               : 'error'
         })
+
         return Boolean(
           response?.success
         )
@@ -1128,7 +1104,7 @@ export const Store: React.FC = () => {
           if (
             onScreen &&
             moreCatProduct <
-              currentTotal &&
+            currentTotal &&
             !loadingCatProd
           ) {
             setMoreCaProduct(
@@ -1148,7 +1124,7 @@ export const Store: React.FC = () => {
                   fetchMoreResult
                 }: {
                   fetchMoreResult?:
-                    FetchMoreResult
+                  FetchMoreResult
                 }
               ) => {
                 if (
@@ -1179,7 +1155,7 @@ export const Store: React.FC = () => {
 
                 if (
                   typeof fetchedTotalCount !==
-                    'number' ||
+                  'number' ||
                   Number.isNaN(
                     fetchedTotalCount
                   )
@@ -1189,11 +1165,11 @@ export const Store: React.FC = () => {
 
                 return {
                   getCatProductsWithProduct:
-                    {
-                      catProductsWithProduct,
-                      totalCount:
-                        fetchedTotalCount
-                    }
+                  {
+                    catProductsWithProduct,
+                    totalCount:
+                      fetchedTotalCount
+                  }
                 }
               }
             })
@@ -1211,7 +1187,7 @@ export const Store: React.FC = () => {
 
           if (
             err?.message ===
-              'Token expired' ||
+            'Token expired' ||
             responseError
           ) {
             onClickLogout({
@@ -1289,13 +1265,12 @@ export const Store: React.FC = () => {
 
   const currentModalTitle =
     currentModalKey === 3
-      ? `Producto ${
-          product?.pName ?? ''
-        }`
+      ? `Producto ${product?.pName ?? ''
+      }`
       : currentModalKey
         ? MODAL_TITLE[
-            currentModalKey
-          ]
+        currentModalKey
+        ]
         : ''
 
   const modalProps = {
@@ -1304,8 +1279,7 @@ export const Store: React.FC = () => {
     modal: true,
     padding: 0,
     show:
-      currentModalKey !==
-      null,
+      currentModalKey !== null,
     title:
       currentModalTitle,
     size:
@@ -1314,9 +1288,9 @@ export const Store: React.FC = () => {
       getGlobalStyle(
         '--z-index-modal'
       ),
+
+    // La limpieza se realiza al cancelar/cerrar explícitamente.
     onCancel:
-      handleCloseModal,
-    onHide:
       handleCloseModal
   }
 
@@ -1328,13 +1302,11 @@ export const Store: React.FC = () => {
 
   return (
     <div
-      className={`${
-        styles.wrapper
-      } ${
-        isMobileOrTablet
+      className={`${styles.wrapper
+        } ${isMobileOrTablet
           ? styles.center
           : ''
-      }`}
+        }`}
       style={{
         justifyContent:
           'normal'
@@ -1457,7 +1429,6 @@ export const Store: React.FC = () => {
             sendNotification
           }
         />
-
       </div>
 
       <AwesomeModal
@@ -1492,8 +1463,8 @@ export const Store: React.FC = () => {
       >
         {currentModalKey
           ? component[
-              currentModalKey
-            ]
+          currentModalKey
+          ]
           : null}
       </AwesomeModal>
     </div>

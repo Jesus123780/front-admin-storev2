@@ -104,9 +104,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     handleCheckFreeShipping,
     handleCheckStock,
     handleClick,
-    handleDecreaseStock = () => {},
+    handleDecreaseStock = () => { },
     handleDelete,
-    handleIncreaseStock = () => {},
+    handleIncreaseStock = () => { },
     handleRegister,
     onClickClear,
     setActive,
@@ -159,11 +159,11 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     } = tagsProps ?? {
         dataTags: [],
         handleAddTag: () => false,
-        handleRemoveTag: () => {},
-        setNewTags: () => {},
+        handleRemoveTag: () => { },
+        setNewTags: () => { },
         newTags: [],
         loadingTags: false,
-        registerTags: () => {},
+        registerTags: () => { },
         tags: {
             tag: ''
         }
@@ -619,10 +619,46 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             (!check?.noAvailability || selectedDays.length === 0)
     }
 
+    interface StepButtonConfig {
+        label: string
+        iconName: string
+    }
+
+    const buttonConfig: Record<number, StepButtonConfig> = {
+        [STEPS.PRODUCT]: {
+            label: 'Crear producto',
+            iconName: 'IconBox'
+        },
+        [STEPS.DESSERTS]: {
+            label: 'Continuar',
+            iconName: 'IconArrowRight'
+        },
+        [STEPS.COMPLEMENTS]: {
+            label: 'Continuar',
+            iconName: 'IconArrowRight'
+        },
+        [STEPS.AVAILABILITY]: {
+            label: 'Selecciona disponibilidad',
+            iconName: 'IconCalendar'
+        }
+    }
+
+
     const asSaveAvailableProduct =
         active === STEPS.AVAILABILITY &&
         (Boolean(check?.availability) ||
             (Boolean(check?.noAvailability) && selectedDays.length > 0))
+
+    const currentButtonConfig: StepButtonConfig =
+        active === STEPS.AVAILABILITY && asSaveAvailableProduct
+            ? {
+                label: 'Guardar',
+                iconName: 'IconSuccess'
+            }
+            : buttonConfig[active] ?? {
+                label: 'Continuar',
+                iconName: 'IconArrowRight'
+            }
 
     useEffect(() => {
         if (active === STEPS.COMPLEMENTS) {
@@ -632,7 +668,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         }
     }, [active])
 
-    const components = {
+    const components: Record<number, React.ReactNode> = {
         0: (
             <div className={styles.product_details}>
                 <div className={styles.product_form}>
@@ -660,11 +696,14 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         >
                             Tags
                         </Text>
+                        <Button primary={false} size='small'>
+                            Opcional
+                        </Button>
                     </Row>
 
                     <Text
                         size='sm'
-                        styles={{ color: getGlobalStyle('--color-text-gray-light') }}
+                        styles={{ color: getGlobalStyle('--color-text-gray-dark-light') }}
                     >
                         Los tags ayudan a tus clientes a encontrar este producto
                         más rápido.
@@ -694,7 +733,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
 
                         <Text
                             size='sm'
-                            styles={{ color: getGlobalStyle('--color-text-gray-light') }}
+                            styles={{ color: getGlobalStyle('--color-text-gray-dark-light') }}
                         >
                             {'Al presionar Enter o + se guardan automáticamente. Ejemplos: oferta, nuevo, vegano.'}
                         </Text>
@@ -714,7 +753,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
 
                             <Text
                                 size='sm'
-                                styles={{ color: getGlobalStyle('--color-text-gray-light') }}
+                                styles={{ color: getGlobalStyle('--color-text-gray-dark-light') }}
                             >
                                 Toca un tag para seleccionarlo. Usa la X para
                                 eliminarlo definitivamente.
@@ -779,7 +818,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         <div className={styles.tag_selected_box}>
                             <Text
                                 size='sm'
-                                styles={{ color: getGlobalStyle('--color-text-gray-light') }}
+                                styles={{ color: getGlobalStyle('--color-text-gray-dark-light') }}
                             >
                                 Tag seleccionado
                             </Text>
@@ -891,7 +930,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
 
                     <Text
                         size='sm'
-                        color='gray'
+                        color='gray-dark'
                     >
                         Configura cuándo pueden comprar este producto.
                         Puedes mantenerlo disponible todos los días o
@@ -914,7 +953,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                             }}
                         />
 
-                        <Text size='sm' color='gray'>
+                        <Text size='sm' color='gray-dark'>
                             Los clientes podrán comprar este producto sin
                             restricciones de días u horarios configurados
                             en esta sección.
@@ -935,7 +974,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                             }}
                         />
 
-                        <Text size='sm' color='gray'>
+                        <Text size='sm' color='gray-dark'>
                             Define los días de la semana y las horas en
                             que estará disponible para tus clientes.
                         </Text>
@@ -949,7 +988,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                                 Días y horarios
                             </Text>
 
-                            <Text size='sm' color='gray'>
+                            <Text size='large' color='gray-dark-dark'>
                                 Selecciona los días disponibles y configura
                                 la hora de inicio y finalización para cada
                                 día seleccionado.
@@ -970,7 +1009,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         </div>
 
                         {selectedDays.length === 0 && (
-                            <Text size='sm' color='gray'>
+                            <Text size='large' color='gray-dark'>
                                 Aún no has seleccionado ningún día.
                             </Text>
                         )}
@@ -1007,7 +1046,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     customHeight='200px'
                     footer={true}
                     header={false}
-                    onCancel={() => {}}
+                    onCancel={() => { }}
                     onConfirm={cancelAll}
                     onHide={handleOpenCloseAlert}
                     padding='20px'
@@ -1032,7 +1071,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 </div>
 
                 <main className={styles.container_steps}>
-                    {components[active]}
+                    {components[active] ?? null}
                 </main>
 
                 <footer className={styles.container_steps_actions}>
@@ -1070,8 +1109,11 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         loading={loading}
                         onClick={handleContinue}
                         primary
+                        size='medium'
+                        iconName={currentButtonConfig.iconName}
+                        iconPosition='right'
                     >
-                        {asSaveAvailableProduct ? 'Guardar' : 'Continuar'}
+                        {currentButtonConfig.label}
                     </Button>
                 </footer>
             </div>

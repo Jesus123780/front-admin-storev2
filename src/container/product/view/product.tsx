@@ -135,20 +135,37 @@ export const ProductView: React.FC<IProductViewProps> = ({
   ...props
 }) => {
   const router = useRouter()
+  // Local floor for the stock. It mirrors the persisted `currentStock`, but it
+  // also moves up locally after a successful restock so the operator can never
+  // go back below the newly reached stock even if the parent data hasn't
+  // refreshed yet. Lowering stock is NOT allowed from this flow.
+  const [stockFloor, setStockFloor] = useState<number>(Number(currentStock) || 0)
   // Local target the operator wants to reach. Starts at (and never goes below)
-  // the current stock — only increases are allowed (restock/entry).
+  // the stock floor — only increases are allowed (restock/entry).
   const [targetStock, setTargetStock] = useState<number>(Number(currentStock) || 0)
   const [restocking, setRestocking] = useState<boolean>(false)
 
   useEffect(() => {
-    setTargetStock(Number(currentStock) || 0)
+    const floor = Number(currentStock) || 0
+    setStockFloor(floor)
+    // Keep the target at or above the floor at all times.
+    setTargetStock((prev) => Math.max(Number(prev) || 0, floor))
   }, [currentStock])
 
+  // Whether lowering is blocked: the target is already at (or below) the floor.
+  const canLower = targetStock > stockFloor
+
   const onRestock = async () => {
-    if (targetStock <= Number(currentStock)) return
+    // Guard: never submit a non-increasing target. Lowering is not allowed.
+    if (targetStock <= stockFloor) return
     setRestocking(true)
     try {
-      await handleRestockProduct(targetStock)
+      const success = await handleRestockProduct(targetStock)
+      if (success) {
+        // Raise the local floor so the operator cannot go back below the
+        // stock just reached, regardless of parent refetch timing.
+        setStockFloor(targetStock)
+      }
     } finally {
       setRestocking(false)
     }
@@ -170,33 +187,45 @@ export const ProductView: React.FC<IProductViewProps> = ({
     <div {...props} style={{ height: '100%' }}>
       <Row>
         <Button
-          onClick={() => {
-            return setModal()
-          }}
+          onClick={() => setModal()}
           primary
+          size='small'
+          iconName='IconPlus'
+          iconPosition='left'
         >
           Añadir Adicionales
         </Button>
+
         <Button
-          onClick={() => {
-            return setShowDessert(!showDessert)
-          }}
+          onClick={() => setShowDessert(!showDessert)}
           primary
+          size='small'
+          iconName='IconBox'
+          iconPosition='left'
         >
           Añadir Sobremesa
         </Button>
+
         <Button
           onClick={() => {
-            if (pId) { return router.push(`/products/edit?pId=${pId}`) }
+            if (pId) {
+              return router.push(`/products/edit?pId=${pId}`)
+            }
+
             return null
           }}
+          size='small'
+          iconName='IconEdit'
+          iconPosition='left'
         >
           Editar
         </Button>
+
         <Button
-          onClick={() => {
-            return setAlertModal(true)
-          }}
+          onClick={() => setAlertModal(true)}
+          size='small'
+          iconName='IconDelete'
+          iconPosition='left'
         >
           Eliminar
         </Button>
@@ -303,31 +332,33 @@ export const ProductView: React.FC<IProductViewProps> = ({
             {checkStock && (
               <Column style={{ gap: getGlobalStyle('--spacing-s'), marginBottom: getGlobalStyle('--spacing-2xl') }}>
                 <Text color='gray-dark' size='sm'>
-                  {`Stock actual: ${Number(currentStock) || 0}`}
+                  {`Stock actual: ${stockFloor}`}
                 </Text>
                 <AlertInfo
                   message='Solo puedes aumentar el stock (entrada de inventario). Para disminuirlo usa una venta o un ajuste de inventario.'
                   type='warning'
                 />
-                <Row alignItems='center' style={{ gap: getGlobalStyle('--spacing-m') }}>
+                <Column alignItems='flex-start' style={{ gap: getGlobalStyle('--spacing-m') }}>
                   <QuantityButton
                     handleDecrement={() => {
-                      setTargetStock((prev) => (prev > Number(currentStock) ? prev - 1 : Number(currentStock) || 0))
+                      // Clamp at the floor: never allow the target below the
+                      // current persisted/reached stock.
+                      setTargetStock((prev) => Math.max((Number(prev) || stockFloor) - 1, stockFloor))
                     }}
                     handleIncrement={() => {
-                      setTargetStock((prev) => (Number(prev) || Number(currentStock) || 0) + 1)
+                      setTargetStock((prev) => Math.max(Number(prev) || stockFloor, stockFloor) + 1)
                     }}
-                    showNegativeButton={targetStock <= (Number(currentStock) || 0)}
+                    showNegativeButton={!canLower}
                     quantity={targetStock}
                   />
                   <RippleButton
-                    disabled={restocking || targetStock <= (Number(currentStock) || 0)}
+                    disabled={restocking || !canLower}
                     onClick={onRestock}
-                    widthButton='min-content'
+                    fullWidth={true}
                   >
-                    {`Agregar entrada (+${Math.max(targetStock - (Number(currentStock) || 0), 0)})`}
+                    {`Agregar entrada (+${Math.max(targetStock - stockFloor, 0)})`}
                   </RippleButton>
-                </Row>
+                </Column>
               </Column>
             )}
           </Column>
