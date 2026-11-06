@@ -602,14 +602,16 @@ export const Update = ({ id = '' } = { id: null }) => {
                 >
                   Código de barras:
                 </Text>
+                <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
                 <InputHooks
-                  info='Código de barras EAN-13 (13 dígitos). Déjalo vacío para conservar el actual.'
+                  info='Acepta EAN-13, EAN-8, UPC, CODE128 o CODE39 (formato detectado automáticamente). Déjalo vacío para conservar el actual.'
                   name='ProBarCode'
                   onChange={handleChange}
-                  title='Código de barras (EAN-13)'
+                  title='Código de barras'
                   value={barCodeValue}
                   width='100%'
                 />
+                <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
                 <BarCodes value={barCodeValue} />
               </Column>
               <Column>

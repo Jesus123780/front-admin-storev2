@@ -250,8 +250,9 @@ export const CreateSales = ({
         return
       }
 
-      // Accept digits (and a few symbols some scanners emit). Ignore control keys.
-      if (event.key.length === 1 && /[0-9A-Za-z]/.test(event.key)) {
+      // Acepta cualquier carácter ASCII imprimible (dígitos, letras y los
+      // símbolos de CODE39: - . $ / + % y espacio). Ignora teclas de control.
+      if (event.key.length === 1 && /[\x20-\x7E]/.test(event.key)) {
         buffer.chars += event.key
       }
     }

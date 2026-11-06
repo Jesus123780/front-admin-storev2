@@ -212,11 +212,11 @@ export const FormProduct = ({
       <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
       <InputHooks
         tabIndex={6}
-        info='Código de barras EAN-13 (13 dígitos).'
+        info='Acepta EAN-13, EAN-8, UPC, CODE128 o CODE39. El formato se detecta automáticamente.'
         name='ProBarCode'
         onChange={handleChange}
         required={false}
-        title='Código de barras (EAN-13)'
+        title='Código de barras'
         type='text'
         value={values?.ProBarCode ?? ''}
       />
