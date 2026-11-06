@@ -76,7 +76,13 @@ type HandleActionClick = (
 ) => HandleActionClickResult
 
 interface AvailableProduct {
-  dayAvailable: string
+  availableProductId?: string
+  idStore?: string
+  pId?: string
+  dayAvailable: number
+  startDate?: string
+  endDate?: string
+  state?: number
 }
 
 interface GraphQLError {
@@ -1014,17 +1020,23 @@ const handleUpdateImageProduct = useCallback(
   const { days } =
     useSaveAvailableProduct()
 
-  const selectedDays: string[] =
+  // Raw availability records (day + time ranges) used by the "Ver productos"
+  // modal to render the read-only weekly availability and the "available today"
+  // state. Kept intact so the view can show start/end times, not just the day.
+  const availability: AvailableProduct[] =
     Array.isArray(
       product?.getAllAvailableProduct
     )
-      ? product.getAllAvailableProduct.map(
-        (
-          day: AvailableProduct
-        ) =>
-          day.dayAvailable
-      )
+      ? product.getAllAvailableProduct
       : []
+
+  const selectedDays: number[] =
+    availability.map(
+      (
+        day: AvailableProduct
+      ) =>
+        day.dayAvailable
+    )
 
   const handleDeleteProduct =
     useCallback(
@@ -1096,6 +1108,7 @@ const handleUpdateImageProduct = useCallback(
     createdAt: product?.createdAt,
     updatedAt: product?.updatedAt,
     selectedDays,
+    availability,
     showDessert,
     store,
     storeName,

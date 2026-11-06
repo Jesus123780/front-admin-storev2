@@ -3,14 +3,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { generateStoreURL, useImageUploaderProduct } from 'npm-pkg-hook'
+import { generateStoreURL, useAvailableProductDays, useImageUploaderProduct } from 'npm-pkg-hook'
 import {
   AlertInfo,
+  AvailableDaysView,
   AwesomeModal,
   BarCodes,
   Button,
   Column,
-  DaySelector,
   Divider,
   getGlobalStyle,
   ImageProductEdit,
@@ -35,6 +35,12 @@ interface IProductViewProps {
   dataOptional?: Array<any>
   days?: Array<any>
   selectedDays?: Array<any>
+  /**
+   * Raw availability records of the product (days + time ranges) coming from
+   * `getAllAvailableProduct` / `product_availables`. Used to render the
+   * read-only weekly availability in the "Ver productos" modal.
+   */
+  availability?: Array<any>
   modal?: boolean
   loading?: boolean
   nameStore?: string
@@ -99,8 +105,7 @@ interface IProductViewProps {
 export const ProductView: React.FC<IProductViewProps> = ({
   dataExtra = [],
   dataOptional = [],
-  days = [],
-  selectedDays = [],
+  availability = [],
   modal = false,
   loading = false,
   nameStore = '',
@@ -132,9 +137,6 @@ export const ProductView: React.FC<IProductViewProps> = ({
   },
   setShowDessert = (boolean) => {
     return boolean
-  },
-  handleDaySelection = () => {
-    return
   },
   setAlertModal = (boolean) => {
     return boolean
@@ -178,6 +180,14 @@ export const ProductView: React.FC<IProductViewProps> = ({
   ...props
 }) => {
   const router = useRouter()
+  // Derive the read-only weekly availability (days, time ranges and whether
+  // the product is available today) from the raw records. Works offline since
+  // the modal already loads `availability` with the product query.
+  const {
+    days: availableDays,
+    availableToday,
+    hasSchedule
+  } = useAvailableProductDays({ records: availability })
   // Local floor for the stock. It mirrors the persisted `currentStock`, but it
   // also moves up locally after a successful restock so the operator can never
   // go back below the newly reached stock even if the parent data hasn't
@@ -505,25 +515,21 @@ export const ProductView: React.FC<IProductViewProps> = ({
           <Text color='gray-dark' size='lg'>
             Días de la semana disponibles
           </Text>
-          {selectedDays?.length > 0 ? (
-            <Column>
-              <div style={{ display: 'flex' }}>
-                <DaySelector
-                  days={days}
-                  handleDaySelection={handleDaySelection}
-                  selectedDays={selectedDays}
+          <Column>
+            <AvailableDaysView
+              availableToday={availableToday}
+              days={availableDays}
+            />
+            {hasSchedule ? (
+              <>
+                <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+                <AlertInfo
+                  message='Estos son los días de la semana en que el producto estará disponible'
+                  type='warning'
                 />
-              </div>
-              <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
-              <AlertInfo message='Estos son los días de la semana en que el producto estará disponible' type='warning' />
-            </Column>
-          ) : (
-            <div>
-              <Text color='gray-dark' size='sm'>
-                Disponible toda la semana
-              </Text>
-            </div>
-          )}
+              </>
+            ) : null}
+          </Column>
         </div>
       </div>
       <AwesomeModal
