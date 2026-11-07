@@ -67,7 +67,7 @@ export interface AppContextState {
   salesOpen: boolean
   selectedStore: unknown | null
   isOpenOrder: boolean
-  show: number | false | null
+  show: number | false | null | boolean
   showModalComponent: number | false
   status: string
   modalsLector: number | boolean
@@ -76,7 +76,7 @@ export interface AppContextState {
   toggleTheme?: () => void
   initTheme?: () => void
 
-  handleClick: (index: number) => void
+  handleClick: (index: number | boolean) => void
   handleMenu: (index: number | false) => void
   toggleModal: (index: number) => void
   sendNotification: (
@@ -243,7 +243,7 @@ const Provider = ({ children }: ProviderProps) => {
   const [
     show,
     setShow
-  ] = useState<number | false | null>(null)
+  ] = useState<number | false | null | boolean>(null)
 
   const [
     showModalComponent,
@@ -340,7 +340,7 @@ const Provider = ({ children }: ProviderProps) => {
    * @param index Section index.
    */
   const handleClick = useCallback(
-    (index: number) => {
+    (index: number | boolean) => {
       const food = searchParams?.get?.('food')
 
       if (food) {

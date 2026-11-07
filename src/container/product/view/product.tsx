@@ -7,8 +7,10 @@ import {
   generateStoreURL,
   timeSuggestions,
   useAvailableProductDays,
+  useCategoriesProduct,
   useImageUploaderProduct,
-  useUpdateAvailableProductDays
+  useUpdateAvailableProductDays,
+  useUpdateProductCategory
 } from 'npm-pkg-hook'
 import {
   AlertInfo,
@@ -22,6 +24,7 @@ import {
   getGlobalStyle,
   ImageProductEdit,
   LoaderSubItem,
+  NewSelect,
   numberFormat,
   OptionalExtraProducts,
   PercentBadge,
@@ -51,10 +54,10 @@ interface IProductViewProps {
   /** Called after the availability schedule is updated (e.g. to refetch). */
   onAvailabilityUpdated?: () => void
   /** Optional notifier for success/error feedback. */
-  sendNotification?: (notification: {
-    title: string
-    description: string
-    backgroundColor: string
+  sendNotification?: (notification?: {
+    title?: string
+    description?: string
+    backgroundColor?: string
   }) => void
   modal?: boolean
   loading?: boolean
@@ -81,6 +84,10 @@ interface IProductViewProps {
   handleDaySelection?: (day: string) => void
   setAlertModal?: (boolean: boolean) => void
   pId?: number | null
+  /** Current category id (`carProId`) of the product. */
+  carProId?: string | null
+  /** Called after the product's category is updated (e.g. to refetch). */
+  onCategoryUpdated?: () => void
   ProBarCode?: string | null
   checkStock?: boolean
   /** Current persisted stock of the product (floor for restock). */
@@ -121,8 +128,8 @@ export const ProductView: React.FC<IProductViewProps> = ({
   dataExtra = [],
   dataOptional = [],
   availability = [],
-  onAvailabilityUpdated = () => {},
-  sendNotification = () => {},
+  onAvailabilityUpdated = () => { },
+  sendNotification = () => { },
   modal = false,
   loading = false,
   nameStore = '',
@@ -159,6 +166,8 @@ export const ProductView: React.FC<IProductViewProps> = ({
     return boolean
   },
   pId = null,
+  carProId = null,
+  onCategoryUpdated = () => { },
   ProBarCode = null,
   checkStock = false,
   currentStock = 0,
@@ -265,6 +274,50 @@ export const ProductView: React.FC<IProductViewProps> = ({
       backgroundColor: 'error'
     })
   }
+  // ---------------------------------------------------------------------------
+  // Category editing. Lets the operator change the product's category inline in
+  // the "Ver productos" modal / product detail view. The category list is the
+  // same source used by the product create form (`useCategoriesProduct`), and
+  // the update goes through the dedicated `useUpdateProductCategory` hook.
+  // ---------------------------------------------------------------------------
+  const [categories] = useCategoriesProduct()
+  const { updateProductCategory, loading: savingCategory } =
+    useUpdateProductCategory({
+      sendNotification,
+      onSuccess: () => {
+        onCategoryUpdated()
+      }
+    })
+  // Locally selected category, seeded from the product's current `carProId`.
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    carProId ? String(carProId) : ''
+  )
+
+  // Keep the local selection in sync when the product (and thus its category)
+  // changes, e.g. after opening a different product or a refetch.
+  useEffect(() => {
+    setSelectedCategory(carProId ? String(carProId) : '')
+  }, [carProId])
+
+  /** Persists the selected category for the current product. */
+  const handleSaveCategory = async (): Promise<void> => {
+    if (pId === null || pId === undefined) {
+      return
+    }
+    if (!selectedCategory) {
+      sendNotification({
+        title: 'Selecciona una categoría',
+        description: 'Debes elegir una categoría antes de guardar.',
+        backgroundColor: 'warning'
+      })
+      return
+    }
+    await updateProductCategory({
+      pId: String(pId),
+      carProId: selectedCategory
+    })
+  }
+
   // Local floor for the stock. It mirrors the persisted `currentStock`, but it
   // also moves up locally after a successful restock so the operator can never
   // go back below the newly reached stock even if the parent data hasn't
@@ -491,6 +544,51 @@ export const ProductView: React.FC<IProductViewProps> = ({
               </Column>
             )
           })()}
+
+          <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+
+          {/* CATEGORÍA DEL PRODUCTO (editable) */}
+          <Column style={{ gap: getGlobalStyle('--spacing-s') }}>
+            <Text color='black' size='xl' as='h3' weight={700}>
+              Categoría
+            </Text>
+            <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+            <NewSelect
+              id='carProId'
+              name='carProId'
+              optionName='pName'
+              options={categories || []}
+              title='Categoría del producto'
+              value={selectedCategory}
+              getOptionValue={(option) => {
+                return (option as { carProId?: string })?.carProId ?? ''
+              }}
+              onChange={(event) => {
+                setSelectedCategory(
+                  event?.target?.value != null
+                    ? String(event.target.value)
+                    : ''
+                )
+              }}
+            />
+            <Row justifyContent='flex-end'>
+              <Button
+                primary
+                size='small'
+                loading={savingCategory}
+                disabled={
+                  savingCategory ||
+                  !selectedCategory ||
+                  selectedCategory === (carProId ? String(carProId) : '')
+                }
+                onClick={() => {
+                  void handleSaveCategory()
+                }}
+              >
+                Guardar categoría
+              </Button>
+            </Row>
+          </Column>
 
           <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           <div>

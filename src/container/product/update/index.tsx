@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import {
   useAmountInput,
+  useCategoriesProduct,
   useDeleteProductsFood,
   useDessert,
   useDessertWithPrice,
@@ -12,7 +13,8 @@ import {
   useImageUploaderProduct,
   useRestockProduct,
   useSetImageProducts,
-  useUpdateManageStock
+  useUpdateManageStock,
+  useUpdateProductCategory
 } from 'npm-pkg-hook'
 import {
   AlertInfo,
@@ -281,18 +283,64 @@ export const Update = ({ id = '' } = { id: null }) => {
     ProBarCode: null
   }
 
+  // ---------------------------------------------------------------------------
+  // CATEGORY UPDATE
+  // ---------------------------------------------------------------------------
+
+  // Category currently saved in the product.
+  const carProId = String(dataProduct?.carProId ?? '')
+
+  // Category selected in the form.
+  const [selectedCategory, setSelectedCategory] = useState<string>(carProId)
+
+  // Keep the selection synchronized when the product changes or is refetched.
+  useEffect(() => {
+    setSelectedCategory(carProId)
+  }, [carProId])
+
+  const onCategoryUpdated = () => {
+    if (id !== null && id !== undefined && id !== '') {
+      handleGetOneProduct({ pId: String(id) })
+    }
+  }
+
+  const { updateProductCategory, loading: savingCategory } =
+    useUpdateProductCategory({
+      sendNotification,
+      onSuccess: onCategoryUpdated
+    })
+
+  /** Updates the category only when the selected value is different. */
+  const handleSaveCategory = async (): Promise<void> => {
+    if (id === null || id === undefined || id === '') return
+
+    // Do not execute the category mutation when nothing changed.
+    if (selectedCategory === carProId) return
+
+    if (!selectedCategory) {
+      sendNotification({
+        title: 'Selecciona una categoría',
+        description: 'Debes elegir una categoría antes de guardar.',
+        backgroundColor: 'warning'
+      })
+      return
+    }
+
+    await updateProductCategory({
+      pId: String(id),
+      carProId: selectedCategory
+    })
+  }
+
   // Barcode shown/edited in the form. Prefer what the operator is currently
   // typing (dataForm), falling back to the product's saved barcode so the
   // live preview and the EAN-13 renderer stay in sync.
   const barCodeValue: string = `${(dataForm as DataForm)?.ProBarCode ?? ProBarCode ?? ''}`
 
   // HANDLESS
-  interface OnFileInputChangeEvent extends React.ChangeEvent<HTMLInputElement> { }
+  type OnFileInputChangeEvent = React.ChangeEvent<HTMLInputElement>
 
-  interface FilePreview {
-    src: string
-    alt: string
-  }
+
 
   const onFileInputChange = (event: OnFileInputChangeEvent) => {
     const { files } = event.target
@@ -342,12 +390,12 @@ export const Update = ({ id = '' } = { id: null }) => {
 
 
   // HANDLES
-  const handleForm = (e) => {
+  const handleForm = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
     return handleSubmit({
       event: e,
-
-      action: () => {
+      action: async () => {
         const {
           pName,
           ProPrice,
@@ -370,62 +418,63 @@ export const Update = ({ id = '' } = { id: null }) => {
           sTateLogistic
         } = dataForm as DataForm || {}
 
-        return editProductFoods({
-          variables: {
-            input: {
-              pId: id,
-              pName,
-              ProPrice: ProPrice ?? 0,
-              ProDescuento: ProDescuento ?? 0,
-              ValueDelivery: ValueDelivery ?? 0,
-              ProUniDisponibles,
-              ProDescription,
-              ProProtegido,
-              ProAssurance,
-              ProWidth,
-              ProHeight,
-              ProLength,
-              ProWeight,
-              ProQuantity,
-              ProOutstanding,
-              ProDelivery,
-              ProVoltaje,
-              // Only send the barcode when the operator actually typed one so an
-              // empty field never clears the product's existing barcode.
-              ...(ProBarCodeForm ? { ProBarCode: ProBarCodeForm } : {}),
-              pState,
-              sTateLogistic
-            }
-          },
-          // update: (cache, { data: { productFoodsOne } }) => {
-          //   return updateCache({
-          //     cache,
-          //     query: GET_ONE_PRODUCTS_FOOD,
-          //     nameFun: 'productFoodsOne',
-          //     dataNew: productFoodsOne
-          //   })
-          // }
-        })
-          .then((response: EditProductFoodsResponse) => {
-            // The success/error alert is raised by useEditProduct's onCompleted
-            // handler (single source of truth), so we don't duplicate it here.
-            if (response?.data?.editProductFoods?.success) {
-              // If the user selected a new image, upload it too. Fire-and-forget
-              // with its own error handling so a failed image upload does not
-              // mask the successful product update.
-              if (image) {
-                void handleUpdateImageProduct()
+        try {
+          const response: EditProductFoodsResponse = await editProductFoods({
+            variables: {
+              input: {
+                pId: id,
+                pName,
+                ProPrice: ProPrice ?? 0,
+                ProDescuento: ProDescuento ?? 0,
+                ValueDelivery: ValueDelivery ?? 0,
+                ProUniDisponibles,
+                ProDescription,
+                ProProtegido,
+                ProAssurance,
+                ProWidth,
+                ProHeight,
+                ProLength,
+                ProWeight,
+                ProQuantity,
+                ProOutstanding,
+                ProDelivery,
+                ProVoltaje,
+                // An empty barcode must not clear the barcode already saved.
+                ...(ProBarCodeForm ? { ProBarCode: ProBarCodeForm } : {}),
+                pState,
+                sTateLogistic
               }
             }
           })
-          .catch((response: EditProductFoodsResponse) => {
-            const { message, success } = response?.data?.editProductFoods || {}
-            sendNotification({
-              title: 'Exitoso',
-              description: message,
-              backgroundColor: success ? 'success' : 'error'
-            })
+
+          const productUpdated = Boolean(
+            response?.data?.editProductFoods?.success
+          )
+
+          if (!productUpdated) return
+
+          // Keep the existing image upload behavior.
+          if (image) {
+            void handleUpdateImageProduct()
+          }
+
+          // Save the category from this same main form button.
+          // handleSaveCategory skips the mutation when the category did not change.
+          await handleSaveCategory()
+        } catch (error) {
+          const response = error as EditProductFoodsResponse
+          const message =
+            response?.data?.editProductFoods?.message ??
+            (error instanceof Error
+              ? error.message
+              : 'No se pudo actualizar el producto.')
+
+          sendNotification({
+            title: 'Error',
+            description: message,
+            backgroundColor: 'error'
           })
+        }
       }
     })
   }
@@ -449,6 +498,8 @@ export const Update = ({ id = '' } = { id: null }) => {
     })
     return router.back()
   }
+  const [categories] = useCategoriesProduct()
+
   // EFFECTS
   useEffect(() => {
     handleGetOneProduct({ pId: id })
@@ -511,6 +562,7 @@ export const Update = ({ id = '' } = { id: null }) => {
     }
   }
 
+
   return (
     <div className={styles.content}>
       <div className={styles.container}>
@@ -557,11 +609,17 @@ export const Update = ({ id = '' } = { id: null }) => {
             fileInputRef={fileInputRef}
             getStore={getStore || {}}
             handleChange={handleChange}
+            pId={String(id)}
             handleForm={handleForm}
+            categories={categories}
             loading={loading}
             propsImageEdit={propsUploadProductImage}
             onFileInputChange={onFileInputChange}
             src={src}
+            sendNotification={sendNotification}
+            savingCategory={savingCategory}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
           />
           <>
             <div>

@@ -1084,6 +1084,15 @@ const handleUpdateImageProduct = useCallback(
     ProDescuento,
     ProImage,
     ProPrice,
+    // Categoría actual del producto. Permite editarla desde el modal
+    // "Ver productos" mediante el selector de categorías.
+    carProId: product?.carProId,
+    onCategoryUpdated: (): void => {
+      // Refetch the product so the modal reflects the new category.
+      if (product?.pId !== null && product?.pId !== undefined) {
+        handleGetOneProduct({ pId: String(product.pId) })
+      }
+    },
     // Propiedades adicionales del producto para que el modal
     // "Ver productos" muestre toda la información disponible.
     pCode: product?.pCode,

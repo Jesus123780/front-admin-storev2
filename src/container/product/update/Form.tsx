@@ -1,20 +1,38 @@
+
 'use client'
 
 import Link from 'next/link'
 import { generateStoreURL } from 'npm-pkg-hook'
 import {
   AmountInput,
+  Column,
   Divider,
   getGlobalStyle,
   ImageProductEdit,
   InputHooks,
-  RippleButton
+  NewSelect,
+  RippleButton,
+  Text
 } from 'pkg-components'
 import React from 'react'
 
+type SendNotificationFn = (params: {
+  description: string
+  title: string
+  backgroundColor: string
+}) => void
+
+interface ProductCategoryOption {
+  carProId?: string | number
+  pName?: string
+}
+
 interface FormProps {
   alt?: string
+  src?: string
   loading?: boolean
+  savingCategory?: boolean
+
   errorForm?: {
     ProDescription?: boolean
     ProDescuento?: boolean
@@ -22,6 +40,7 @@ interface FormProps {
     ValueDelivery?: boolean
     pName?: boolean
   }
+
   getStore?: {
     city?: {
       cName?: string
@@ -32,7 +51,11 @@ interface FormProps {
     idStore?: string
     storeName?: string
   }
+
   fileInputRef: React.RefObject<HTMLInputElement>
+
+  propsImageEdit?: React.ComponentProps<typeof ImageProductEdit>
+
   dataForm?: {
     ProDescription?: string
     ProDescuento?: string
@@ -40,16 +63,33 @@ interface FormProps {
     ValueDelivery?: string
     pName?: string
   }
-  onFileInputChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
-  handleForm?: (event: React.FormEvent<HTMLFormElement>) => void
+
+  onFileInputChange?: (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => void
+
+  handleForm?: React.FormEventHandler<HTMLFormElement>
+
   handleChange?: (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void
+
+  sendNotification: SendNotificationFn
+
+  pId: string
+
+  categories?: ProductCategoryOption[]
+
+  selectedCategory?: string
+
+  setSelectedCategory?: (categoryId: string) => void
 }
 
 export const FormMemo: React.FC<FormProps> = ({
+  categories = [],
   loading = false,
-  propsImageEdit,
+  savingCategory = false,
+  propsImageEdit = {},
   errorForm = {
     ProDescription: false,
     ProDescuento: false,
@@ -57,20 +97,7 @@ export const FormMemo: React.FC<FormProps> = ({
     ValueDelivery: false,
     pName: false
   },
-  getStore = {
-    city: {
-      cName: {
-        toLocaleLowerCase: () => { return }
-      }
-    },
-    department: {
-      dName: {
-        toLocaleLowerCase: () => { return }
-      }
-    },
-    idStore: '',
-    storeName: ''
-  },
+  getStore = {},
   dataForm = {
     ProDescription: '',
     ProDescuento: '',
@@ -78,20 +105,20 @@ export const FormMemo: React.FC<FormProps> = ({
     ValueDelivery: '',
     pName: ''
   },
-  handleForm = (event) => { return event },
-  handleChange = () => { return }
+  selectedCategory = '',
+  handleForm = (event) => {
+    event.preventDefault()
+  },
+  handleChange = () => {},
+  setSelectedCategory = () => {}
 }) => {
   const {
     city,
     department,
     storeName,
     idStore
-  } = getStore || {
-    city: { cName: '' },
-    department: { dName: '' },
-    storeName: '',
-    idStore: ''
-  }
+  } = getStore
+
   const urlStore = generateStoreURL({
     city,
     department,
@@ -100,7 +127,7 @@ export const FormMemo: React.FC<FormProps> = ({
   })
 
   return (
-    <form onSubmit={(e) => { return handleForm(e) }}>
+    <form onSubmit={handleForm}>
       <ImageProductEdit {...propsImageEdit} />
       <InputHooks
         error={errorForm?.pName}
@@ -111,9 +138,11 @@ export const FormMemo: React.FC<FormProps> = ({
         title='Nombre del Producto*'
         value={dataForm?.pName}
       />
+
       <Divider marginTop={getGlobalStyle('--spacing-3xl')} />
+
       <AmountInput
-        allowDecimals={true}
+        allowDecimals
         decimalSeparator=','
         decimalsLimit={2}
         decimalScale={2}
@@ -135,7 +164,7 @@ export const FormMemo: React.FC<FormProps> = ({
       />
 
       <AmountInput
-        allowDecimals={true}
+        allowDecimals
         decimalSeparator=','
         decimalsLimit={2}
         defaultValue={dataForm?.ProDescuento}
@@ -154,8 +183,9 @@ export const FormMemo: React.FC<FormProps> = ({
         prefix='$'
         value={dataForm?.ProDescuento}
       />
+
       <AmountInput
-        allowDecimals={true}
+        allowDecimals
         decimalSeparator=','
         decimalsLimit={2}
         defaultValue={dataForm?.ValueDelivery}
@@ -174,6 +204,7 @@ export const FormMemo: React.FC<FormProps> = ({
         prefix='$'
         value={dataForm?.ValueDelivery}
       />
+
       <InputHooks
         error={errorForm?.ProDescription}
         info='Descripción del producto que se mostrará en la tienda'
@@ -184,14 +215,47 @@ export const FormMemo: React.FC<FormProps> = ({
         value={dataForm?.ProDescription}
         width='100%'
       />
+
       <Divider marginTop={getGlobalStyle('--spacing-3xl')} />
-      {getStore &&
+
+      {storeName && (
         <Link href={urlStore} target='_blank'>
-          {getStore?.storeName}
+          {storeName}
         </Link>
-      }
+      )}
+
+      <Column style={{ gap: getGlobalStyle('--spacing-s') }}>
+        <Text color='black' size='xl' as='h3' weight={700}>
+          Categoría
+        </Text>
+
+        <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
+
+        <NewSelect
+          id='carProId'
+          name='carProId'
+          optionName='pName'
+          options={categories}
+          title='Categoría del producto'
+          value={selectedCategory}
+          getOptionValue={(option) => {
+            return (
+              (option as { carProId?: string | number })?.carProId?.toString() ?? ''
+            )
+          }}
+          onChange={(event) => {
+            setSelectedCategory(
+              event?.target?.value != null
+                ? String(event.target.value)
+                : ''
+            )
+          }}
+        />
+      </Column>
+
+      {/* Único botón principal para guardar producto y categoría */}
       <RippleButton
-        disabled={loading}
+        disabled={loading || savingCategory}
         margin='20px auto'
         type='submit'
       >
