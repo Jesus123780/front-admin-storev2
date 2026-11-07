@@ -12,6 +12,7 @@ import {
   usePushNotifications,
   // useReactToPrint,
   useSales,
+  useScanFeedback,
   useStore,
   useStoreTables
 } from 'npm-pkg-hook'
@@ -27,7 +28,6 @@ import {
   getGlobalStyle,
   InputHooks,
   numberFormat,
-  RippleButton,
   Row
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
@@ -41,8 +41,10 @@ import React, {
 
 import { Context } from '../../../context/Context'
 import { ModalScanner } from '../../ModalScanner'
+import { CreateProductDrawer } from './CreateProductDrawer'
 import { useModalLayer } from './modalLayers'
 import { ModalSales } from './ModalSales'
+import { ProductNotFoundDialog } from './ProductNotFoundDialog'
 import { SubItems } from './SubItems'
 import { SuccessSaleModal } from './Success'
 
@@ -80,8 +82,29 @@ export const CreateSales = ({
   const [dataStore] = useStore()
   const [storeTables] = useStoreTables()
 
-  // Barcode scanning: camera modal visibility.
+  // Barcode scanning: camera modal visibility + mode ('barcode' | 'qr').
   const [showScanner, setShowScanner] = useState(false)
+  const [scannerMode, setScannerMode] = useState('barcode')
+  // Código detectado por el escáner que NO existe como producto: dispara el
+  // diálogo de creación. null = diálogo cerrado.
+  const [notFoundBarcode, setNotFoundBarcode] = useState(null)
+  // Código para el drawer de creación embebido (AC-10). null = drawer cerrado.
+  const [createDrawerBarcode, setCreateDrawerBarcode] = useState(null)
+  // Guard anti-doble: pId ya agregados al carrito desde la creación.
+  const createdAddedRef = useRef(new Set())
+  // pId del producto recién escaneado/encontrado para resaltarlo en el carrito
+  // con la animación "pop". null = sin resaltado. Se limpia tras ~1.2s para
+  // permitir re-disparar la animación al escanear el mismo producto de nuevo.
+  const [highlightedPid, setHighlightedPid] = useState(null)
+  const highlightTimerRef = useRef(null)
+  // Retroalimentación sonora/vibración del escaneo (Web Audio API).
+  const {
+    soundEnabled,
+    toggleSound,
+    playSuccess,
+    playError,
+    vibrate
+  } = useScanFeedback()
 
   // Web Push: only the subscription flag and the server-send action are needed
   // here to notify when a sale is registered from this screen.
@@ -211,6 +234,108 @@ export const CreateSales = ({
     }
   })
 
+  // Limpia el temporizador del resaltado al desmontar para evitar fugas.
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) {
+        clearTimeout(highlightTimerRef.current)
+      }
+    }
+  }, [])
+
+  /**
+   * Resalta un producto del carrito con la animación "pop". Reinicia primero el
+   * valor a null (en un frame) para que, si el mismo pId se vuelve a escanear,
+   * React detecte el cambio y la animación se re-dispare. Programa la limpieza
+   * tras la duración de la animación.
+   *
+   * @param {string} pId - Identificador del producto a resaltar.
+   */
+  const triggerHighlight = (pId) => {
+    if (!pId) {return}
+    if (highlightTimerRef.current) {
+      clearTimeout(highlightTimerRef.current)
+    }
+    setHighlightedPid(null)
+    requestAnimationFrame(() => {
+      setHighlightedPid(String(pId))
+    })
+    highlightTimerRef.current = setTimeout(() => {
+      setHighlightedPid(null)
+      highlightTimerRef.current = null
+    }, 1200)
+  }
+
+  /**
+   * Punto único de entrada de la UI para un código escaneado (cámara, lector
+   * USB/Bluetooth, imagen o entrada manual). Delega en el controlador central
+   * del hook (consulta backend + carrito) y reacciona al resultado:
+   *  - FOUND     → abre el modal de ventas (?saleOpen=true), sonido de éxito,
+   *                vibración y resalta el producto en el carrito (pop).
+   *  - NOT_FOUND → abre el diálogo para crear el producto con el código.
+   *  - INVALID/ERROR → sonido de error (el hook ya notifica el detalle).
+   *  - DUPLICATE_EVENT → se ignora (rebote de la misma lectura).
+   */
+  const handleScannedCode = async (rawCode) => {
+    if (typeof handleAddProductByBarcode !== 'function') {return}
+    const outcome = await handleAddProductByBarcode(rawCode)
+    if (!outcome || typeof outcome !== 'object') {return}
+
+    if (outcome.status === 'FOUND') {
+      playSuccess()
+      vibrate(40)
+      // Abre el modal de ventas (sincroniza ?saleOpen=true en la URL) y resalta
+      // el producto recién agregado al carrito.
+      setSalesOpen(true)
+      triggerHighlight(outcome.product?.pId ?? outcome.product?.id)
+    } else if (outcome.status === 'NOT_FOUND') {
+      playError()
+      setNotFoundBarcode(outcome.barcode || String(rawCode))
+    } else if (outcome.status === 'INVALID' || outcome.status === 'ERROR') {
+      playError()
+    }
+    return outcome
+  }
+
+  /**
+   * El usuario aceptó crear el producto del código no encontrado. Abre el
+   * DRAWER de creación embebido (sin salir de ventas), con el código
+   * precargado. Al guardar, `handleProductCreatedFromScan` lo agrega al carrito.
+   */
+  const handleCreateProductFromBarcode = (barcode) => {
+    setNotFoundBarcode(null)
+    setShowScanner(false)
+    setCreateDrawerBarcode(barcode)
+  }
+
+  /**
+   * Callback invocado por el formulario de creación (vía useCreateProduct)
+   * cuando el producto se persiste con éxito. Lo agrega automáticamente al
+   * carrito reutilizando `handleAddProduct` de useSales (AC-10), cierra el
+   * drawer, reproduce el sonido de éxito y notifica. Guard anti-doble por pId.
+   */
+  const handleProductCreatedFromScan = (createdProduct) => {
+    const pId = createdProduct?.pId
+    if (!pId) {return}
+    if (createdAddedRef.current.has(String(pId))) {return}
+    createdAddedRef.current.add(String(pId))
+
+    if (typeof handleAddProduct === 'function') {
+      handleAddProduct(createdProduct)
+    }
+    playSuccess()
+    vibrate(40)
+    setCreateDrawerBarcode(null)
+    // Abre el modal de ventas y resalta el producto recién creado en el carrito.
+    setSalesOpen(true)
+    triggerHighlight(pId)
+    sendNotification({
+      title: 'Producto creado',
+      backgroundColor: 'success',
+      description: `${createdProduct?.pName ?? 'El producto'} se creó y se agregó al carrito.`
+    })
+  }
+
   // Keyboard-wedge scanner support. USB/Bluetooth barcode scanners behave like
   // a keyboard: they "type" the code very fast and send Enter at the end. We
   // buffer rapid keystrokes globally and, on Enter, resolve the product by its
@@ -229,7 +354,7 @@ export const CreateSales = ({
         tag === 'TEXTAREA' ||
         tag === 'SELECT' ||
         target?.isContentEditable
-      if (isEditable) return
+      if (isEditable) {return}
 
       const now = Date.now()
       const buffer = scanBufferRef.current
@@ -243,9 +368,11 @@ export const CreateSales = ({
       if (event.key === 'Enter') {
         const code = buffer.chars.trim()
         buffer.chars = ''
-        if (code.length >= MIN_LENGTH && typeof handleAddProductByBarcode === 'function') {
+        if (code.length >= MIN_LENGTH) {
           event.preventDefault()
-          handleAddProductByBarcode(code)
+          // Flujo único: consulta backend, agrega al carrito, sonido y, si no
+          // existe, abre el diálogo de creación.
+          Promise.resolve(handleScannedCode(code)).catch(() => { })
         }
         return
       }
@@ -261,7 +388,8 @@ export const CreateSales = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [handleAddProductByBarcode])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleAddProductByBarcode, playSuccess, playError, dataStore])
 
   const restPropsSliderCategory = {
     data: datCat,
@@ -607,17 +735,38 @@ export const CreateSales = ({
 
       <ModalSales {...restPropsSalesModal} />
       <FloatingScanButtons
-        onOpenQRModal={() => setShowScanner(true)}
-        onOpenBarcodeModal={() => setShowScanner(true)}
+        onOpenBarcodeModal={() => {
+          setScannerMode('barcode')
+          setShowScanner(true)
+        }}
+        onOpenQRModal={() => {
+          // Escaneo QR real (vía ZXing: imagen + entrada manual). Flujo separado
+          // del de barras pero reutilizando el mismo controlador de negocio.
+          setScannerMode('qr')
+          setShowScanner(true)
+        }}
       />
       <ModalScanner
         show={showScanner}
+        mode={scannerMode}
         onHide={() => setShowScanner(false)}
+        soundEnabled={soundEnabled}
+        onToggleSound={toggleSound}
         onScan={(code) => {
-          if (typeof handleAddProductByBarcode === 'function') {
-            handleAddProductByBarcode(code)
-          }
+          Promise.resolve(handleScannedCode(code)).catch(() => { })
         }}
+      />
+      <ProductNotFoundDialog
+        show={Boolean(notFoundBarcode)}
+        barcode={notFoundBarcode ?? ''}
+        onConfirmCreate={handleCreateProductFromBarcode}
+        onCancel={() => setNotFoundBarcode(null)}
+      />
+      <CreateProductDrawer
+        show={Boolean(createDrawerBarcode)}
+        barcode={createDrawerBarcode ?? ''}
+        onClose={() => setCreateDrawerBarcode(null)}
+        onProductCreated={handleProductCreatedFromScan}
       />
       <GenerateSalesPkg
         // Guardar una venta pendiente.
@@ -681,6 +830,7 @@ export const CreateSales = ({
         values={values}
         handleAddAllProductsToCart={handleAddAllProductsToCart}
         sendNotification={sendNotification}
+        highlightedPid={highlightedPid ?? ''}
         {...filterProps}
       />
       <SubItems {...modalItems} />

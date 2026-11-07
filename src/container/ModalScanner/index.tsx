@@ -1,4 +1,6 @@
-import { AwesomeModal, BarcodeScanner, getGlobalStyle } from 'pkg-components'
+import {
+ AwesomeModal, BarcodeScanner, Button, getGlobalStyle, Row, Text 
+} from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import React from 'react'
 
@@ -9,24 +11,33 @@ interface ModalScannerProps {
     onScan?: (code: string) => void
     /** Allow the same code to be scanned repeatedly (useful in a POS). */
     continuous?: boolean
+    /** Current sound preference (controlled by the parent via useScanFeedback). */
+    soundEnabled?: boolean
+    /** Toggles the scan sound preference. */
+    onToggleSound?: () => void
+    /** Scanner mode: 'barcode' (default) or 'qr'. */
+    mode?: 'barcode' | 'qr'
 }
 
 export const ModalScanner = ({
     show = false,
     onHide = () => { },
     onScan,
-    continuous = true
+    continuous = true,
+    soundEnabled = true,
+    onToggleSound,
+    mode = 'barcode'
 }: ModalScannerProps) => {
+    const title = mode === 'qr'
+        ? 'Escanear código QR del producto'
+        : 'Escanear código de barras del producto'
     return (
         <AwesomeModal
-            borderRadius='4px'
             btnCancel={true}
             btnConfirm={false}
-            customHeight='60vh'
             footer={false}
             header={true}
-            height='60vh'
-            size={MODAL_SIZES.medium}
+            size={MODAL_SIZES.small}
             onCancel={() => {
                 return false
             }}
@@ -34,11 +45,33 @@ export const ModalScanner = ({
             padding={0}
             question={false}
             show={Boolean(show)}
-            title='Escanear código de barras del producto'
+            title={title}
             zIndex={getGlobalStyle('--z-index-99999')}
         >
             {Boolean(show) && (
-                <BarcodeScanner continuous={continuous} onScan={onScan} />
+                <>
+                    {typeof onToggleSound === 'function' && (
+                        <Row
+                            style={{
+                                justifyContent: 'flex-end',
+                                padding: getGlobalStyle('--spacing-s')
+                            }}
+                        >
+                            <Button
+                                border='none'
+                                onClick={onToggleSound}
+                                aria-pressed={soundEnabled}
+                                aria-label={soundEnabled ? 'Desactivar sonido de escaneo' : 'Activar sonido de escaneo'}
+                                title={soundEnabled ? 'Sonido activado' : 'Sonido desactivado'}
+                            >
+                                <Text as='span' size='sm'>
+                                    {soundEnabled ? '🔊 Sonido' : '🔇 Sonido'}
+                                </Text>
+                            </Button>
+                        </Row>
+                    )}
+                    <BarcodeScanner continuous={continuous} onScan={onScan} mode={mode} />
+                </>
             )}
         </AwesomeModal>
     )

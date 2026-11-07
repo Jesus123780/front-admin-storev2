@@ -39,3 +39,8 @@ build
 
 # backend server
 front-back-server
+# E2E generated artifacts
+e2e/harness/scanner.bundle.js
+e2e/fixtures/images/
+playwright-report/
+test-results/

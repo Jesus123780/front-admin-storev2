@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import {
   useStockMovements,
   useTotalAllSales,
@@ -78,6 +79,7 @@ const parsePercentage = (value) => {
  * @returns {JSX.Element} The inventory performance section.
  */
 export const InventoryPerformance = ({ filter }) => {
+  const router = useRouter()
   const [stocksMovements] = useStockMovements(filter)
   const [weeklyStockMovement] = useWeeklyStockMovement()
   const [totalProductsInStock] = useTotalProductsInStock()
@@ -101,7 +103,11 @@ export const InventoryPerformance = ({ filter }) => {
     {
       label: 'Unidades en inventario',
       value: totalProductsInStock ?? 0,
-      icon: { icon: 'IconInventory', color: getGlobalStyle('--color-icons-warning'), size: 28 }
+      icon: { icon: 'IconInventory', color: getGlobalStyle('--color-icons-warning'), size: 28 },
+      // Al hacer clic se abre el detalle navegable de este KPI: todos los
+      // productos y complementos que se manejan por inventario y tienen stock.
+      actionIcon: 'IconUpRightArrow',
+      onClick: () => router.push('/products/units')
     },
     {
       label: 'Unidades despachadas',

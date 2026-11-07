@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   useCategoriesProduct,
   useCreateProduct,
@@ -13,7 +13,20 @@ import React, { useContext } from 'react'
 import { Context } from '../../context/Context'
 import { FoodComponent } from './create'
 
-export const Product = () => {
+interface ProductProps {
+  /**
+   * Código de barras para precargar el formulario. Tiene prioridad sobre el
+   * query param `?barcode=`. Lo usa el drawer de creación embebido en ventas.
+   */
+  barcode?: string
+  /**
+   * Callback invocado tras crear un producto (con sus datos). En ventas lo usa
+   * para agregarlo automáticamente al carrito (AC-10).
+   */
+  onProductCreated?: (product: Record<string, unknown>) => void
+}
+
+export const Product = ({ barcode, onProductCreated }: ProductProps = {}) => {
   const {
     setAlertBox,
     sendNotification,
@@ -21,6 +34,10 @@ export const Product = () => {
     setShowComponentModal
   } = useContext(Context)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // Código de barras precargado: prioridad al prop (drawer embebido en ventas),
+  // si no, al query param `?barcode=` (persiste al recargar, AC-22).
+  const initialBarcode = barcode ?? searchParams?.get('barcode') ?? ''
   const propsUploadProductImage = useImageUploaderProduct({
     sendNotification
   })
@@ -58,7 +75,9 @@ export const Product = () => {
     image,
     router,
     sendNotification,
-    setAlertBox
+    setAlertBox,
+    initialBarcode,
+    onProductCreated
   })
 
   const [productsFood, { loading, fetchMore }] = useProductsFood({

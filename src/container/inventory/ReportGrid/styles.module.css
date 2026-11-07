@@ -16,11 +16,43 @@
   box-shadow: var(--box-shadow-lg);
 }
 
+.cardInteractive {
+  cursor: pointer;
+}
+
+.cardInteractive:hover {
+  border-color: var(--color-icons-primary);
+}
+
+.cardInteractive:focus-visible {
+  outline: var(--border-width-sm, 2px) solid var(--color-icons-primary);
+  outline-offset: 2px;
+}
+
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--spacing-md);
+}
+
+.iconGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.actionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.cardInteractive:hover .actionIcon {
+  transform: translate(2px, -2px);
 }
 
 .title {

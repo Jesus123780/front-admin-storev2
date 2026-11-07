@@ -184,18 +184,37 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
               }
             }
           })
-          const response = registerStoreResult?.data?.newRegisterStore || { success: false, message: '' }
-          const { success, message } = response || { success: null, message: '' }
-          if (!success && message === 'Ya existe una tienda registrada') {
-            // setNextStep(0)
+          const response = registerStoreResult?.data?.newRegisterStore || { success: false, message: '', code: '' }
+          // Branch on the normalized, locale-independent `code` returned by the
+          // backend instead of matching the localized `message` text (which
+          // changes with the language and previously never matched). The
+          // `message` is still used as-is for display in the toast.
+          const { success, message = '', code = '' } = response || { success: false, message: '', code: '' }
+
+          // Store already registered: show the backend message and stop.
+          if (code === 'STORE_ALREADY_EXISTS') {
             sendNotification({
               backgroundColor: 'error',
               description: `${message}`,
               title: `${message}`
             })
+            setAlertBox({ message })
             return
           }
-          if (success) {
+
+          // User not found: the session is invalid for this flow, go to login.
+          if (code === 'USER_NOT_FOUND') {
+            sendNotification({
+              backgroundColor: 'error',
+              description: `${message}`,
+              title: `${message}`
+            })
+            globalThis.location.href = ROUTES.login
+            return
+          }
+
+          // Store created successfully.
+          if (success && code === 'STORE_CREATED') {
             // reset form and location states for a better UX in case the user wants to register another store
             // @ts-expect-error setDataValue has incompatible type
             setDataValue({})
@@ -216,17 +235,16 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
               }, 3000)
               return
             }
+            setAlertBox({ message })
+            return
           }
 
-          if (message === 'No se encontró el usuario') {
-            globalThis.location.href = ROUTES.login
-          } else {
-            sendNotification({
-              backgroundColor: 'error',
-              description: `${message}`,
-              title: `${message}`
-            })
-          }
+          // Any other outcome (e.g. STORE_REGISTER_ERROR) -> surface the message.
+          sendNotification({
+            backgroundColor: 'error',
+            description: `${message}`,
+            title: `${message}`
+          })
           setAlertBox({ message })
         }
       })

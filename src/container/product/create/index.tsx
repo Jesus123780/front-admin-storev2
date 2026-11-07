@@ -17,6 +17,7 @@ import {
 } from 'npm-pkg-hook'
 import {
     AwesomeModal,
+    BarCodes,
     Button,
     Checkbox,
     Column,
@@ -34,6 +35,7 @@ import {
     Tag,
     Text
 } from 'pkg-components'
+import InputHooks from 'pkg-components/stories/molecules/Inputs/InputHooks/InputHooks'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import React, {
     memo,
@@ -677,6 +679,25 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
 
                 <div className={styles.product_image}>
                     <ImageProductEdit {...propsImageEdit} />
+                    <InputHooks
+                        tabIndex={6}
+                        info='Acepta EAN-13, EAN-8, UPC, CODE128 o CODE39. El formato se detecta automáticamente.'
+                        name='ProBarCode'
+                        onChange={handleChange}
+                        required={false}
+                        title='Código de barras'
+                        type='text'
+                        value={values?.ProBarCode ?? ''}
+                    />
+                    <Divider marginTop={getGlobalStyle('--spacing-3xl')} />
+
+                    <Text as='p' size='sm'>
+                        Déjalo vacío para que el sistema genere un código de barras válido
+                        automáticamente.
+                    </Text>
+                    {Boolean(values?.ProBarCode) && (
+                        <BarCodes value={`${values?.ProBarCode ?? ''}`} />
+                    )}
                 </div>
 
                 <div className={styles.product_tags}>

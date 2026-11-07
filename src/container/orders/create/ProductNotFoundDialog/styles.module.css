@@ -1,0 +1,7 @@
+.codeBox {
+  gap: var(--spacing-xs, 4px);
+  padding: var(--spacing-md, 12px);
+  background-color: var(--color-background-gray-light, #f4f5f7);
+  border: 1px dashed var(--color-neutral-gray, #c7c9d1);
+  border-radius: var(--border-radius-sm, 6px);
+}

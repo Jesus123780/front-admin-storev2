@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scanner E2E Harness</title>
+  </head>
+  <body>
+    <main>
+      <h1>Scanner E2E Harness</h1>
+      <!-- Campo de formulario normal: el keyboard-wedge NO debe interceptar aquí. -->
+      <input id="normal-input" type="text" aria-label="campo normal" />
+      <div id="cart-status" data-ready="false"></div>
+    </main>
+    <!-- Bundle con la lógica real (processBarcode + decodeBarcodeFromImage). -->
+    <script src="./scanner.bundle.js"></script>
+    <script>
+      // Keyboard-wedge: réplica fiel del listener de orders/create/index.jsx.
+      // Acumula teclas rápidas y procesa al Enter; ignora inputs/textareas.
+      (function () {
+        var buffer = { chars: '', lastTime: 0 }
+        var INTER_KEY_MS = 50
+        var MIN_LENGTH = 6
+        window.addEventListener('keydown', function (event) {
+          var t = event.target
+          var tag = t && t.tagName
+          var editable =
+            tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)
+          if (editable) return
+          var now = Date.now()
+          if (now - buffer.lastTime > INTER_KEY_MS) buffer.chars = ''
+          buffer.lastTime = now
+          if (event.key === 'Enter') {
+            var code = buffer.chars.trim()
+            buffer.chars = ''
+            if (code.length >= MIN_LENGTH && window.__scanner) {
+              event.preventDefault()
+              window.__wedgeLast = window.__scanner.scan(code)
+            }
+            return
+          }
+          if (event.key.length === 1 && /[\x20-\x7E]/.test(event.key)) {
+            buffer.chars += event.key
+          }
+        })
+        var el = document.getElementById('cart-status')
+        if (el) el.setAttribute('data-ready', 'true')
+      })()
+    </script>
+  </body>
+</html>
