@@ -37,7 +37,7 @@ const formatDatePart = (date, options) => new Intl.DateTimeFormat('es-CO', optio
  */
 const getWeekRange = (weekStart) => {
   const startDate = new Date(weekStart)
-  if (Number.isNaN(startDate.getTime())) {return ''}
+  if (Number.isNaN(startDate.getTime())) { return '' }
 
   const endDate = new Date(startDate)
   endDate.setDate(endDate.getDate() + 6)
@@ -60,7 +60,7 @@ const getWeekRange = (weekStart) => {
  * @returns {number | null} Parsed percentage or null when unavailable.
  */
 const parsePercentage = (value) => {
-  if (value === null || value === undefined || value === 'N/A') {return null}
+  if (value === null || value === undefined || value === 'N/A') { return null }
   const parsed = typeof value === 'number'
     ? value
     : Number.parseFloat(String(value).replace('%', '').trim())
@@ -84,7 +84,7 @@ export const InventoryPerformance = ({ filter }) => {
   const [weeklyStockMovement] = useWeeklyStockMovement()
   const [totalProductsInStock] = useTotalProductsInStock()
   const [totalProductSold] = useTotalProductsSolded()
-  const [totalAllSales] = useTotalAllSales()
+  const { netTotal, totalDiscount } = useTotalAllSales()
 
   const weeklyMovements = Array.isArray(weeklyStockMovement) ? weeklyStockMovement : []
   const visibleWeeklyMovements = weeklyMovements.filter((item) => {
@@ -96,9 +96,15 @@ export const InventoryPerformance = ({ filter }) => {
   const kpis = [
     {
       label: 'Valor total de ventas concluidas',
-      value: totalAllSales ?? 0,
+      value: netTotal ?? 0,
       numberformat: true,
       icon: { icon: 'IconUpTrend', color: getGlobalStyle('--color-icons-success'), size: 28 }
+    },
+    {
+      label: 'Valor total decuentos aplicados',
+      value: totalDiscount ?? 0,
+      numberformat: true,
+      icon: { icon: 'IconPromo', color: getGlobalStyle('--color-icons-success'), size: 28 }
     },
     {
       label: 'Unidades en inventario',
@@ -156,7 +162,7 @@ export const InventoryPerformance = ({ filter }) => {
                 Aún no hay movimientos semanales para mostrar.
               </Text>
             </div>
-            )
+          )
           : (
             <div className={styles.weeklyGrid}>
               {visibleWeeklyMovements.map((item) => {
@@ -177,7 +183,7 @@ export const InventoryPerformance = ({ filter }) => {
                         <Text as='p' className={styles.percentageNa} size='md' weight={600}>
                           Sin datos
                         </Text>
-                        )
+                      )
                       : (
                         <div
                           aria-label={
@@ -187,13 +193,12 @@ export const InventoryPerformance = ({ filter }) => {
                                 ? `Bajó ${Math.abs(percentage)}%`
                                 : 'Sin variación'
                           }
-                          className={`${styles.percentageRow} ${
-                            isPositive
+                          className={`${styles.percentageRow} ${isPositive
                               ? styles.percentagePositive
                               : isNegative
                                 ? styles.percentageNegative
                                 : styles.percentageNeutral
-                          }`}
+                            }`}
                         >
                           {!isNeutral && (
                             <Icon
@@ -210,12 +215,12 @@ export const InventoryPerformance = ({ filter }) => {
                                 : 'Sin variación'}
                           </Text>
                         </div>
-                        )}
+                      )}
                   </Column>
                 )
               })}
             </div>
-            )}
+          )}
       </div>
     </section>
   )

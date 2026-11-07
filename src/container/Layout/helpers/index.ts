@@ -8,6 +8,6 @@ export const widths = {
 export const heights = {
   1: '100%',
   2: '100%',
-  3: 'calc(100vh - 80px)',
+  3: 'calc(100vh - 130px)',
   4: '100%'
 }

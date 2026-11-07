@@ -2,14 +2,16 @@
 
 import { useRecentOrders } from 'npm-pkg-hook'
 import {
- getGlobalStyle, 
- Icon, 
- Pagination, 
- Text 
+  getGlobalStyle,
+  Icon,
+  Pagination,
+  Text
 } from 'pkg-components'
 import PropTypes from 'prop-types'
 import {
- useEffect, useMemo, useState 
+  useEffect,
+  useMemo,
+  useState
 } from 'react'
 
 import { formatCurrency, formatDate } from '../../utils/format'
@@ -28,9 +30,71 @@ const STATUS_FILTERS = [
 ]
 
 /**
- * Recent orders table with debounced search, status quick-filters, real
- * backend pagination and semantic status badges. Dates are shown in the
- * business timezone; each row's data comes from a single efficient query.
+ * Normalizes the monetary fields returned by the recent-orders query.
+ * `total` is treated as the subtotal before discounts and `netTotal` as
+ * the final amount charged. The fallback keeps older API responses usable.
+ *
+ * @param {object} row - Order returned by the API.
+ * @returns {{ subtotal: number, discount: number, netTotal: number }}
+ */
+const getOrderAmounts = (row) => {
+  const subtotalValue = Number(row?.total)
+  const discountValue = Number(row?.discountAmount)
+  const subtotal = Number.isFinite(subtotalValue) ? subtotalValue : 0
+  const discount = Number.isFinite(discountValue) ? Math.max(0, discountValue) : 0
+  const netValue = Number(row?.netTotal)
+  const netTotal = row?.netTotal !== null && row?.netTotal !== undefined && Number.isFinite(netValue)
+    ? netValue
+    : Math.max(0, subtotal - discount)
+
+  return { subtotal, discount, netTotal }
+}
+
+/**
+ * Builds the label for the discount method. For percentage discounts,
+ * `discountAmount` is the monetary value discounted, so the percentage is
+ * derived from the subtotal (e.g. $9,000 / $90,000 = 10%).
+ *
+ * @param {object} row - Order returned by the API.
+ * @param {number} subtotal - Order subtotal before discount.
+ * @param {number} discount - Monetary value discounted.
+ * @returns {{ type: string, percentage: string, className: string } | null}
+ */
+const getDiscountMeta = (row, subtotal, discount) => {
+  if (discount <= 0) return null
+
+  const discountType = String(row?.discountType ?? '').toUpperCase()
+
+  if (discountType === 'PERCENT') {
+    const percentage = subtotal > 0
+      ? new Intl.NumberFormat('es-CO', { maximumFractionDigits: 2 }).format((discount / subtotal) * 100)
+      : null
+
+    return {
+      type: 'Porcentaje',
+      percentage: percentage ? `${percentage}%` : '',
+      className: 'discountTypePercent'
+    }
+  }
+
+  if (discountType === 'AMOUNT') {
+    return {
+      type: 'Valor fijo',
+      percentage: '',
+      className: 'discountTypeAmount'
+    }
+  }
+
+  return {
+    type: 'Descuento',
+    percentage: '',
+    className: 'discountTypeAmount'
+  }
+}
+
+/**
+ * Recent orders panel with debounced search, status quick-filters,
+ * server-side pagination, and a responsive discount breakdown.
  *
  * @param {object} props - Component props.
  * @param {object} props.baseFilter - DashboardFilterInput for the active period.
@@ -49,7 +113,7 @@ export const RecentOrders = ({ baseFilter, currency }) => {
     return () => clearTimeout(handle)
   }, [searchInput])
 
-  // Reset to page 1 whenever the period, search or status changes.
+  // Reset pagination whenever the period, search, or status filter changes.
   useEffect(() => {
     setPage(1)
   }, [baseFilter, debouncedSearch, statusFilter])
@@ -69,9 +133,9 @@ export const RecentOrders = ({ baseFilter, currency }) => {
   const [result, { loading, error, refetch }] = useRecentOrders(filter)
 
   const allRows = result?.rows ?? []
-  // Status quick-filter is applied client-side over the current page because
-  // the backend status filter is not part of the recent-orders contract yet;
-  // period + search + pagination are server-driven.
+
+  // The API contract does not expose a status filter yet. This quick-filter
+  // therefore applies to the rows on the current server-paginated page.
   const rows = statusFilter === 'all'
     ? allRows
     : allRows.filter((row) => String(row.statusState) === statusFilter)
@@ -79,7 +143,7 @@ export const RecentOrders = ({ baseFilter, currency }) => {
   const total = result?.total ?? 0
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const pageItems = useMemo(
-    () => Array.from({ length: pageCount }, (_, i) => i + 1),
+    () => Array.from({ length: pageCount }, (_, index) => index + 1),
     [pageCount]
   )
 
@@ -87,15 +151,23 @@ export const RecentOrders = ({ baseFilter, currency }) => {
 
   const renderRows = () => {
     if (isInitialLoading) {
-      return Array.from({ length: 4 }).map((_, i) => (
-        <div className={styles.rowSkeleton} key={`sk-${i}`} aria-busy='true' />
+      return Array.from({ length: 4 }).map((_, index) => (
+        <div
+          aria-busy='true'
+          className={styles.rowSkeleton}
+          key={`sk-${index}`}
+        />
       ))
     }
 
     if (rows.length === 0) {
       return (
         <div className={styles.empty}>
-          <Icon color={getGlobalStyle('--color-icons-gray-light')} icon='IconListBullet' size={28} />
+          <Icon
+            color={getGlobalStyle('--color-icons-gray-light')}
+            icon='IconListBullet'
+            size={28}
+          />
           <Text as='p' className={styles.emptyText} size='md'>
             {debouncedSearch || statusFilter !== 'all'
               ? 'No hay pedidos que coincidan con el filtro. Prueba limpiar la búsqueda.'
@@ -106,32 +178,80 @@ export const RecentOrders = ({ baseFilter, currency }) => {
     }
 
     return rows.map((row) => {
-      const meta = getOrderStatusMeta(row.statusState)
+      const meta = getOrderStatusMeta(row.statusState) ?? { tone: 'neutral', label: 'Desconocido' }
+      const { subtotal, discount, netTotal } = getOrderAmounts(row)
+      const discountMeta = getDiscountMeta(row, subtotal, discount)
+
       return (
-        <div className={styles.row} key={row.orderId}>
-          <span className={styles.cellCode} data-label='Pedido'>
-            <Text as='span' size='sm' weight={600}>{row.code}</Text>
-          </span>
-          <span className={styles.cellProduct} data-label='Producto'>
-            <Text as='span' className={styles.productName} size='md'>
-              {row.productSummary}
+        <div className={styles.row} key={row.orderId} role='row'>
+          <span className={styles.cellCode} data-label='Pedido' role='cell'>
+            <Text as='span' size='sm' weight={600}>
+              {row.code}
             </Text>
-            {row.extraItems > 0 && (
+          </span>
+
+          <span className={styles.cellProduct} data-label='Producto' role='cell'>
+            <Text as='span' className={styles.productName} size='md'>
+              {row.productSummary || 'Producto sin nombre'}
+            </Text>
+            {Number(row.extraItems) > 0 && (
               <Text as='span' className={styles.extra} size='sm'>
-                +{row.extraItems} {row.extraItems === 1 ? 'producto' : 'productos'}
+                +{row.extraItems} {Number(row.extraItems) === 1 ? 'producto' : 'productos'}
               </Text>
             )}
           </span>
-          <span className={styles.cellDate} data-label='Fecha'>
+
+          <span className={styles.cellDate} data-label='Fecha' role='cell'>
             <Text as='span' size='sm'>
-              {formatDate(row.createdAt, { timezone: baseFilter?.timezone, dateStyleOptions: { day: '2-digit', month: 'short' } })}
+              {formatDate(row.createdAt, {
+                timezone: baseFilter?.timezone,
+                dateStyleOptions: { day: '2-digit', month: 'short' }
+              })}
             </Text>
           </span>
-          <span className={styles.cellStatus} data-label='Estado'>
-            <span className={`${styles.badge} ${styles[`badge_${meta.tone}`]}`}>{meta.label}</span>
+
+          <span className={styles.cellStatus} data-label='Estado' role='cell'>
+            <span className={`${styles.badge} ${styles[`badge_${meta.tone}`] || styles.badge_neutral}`}>
+              {meta.label}
+            </span>
           </span>
-          <span className={styles.cellPrice} data-label='Total'>
-            <Text as='span' size='md' weight={700}>{formatCurrency(row.total, { currency })}</Text>
+
+          <span className={styles.cellDiscount} data-label='Descuento' role='cell'>
+            {discountMeta
+              ? (
+                <>
+                  <span className={styles.discountMeta}>
+                    <span className={`${styles.discountType} ${styles[discountMeta.className]}`}>
+                      {discountMeta.type}
+                    </span>
+                    {discountMeta.percentage && (
+                      <Text as='span' className={styles.discountPercentage} size='xs'>
+                        {discountMeta.percentage}
+                      </Text>
+                    )}
+                  </span>
+                  <Text as='span' className={styles.discountAmount} size='sm' weight={600}>
+                    -{formatCurrency(discount, { currency })}
+                  </Text>
+                </>
+                )
+              : (
+                <Text as='span' className={styles.noDiscount} size='sm'>
+                  Sin descuento
+                </Text>
+                )}
+          </span>
+
+          <span className={styles.cellPrice} data-label='Total final' role='cell'>
+            {discount > 0 && (
+              <Text as='span' className={styles.originalTotal} size='xs'>
+                <span className={styles.originalLabel}>Subtotal</span>
+                {formatCurrency(subtotal, { currency })}
+              </Text>
+            )}
+            <Text as='span' className={styles.finalTotal} size='md' weight={700}>
+              {formatCurrency(netTotal, { currency })}
+            </Text>
           </span>
         </div>
       )
@@ -139,33 +259,48 @@ export const RecentOrders = ({ baseFilter, currency }) => {
   }
 
   return (
-    <section aria-busy={loading} aria-label='Pedidos recientes' className={styles.panel}>
+    <section
+      aria-busy={loading}
+      aria-label='Pedidos recientes'
+      className={styles.panel}
+    >
       <header className={styles.header}>
-        <Text as='h2' className={styles.title} size='xl' weight={700}>
-          Pedidos recientes
-        </Text>
+        <div className={styles.heading}>
+          <Text as='h2' className={styles.title} size='xl' weight={700}>
+            Pedidos recientes
+          </Text>
+          <Text as='p' className={styles.subtitle} size='sm'>
+            Consulta el detalle de tus últimas ventas y descuentos aplicados.
+          </Text>
+        </div>
+
         <div className={styles.controls}>
           <label className={styles.search}>
-            <Icon color={getGlobalStyle('--color-icons-gray-light')} icon='IconSearch' size={16} />
+            <Icon
+              color={getGlobalStyle('--color-icons-gray-light')}
+              icon='IconSearch'
+              size={16}
+            />
             <input
               aria-label='Buscar por código de pedido'
               className={styles.searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(event) => setSearchInput(event.target.value)}
               placeholder='Buscar pedido…'
               type='search'
               value={searchInput}
             />
           </label>
+
           <div aria-label='Filtrar por estado' className={styles.statusFilters} role='group'>
-            {STATUS_FILTERS.map((f) => (
+            {STATUS_FILTERS.map((status) => (
               <button
-                aria-pressed={statusFilter === f.id}
-                className={`${styles.statusChip} ${statusFilter === f.id ? styles.statusChipActive : ''}`}
-                key={f.id}
-                onClick={() => setStatusFilter(f.id)}
+                aria-pressed={statusFilter === status.id}
+                className={`${styles.statusChip} ${statusFilter === status.id ? styles.statusChipActive : ''}`}
+                key={status.id}
+                onClick={() => setStatusFilter(status.id)}
                 type='button'
               >
-                {f.label}
+                {status.label}
               </button>
             ))}
           </div>
@@ -176,13 +311,14 @@ export const RecentOrders = ({ baseFilter, currency }) => {
         ? <WidgetError onRetry={refetch} />
         : (
           <>
-            <div className={styles.table} role='table'>
+            <div className={styles.table} role='table' aria-label='Listado de pedidos recientes'>
               <div className={styles.headRow} role='row'>
-                <span className={styles.cellCode}>Pedido</span>
-                <span className={styles.cellProduct}>Producto</span>
-                <span className={styles.cellDate}>Fecha</span>
-                <span className={styles.cellStatus}>Estado</span>
-                <span className={styles.cellPrice}>Total</span>
+                <span className={styles.cellCode} role='columnheader'>Pedido</span>
+                <span className={styles.cellProduct} role='columnheader'>Producto</span>
+                <span className={styles.cellDate} role='columnheader'>Fecha</span>
+                <span className={styles.cellStatus} role='columnheader'>Estado</span>
+                <span className={styles.cellDiscount} role='columnheader'>Descuento</span>
+                <span className={styles.cellPrice} role='columnheader'>Total final</span>
               </div>
               {renderRows()}
             </div>
@@ -191,9 +327,9 @@ export const RecentOrders = ({ baseFilter, currency }) => {
               <div className={styles.pagination}>
                 <Pagination
                   currentPage={page}
-                  handleNextPage={() => setPage((p) => Math.min(p + 1, pageCount))}
-                  handleOnClick={(p) => setPage(p)}
-                  handlePrevPage={() => setPage((p) => Math.max(p - 1, 1))}
+                  handleNextPage={() => setPage((current) => Math.min(current + 1, pageCount))}
+                  handleOnClick={(nextPage) => setPage(nextPage)}
+                  handlePrevPage={() => setPage((current) => Math.max(current - 1, 1))}
                   isVisableButtonLeft
                   isVisableButtonRight
                   isVisableButtons
