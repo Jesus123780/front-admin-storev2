@@ -32,6 +32,7 @@ import {
   QuantityButton,
   RippleButton,
   Row,
+  Tag,
   Text,
   ToggleSwitch
 } from 'pkg-components'
@@ -685,9 +686,17 @@ export const Update = ({ id = '' } = { id: null }) => {
                 />
                 {checkStock && (
                   <Column style={{ gap: getGlobalStyle('--spacing-s'), marginBottom: getGlobalStyle('--spacing-2xl') }}>
-                    <Text as='span' size='sm'>
-                      {`Stock actual: ${currentStock}`}
-                    </Text>
+                    <Row>
+                      <Text as='h3' size='lg' >
+                        {`Stock actual: ${currentStock}`}
+                      </Text>
+                      {currentStock <= 0
+                        && <Tag backgroundColor='gray' size='lg'>
+                          Agotado
+                        </Tag>
+                      }
+                    </Row>
+                    <Divider marginBottom={getGlobalStyle('--spacing-lg')} />
                     <AlertInfo
                       message='Solo puedes aumentar el stock (entrada de inventario). Para disminuirlo usa una venta o un ajuste de inventario.'
                       type='warning'

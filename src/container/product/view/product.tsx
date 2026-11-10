@@ -612,7 +612,6 @@ export const ProductView: React.FC<IProductViewProps> = ({
               </label>
 
             </Column>
-
             <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
           </div>
           <Column>
@@ -631,9 +630,10 @@ export const ProductView: React.FC<IProductViewProps> = ({
             />
             {checkStock && (
               <Column style={{ gap: getGlobalStyle('--spacing-s'), marginBottom: getGlobalStyle('--spacing-2xl') }}>
-                <Text color='gray-dark' size='sm'>
+                <Text color='black' size='xl' as='h3' weight={700}>
                   {`Stock actual: ${stockFloor}`}
                 </Text>
+                <Divider marginTop={getGlobalStyle('--spacing-2xl')} />¨
                 <AlertInfo
                   message='Solo puedes aumentar el stock (entrada de inventario). Para disminuirlo usa una venta o un ajuste de inventario.'
                   type='warning'
@@ -664,9 +664,10 @@ export const ProductView: React.FC<IProductViewProps> = ({
           </Column>
           {tag?.nameTag !== null ? (
             <div>
-              <Text color='gray-dark' size='sm'>
+              <Text color='black' size='xl' as='h3' weight={700}>
                 Tag descripción del producto
               </Text>
+              <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
               <div>
                 {tag?.nameTag ? <Tag label={tag.nameTag} /> : null}
               </div>

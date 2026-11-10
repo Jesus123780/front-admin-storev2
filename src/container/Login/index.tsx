@@ -1,14 +1,11 @@
+
 'use client'
 
 import Link from 'next/link'
 import {
-  Cookies,
   encryptSession,
   fetchJson,
-  isTokenExpired,
-  signOutAuth,
   useLoading,
-  useLogout,
   useRegisterDeviceUser,
   useSetSession
 } from 'npm-pkg-hook'
@@ -33,34 +30,36 @@ import React, {
 import { getDeviceId } from '../../../apollo/getDeviceId'
 import pkg from '../../../package.json'
 import { Context } from '../../context/Context'
-import { decodeToken, getUserFromToken } from '../../utils'
+import { decodeToken } from '../../utils'
 import styles from './styles.module.css'
 
-const EXPIRED_MESSAGE = 'Session expired, refresh needed'
 const AUTH_ENDPOINT = '/api/auth'
 const ELECTRON_AUTH_TIMEOUT_MS = 180_000
+
 const SESSION_COOKIE_NAME =
   process.env.NEXT_PUBLIC_SESSION_NAME || 'session_name'
+
 const GOOGLE_CLIENT_ID =
   process.env.NEXT_PUBLIC_CLIENT_ID_LOGIN_GOOGLE || ''
+
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_URL_BACK_SERVER?.replace(/\/+$/, '') || ''
+
 const TERMS_URL = process.env.NEXT_PUBLIC_TERMS_URL
 const PRIVACY_URL = process.env.NEXT_PUBLIC_PRIVACY_URL
 
 /**
  * Indicates whether the app runs in a development environment.
- * The quick-login button is only rendered when this is true, so it
- * never ships to production builds.
  */
 const IS_DEV = process.env.NODE_ENV === 'development'
 
 /**
  * Mock credentials used by the development-only quick login.
- * Values can be overridden through environment variables.
  */
 const DEV_LOGIN_EMAIL =
-  process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL || 'prueba_local_13@local.test'
+  process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL ||
+  'prueba_local_13@local.test'
+
 const DEV_LOGIN_ID =
   process.env.NEXT_PUBLIC_DEV_LOGIN_ID || 'dev-user-local'
 
@@ -69,7 +68,6 @@ interface LoginProps {
 
   /**
    * Enables the optional Google One Tap prompt.
-   * Disabled by default to avoid competing login prompts.
    */
   enableGoogleOneTap?: boolean
 }
@@ -173,10 +171,12 @@ interface ElectronIpcRenderer {
     channel: string,
     ...args: unknown[]
   ) => Promise<unknown>
+
   on: (
     channel: string,
     listener: ElectronListener
   ) => void
+
   removeListener: (
     channel: string,
     listener: ElectronListener
@@ -184,17 +184,17 @@ interface ElectronIpcRenderer {
 }
 
 /**
- * Returns a normalized identifier from a string or numeric value.
- *
- * @param {unknown} value - Identifier to normalize.
- * @returns {string} Normalized identifier or an empty string.
+ * Normalizes a string or numeric identifier.
  */
 const normalizeIdentifier = (value: unknown): string => {
   if (typeof value === 'string') {
     return value.trim()
   }
 
-  if (typeof value === 'number' && Number.isFinite(value)) {
+  if (
+    typeof value === 'number' &&
+    Number.isFinite(value)
+  ) {
     return String(value)
   }
 
@@ -203,9 +203,6 @@ const normalizeIdentifier = (value: unknown): string => {
 
 /**
  * Returns a user-friendly error message.
- *
- * @param {unknown} error - Original error.
- * @returns {string} Safe message to display to the user.
  */
 const getFriendlyErrorMessage = (error: unknown): string => {
   const message =
@@ -239,13 +236,14 @@ const getFriendlyErrorMessage = (error: unknown): string => {
     return 'El servicio de autenticación no está configurado correctamente.'
   }
 
-  return message || 'Ocurrió un error al iniciar sesión. Inténtalo nuevamente.'
+  return (
+    message ||
+    'Ocurrió un error al iniciar sesión. Inténtalo nuevamente.'
+  )
 }
 
 /**
  * Gets the Electron IPC bridge when the application runs in Electron.
- *
- * @returns {ElectronIpcRenderer | undefined} Available IPC bridge.
  */
 const getElectronIpcRenderer = ():
   | ElectronIpcRenderer
@@ -265,8 +263,6 @@ const getElectronIpcRenderer = ():
 
 /**
  * Returns the Google Identity Services API when available.
- *
- * @returns {GoogleIdentityApi | undefined} Google Identity API.
  */
 const getGoogleIdentityApi = ():
   | GoogleIdentityApi
@@ -285,24 +281,21 @@ const getGoogleIdentityApi = ():
 /**
  * Login component for web and Electron applications.
  *
- * Features:
- * - Centralized Google login handling.
- * - Duplicate authentication prevention.
- * - Consistent loading feedback.
- * - Expired session cleanup.
- * - Electron authentication timeout and cancellation handling.
- * - Optional Google One Tap integration.
- *
- * @param {LoginProps} props - Login configuration.
- * @returns {JSX.Element} Login interface.
+ * Session validation and expired-session cleanup are centralized
+ * in the global Auth component.
  */
 export const Login: React.FC<LoginProps> = ({
   googleLoaded = false,
   enableGoogleOneTap = false
 }) => {
   const [handleRegisterDeviceUser] = useRegisterDeviceUser()
-  const { setAlertBox, isElectron, sendNotification } = useContext(Context)
-  const { onClickLogout } = useLogout()
+
+  const {
+    setAlertBox,
+    isElectron,
+    sendNotification
+  } = useContext(Context)
+
   const [handleSession] = useSetSession()
 
   const { loading, wrap } = useLoading({
@@ -314,6 +307,7 @@ export const Login: React.FC<LoginProps> = ({
     useState(false)
 
   const loginInProgressRef = useRef(false)
+
   const electronAuthTimeoutRef =
     useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -321,8 +315,6 @@ export const Login: React.FC<LoginProps> = ({
 
   /**
    * Clears the Electron authentication timeout.
-   *
-   * @returns {void}
    */
   const clearElectronAuthTimeout = useCallback(() => {
     if (electronAuthTimeoutRef.current !== null) {
@@ -333,9 +325,6 @@ export const Login: React.FC<LoginProps> = ({
 
   /**
    * Displays a consistent authentication error.
-   *
-   * @param {unknown} error - Original error.
-   * @returns {void}
    */
   const notifyLoginError = useCallback(
     (error: unknown) => {
@@ -358,10 +347,7 @@ export const Login: React.FC<LoginProps> = ({
   /**
    * Sends the login request and establishes the application session.
    *
-   * The API payload remains compatible with the existing backend contract.
-   *
-   * @param {UserPayload} payload - Authenticated user profile.
-   * @returns {Promise<void>} Resolves after session setup and navigation.
+   * @param payload - Authenticated user profile.
    */
   const doLoginFlow = useCallback(
     async (payload: UserPayload): Promise<void> => {
@@ -387,21 +373,27 @@ export const Login: React.FC<LoginProps> = ({
       }
 
       const name =
-        user.name?.trim() || email.split('@')[0] || 'Usuario'
+        user.name?.trim() ||
+        email.split('@')[0] ||
+        'Usuario'
 
       const body = {
         name,
         username: user.username?.trim() || name,
         lastName: user.lastName?.trim() || name,
         email,
+
         // Preserved for compatibility with the current backend.
         // This value must never be treated as proof of Google identity.
         password: userId,
+
         locationFormat: user.locationFormat ?? [],
+
         useragent:
           typeof navigator !== 'undefined'
             ? navigator.userAgent
             : null,
+
         deviceId,
         imageUrl: user.imageUrl ?? user.image ?? ''
       }
@@ -434,11 +426,23 @@ export const Login: React.FC<LoginProps> = ({
 
       const responseData = requestLogin.data
       const userResponse = responseData?.user
-      const token = normalizeIdentifier(responseData?.token)
-      const authenticatedUserId = normalizeIdentifier(userResponse?.id)
 
-      if (!userResponse || !token || !authenticatedUserId) {
-        throw new Error('Invalid login response structure')
+      const token = normalizeIdentifier(
+        responseData?.token
+      )
+
+      const authenticatedUserId = normalizeIdentifier(
+        userResponse?.id
+      )
+
+      if (
+        !userResponse ||
+        !token ||
+        !authenticatedUserId
+      ) {
+        throw new Error(
+          'Invalid login response structure'
+        )
       }
 
       const storeId = normalizeIdentifier(
@@ -459,7 +463,7 @@ export const Login: React.FC<LoginProps> = ({
         )
       }
 
-      /*
+      /**
        * Save the session in one operation to avoid partial session state.
        * Empty values also prevent stale merchant/store identifiers from
        * surviving a subsequent login without a store.
@@ -493,16 +497,30 @@ export const Login: React.FC<LoginProps> = ({
 
       await handleSession({ cookies })
 
-      /*
-       * Device registration is supplementary. A device-registration
-       * failure should not invalidate an otherwise successful login.
+      /**
+       * Device registration is supplementary.
+       * A registration failure should not invalidate an otherwise
+       * successful login.
        */
       try {
-        if (typeof handleRegisterDeviceUser === 'function') {
+        if (
+          typeof handleRegisterDeviceUser === 'function'
+        ) {
           await handleRegisterDeviceUser({ deviceId })
         }
       } catch {
         // Continue because the session has already been established.
+      }
+
+      // A successful login also clears the previous expiration notice.
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(
+          'app.session.expired'
+        )
+
+        window.sessionStorage.removeItem(
+          'app.session.logout-handled'
+        )
       }
 
       const destination = storeId
@@ -511,14 +529,14 @@ export const Login: React.FC<LoginProps> = ({
 
       window.location.assign(destination)
     },
-    [handleRegisterDeviceUser, handleSession]
+    [
+      handleRegisterDeviceUser,
+      handleSession
+    ]
   )
 
   /**
    * Processes Google authentication while preventing concurrent logins.
-   *
-   * @param {UserPayload} payload - Google user profile.
-   * @returns {Promise<void>} Authentication result.
    */
   const responseGoogle = useCallback(
     async (payload: UserPayload): Promise<void> => {
@@ -552,9 +570,6 @@ export const Login: React.FC<LoginProps> = ({
 
   /**
    * Validates a Google Identity Services credential response.
-   *
-   * @param {GoogleCredentialResponse} response - Google credential response.
-   * @returns {Promise<void>} Credential processing result.
    */
   const handleGoogleCredential = useCallback(
     async (
@@ -578,13 +593,15 @@ export const Login: React.FC<LoginProps> = ({
         }
 
         const userName =
-          claims.name || claims.email.split('@')[0]
+          claims.name ||
+          claims.email.split('@')[0]
 
         await responseGoogle({
           user: {
             name: userName,
             username: userName,
-            lastName: claims.family_name || userName,
+            lastName:
+              claims.family_name || userName,
             email: claims.email,
             id: claims.sub,
             image: claims.picture,
@@ -596,17 +613,21 @@ export const Login: React.FC<LoginProps> = ({
         notifyLoginError(error)
       }
     },
-    [notifyLoginError, responseGoogle]
+    [
+      notifyLoginError,
+      responseGoogle
+    ]
   )
 
   /**
    * Initiates Google authentication in Electron.
-   *
-   * @returns {Promise<void>} Authentication initiation result.
    */
   const handleElectronGoogleLogin = useCallback(
     async (): Promise<void> => {
-      if (isLoading || loginInProgressRef.current) {
+      if (
+        isLoading ||
+        loginInProgressRef.current
+      ) {
         return
       }
 
@@ -677,88 +698,8 @@ export const Login: React.FC<LoginProps> = ({
   )
 
   /**
-   * Clears an expired session and redirects to the login page.
-   *
-   * @returns {Promise<void>} Session cleanup result.
-   */
-  const clearExpiredSession = useCallback(
-    async (): Promise<void> => {
-      try {
-        if (typeof onClickLogout === 'function') {
-          await onClickLogout({ redirect: false })
-        }
-
-        await signOutAuth({
-          redirect: true,
-          callbackUrl: ROUTES.index,
-          reload: false
-        })
-      } catch {
-        setAlertBox({
-          message:
-            'Ocurrió un error al cerrar la sesión. Intenta nuevamente.',
-          color: 'error'
-        })
-      }
-    },
-    [onClickLogout, setAlertBox]
-  )
-
-  /**
-   * Validates an existing session once when the component mounts.
-   *
-   * @returns {void} Starts session validation.
-   */
-  useEffect(() => {
-    let isActive = true
-
-    const validateSession = async (): Promise<void> => {
-      const sessionToken = Cookies.get('session')
-
-      if (!sessionToken) {
-        return
-      }
-
-      try {
-        if (isTokenExpired(sessionToken)) {
-          if (isActive) {
-            await clearExpiredSession()
-          }
-
-          return
-        }
-
-        const result = await getUserFromToken(sessionToken)
-
-        if (
-          isActive &&
-          result?.message === EXPIRED_MESSAGE
-        ) {
-          await clearExpiredSession()
-        }
-      } catch {
-        if (isActive) {
-          setAlertBox({
-            message:
-              'No fue posible validar la sesión existente. Puedes intentar iniciar sesión nuevamente.',
-            color: 'error'
-          })
-        }
-      }
-    }
-
-    void validateSession()
-
-    return () => {
-      isActive = false
-    }
-  }, [clearExpiredSession, setAlertBox])
-
-  /**
    * Registers Electron authentication listeners and removes them
    * when the component unmounts.
-   *
-   * @returns {void | (() => void)} Listener cleanup.
    */
   useEffect(() => {
     if (!isElectron) {
@@ -887,11 +828,6 @@ export const Login: React.FC<LoginProps> = ({
 
   /**
    * Initializes the optional Google One Tap flow.
-   *
-   * One Tap is opt-in because the page already exposes an explicit
-   * Google sign-in button.
-   *
-   * @returns {void | (() => void)} Identity prompt cleanup.
    */
   useEffect(() => {
     if (
@@ -931,9 +867,6 @@ export const Login: React.FC<LoginProps> = ({
 
   /**
    * Handles the legacy Google login button response.
-   *
-   * @param {unknown} response - Response from the GoogleLogin component.
-   * @returns {Promise<void>} Authentication result.
    */
   const handleWebGoogleSuccess = async (
     response: unknown
@@ -944,6 +877,7 @@ export const Login: React.FC<LoginProps> = ({
     const profile = googleResponse?.profileObj
 
     const email = profile?.email?.trim()
+
     const googleId = normalizeIdentifier(
       profile?.googleId
     )
@@ -978,14 +912,11 @@ export const Login: React.FC<LoginProps> = ({
 
   /**
    * Development-only quick login using mock credentials.
-   *
-   * Reuses the standard login flow so the resulting session is identical
-   * to a real login. Never rendered in production.
-   *
-   * @returns {Promise<void>} Authentication result.
    */
   const handleDevQuickLogin = async (): Promise<void> => {
-    const name = DEV_LOGIN_EMAIL.split('@')[0] || 'Usuario Dev'
+    const name =
+      DEV_LOGIN_EMAIL.split('@')[0] ||
+      'Usuario Dev'
 
     await responseGoogle({
       user: {
@@ -1066,7 +997,15 @@ export const Login: React.FC<LoginProps> = ({
               ) : (
                 'Continuar con Google'
               )}
-              <div style={{ width: 'min-content', opacity: 0 }}>.</div>
+
+              <div
+                style={{
+                  width: 'min-content',
+                  opacity: 0
+                }}
+              >
+                .
+              </div>
             </Button>
           ) : (
             <GoogleLogin
@@ -1141,8 +1080,15 @@ export const Login: React.FC<LoginProps> = ({
                   ) : (
                     'Continuar con Google'
                   )}
-                  <div style={{ width: 'min-content', opacity: 0 }}>.</div>
 
+                  <div
+                    style={{
+                      width: 'min-content',
+                      opacity: 0
+                    }}
+                  >
+                    .
+                  </div>
                 </Button>
               )}
             />

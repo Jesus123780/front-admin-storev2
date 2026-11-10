@@ -1,16 +1,22 @@
+
 'use client'
 
 import {
+  ProductStatus,
   useDeleteProductsFood,
   useFilterConfigs,
-  useProductsFood
+  useProductsFood,
+  useUpdateStatusProduct
 } from 'npm-pkg-hook'
 import { DisabledProducts } from 'pkg-components'
-import React, { useCallback, useContext, useState } from 'react'
+import React, {
+  useCallback,
+  useContext,
+  useState
+} from 'react'
 
 import { Context } from '../../../context/Context'
 
-/** pState value that identifies disabled products. */
 const DISABLED_STATE = 0
 const MIN_SEARCH_LENGTH = 4
 
@@ -21,13 +27,14 @@ interface AppliedFilters {
   priceMax?: number | null
 }
 
-/**
- * Container for /products/disabled.
- * Fetches disabled products (pState = 0), wires filters, search, pagination
- * and the restore action into the DisabledProducts page component.
- */
+interface RestoreProductInput {
+  pId: string
+  pState: number
+}
+
 export const DisabledProductsContainer = () => {
   const { sendNotification } = useContext(Context)
+
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({})
@@ -52,12 +59,16 @@ export const DisabledProductsContainer = () => {
     callback: () => undefined
   })
 
-  const { handleDelete } = useDeleteProductsFood({
+  useDeleteProductsFood({
     sendNotification,
     onSuccess: () => {
       refetch({ page: currentPage })
     }
   })
+
+  const [
+    updateStatusProduct
+   ]= useUpdateStatusProduct()
 
   const handlePageChange = useCallback((pageNumber: number) => {
     setCurrentPage(pageNumber)
@@ -69,23 +80,36 @@ export const DisabledProductsContainer = () => {
     setCurrentPage(1)
   }, [])
 
-  const handleApplyFilters = useCallback((selection: Record<string, Set<string>>) => {
+  const handleApplyFilters = useCallback((
+    selection: Record<string, Set<string>>
+  ) => {
     const variables = buildVariables(selection)
+
     const next: AppliedFilters = {
       categories: variables.categories ?? [],
       orderBy: variables.orderBy ?? [],
-      priceMin: typeof variables.priceMin === 'number' ? variables.priceMin : null,
-      priceMax: typeof variables.priceMax === 'number' ? variables.priceMax : null
+      priceMin: typeof variables.priceMin === 'number'
+        ? variables.priceMin
+        : null,
+      priceMax: typeof variables.priceMax === 'number'
+        ? variables.priceMax
+        : null
     }
+
     setAppliedFilters(next)
     setCurrentPage(1)
-    // pState is always forced to DISABLED_STATE: this view only lists disabled products.
-    refetch({ ...next, page: 1, pState: DISABLED_STATE })
+
+    refetch({
+      ...next,
+      page: 1,
+      pState: DISABLED_STATE
+    })
   }, [buildVariables, refetch])
 
   const handleClearFilters = useCallback(() => {
     setAppliedFilters({})
     setCurrentPage(1)
+
     refetch({
       page: 1,
       categories: [],
@@ -96,16 +120,75 @@ export const DisabledProductsContainer = () => {
     })
   }, [refetch])
 
-  const handleRestore = useCallback(async (product: { pId: string | null }) => {
-    if (!product?.pId) return
-    setRestoringId(product.pId)
+  /**
+   * Restore a disabled product.
+   */
+  const handleRestore = useCallback(async (
+    product: RestoreProductInput
+  ) => {
+    const { pId } = product ?? {}
+
+    if (!pId) {
+      sendNotification({
+        title: 'Error',
+        description: 'No se encontró el identificador del producto',
+        backgroundColor: 'error'
+      })
+      return
+    }
+
+    setRestoringId(pId)
+
     try {
-      // The mutation toggles the state: 0 (disabled) -> 1 (active).
-      await handleDelete({ pId: product.pId, pState: DISABLED_STATE } as any)
+      const response = await updateStatusProduct({
+        pId,
+        pState: ProductStatus.ACTIVE
+      })
+
+      // Capture the backend response.
+      if (!response?.success) {
+        sendNotification({
+          title: 'No se pudo restaurar',
+          description: response?.message ?? 'Ocurrió un error al restaurar el producto',
+          backgroundColor: 'error'
+        })
+        return
+      }
+
+      sendNotification({
+        title: 'Producto restaurado',
+        description: response.message || 'El producto fue activado exitosamente',
+        backgroundColor: 'success'
+      })
+
+      // Refresh the disabled products listing.
+      await refetch({
+        page: currentPage,
+        pState: DISABLED_STATE
+      })
+
+    } catch (error) {
+      console.error(
+        'DisabledProductsContainer.handleRestore:',
+        error
+      )
+
+      sendNotification({
+        title: 'Error al restaurar',
+        description: error instanceof Error
+          ? error.message
+          : 'Ocurrió un error inesperado al restaurar el producto',
+        backgroundColor: 'error'
+      })
     } finally {
       setRestoringId(null)
     }
-  }, [handleDelete])
+  }, [
+    currentPage,
+    refetch,
+    sendNotification,
+    updateStatusProduct
+  ])
 
   return (
     <DisabledProducts

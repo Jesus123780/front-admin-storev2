@@ -1,10 +1,10 @@
+
 import {
   gql,
   useQuery,
   useReactiveVar
 } from '@apollo/client'
 import {
-  useParams,
   usePathname,
   useRouter,
   useSearchParams
@@ -17,7 +17,8 @@ import { ROUTES } from 'pkg-components'
 import React, {
   Fragment,
   useContext,
-  useEffect
+  useEffect,
+  useRef
 } from 'react'
 
 import { Context } from '@/context/Context'
@@ -28,92 +29,160 @@ import {
   refreshSession,
   shouldProactivelyRefresh
 } from './helpers/session-token'
-// import { UPDATE_TOKEN } from './queries'
 
 /**
- * Query param usado para avisar que la sesión expiró tras un logout forzado.
+ * Query param usado para avisar que la sesión expiró.
  */
 const SESSION_EXPIRED_PARAM = 'sessionExpired'
 
 /**
- * Marca efímera en sessionStorage. Es más fiable que el query param porque
- * sobrevive al re-render que provoca el logout (clearStore) y no compite con
- * la sincronización de la URL del App Router.
+ * Marca utilizada para mostrar la notificación una sola vez.
  */
 const SESSION_EXPIRED_FLAG = 'app.session.expired'
 
 /**
+ * Marca que indica que el logout por expiración ya fue procesado.
+ *
+ * Es independiente de SESSION_EXPIRED_FLAG porque la notificación
+ * puede consumir su propia marca antes de terminar la navegación.
+ */
+const SESSION_LOGOUT_HANDLED_FLAG = 'app.session.logout-handled'
+
+/**
  * Rutas públicas donde mostramos el aviso de sesión expirada.
  */
-const SESSION_EXPIRED_ROUTES = new Set<string>([ROUTES.index, ROUTES.login])
+const SESSION_EXPIRED_ROUTES = new Set<string>([
+  ROUTES.index,
+  ROUTES.login
+])
+
+/**
+ * Consulta local de Apollo.
+ * Se declara fuera del componente para conservar su referencia.
+ */
+const QUERY_DATA_LOGGING = gql`
+  query IsUserLoggedIn {
+    isLogged @client
+  }
+`
 
 interface AuthProps {
   readonly children: React.ReactNode
 }
 
 export default function Auth({ children }: AuthProps) {
-  // STATE
+  // ROUTING
   const pathname = usePathname()
-  const params = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { onClickLogout } = useLogout({})
-  const { sendNotification } = useContext(Context)
 
-  // Escucha reactiva del estado de sesión. El errorLink de Apollo marca
-  // isLoggedVar({ expired: true }) cuando el backend responde "Session expired".
+  // AUTH
+  const { onClickLogout } = useLogout({})
   const loggedState = useReactiveVar(isLoggedVar)
 
-  // QUERIES
-  // const [updateToken, { data, called }] = useMutation(UPDATE_TOKEN)
+  // CONTEXT
+  const { sendNotification } = useContext(Context)
 
-  // Actualiza el auth token del usuario por cada cambio de ventana
-  const QUERY_DATA_LOGGING = gql`
-    query IsUserLoggedIn {
-      isLogged @client
-    }
-  `
+  // QUERIES
   const { data: dataLogged } = useQuery(QUERY_DATA_LOGGING)
 
+  // REFS
+  const verificationQueueRef = useRef<Promise<void>>(
+    Promise.resolve()
+  )
 
-  // Respuesta de la verificación del token
+  const lastVerificationPathRef = useRef<string | null>(null)
+
+  const logoutInProgressRef = useRef(false)
+
+  const notificationHandledRef = useRef(false)
+
+  /**
+   * Responde si el logout por expiración ya fue procesado
+   * en esta pestaña y todavía no se ha establecido una sesión nueva.
+   */
+  const isExpiredLogoutHandled = (): boolean => {
+    if (globalThis.window === undefined) {
+      return false
+    }
+
+    return (
+      globalThis.sessionStorage.getItem(
+        SESSION_LOGOUT_HANDLED_FLAG
+      ) === 'true'
+    )
+  }
+
+  /**
+   * Marca la sesión como activa y elimina la marca del logout anterior.
+   */
+  const markSessionAsActive = (): void => {
+    if (globalThis.window !== undefined) {
+      globalThis.sessionStorage.removeItem(
+        SESSION_LOGOUT_HANDLED_FLAG
+      )
+    }
+
+    isLoggedVar({
+      state: true,
+      expired: false,
+      message: 'Sesión activa',
+      code: 200
+    })
+  }
+
+  /**
+   * Valida la sesión al montar la aplicación y al cambiar de ruta.
+   *
+   * Los cambios en searchParams no vuelven a ejecutar esta validación.
+   * Las validaciones se encolan para evitar que dos rutas ejecuten
+   * simultáneamente el mismo proceso de autenticación.
+   */
   useEffect(() => {
+    if (!pathname) {
+      return
+    }
 
-    const verifySession = async () => {
+    // Evita repetir la validación en renders de la misma ruta.
+    if (lastVerificationPathRef.current === pathname) {
+      return
+    }
+
+    lastVerificationPathRef.current = pathname
+
+    const verifySession = async (): Promise<void> => {
       try {
-        const session = await getSession()
-
-        // Sesión válida y vigente -> marcar como activa.
-        if (session?.isSession) {
-          isLoggedVar({
-            state: true,
-            expired: false,
-            message: 'Sesión activa',
-            code: 200
-          })
+        // Después de un logout forzado no debemos volver a validar
+        // la misma sesión desde las rutas públicas.
+        if (
+          SESSION_EXPIRED_ROUTES.has(pathname) &&
+          isExpiredLogoutHandled()
+        ) {
           return
         }
 
-        // No hay access token válido. Antes de cerrar sesión intentamos
-        // recuperarla con el refresh token HttpOnly (p. ej. tras recargar la
-        // app con el access ya expirado). Solo si el refresh falla la sesión
-        // se considera realmente terminada.
+        const session = await getSession()
+
+        // La sesión ya está vigente.
+        if (session?.isSession) {
+          markSessionAsActive()
+          return
+        }
+
+        // No hay sesión activa. Intentamos recuperar la sesión
+        // usando el refresh token HttpOnly.
         const hadSession = Boolean(getAccessToken())
+
         const refreshed = await refreshSession()
 
         if (refreshed) {
-          isLoggedVar({
-            state: true,
-            expired: false,
-            message: 'Sesión activa',
-            code: 200
-          })
+          markSessionAsActive()
           return
         }
 
-        // El refresh falló. Solo marcamos expirada si existía una sesión
-        // previa; de lo contrario el usuario simplemente no ha iniciado sesión
-        // y no debemos desloguearlo (evita el redirect a "/" durante el login).
+        // El refresh falló. Solo expiramos si existía una sesión
+        // anterior; no debemos afectar al usuario que no ha iniciado
+        // sesión y está visitando una ruta pública.
         if (hadSession) {
           isLoggedVar({
             state: false,
@@ -123,6 +192,8 @@ export default function Auth({ children }: AuthProps) {
           })
         }
       } catch (error) {
+        // Conservamos el comportamiento existente para errores
+        // explícitos de validación.
         if (typeof error === 'string') {
           isLoggedVar({
             state: false,
@@ -134,119 +205,248 @@ export default function Auth({ children }: AuthProps) {
       }
     }
 
-    verifySession()
-     
-  }, [pathname, params])
+    // Encola la validación. Esto evita que los cambios rápidos de ruta
+    // provoquen varias llamadas concurrentes.
+    const previousValidation = verificationQueueRef.current
 
-  // 🔄 Refresh PROACTIVO: al montar la app y cada vez que la pestaña vuelve a
-  // ser visible, si el access token está próximo a expirar lo renovamos antes
-  // de que cualquier operación falle. El single-flight de refreshSession evita
-  // renovaciones concurrentes.
+    const nextValidation = previousValidation.then(
+      verifySession,
+      verifySession
+    )
+
+    verificationQueueRef.current = nextValidation.catch(() => {
+      // Evita que un error deje bloqueada la cola.
+    })
+  }, [pathname])
+
+  /**
+   * Refresh PROACTIVO:
+   *
+   * - Al montar la aplicación.
+   * - Cuando la pestaña vuelve a estar visible.
+   *
+   * No intenta refrescar nuevamente una sesión cuyo logout ya
+   * fue procesado y que está en una ruta pública.
+   */
   useEffect(() => {
-    if (globalThis.window === undefined) { return }
-
-    const proactiveRefresh = async () => {
-      if (!getAccessToken()) { return }
-      if (!shouldProactivelyRefresh()) { return }
-      await refreshSession()
+    if (globalThis.window === undefined) {
+      return
     }
 
-    // Al montar.
-    proactiveRefresh()
+    const proactiveRefresh = async (): Promise<void> => {
+      if (
+        SESSION_EXPIRED_ROUTES.has(pathname ?? '') &&
+        isExpiredLogoutHandled()
+      ) {
+        return
+      }
 
-    const onVisibilityChange = () => {
-      if (globalThis.document.visibilityState === 'visible') {
-        proactiveRefresh()
+      if (!getAccessToken()) {
+        return
+      }
+
+      if (!shouldProactivelyRefresh()) {
+        return
+      }
+
+      try {
+        await refreshSession()
+      } catch {
+        // La validación principal de sesión es responsable
+        // de determinar si corresponde cerrar la sesión.
       }
     }
 
-    globalThis.document.addEventListener('visibilitychange', onVisibilityChange)
-    return () => {
-      globalThis.document.removeEventListener('visibilitychange', onVisibilityChange)
+    void proactiveRefresh()
+
+    const onVisibilityChange = (): void => {
+      if (globalThis.document.visibilityState === 'visible') {
+        void proactiveRefresh()
+      }
     }
-     
+
+    globalThis.document.addEventListener(
+      'visibilitychange',
+      onVisibilityChange
+    )
+
+    return () => {
+      globalThis.document.removeEventListener(
+        'visibilitychange',
+        onVisibilityChange
+      )
+    }
   }, [])
 
-  // Cierra la sesión automáticamente cuando el errorLink (o verifySession)
-  // marca la sesión como expirada, y redirige a /login con el query param
-  // para notificar al usuario.
+  /**
+   * Logout automático cuando la sesión expira.
+   *
+   * El ref impide que el mismo logout se ejecute más de una vez,
+   * incluso si onClickLogout cambia de referencia entre renders.
+   */
   useEffect(() => {
-    if (!loggedState?.expired) { return }
+    if (!loggedState?.expired) {
+      // Una sesión nueva permite volver a procesar futuras expiraciones.
+      if (loggedState?.state) {
+        logoutInProgressRef.current = false
+      }
 
-    const forceLogout = async () => {
+      return
+    }
+
+    if (logoutInProgressRef.current) {
+      return
+    }
+
+    logoutInProgressRef.current = true
+
+    const forceLogout = async (): Promise<void> => {
       try {
-        // Deja una marca efímera ANTES de limpiar/navegar para que el aviso
-        // sobreviva al re-render provocado por el logout.
         if (globalThis.window !== undefined) {
-          globalThis.sessionStorage.setItem(SESSION_EXPIRED_FLAG, 'true')
+          // Marcamos ambas condiciones antes de limpiar el store.
+          // Así ningún render intermedio vuelve a validar la sesión.
+          globalThis.sessionStorage.setItem(
+            SESSION_EXPIRED_FLAG,
+            'true'
+          )
+
+          globalThis.sessionStorage.setItem(
+            SESSION_LOGOUT_HANDLED_FLAG,
+            'true'
+          )
         }
 
-        // Limpia cookies y el store de Apollo sin redirigir, para poder
-        // controlar nosotros la URL de destino.
-        await onClickLogout?.({ redirect: false })
+        // Limpia cookies y Apollo sin delegar la redirección.
+        await onClickLogout?.({
+          redirect: false
+        })
+      } catch {
+        // Aunque falle el logout interno, continuamos con el flujo
+        // de navegación y evitamos repetir el proceso.
       } finally {
-        // Resetea el estado reactivo para evitar re-disparar el logout en
-        // navegaciones posteriores.
+        // Reset del estado reactivo.
         isLoggedVar({
           state: false,
           expired: false,
           message: '',
           code: ''
         })
-        router.replace(`${ROUTES.login}?${SESSION_EXPIRED_PARAM}=true`)
+
+        const targetUrl =
+          `${ROUTES.login}?${SESSION_EXPIRED_PARAM}=true`
+
+        // Evita navegar innecesariamente a la misma URL.
+        const alreadyAtTarget =
+          pathname === ROUTES.login &&
+          searchParams?.get(SESSION_EXPIRED_PARAM) === 'true'
+
+        if (!alreadyAtTarget) {
+          router.replace(targetUrl)
+        }
       }
     }
 
-    forceLogout()
-     
-  }, [loggedState?.expired])
+    void forceLogout()
+  }, [
+    loggedState?.expired,
+    loggedState?.state,
+    onClickLogout,
+    pathname,
+    router,
+    searchParams
+  ])
 
-  // Muestra la notificación de "sesión expirada" al llegar a / o /login.
-  // Lee tanto el query param como la marca de sessionStorage (respaldo fiable)
-  // y luego limpia ambos para no repetir el aviso.
+  /**
+   * Notificación de sesión expirada.
+   *
+   * Se muestra una sola vez, independientemente de si la señal
+   * llegó mediante el query param o sessionStorage.
+   */
   useEffect(() => {
-    if (globalThis.window === undefined) { return }
-    if (!SESSION_EXPIRED_ROUTES.has(pathname)) { return }
+    if (globalThis.window === undefined) {
+      return
+    }
 
-    const hasParam = searchParams?.get(SESSION_EXPIRED_PARAM) === 'true'
-    const hasFlag = globalThis.sessionStorage.getItem(SESSION_EXPIRED_FLAG) === 'true'
+    if (!SESSION_EXPIRED_ROUTES.has(pathname ?? '')) {
+      return
+    }
 
-    if (!hasParam && !hasFlag) { return }
+    const hasParam =
+      searchParams?.get(SESSION_EXPIRED_PARAM) === 'true'
 
-    // Limpia la marca de sessionStorage inmediatamente (one-shot).
-    globalThis.sessionStorage.removeItem(SESSION_EXPIRED_FLAG)
+    const hasFlag =
+      globalThis.sessionStorage.getItem(
+        SESSION_EXPIRED_FLAG
+      ) === 'true'
+
+    // Cuando ya no hay señal, permitimos una futura notificación.
+    if (!hasParam && !hasFlag) {
+      notificationHandledRef.current = false
+      return
+    }
+
+    if (notificationHandledRef.current) {
+      return
+    }
+
+    // Se marca antes de notificar para evitar duplicaciones
+    // provocadas por renders del contexto.
+    notificationHandledRef.current = true
+
+    globalThis.sessionStorage.removeItem(
+      SESSION_EXPIRED_FLAG
+    )
 
     sendNotification?.({
       title: 'Sesión expirada',
-      description: 'Tu sesión ha expirado. Inicia sesión nuevamente.',
+      description:
+        'Tu sesión ha expirado. Inicia sesión nuevamente.',
       backgroundColor: '#E74C3C',
       position: 'top-right'
     })
 
-    // Limpia el query param de la URL para no repetir el aviso al refrescar.
+    // Limpiamos únicamente el parámetro de sesión expirada
+    // y conservamos los demás parámetros de la URL.
     if (hasParam) {
-      const newParams = new URLSearchParams(searchParams?.toString() ?? '')
-      newParams.delete(SESSION_EXPIRED_PARAM)
-      const queryStr = newParams.toString()
-      router.replace(queryStr ? `${pathname}?${queryStr}` : pathname)
-    }
-     
-  }, [pathname, searchParams])
+      const newParams = new URLSearchParams(
+        searchParams?.toString() ?? ''
+      )
 
+      newParams.delete(SESSION_EXPIRED_PARAM)
+
+      const queryString = newParams.toString()
+
+      router.replace(
+        queryString
+          ? `${pathname}?${queryString}`
+          : pathname
+      )
+    }
+  }, [
+    pathname,
+    searchParams,
+    router,
+    sendNotification
+  ])
+
+  /**
+   * Log de diagnóstico de Apollo.
+   */
   useEffect(() => {
-    const res = dataLogged?.isLogged
-    if (res?.message) {
-      if (res.code >= 500) {
-        // eslint-disable-next-line
-        console.log(res.message);
-        // eslint-disable-next-line
-        if (res.code >= 300 || res.code === 403) console.log(res.message);
-        // eslint-disable-next-line
-        if (res.code >= 400 && res.code !== 403) console.log(res.message);
-        // eslint-disable-next-line
-        if (res.code >= 200) console.log(res.message);
-      }
+    const response = dataLogged?.isLogged
+
+    if (
+      response?.message &&
+      Number(response.code) >= 500
+    ) {
+      // eslint-disable-next-line no-console
+      console.log(response.message)
     }
   }, [dataLogged?.isLogged])
-  return <Fragment>{children}</Fragment>
+
+  return (
+    <Fragment>
+      {children}
+    </Fragment>
+  )
 }

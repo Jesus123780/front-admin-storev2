@@ -187,7 +187,7 @@ export const InventoryUnits = () => {
             </Text>
 
             <Text size='xl' weight={700}>
-              {numberFormat(totalRecords)}
+              {totalRecords}
             </Text>
           </Column>
         </div>
@@ -272,7 +272,7 @@ export const InventoryUnits = () => {
                         </TableCell>
 
                         <TableCell col={3} row={tableRowIndex}>
-                          <Text weight={700}>{numberFormat(row.stock)}</Text>
+                          <Text weight={700}>{row.stock}</Text>
                         </TableCell>
 
                         <TableCell col={4} row={tableRowIndex}>

@@ -106,10 +106,13 @@ export const SubItems = ({
       title='Listado de sub productos'
     >
       <Column className={styles.container}>
+        {/* Header: siempre arriba */}
         <Column className={styles.header}>
           {pName}
         </Column>
-        <Column>
+
+        {/* Content: scroll independiente */}
+        <Column className={styles.content}>
           {loading ? (
             <LoaderSubItem />
           ) : (
@@ -131,23 +134,25 @@ export const SubItems = ({
           )}
         </Column>
 
-        <Row>
+        {/* Footer: siempre abajo */}
+        <Row className={styles.footer}>
           {loading ? (
             <Skeleton numberObject={1} style={{ padding: 0, margin: 0 }} />
           ) : (
-            (showQuantity && 
-            <QuantityButton
-              handleDecrement={handleDecrement}
-              handleIncrement={handleIncrement}
-              label={numberFormat(ProPrice)}
-              quantity={ProQuantity}
-              showNegativeButton={
-                !ProQuantity || ProQuantity === 0 || ProQuantity === null
-              }
-              validationZero={false}
-            />
+            showQuantity && (
+              <QuantityButton
+                handleDecrement={handleDecrement}
+                handleIncrement={handleIncrement}
+                label={numberFormat(ProPrice)}
+                quantity={ProQuantity}
+                showNegativeButton={
+                  !ProQuantity || ProQuantity === 0 || ProQuantity === null
+                }
+                validationZero={false}
+              />
             )
           )}
+
           <RippleButton
             disabled={disabled}
             onClick={() => {
@@ -155,8 +160,8 @@ export const SubItems = ({
               setModalItem(!modalItem)
             }}
           >
-              Agregar
-            {computedSumExtra > 0 && `${numberFormat(computedSumExtra)}`}
+            Agregar
+            {computedSumExtra > 0 && ` ${numberFormat(computedSumExtra)}`}
           </RippleButton>
         </Row>
       </Column>

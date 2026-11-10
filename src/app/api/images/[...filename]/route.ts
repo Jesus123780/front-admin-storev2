@@ -56,9 +56,10 @@ const safeDecode = (value: string): string => {
 }
 
 // Next.js 15+: params es una Promise.
+// Se utiliza catch-all para capturar rutas con varios segmentos.
 interface RouteContext {
   params: Promise<{
-    filename: string
+    filename: string[]
   }>
 }
 
@@ -73,10 +74,25 @@ export const GET = async (
     // Resolver params antes de acceder a filename.
     const { filename: rawFilename } = await ctx.params
 
+    // Unir todos los segmentos recibidos por Next.js.
+    const rawPath = Array.isArray(rawFilename)
+      ? rawFilename.join('/')
+      : String(rawFilename ?? '')
+
     // Next decodifica params, pero algunos nombres (con espacios o
     // caracteres especiales) pueden llegar aún codificados o parcialmente.
     // Decodificamos de forma segura para obtener el nombre real en disco.
-    const filename = safeDecode(String(rawFilename ?? '')).trim()
+    let filename = safeDecode(String(rawPath ?? '')).trim()
+
+    // Normalizar rutas que llegan con barras adicionales.
+    //
+    // Ejemplos:
+    // /images/producto.png -> producto.png
+    // images/producto.png  -> producto.png
+    // //images/producto.png -> producto.png
+    filename = filename
+      .replace(/^\/+/, '')
+      .replace(/^images\/+/i, '')
 
     // Validar nombres vacíos o inválidos.
     if (
@@ -99,6 +115,12 @@ export const GET = async (
       segments.some((segment) => segment === '.' || segment === '..')
     ) {
       return await servePlaceholder()
+    }
+
+    // Si solicitan directamente el placeholder, servir el archivo físico.
+    // Esto evita cualquier posibilidad de un bucle de redirecciones.
+    if (filename === 'placeholder-image.webp') {
+      return await servePlaceholderImage()
     }
 
     // Validar extensión.
@@ -148,12 +170,27 @@ export const GET = async (
 }
 
 /**
- * Retorna la imagen placeholder cuando el archivo solicitado
- * no existe o sucede algún error.
+ * Retorna directamente la imagen placeholder cuando el archivo solicitado
+ * no existe, es inválido o sucede algún error.
+ *
+ * No realiza redirecciones: devuelve el contenido físico de la imagen.
  */
 const servePlaceholder = async (): Promise<Response> => {
+  return await servePlaceholderImage()
+}
+
+/**
+ * Lee y retorna la imagen placeholder desde public/images/.
+ */
+const servePlaceholderImage = async (): Promise<Response> => {
   try {
-    await fs.promises.stat(publicPlaceholderPath)
+    const fileStats = await fs.promises.stat(publicPlaceholderPath)
+
+    if (!fileStats.isFile()) {
+      return new Response(null, {
+        status: 204
+      })
+    }
 
     const stream = fs.createReadStream(publicPlaceholderPath)
 
