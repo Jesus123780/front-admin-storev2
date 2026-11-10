@@ -185,7 +185,6 @@ const Provider = ({ children }: ProviderProps) => {
     initTheme,
     theme
   } = useTheme()
-
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()

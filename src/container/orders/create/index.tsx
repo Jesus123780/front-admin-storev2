@@ -2,19 +2,22 @@
 
 import { useRouter } from 'next/navigation'
 import {
+  ConfigurationScope,
   generateStoreURL,
   useAmountInput,
   useFilterConfigs,
   useFormatDate,
   useGetAllPaymentMethods,
   useGetClients,
+  useGetResolvedConfiguration,
   usePrintSaleTicket,
   usePushNotifications,
   // useReactToPrint,
   useSales,
   useScanFeedback,
   useStore,
-  useStoreTables
+  useStoreTables,
+  useUpsertConfiguration
 } from 'npm-pkg-hook'
 import {
   AwesomeModal,
@@ -33,6 +36,7 @@ import {
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import PropTypes from 'prop-types'
 import React, {
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -47,6 +51,75 @@ import { ModalSales } from './ModalSales'
 import { ProductNotFoundDialog } from './ProductNotFoundDialog'
 import { SubItems } from './SubItems'
 import { SuccessSaleModal } from './Success'
+
+/* =========================================================
+   SALES TABLE CONFIGURATION
+========================================================= */
+
+interface SalesDividerPositions {
+  [key: string]: number
+}
+
+/**
+ * Default catalog / cart distribution.
+ */
+const DEFAULT_SALES_DIVIDER_POSITIONS: SalesDividerPositions = {
+  __0: 66.6667,
+  __1: 33.3333
+}
+
+/**
+ * Configuration identity.
+ */
+const SALES_TABLE_CONFIGURATION = {
+  componentName: 'SalesTable',
+  key: 'columnPositions'
+} as const
+
+/**
+ * Delay before persisting a column resize.
+ */
+const SALES_RESIZE_DEBOUNCE_MS = 700
+
+/**
+ * Validate configuration received from Apollo.
+ */
+const normalizeSalesDividerPositions = (
+  value: unknown
+): SalesDividerPositions | null => {
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    Array.isArray(value)
+  ) {
+    return null
+  }
+
+  const entries = Object.entries(
+    value as Record<string, unknown>
+  )
+
+  if (!entries.length) {
+    return null
+  }
+
+  const result: SalesDividerPositions = {}
+
+  for (const [key, position] of entries) {
+    if (
+      typeof position !== 'number' ||
+      !Number.isFinite(position) ||
+      position < 0 ||
+      position > 100
+    ) {
+      return null
+    }
+
+    result[key] = position
+  }
+
+  return result
+}
 
 export const CreateSales = ({
   show = false,
@@ -252,7 +325,7 @@ export const CreateSales = ({
    * @param {string} pId - Identificador del producto a resaltar.
    */
   const triggerHighlight = (pId) => {
-    if (!pId) {return}
+    if (!pId) { return }
     if (highlightTimerRef.current) {
       clearTimeout(highlightTimerRef.current)
     }
@@ -266,6 +339,7 @@ export const CreateSales = ({
     }, 1200)
   }
 
+
   /**
    * Punto único de entrada de la UI para un código escaneado (cámara, lector
    * USB/Bluetooth, imagen o entrada manual). Delega en el controlador central
@@ -277,9 +351,9 @@ export const CreateSales = ({
    *  - DUPLICATE_EVENT → se ignora (rebote de la misma lectura).
    */
   const handleScannedCode = async (rawCode) => {
-    if (typeof handleAddProductByBarcode !== 'function') {return}
+    if (typeof handleAddProductByBarcode !== 'function') { return }
     const outcome = await handleAddProductByBarcode(rawCode)
-    if (!outcome || typeof outcome !== 'object') {return}
+    if (!outcome || typeof outcome !== 'object') { return }
 
     if (outcome.status === 'FOUND') {
       playSuccess()
@@ -316,8 +390,8 @@ export const CreateSales = ({
    */
   const handleProductCreatedFromScan = (createdProduct) => {
     const pId = createdProduct?.pId
-    if (!pId) {return}
-    if (createdAddedRef.current.has(String(pId))) {return}
+    if (!pId) { return }
+    if (createdAddedRef.current.has(String(pId))) { return }
     createdAddedRef.current.add(String(pId))
 
     if (typeof handleAddProduct === 'function') {
@@ -354,7 +428,7 @@ export const CreateSales = ({
         tag === 'TEXTAREA' ||
         tag === 'SELECT' ||
         target?.isContentEditable
-      if (isEditable) {return}
+      if (isEditable) { return }
 
       const now = Date.now()
       const buffer = scanBufferRef.current
@@ -716,6 +790,207 @@ export const CreateSales = ({
     onClearFilters: handleClearFiltersFromModal
   }
 
+  /* =========================================================
+   SALES TABLE CONFIGURATION
+========================================================= */
+
+  /**
+   * Retrieve the effective configuration.
+   *
+   * Precedence:
+   * USER > STORE > APP
+   */
+  const {
+    value: savedSalesDividerPositions,
+    loading: loadingSalesDividerPositions,
+    error: salesDividerConfigurationError
+  } = useGetResolvedConfiguration({
+    componentName: SALES_TABLE_CONFIGURATION.componentName,
+    key: SALES_TABLE_CONFIGURATION.key,
+    defaultValue: DEFAULT_SALES_DIVIDER_POSITIONS
+  })
+  console.log({savedSalesDividerPositions})
+  /**
+   * Mutation responsible for persisting configuration.
+   */
+  const {
+    upsertConfiguration
+  } = useUpsertConfiguration()
+
+  /**
+   * Normalize recovered configuration.
+   *
+   * If no configuration exists, use the default layout.
+   */
+  const salesDividerPosition =
+    normalizeSalesDividerPositions(
+      savedSalesDividerPositions
+    ) ?? DEFAULT_SALES_DIVIDER_POSITIONS
+
+  /**
+   * Holds the latest resize waiting for persistence.
+   */
+  const pendingSalesDividerPositionRef =
+    useRef < SalesDividerPositions | null > (null)
+
+  /**
+   * Debounce timer.
+   */
+  const salesDividerTimerRef = useRef <
+    ReturnType < typeof setTimeout > | null
+    > (null)
+
+  /**
+   * Persist the latest divider positions.
+   *
+   * Apollo updates its normalized/resolved cache
+   * through useUpsertConfiguration.
+   */
+  const persistSalesDividerPosition = useCallback(
+    async (
+      positions: SalesDividerPositions
+    ): Promise<void> => {
+      try {
+        const response = await upsertConfiguration({
+          scope: ConfigurationScope.USER,
+          componentName: SALES_TABLE_CONFIGURATION.componentName,
+          key: SALES_TABLE_CONFIGURATION.key,
+          value: positions,
+          description: 'Distribución de columnas del módulo de ventas'
+        })
+
+        if (!response?.success) {
+          sendNotification({
+            title: 'Error al guardar la distribución',
+            description:
+              response?.message ??
+              'No fue posible guardar las posiciones de las columnas.',
+            backgroundColor: 'error'
+          })
+        }
+      } catch (error) {
+        console.error(
+          'CreateSales.persistSalesDividerPosition:',
+          error
+        )
+
+        sendNotification({
+          title: 'Error de configuración',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'No se pudieron guardar las posiciones del catálogo.',
+          backgroundColor: 'error'
+        })
+      }
+    },
+    [
+      upsertConfiguration,
+      sendNotification
+    ]
+  )
+
+  /**
+   * Flush the pending resize immediately.
+   *
+   * Used when closing the sales modal or unmounting.
+   */
+  const flushSalesDividerPosition = useCallback(() => {
+    if (salesDividerTimerRef.current) {
+      clearTimeout(salesDividerTimerRef.current)
+      salesDividerTimerRef.current = null
+    }
+
+    const pending =
+      pendingSalesDividerPositionRef.current
+
+    pendingSalesDividerPositionRef.current = null
+
+    if (pending) {
+      void persistSalesDividerPosition(pending)
+    }
+  }, [persistSalesDividerPosition])
+
+  /**
+   * Receives resize events from GenerateSales.
+   *
+   * Only the latest position is persisted after
+   * the user stops resizing for 700ms.
+   */
+  const handleSalesDividerPositionChange = useCallback(
+    (positions: Record<string, number>) => {
+      const normalized =
+        normalizeSalesDividerPositions(positions)
+
+      if (!normalized) {
+        return
+      }
+
+      pendingSalesDividerPositionRef.current = normalized
+
+      if (salesDividerTimerRef.current) {
+        clearTimeout(salesDividerTimerRef.current)
+      }
+
+      salesDividerTimerRef.current = setTimeout(() => {
+        salesDividerTimerRef.current = null
+
+        const latest =
+          pendingSalesDividerPositionRef.current
+
+        pendingSalesDividerPositionRef.current = null
+
+        if (latest) {
+          void persistSalesDividerPosition(latest)
+        }
+      }, SALES_RESIZE_DEBOUNCE_MS)
+    },
+    [persistSalesDividerPosition]
+  )
+
+  /**
+   * Flush when the sales modal closes.
+   */
+  useEffect(() => {
+    if (!show) {
+      flushSalesDividerPosition()
+    }
+  }, [
+    show,
+    flushSalesDividerPosition
+  ])
+
+  /**
+   * Flush any pending resize when CreateSales unmounts.
+   *
+   * Keeping a ref prevents stale callbacks during cleanup.
+   */
+  const flushSalesDividerPositionRef = useRef(
+    flushSalesDividerPosition
+  )
+
+  flushSalesDividerPositionRef.current =
+    flushSalesDividerPosition
+
+  useEffect(() => {
+    return () => {
+      flushSalesDividerPositionRef.current()
+    }
+  }, [])
+
+  /**
+   * Configuration query diagnostics.
+   */
+  useEffect(() => {
+    if (salesDividerConfigurationError) {
+      console.error(
+        'Error loading SalesTable configuration:',
+        salesDividerConfigurationError
+      )
+    }
+  }, [salesDividerConfigurationError])
+
+
   return (
     <>
       <SuccessSaleModal
@@ -831,6 +1106,9 @@ export const CreateSales = ({
         handleAddAllProductsToCart={handleAddAllProductsToCart}
         sendNotification={sendNotification}
         highlightedPid={highlightedPid ?? ''}
+        dividerPosition={salesDividerPosition}
+        dividerPositionLoading={loadingSalesDividerPositions}
+        onDividerPositionChange={handleSalesDividerPositionChange}
         {...filterProps}
       />
       <SubItems {...modalItems} />
