@@ -180,6 +180,7 @@ interface ProviderProps {
  * @returns Provider tree.
  */
 const Provider = ({ children }: ProviderProps) => {
+  
   const {
     toggleTheme,
     initTheme,

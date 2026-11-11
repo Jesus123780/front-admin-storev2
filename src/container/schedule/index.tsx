@@ -28,8 +28,9 @@ import {
   Text
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
-import PropTypes from 'prop-types'
-import React, { useContext, useEffect, useState } from 'react'
+import React, {
+ useContext, useEffect, useState 
+} from 'react'
 
 import { Context } from '../../context/Context'
 import { autocompleteStoreSchedules } from './helpers'
@@ -40,7 +41,6 @@ export const ScheduleTimings = ({ isChart = false }) => {
   const [data, { loading: lsc }] = useSchedules({ schDay: 1 })
   const [showTiming, setShowTiming] = useState(1)
   const [showModalTiming, setShowModalTiming] = useState(false)
-
   const { handleHourPmAM } = useFormatDate({})
   const { onClickLogout } = useLogout({})
   const { isMobile } = useMobile()
@@ -55,7 +55,7 @@ export const ScheduleTimings = ({ isChart = false }) => {
   }, [dataStore, loadingStore])
 
   const handleSetStoreScheduleEveryDay = () => {
-    if (loadingStore || loadingSchEday) return
+    if (loadingStore || loadingSchEday) {return}
 
     const nextValue = !openStoreEveryDay
     setOpenStoreEveryDay(nextValue)
@@ -121,7 +121,7 @@ export const ScheduleTimings = ({ isChart = false }) => {
 
   const handleForm = async (event) => {
     event.preventDefault()
-    if (loading || lsc) return
+    if (loading || lsc) {return}
 
     if (!startTime || !endTime) {
       setAlertBox({ message: 'Llena todos los campos' })
@@ -320,8 +320,4 @@ export const ScheduleTimings = ({ isChart = false }) => {
       </AwesomeModal>
     </div>
   )
-}
-
-ScheduleTimings.propTypes = {
-  isChart: PropTypes.bool
 }

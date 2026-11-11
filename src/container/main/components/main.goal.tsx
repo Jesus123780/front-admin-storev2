@@ -21,6 +21,7 @@ export const Goal = () => {
     const { sendNotification } = useContext(Context)
 
     const [dataStore] = useStore()
+
     const { dailyGoal } = dataStore || {}
     const [data, { loading }] = useGetSalesAmountToday()
     const [upsertGoal, { loading: loadingGoal }] = useUpsertGoal({ sendNotification })
@@ -95,12 +96,39 @@ export const Goal = () => {
                 </button>
             </Column> */}
             <KmhGoalChart
-                size={250}
-                current={loading ? 0 : data?.total} goal={loading ? 0 : Number(dailyGoal ?? 0)}
-                moneyFormat
-                numberFormat={numberFormat}
-                orientation='vertical'
-                fontSize='12px'
+                size={150}
+                current={loading ? 0 : data?.total}
+                goal={loading ? 0 : Number(dailyGoal ?? 0)}
+                orientation="horizontal"
+                startAngle={180}
+                sweepDirection="clockwise"
+                strokeWidth={16}
+                animated
+                animateOnMount
+                animationDuration={1200}
+                animationDelay={100}
+                animationEasing="ease-out"
+                showTicks
+                tickCount={5}
+                tickLength={6}
+                showGoalMarker
+                colorStops={[
+                    {
+                        minPercentage: 0,
+                        color: '#E74C3C'
+                    },
+                    {
+                        minPercentage: 60,
+                        color: '#E6A23C'
+                    },
+                    {
+                        minPercentage: 85,
+                        color: '#27AE60'
+                    }
+                ]}
+                caption="Ventas del día"
+                showOverflowLabel
+                showGoalReachedLabel
             />
         </Column>
     )

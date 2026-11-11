@@ -31,6 +31,7 @@ import {
   getGlobalStyle,
   InputHooks,
   numberFormat,
+  ROUTES,
   Row
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
@@ -51,6 +52,7 @@ import { ModalSales } from './ModalSales'
 import { ProductNotFoundDialog } from './ProductNotFoundDialog'
 import { SubItems } from './SubItems'
 import { SuccessSaleModal } from './Success'
+import { MENU_OPTIONS } from '@/context/helpers'
 
 /* =========================================================
    SALES TABLE CONFIGURATION
@@ -87,16 +89,27 @@ const SALES_RESIZE_DEBOUNCE_MS = 700
 const normalizeSalesDividerPositions = (
   value: unknown
 ): SalesDividerPositions | null => {
+  let candidate = value
+
+  // Algunas configuraciones pueden llegar serializadas como JSON.
+  if (typeof candidate === 'string') {
+    try {
+      candidate = JSON.parse(candidate)
+    } catch {
+      return null
+    }
+  }
+
   if (
-    !value ||
-    typeof value !== 'object' ||
-    Array.isArray(value)
+    !candidate ||
+    typeof candidate !== 'object' ||
+    Array.isArray(candidate)
   ) {
     return null
   }
 
   const entries = Object.entries(
-    value as Record<string, unknown>
+    candidate as Record<string, unknown>
   )
 
   if (!entries.length) {
@@ -105,9 +118,18 @@ const normalizeSalesDividerPositions = (
 
   const result: SalesDividerPositions = {}
 
-  for (const [key, position] of entries) {
+  for (const [key, rawPosition] of entries) {
     if (
-      typeof position !== 'number' ||
+      rawPosition === null ||
+      rawPosition === undefined ||
+      rawPosition === ''
+    ) {
+      return null
+    }
+
+    const position = Number(rawPosition)
+
+    if (
       !Number.isFinite(position) ||
       position < 0 ||
       position > 100
@@ -132,7 +154,8 @@ export const CreateSales = ({
     sendNotification,
     setAlertBox,
     setMessagesToast,
-    setSalesOpen
+    setSalesOpen,
+    handleClick
   } = useContext(Context)
   const [client, setClient] = useState({
     clientName: '',
@@ -149,7 +172,7 @@ export const CreateSales = ({
   const [fetchMoreLoader, setFetchMoreLoader] = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
   const [prod, setProd] = useState(null)
-  const componentRef = useRef()
+  const componentRef = useRef(null)
   const promiseResolveRef = useRef(null)
   const router = useRouter()
   const [dataStore] = useStore()
@@ -800,32 +823,43 @@ export const CreateSales = ({
    * Precedence:
    * USER > STORE > APP
    */
-  const {
-    value: savedSalesDividerPositions,
-    loading: loadingSalesDividerPositions,
-    error: salesDividerConfigurationError
-  } = useGetResolvedConfiguration({
-    componentName: SALES_TABLE_CONFIGURATION.componentName,
-    key: SALES_TABLE_CONFIGURATION.key,
-    defaultValue: DEFAULT_SALES_DIVIDER_POSITIONS
-  })
-  console.log({savedSalesDividerPositions})
+/* =========================================================
+   SALES TABLE CONFIGURATION
+========================================================= */
+
+const {
+  value: savedSalesDividerPositions,
+  loading: loadingSalesDividerPositions,
+  error: salesDividerConfigurationError
+} = useGetResolvedConfiguration({
+  componentName: SALES_TABLE_CONFIGURATION.componentName,
+  key: SALES_TABLE_CONFIGURATION.key,
+  defaultValue: DEFAULT_SALES_DIVIDER_POSITIONS
+})
+
+/**
+ * Normaliza la configuración recuperada.
+ */
+const normalizedSavedSalesDividerPositions = normalizeSalesDividerPositions(
+  savedSalesDividerPositions
+)
+
+/**
+ * Mientras se consulta la configuración, utiliza una distribución
+ * provisional. Cuando termina la consulta, utiliza la configuración
+ * recuperada o el valor predeterminado si no existe.
+ */
+const salesDividerPosition =
+  normalizedSavedSalesDividerPositions ??
+  DEFAULT_SALES_DIVIDER_POSITIONS
+
+
   /**
    * Mutation responsible for persisting configuration.
    */
   const {
     upsertConfiguration
   } = useUpsertConfiguration()
-
-  /**
-   * Normalize recovered configuration.
-   *
-   * If no configuration exists, use the default layout.
-   */
-  const salesDividerPosition =
-    normalizeSalesDividerPositions(
-      savedSalesDividerPositions
-    ) ?? DEFAULT_SALES_DIVIDER_POSITIONS
 
   /**
    * Holds the latest resize waiting for persistence.
@@ -991,6 +1025,11 @@ export const CreateSales = ({
   }, [salesDividerConfigurationError])
 
 
+  const handleRedirectCreateProduct = () => {
+    setSalesOpen(false)
+    handleClick(MENU_OPTIONS.CREATE_PRODUCTS)
+    
+  }
   return (
     <>
       <SuccessSaleModal
@@ -1109,6 +1148,7 @@ export const CreateSales = ({
         dividerPosition={salesDividerPosition}
         dividerPositionLoading={loadingSalesDividerPositions}
         onDividerPositionChange={handleSalesDividerPositionChange}
+        handleRedirectCreateProduct={handleRedirectCreateProduct}
         {...filterProps}
       />
       <SubItems {...modalItems} />

@@ -8,8 +8,8 @@ import {
   useRouter,
   useSearchParams
 } from 'next/navigation'
-
 import {
+  ConfigurationScope,
   Cookies,
   newMessageSubscription,
   newStoreOrderSubscription,
@@ -17,6 +17,7 @@ import {
   useConnection,
   useCreateDeliveryTime,
   useDeliveryTime,
+  useGetResolvedConfiguration,
   useLogout,
   useManageNewOrder,
   useManageQueryParams,
@@ -29,13 +30,11 @@ import {
   useSubscriptionValidation,
   useTotalSales,
   useUpdateModuleOrder,
+  useUpsertConfiguration,
   useUpsertGoal,
   useUser,
-  version as logicalVersion,
-  useUpsertConfiguration,
-  ConfigurationScope
+  version as logicalVersion
 } from 'npm-pkg-hook'
-
 import {
   AlertBox,
   Aside,
@@ -52,7 +51,6 @@ import {
   Plan,
   Toast
 } from 'pkg-components'
-
 import React, {
   useCallback,
   useContext,
@@ -62,16 +60,13 @@ import React, {
 } from 'react'
 
 import packageJson from '../../../package.json'
-
 import { Context } from '../../context/Context'
-
 import { Categories } from '../categories'
 import { Clients } from '../clients'
 import { CreateSales } from '../orders/create'
 import { useDevServerStatus } from '../orders/view/hooks'
 import { Product } from '../product'
 import { ScheduleTimings } from '../schedule'
-
 import { Footer } from './Footer/index'
 import { heights, widths } from './helpers'
 import styles from './styles.module.css'
@@ -146,12 +141,19 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setCollapsed,
     setIsOpenOrder,
     setSalesOpen,
-    theme,
     toggleTheme,
     deleteToast,
     setShowComponentModal,
     setStatus
   } = useContext(Context)
+
+    const {
+    value: theme
+  } = useGetResolvedConfiguration({
+    componentName: 'AppShell',
+    key: 'theme',
+    defaultValue: 'light'
+  })
 
   // --------------------------------------------------
   // Application configuration
@@ -180,7 +182,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     async (
       nextTheme: ThemePreference
     ): Promise<void> => {
-      if (savingTheme) return
+      if (savingTheme) {return}
 
       try {
         const response = await upsertConfiguration({
@@ -300,7 +302,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   // --------------------------------------------------
 
   const [dataStore] = useStore()
-
+  
   const idStore = dataStore?.idStore ?? ''
 
   const [count, { loading: loadingCount }] =

@@ -13,6 +13,7 @@ import React from 'react'
 
 import { useModalLayer } from '../modalLayers'
 import styles from './styles.module.css'
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 
 interface ISuccessSaleModal {
   code: string
@@ -88,7 +89,7 @@ export const SuccessSaleModal: React.FC<ISuccessSaleModal> = ({
         return setOpenCurrentSale(false)
       }}
       show={openCurrentSale}
-      size='100%'
+      size={MODAL_SIZES.large}
       useScroll={true}
       zIndex={zIndex}
     >
