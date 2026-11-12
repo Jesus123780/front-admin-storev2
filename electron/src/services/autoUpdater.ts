@@ -110,8 +110,14 @@ export const initializeAutoUpdater = (getWindow: GetWindow): void => {
     channels: Object.values(CHANNELS)
   })
 
-  if (!app.isPackaged || process.platform !== 'win32') {
-    log.info('[updater] Desactivado: desarrollo o plataforma distinta de Windows')
+  const supportedPlatform =
+    process.platform === 'win32' ||
+    process.platform === 'darwin'
+
+  if (!app.isPackaged || !supportedPlatform) {
+    log.info(
+      '[updater] Desactivado: desarrollo o plataforma no soportada'
+    )
     return
   }
 

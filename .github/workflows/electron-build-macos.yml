@@ -1,0 +1,159 @@
+
+name: Venty - macOS Test Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: Build macOS ${{ matrix.arch }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15
+          - arch: arm64
+            runner: macos-15-arm64
+
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 150
+
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      MAC_ARCH: ${{ matrix.arch }}
+
+    steps:
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Setup Python 3.11
+        id: python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          repository: foodi-app-org/front-back-server
+          ref: main
+          path: backend-source
+          persist-credentials: false
+
+      - name: Install backend dependencies
+        working-directory: backend-source
+        env:
+          NODE_GYP_FORCE_PYTHON: ${{ steps.python.outputs.python-path }}
+          PYTHON: ${{ steps.python.outputs.python-path }}
+        run: |
+          npm ci --no-audit --no-fund
+
+      - name: Compile backend
+        working-directory: backend-source
+        run: |
+          npm run prepare-build
+          test -f build/server.js
+
+      - name: Configure backend executable
+        working-directory: backend-source
+        run: |
+          rm -f .env
+
+          node <<'NODE'
+          const fs = require('node:fs')
+          const pkg = JSON.parse(
+            fs.readFileSync('package.json', 'utf8')
+          )
+
+          pkg.bin = {
+            server: 'build/server.js'
+          }
+
+          pkg.pkg = {
+            scripts: ['build/**/*.js'],
+            assets: [
+              'build/**/*.gql',
+              'build/**/*.graphql',
+              'public/**/*',
+              'config/**/*',
+              'src/api/lib/types/**/*',
+              'build/api/lib/types/**/*',
+              'node_modules/sequelize/lib/**/*.js',
+              'node_modules/sqlite3/**/*'
+            ]
+          }
+
+          fs.writeFileSync(
+            'package.json',
+            JSON.stringify(pkg, null, 2) + '\n'
+          )
+          NODE
+
+      - name: Build macOS backend
+        working-directory: backend-source
+        run: |
+          mkdir -p ../front-back-server
+
+          npx --yes @yao-pkg/pkg@6.25.0 . \
+            --sea \
+            --targets "node22-macos-${MAC_ARCH}" \
+            --output "../front-back-server/front-back-server-mac-${MAC_ARCH}"
+
+          chmod +x "../front-back-server/front-back-server-mac-${MAC_ARCH}"
+
+      - name: Build Next.js
+        run: |
+          npm run next:build
+          test -f .next/standalone/server.js
+
+      - name: Compile Electron
+        run: |
+          npm run electron:compile
+          test -f build/main.js
+          test -f build/preload.js
+
+      - name: Configure macOS packaging
+        run: |
+          node scripts/configure-mac-build.cjs
+
+      - name: Build macOS installer
+        run: |
+          npx electron-builder \
+            --mac dmg zip \
+            --${MAC_ARCH} \
+            --publish never
+
+      - name: Validate build output
+        run: |
+          ls -lh dist/
+          find dist -maxdepth 1 \
+            -name '*.dmg' -o -name '*.zip'
+
+      - name: Upload macOS test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Venty-macOS-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/latest-mac.yml
+            dist/*.blockmap
+          if-no-files-found: error
+          retention-days: 14
