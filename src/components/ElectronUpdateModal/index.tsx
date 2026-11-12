@@ -329,7 +329,7 @@ export const ElectronUpdateModal = () => {
         <p className={styles.footer}>
           Venty {currentVersion ? `v${currentVersion}` : ''}
           {' · '}
-          Actualizaciones de Windows
+          Actualizaciones
         </p>
       </dialog>
 
