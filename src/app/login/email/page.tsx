@@ -3,7 +3,7 @@
 import { Column } from 'pkg-components'
 import React from 'react'
 
-import { Email } from '@/container/login/Email'
+import { Email } from '@/container/Login/Email'
 
 export default function EmailPage() {
 
