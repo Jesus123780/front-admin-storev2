@@ -1,6 +1,6 @@
+name: Venty - macOS Release
 
-name: Venty - macOS Test Build
-
+# Igual que Windows: ejecución manual = pruebas; push de tag = Release.
 on:
   workflow_dispatch:
   push:
@@ -10,10 +10,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: venty-macos-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   macos:
     name: Build macOS ${{ matrix.arch }}
-
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
@@ -23,21 +28,20 @@ jobs:
           - arch: arm64
             runner: macos-15
 
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 150
-
     env:
       CI: 'true'
       NEXT_TELEMETRY_DISABLED: '1'
-      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       PUPPETEER_SKIP_DOWNLOAD: 'true'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       MAC_ARCH: ${{ matrix.arch }}
 
     steps:
       - name: Checkout frontend
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -52,6 +56,36 @@ jobs:
       - name: Install frontend
         run: npm ci --no-audit --no-fund
 
+      - name: Validate version and Apple credentials
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "Version no admitida: $version" >&2
+            exit 1
+          }
+          if [[ "$GITHUB_EVENT_NAME" == 'push' ]]; then
+            [[ "$GITHUB_REF_NAME" == "v${version}" ]] || {
+              echo "El tag $GITHUB_REF_NAME no coincide con package.json ($version)" >&2
+              exit 1
+            }
+            for key in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+              [[ -n "${!key:-}" ]] || {
+                echo "Falta el secret de firma/notarizacion: $key" >&2
+                exit 1
+              }
+            done
+          fi
+          echo "VENTY_RELEASE_TAG=v${version}" >> "$GITHUB_ENV"
+          echo "Compilando Venty ${version}, macOS ${MAC_ARCH}"
+
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
@@ -65,30 +99,25 @@ jobs:
         env:
           NODE_GYP_FORCE_PYTHON: ${{ steps.python.outputs.python-path }}
           PYTHON: ${{ steps.python.outputs.python-path }}
-        run: |
-          npm ci --no-audit --no-fund
+          npm_config_python: ${{ steps.python.outputs.python-path }}
+        run: npm ci --no-audit --no-fund
 
       - name: Compile backend
         working-directory: backend-source
         run: |
+          set -euo pipefail
           npm run prepare-build
           test -f build/server.js
 
       - name: Configure backend executable
         working-directory: backend-source
         run: |
+          set -euo pipefail
           rm -f .env
-
           node <<'NODE'
           const fs = require('node:fs')
-          const pkg = JSON.parse(
-            fs.readFileSync('package.json', 'utf8')
-          )
-
-          pkg.bin = {
-            server: 'build/server.js'
-          }
-
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+          pkg.bin = { server: 'build/server.js' }
           pkg.pkg = {
             scripts: ['build/**/*.js'],
             assets: [
@@ -102,54 +131,116 @@ jobs:
               'node_modules/sqlite3/**/*'
             ]
           }
-
-          fs.writeFileSync(
-            'package.json',
-            JSON.stringify(pkg, null, 2) + '\n'
-          )
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n')
           NODE
 
       - name: Build macOS backend
         working-directory: backend-source
         run: |
+          set -euo pipefail
           mkdir -p ../front-back-server
-
           npx --yes @yao-pkg/pkg@6.25.0 . \
             --sea \
             --targets "node22-macos-${MAC_ARCH}" \
             --output "../front-back-server/front-back-server-mac-${MAC_ARCH}"
-
           chmod +x "../front-back-server/front-back-server-mac-${MAC_ARCH}"
+          test -s "../front-back-server/front-back-server-mac-${MAC_ARCH}"
 
       - name: Build Next.js
         run: |
+          set -euo pipefail
           npm run next:build
           test -f .next/standalone/server.js
 
       - name: Compile Electron
         run: |
+          set -euo pipefail
           npm run electron:compile
           test -f build/main.js
           test -f build/preload.js
 
-      - name: Configure macOS packaging
+      - name: Configure macOS packaging and updater
+        shell: bash
         run: |
+          set -euo pipefail
           node scripts/configure-mac-build.cjs
+          # Este paso reutiliza el empaquetado existente del repositorio.
+          # Nombres distintos por arquitectura evitan colisiones en la Release.
+          node <<'NODE'
+          const fs = require('node:fs')
+          const path = 'package.json'
+          const pkg = JSON.parse(fs.readFileSync(path, 'utf8'))
+          pkg.build ??= {}
+          pkg.build.publish = [{
+            provider: 'github',
+            owner: 'Jesus123780',
+            repo: 'front-admin-storev2'
+          }]
+          pkg.build.mac ??= {}
+          pkg.build.mac.artifactName = 'Venty-${version}-mac-${arch}.${ext}'
+          // Para tags falla en vez de publicar una aplicación sin firma.
+          if (process.env.GITHUB_EVENT_NAME === 'push') {
+            pkg.build.forceCodeSigning = true
+            pkg.build.mac.hardenedRuntime = true
+            pkg.build.mac.notarize = true
+          } else {
+            pkg.build.forceCodeSigning = false
+            pkg.build.mac.notarize = false
+          }
+          fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n')
+          NODE
 
-      - name: Build macOS installer
+      - name: Build macOS DMG and ZIP
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          npx electron-builder \
-            --mac dmg zip \
-            --${MAC_ARCH} \
-            --publish never
+          set -euo pipefail
+          # No publicar desde la matriz: solo el job final sube ambas arquitecturas.
+          npx electron-builder --mac dmg zip --"${MAC_ARCH}" --publish never
 
-      - name: Validate build output
+      - name: Validate macOS artifacts and Apple signature
+        shell: bash
         run: |
-          ls -lh dist/
-          find dist -maxdepth 1 \
-            -name '*.dmg' -o -name '*.zip'
+          set -euo pipefail
+          shopt -s nullglob
+          dmgs=(dist/*.dmg)
+          zips=(dist/*.zip)
+          [[ ${#dmgs[@]} -ge 1 && ${#zips[@]} -ge 1 ]] || {
+            echo 'Faltan instaladores DMG/ZIP' >&2
+            exit 1
+          }
+          [[ -s dist/latest-mac.yml ]] || {
+            echo 'Falta dist/latest-mac.yml: no se puede publicar una actualizacion Electron' >&2
+            exit 1
+          }
+          for file in "${dmgs[@]}" "${zips[@]}"; do
+            [[ "$(basename "$file")" == *"-${MAC_ARCH}."* ]] || {
+              echo "Nombre sin arquitectura o incorrecto: $file" >&2
+              exit 1
+            }
+            ls -lh "$file"
+          done
+          if [[ "$GITHUB_EVENT_NAME" == 'push' ]]; then
+            # Validar la firma y el ticket de notarizacion de la .app empaquetada.
+            found=0
+            while IFS= read -r -d '' app; do
+              found=1
+              codesign --verify --deep --strict --verbose=2 "$app"
+              xcrun stapler validate "$app"
+              spctl --assess --verbose --type exec "$app"
+            done < <(find dist -maxdepth 3 -type d -name '*.app' -print0)
+            [[ "$found" -eq 1 ]] || {
+              echo 'No se encontro una .app para validar su firma' >&2
+              exit 1
+            }
+          fi
 
-      - name: Upload macOS test artifacts
+      - name: Upload macOS artifacts for final publication
         uses: actions/upload-artifact@v4
         with:
           name: Venty-macOS-${{ matrix.arch }}-${{ github.run_id }}
@@ -160,3 +251,151 @@ jobs:
             dist/*.blockmap
           if-no-files-found: error
           retention-days: 14
+
+  publish-macos:
+    name: Attach both Macs to Windows GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: macos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_TAG: ${{ github.ref_name }}
+
+    steps:
+      - name: Download both architecture builds
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Venty-macOS-*-${{ github.run_id }}
+          path: downloaded
+          merge-multiple: false
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install YAML parser
+        run: python -m pip install --disable-pip-version-check 'PyYAML==6.0.2'
+
+      - name: Validate hashes and merge Mac update manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          import base64
+          import copy
+          import hashlib
+          import os
+          import shutil
+          from pathlib import Path
+          from urllib.parse import unquote, urlparse
+          import yaml
+
+          release = Path('release-files')
+          release.mkdir(exist_ok=True)
+          manifests = {}
+          names = set()
+          tag = os.environ['RELEASE_TAG']
+          expected_version = tag[1:]
+
+          for arch in ('x64', 'arm64'):
+              folder = Path('downloaded') / f"Venty-macOS-{arch}-{os.environ['GITHUB_RUN_ID']}"
+              source = folder / 'latest-mac.yml'
+              if not source.is_file():
+                  raise SystemExit(f'Falta {source}')
+              data = yaml.safe_load(source.read_text(encoding='utf-8'))
+              if data.get('version') != expected_version:
+                  raise SystemExit(f'La version de {arch} no coincide con {tag}')
+              files = data.get('files', [])
+              if not isinstance(files, list) or not files:
+                  raise SystemExit(f'Manifiesto de {arch} sin files[]')
+              zips = [f for f in files if str(f.get('url', '')).endswith('.zip')]
+              if not zips:
+                  raise SystemExit(f'Manifiesto de {arch} no contiene ZIP')
+              for item in files:
+                  url = str(item.get('url', ''))
+                  name = Path(unquote(urlparse(url).path)).name
+                  if not name or name != unquote(urlparse(url).path):
+                      raise SystemExit(f'Ruta de artefacto no admitida: {url}')
+                  # MacUpdater de electron-updater 6 selecciona por "arm64" en el nombre.
+                  if ('arm64' in name) != (arch == 'arm64'):
+                      raise SystemExit(f'Nombre incompatible con {arch}: {name}')
+                  file = folder / name
+                  if not file.is_file():
+                      raise SystemExit(f'No se encontro el artefacto: {file}')
+                  sha = hashlib.sha512()
+                  with file.open('rb') as fh:
+                      for chunk in iter(lambda: fh.read(1024 * 1024), b''):
+                          sha.update(chunk)
+                  actual = base64.b64encode(sha.digest()).decode()
+                  if item.get('sha512') != actual:
+                      raise SystemExit(f'Hash SHA512 incorrecto: {file}')
+              manifests[arch] = data
+              for file in folder.iterdir():
+                  if file.name == 'latest-mac.yml':
+                      continue
+                  if file.suffix not in ('.dmg', '.zip', '.blockmap'):
+                      continue
+                  if file.name in names:
+                      raise SystemExit(f'Colision de nombres entre arquitecturas: {file.name}')
+                  names.add(file.name)
+                  shutil.copy2(file, release / file.name)
+              if not any(p.suffix == '.dmg' and f'-{arch}.' in p.name for p in folder.iterdir()):
+                  raise SystemExit(f'No hay DMG de {arch}')
+
+          combined = copy.deepcopy(manifests['x64'])
+          combined['files'] = manifests['x64']['files'] + manifests['arm64']['files']
+          # Compatibilidad con lectores antiguos: la ruta principal apunta al ZIP x64.
+          x64_zip = next(f for f in manifests['x64']['files'] if f['url'].endswith('.zip'))
+          combined['path'] = x64_zip['url']
+          combined['sha512'] = x64_zip['sha512']
+          (release / 'latest-mac.yml').write_text(
+              yaml.safe_dump(combined, allow_unicode=True, sort_keys=False),
+              encoding='utf-8'
+          )
+          print('Manifiesto macOS combinado y hashes validados:')
+          print((release / 'latest-mac.yml').read_text(encoding='utf-8'))
+          print('Archivos para Release:', sorted(names))
+          PY
+
+      - name: Wait for the Windows workflow to publish the same release
+        shell: bash
+        run: |
+          set -euo pipefail
+          # No creamos otra Release: el workflow Windows existente es el propietario.
+          # Evita que su validacion "Ensure release is new" falle.
+          for attempt in $(seq 1 95); do
+            published="$(gh release view "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json isDraft --jq '.isDraft' 2>/dev/null || true)"
+            if [[ "$published" == 'false' ]]; then
+              echo "Release $RELEASE_TAG publicada por Windows y lista para macOS"
+              exit 0
+            fi
+            echo "Esperando Release Windows ($attempt/95)"
+            sleep 60
+          done
+          echo "Windows no publico $RELEASE_TAG. No se publican archivos Mac por separado." >&2
+          exit 1
+
+      - name: Publish both Mac architectures and update metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          assets=(release-files/*.dmg release-files/*.zip release-files/*.blockmap)
+          [[ ${#assets[@]} -ge 4 ]] || {
+            echo 'La lista de archivos Mac esta incompleta' >&2
+            exit 1
+          }
+          # Primero subir ZIP/DMG y solo al final el manifiesto visible al updater.
+          gh release upload "$RELEASE_TAG" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload "$RELEASE_TAG" release-files/latest-mac.yml \
+            --repo "$GITHUB_REPOSITORY" --clobber
+          echo "Archivos de $RELEASE_TAG:"
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --json assets --jq '.assets[].name'
