@@ -42,6 +42,30 @@ const shouldShow = (
   )
 }
 
+
+/**
+ * El error técnico se conserva en electron-log desde el proceso principal.
+ * En la interfaz solo mostramos información útil y accionable.
+ */
+const getFriendlyUpdateError = (message: string | null): string => {
+  if (!message) {
+    return 'No pudimos comprobar las actualizaciones. Puedes seguir usando Venty e intentarlo más tarde.'
+  }
+
+  if (
+    /latest-mac\\.yml|latest\\.yml|Cannot find.*release artifacts/i.test(message) ||
+    (/404/.test(message) && /releases\\/download/i.test(message))
+  ) {
+    return 'La actualización aún no está disponible para tu equipo. Puedes seguir usando Venty e intentarlo más tarde.'
+  }
+
+  if (/ENOTFOUND|ETIMEDOUT|ECONNRESET|ERR_INTERNET_DISCONNECTED|network|fetch failed|internet|offline/i.test(message)) {
+    return 'No pudimos conectarnos para buscar actualizaciones. Comprueba tu conexión e inténtalo nuevamente.'
+  }
+
+  return 'No pudimos completar la actualización. Venty sigue disponible; puedes intentarlo más tarde.'
+}
+
 const formatMb = (bytes: number): string => {
   if (!Number.isFinite(bytes) || bytes < 0) {
     return '0.0 MB'
@@ -154,9 +178,9 @@ export const ElectronUpdateModal = () => {
       : 0
 
   const errorMessage = isPreview
-    ? 'Error simulado. No se realizó ninguna descarga.'
+    ? 'La actualización no está disponible en esta demostración.'
     : event?.status === 'error'
-      ? event.message
+      ? getFriendlyUpdateError(event.message)
       : null
 
   const description = (() => {
@@ -175,7 +199,7 @@ export const ElectronUpdateModal = () => {
         return `La versión ${updateVersion ?? 'nueva'} está lista para instalarse. Guarda tus cambios antes de reiniciar.`
 
       case 'error':
-        return 'No fue posible completar la actualización. Revisa el detalle e intenta nuevamente.'
+        return 'Puedes continuar utilizando Venty normalmente.'
 
       default:
         return ''
