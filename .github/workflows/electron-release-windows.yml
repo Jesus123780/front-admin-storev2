@@ -90,14 +90,35 @@ jobs:
           path: backend-source
           persist-credentials: false
 
+      # node-gyp 8 (utilizado por sqlite3) requiere distutils,
+      # que no esta incluido en Python 3.12.
+      - name: Setup Python 3.11 for native backend modules
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          architecture: 'x64'
+
       - name: Install backend dependencies
         working-directory: backend-source
         shell: pwsh
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
         run: |
+          $python = (Get-Command python).Source
+          Write-Host "Python: $python"
+          python --version
+          python -c "import distutils; print('distutils OK')"
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Python 3.11 no tiene distutils disponible'
+          }
+
+          $env:NODE_GYP_FORCE_PYTHON = $python
+          $env:npm_config_python = $python
+
           npm ci --no-audit --no-fund
-          if ($LASTEXITCODE -ne 0) { throw 'Fallo npm ci del backend' }
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Fallo npm ci del backend'
+          }
 
       - name: Compile backend TypeScript and GraphQL
         working-directory: backend-source
