@@ -13,16 +13,22 @@ permissions:
 
 concurrency:
   group: venty-windows-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   windows:
     name: Build and publish Windows NSIS
     runs-on: windows-2022
     timeout-minutes: 120
+
     env:
       CI: 'true'
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
       - name: Checkout frontend
@@ -37,36 +43,32 @@ jobs:
           cache: npm
 
       - name: Install frontend dependencies
-        run: npm ci --no-audit --no-fund
+        run: |
+          npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo npm ci del frontend' }
 
       - name: Configure release version
-        shell: pwsh
         run: |
-          $baseVersion = node -p "require('./package.json').version"
-          if ($baseVersion -notmatch '^\d+\.\d+\.\d+$') {
-            throw "La version del frontend debe ser X.Y.Z: $baseVersion"
+          $base = node -p "require('./package.json').version"
+          if ($base -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Version base no admitida: $base"
           }
-
           if ($env:GITHUB_REF -eq 'refs/heads/main') {
-            $parts = $baseVersion.Split('.')
+            $parts = $base.Split('.')
             $patch = [int]$parts[2] + [int]$env:GITHUB_RUN_NUMBER
             $version = "$($parts[0]).$($parts[1]).$patch"
             npm version $version --no-git-tag-version --ignore-scripts
-            if ($LASTEXITCODE -ne 0) { throw "No se pudo fijar la version $version" }
+            if ($LASTEXITCODE -ne 0) { throw 'Fallo al establecer version del build' }
           } elseif ($env:GITHUB_REF -like 'refs/tags/v*') {
             $version = $env:GITHUB_REF_NAME.Substring(1)
-            if ($version -ne $baseVersion) {
-              throw "El tag v$version no coincide con package.json ($baseVersion)"
-            }
+            if ($version -ne $base) { throw "Tag v$version no coincide con $base" }
           } else {
-            $version = $baseVersion
+            $version = $base
           }
-
           Add-Content -Path $env:GITHUB_ENV -Value "VENTY_RELEASE_TAG=v$version"
-          Write-Host "Version del instalador: $version"
+          Write-Host "Version de Venty: $version"
 
-      - name: Configure GitHub update feed
-        shell: pwsh
+      - name: Configure GitHub update provider
         run: |
           @'
           const fs = require('node:fs');
@@ -81,6 +83,22 @@ jobs:
           fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
           '@ | Set-Content -Path configure-publisher.cjs -Encoding utf8
           node configure-publisher.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo la configuracion de publicacion' }
+
+      # IMPORTANTE: Next.js se compila ANTES de traer backend-source al workspace.
+      # Esta separacion evita que el rastreo standalone/webpack explore sus dependencias.
+      - name: Build Next.js standalone (isolated)
+        run: |
+          if (Test-Path 'backend-source') {
+            throw 'backend-source existe antes del build de Next. Limpia el checkout.'
+          }
+          Write-Host "Workspace: $env:GITHUB_WORKSPACE"
+          Write-Host "Node: $(node --version)"
+          npm run next:build
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo el build aislado de Next.js' }
+          if (-not (Test-Path '.next/standalone/server.js' -PathType Leaf)) {
+            throw 'Next.js no genero .next/standalone/server.js'
+          }
 
       - name: Checkout backend
         uses: actions/checkout@v6
@@ -90,9 +108,7 @@ jobs:
           path: backend-source
           persist-credentials: false
 
-      # node-gyp 8 (utilizado por sqlite3) requiere distutils,
-      # que no esta incluido en Python 3.12.
-      - name: Setup Python 3.11 for native backend modules
+      - name: Setup Python 3.11
         uses: actions/setup-python@v6
         with:
           python-version: '3.11'
@@ -100,29 +116,20 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend-source
-        shell: pwsh
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
         run: |
           $python = (Get-Command python).Source
-          Write-Host "Python: $python"
           python --version
           python -c "import distutils; print('distutils OK')"
-          if ($LASTEXITCODE -ne 0) {
-            throw 'Python 3.11 no tiene distutils disponible'
-          }
-
+          if ($LASTEXITCODE -ne 0) { throw 'Falta distutils; revisar Python' }
           $env:NODE_GYP_FORCE_PYTHON = $python
           $env:npm_config_python = $python
-
           npm ci --no-audit --no-fund
-          if ($LASTEXITCODE -ne 0) {
-            throw 'Fallo npm ci del backend'
-          }
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo npm ci del backend' }
 
       - name: Compile backend TypeScript and GraphQL
         working-directory: backend-source
-        shell: pwsh
         run: |
           npm run prepare-build
           if ($LASTEXITCODE -ne 0) { throw 'Fallo prepare-build del backend' }
@@ -130,13 +137,11 @@ jobs:
             throw 'No se genero build/server.js'
           }
 
-      - name: Prepare backend packaging config (CI only)
+      - name: Configure backend pkg for CI
         working-directory: backend-source
-        shell: pwsh
         run: |
-          # Nunca incluir secretos ni datos locales de clientes en el instalador.
+          # No empaquetar archivos .env ni datos privados del equipo.
           if (Test-Path '.env') { Remove-Item '.env' -Force }
-
           @'
           const fs = require('node:fs');
           const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
@@ -153,60 +158,52 @@ jobs:
               'node_modules/sequelize/lib/**/*.js',
               'node_modules/sqlite3/**/*'
             ],
-            ignore: ['.env', '**/.env', '**/.env.*', 'uploads/**/*'],
             targets: ['node22-win-x64']
           };
           fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
           '@ | Set-Content -Path configure-pkg.cjs -Encoding utf8
           node configure-pkg.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo configuracion de pkg' }
 
       - name: Build backend Windows executable
         working-directory: backend-source
-        shell: pwsh
         run: |
           npx --yes @yao-pkg/pkg@6.25.0 . --sea --targets node22-win-x64 --output dist/front-back-server.exe
-          if ($LASTEXITCODE -ne 0) { throw 'Fallo el empaquetado del backend' }
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo empaquetado del backend' }
 
       - name: Copy and validate backend executable
-        shell: pwsh
         run: |
           $source = 'backend-source/dist/front-back-server.exe'
           $target = 'front-back-server/front-back-server.exe'
-          if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
-            throw "No existe el backend compilado: $source"
-          }
-          New-Item -ItemType Directory -Force -Path 'front-back-server' | Out-Null
+          if (-not (Test-Path $source -PathType Leaf)) { throw "Falta $source" }
+          New-Item -ItemType Directory -Path 'front-back-server' -Force | Out-Null
           Copy-Item -LiteralPath $source -Destination $target -Force
-          $file = Get-Item -LiteralPath $target
-          if ($file.Length -eq 0) { throw 'El backend ejecutable esta vacio' }
-          Write-Host "Backend listo: $target ($($file.Length) bytes)"
-
-      - name: Build Next.js standalone
-        run: npm run next:build
+          $exe = Get-Item $target
+          if ($exe.Length -le 1024) { throw 'El ejecutable no parece valido' }
+          Write-Host "Backend listo: $target ($($exe.Length) bytes)"
 
       - name: Compile Electron
-        run: npm run electron:compile
-
-      - name: Validate compilation
-        shell: pwsh
         run: |
-          $required = @(
+          npm run electron:compile
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo tsup de Electron' }
+
+      - name: Validate build assets
+        run: |
+          @(
             'build/main.js',
             'build/preload.js',
             'build/start.dev.js',
             '.next/standalone/server.js',
             'front-back-server/front-back-server.exe'
-          )
-          foreach ($file in $required) {
-            if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
-              throw "Falta el archivo: $file"
-            }
+          ) | ForEach-Object {
+            if (-not (Test-Path $_ -PathType Leaf)) { throw "Falta archivo $_" }
           }
-          Write-Host 'Compilacion validada.'
 
-      - name: Build Windows test installer (manual)
+      - name: Build test installer (manual only)
         if: github.event_name == 'workflow_dispatch'
-        run: npx electron-builder --win nsis --publish never
+        run: |
+          npx electron-builder --win nsis --publish never
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo electron-builder en modo prueba' }
 
       - name: Upload test installer
         if: github.event_name == 'workflow_dispatch'
@@ -217,29 +214,25 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Check release does not already exist
+      - name: Ensure release is new
         if: github.event_name == 'push'
-        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view $env:VENTY_RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json tagName 2>$null
+          $existing = gh release view $env:VENTY_RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json tagName 2>$null
           if ($LASTEXITCODE -eq 0) {
-            throw "Ya existe el release $env:VENTY_RELEASE_TAG. No se sobrescribira."
+            throw "La release $env:VENTY_RELEASE_TAG ya existe. No se reemplazara."
           }
 
-      - name: Build and upload GitHub Release
+      - name: Build and publish GitHub Release
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: pwsh
         run: |
           npx electron-builder --win nsis --publish always
-          if ($LASTEXITCODE -ne 0) { throw 'electron-builder no pudo publicar' }
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la publicacion de Electron Builder' }
           if (-not (Test-Path 'dist/latest.yml' -PathType Leaf)) {
-            throw 'No se genero dist/latest.yml; no se publicara la release.'
+            throw 'No se genero latest.yml; no se habilitara el update'
           }
-
           gh release edit $env:VENTY_RELEASE_TAG --repo $env:GITHUB_REPOSITORY --draft=false --latest
-          if ($LASTEXITCODE -ne 0) { throw 'No se pudo publicar la release (salir de borrador)' }
-          Write-Host "Release publicada: $env:VENTY_RELEASE_TAG"
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo la activacion de GitHub Release' }
