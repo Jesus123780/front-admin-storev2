@@ -3,6 +3,9 @@ name: Venty - macOS Test Build
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
