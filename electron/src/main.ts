@@ -1,7 +1,6 @@
 import { join } from 'node:path'
 
 import { is } from '@electron-toolkit/utils'
-// 👉 CARGAS LAS VARIABLES .env AQUÍ
 import dotenv from 'dotenv'
 import {
  app, 
@@ -9,42 +8,64 @@ import {
  ipcMain 
 } from 'electron'
 
-import { startBackendServer, startNextJSServer } from './services/index'
-dotenv.config();
-
 import { startGoogleAuth } from './auth'
+import { initializeAutoUpdater } from './services/autoUpdater'
+import { startBackendServer, startNextJSServer } from './services/index'
 
-export const createWindow = () => {
-  const mainWindow = new BrowserWindow({
+dotenv.config()
+
+let mainWindow: BrowserWindow | null = null
+let nextServerPort: number | undefined
+
+export const createWindow = async (): Promise<number | undefined> => {
+  const window = new BrowserWindow({
     width: 900,
     height: 670,
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
       nodeIntegration: false,
-      contextIsolation: true,
-    },
+      contextIsolation: true
+    }
   })
 
-  mainWindow.on('ready-to-show', () => mainWindow.show())
+  mainWindow = window
 
-  const loadURL = async () => {
+  console.info('[Main] Inicializando updater')
+console.info('[Main] Archivo Electron ejecutado:', __filename)
+console.info('[Main] Versión de Electron:', process.versions.electron)
+
+  // No comprobar actualizaciones en dev; el servicio conserva su estado en Main.
+  initializeAutoUpdater(() => mainWindow)
+
+
+  window.once('ready-to-show', () => {
+    if (!window.isDestroyed()) {window.show()}
+  })
+
+  window.on('closed', () => {
+    if (mainWindow === window) {mainWindow = null}
+  })
+
+  if (is.dev) {
     const port = 3000
-    if (is.dev) {
-      mainWindow.loadURL(`http://localhost:${port}`)
-      return port
-    } else {
-      try {
-        const port = await startNextJSServer()
-        console.log('Next.js server started on port:', port)
-        mainWindow.loadURL(`http://localhost:${port}`)
-        return port
-      } catch (error) {
-        console.error('Error starting Next.js server:', error)
-      }
-    }
+    await window.loadURL(`http://localhost:${port}`)
+    return port
   }
-  const port = loadURL()
-  return port
+
+  try {
+    // Evitar reiniciar el servidor Next.js al recrear la ventana (macOS).
+    if (nextServerPort === undefined) {
+      nextServerPort = await startNextJSServer()
+      console.log('Next.js server started on port:', nextServerPort)
+    }
+
+    await window.loadURL(`http://localhost:${nextServerPort}`)
+    return nextServerPort
+  } catch (error) {
+    console.error('Error starting Next.js server:', error)
+    if (!window.isDestroyed()) {window.close()}
+    return undefined
+  }
 }
 
 if (process.env.NODE_ENV !== 'test') {
@@ -52,38 +73,46 @@ if (process.env.NODE_ENV !== 'test') {
     try {
       await startBackendServer()
       const portApp = await createWindow()
+      if (portApp === undefined) {
+        throw new Error('No fue posible iniciar el servidor Next.js')
+      }
       console.log('Electron app started on port:', portApp)
+      console.log('Venty version:', app.getVersion())
 
-      ipcMain.handle('start-google-auth', async (event) => {
-        const mainWindow = BrowserWindow.getFocusedWindow();
-        await startGoogleAuth(mainWindow, portApp);
-      });
+      ipcMain.handle('start-google-auth', async () => {
+        const focusedWindow = BrowserWindow.getFocusedWindow()
+        if (!focusedWindow) {return}
+        await startGoogleAuth(focusedWindow, portApp)
+      })
 
       ipcMain.on('ping', () => console.log('pong'))
-      ipcMain.on('google-auth-success', (event, userData) => {
+      ipcMain.on('google-auth-success', (_event, userData) => {
         console.log('Datos del usuario autenticado:', userData)
       })
 
       app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) {createWindow()}
+        if (BrowserWindow.getAllWindows().length === 0) {
+          void createWindow().catch(console.error)
+        }
       })
     } catch (error) {
-      console.error('Error starting backend server:', error)
+      console.error('Error starting app:', error)
       app.quit()
     }
+  }).catch((error: unknown) => {
+    console.error('Electron app.whenReady failed:', error)
+    app.quit()
   })
+
   app.on('open-url', (event, data) => {
     event.preventDefault()
-    const mainWindow = BrowserWindow.getFocusedWindow()
-    if (mainWindow) {
-      mainWindow.webContents.send('login-success', data)
+    const window = BrowserWindow.getFocusedWindow() ?? mainWindow
+    if (window && !window.isDestroyed()) {
+      window.webContents.send('login-success', data)
     }
   })
+
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {app.quit()}
   })
-
 }
-
-
-

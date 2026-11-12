@@ -1,31 +1,37 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from 'tsup'
 
 export default defineConfig([
-  // Electron build
+  // Mismo output que main="build/main.js" del package.json actual.
   {
-    entry: ['./electron/src/main.ts', './electron/src/preload.ts'],
+    name: 'electron',
+    entry: {
+      main: './electron/src/main.ts',
+      preload: './electron/src/preload.ts'
+    },
+    format: ['cjs'],
+    platform: 'node',
+    target: 'node20',
     splitting: false,
     sourcemap: false,
-    clean: true,
+    clean: false,
     cjsInterop: true,
     skipNodeModulesBundle: true,
     treeshake: true,
     outDir: 'build',
-    external: ['electron'],
-    format: ['cjs'],
-    bundle: true,
+    external: ['electron', 'electron-updater', 'electron-log'],
+    bundle: true
   },
-
-  // Script de Next.js (start.dev.ts)
+  // Conserva tu compilación actual del script auxiliar Next.js.
   {
-    entry: ['src/utils/start.dev.ts'],
-    format: ['cjs'], // Así evitas el warning
+    name: 'next-start',
+    entry: { 'start.dev': 'src/utils/start.dev.ts' },
+    format: ['cjs'],
     platform: 'node',
-    outDir: 'build', // Puedes cambiarlo según prefieras
+    outDir: 'build',
     sourcemap: false,
     minify: false,
-    clean: false, // No limpies todo cuando compilas este archivo
+    clean: false,
     splitting: false,
-    bundle: false, // No hace falta bundlear aquí
+    bundle: false
   }
-]);
+])

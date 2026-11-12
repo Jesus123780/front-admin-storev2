@@ -1,0 +1,90 @@
+name: Venty - Windows installer and auto-update release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 50
+    env:
+      CI: 'true'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Validar que el tag coincide con package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $version = node -p "require('./package.json').version"
+          if ($tag -ne "v$version") {
+            throw "El tag $tag no coincide con package.json version=$version"
+          }
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Si no está versionado el .exe, intenta generarlo con el script existente.
+      # Ajusta este paso si front-back-server es otro repo o necesita secrets.
+      - name: Ensure bundled backend exists
+        shell: pwsh
+        run: |
+          $exe = 'front-back-server/front-back-server.exe'
+          if (-not (Test-Path $exe)) {
+            Write-Host 'No existe el ejecutable backend; ejecutando prebuild:backend'
+            npm run prebuild:backend
+            if ($LASTEXITCODE -ne 0) { throw 'Falló prebuild:backend' }
+          }
+          if (-not (Test-Path $exe)) {
+            throw "No existe $exe. Revisa la generación o descarga del backend."
+          }
+
+      - name: Build Next.js standalone
+        run: npm run next:build
+
+      - name: Compile Electron / preload / start.dev
+        run: npm run electron:compile
+
+      - name: Validate output files
+        shell: pwsh
+        run: |
+          @('build/main.js', 'build/preload.js', 'build/start.dev.js') | ForEach-Object {
+            if (-not (Test-Path $_)) { throw "Falta archivo compilado: $_" }
+          }
+
+      # Instalador base 1.0.5, sólo artefacto descargable, sin publicación.
+      - name: Build NSIS (manual test)
+        if: github.event_name == 'workflow_dispatch'
+        run: npx electron-builder --win nsis --publish never
+
+      - name: Upload testing installer
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Venty-Windows-Base-${{ github.sha }}
+          path: dist/*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+      # Al subir v1.0.6, publica los assets y los metadatos.
+      - name: Publish Windows release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win nsis --publish always

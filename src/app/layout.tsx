@@ -5,6 +5,7 @@ import Script from 'next/script'
 import { ProgressBar, ROUTES } from 'pkg-components'
 import { useEffect, useState } from 'react'
 
+import { ElectronUpdateModal } from '@/components/ElectronUpdateModal'
 import { MemoLayout } from '@/container/Layout'
 import Context from '@/context/Context'
 
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       />
 
       <body>
+        <ElectronUpdateModal />
         <QueryProvider>
           <div id="portal" />
           <ProgressBar progress={progress} hidden={hidden} />

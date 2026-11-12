@@ -6,6 +6,13 @@
   "build": {
     "appId": "com.saybackend.nextjs-electronJ",
     "asar": true,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Jesus123780",
+        "repo": "front-admin-storev2"
+      }
+    ],
     "asarUnpack": [
       "node_modules/next",
       "node_modules/@img",
@@ -67,16 +74,19 @@
     "deepmerge": "4.3.1",
     "dotenv": "16.5.0",
     "electron-log": "5.3.4",
+    "electron-updater": "6.8.11",
     "express": "5.1.0",
     "get-port-please": "3.1.2",
     "google-auth-library": "9.15.1",
     "graphql-ws": "5.16.2",
+    "i": "^0.3.7",
     "js-cookie": "3.0.5",
     "jsonwebtoken": "9.0.1",
     "lodash": "4.17.21",
     "next": "15.2.4",
-    "npm-pkg-hook": "^1.14.6",
-    "pkg-components": "^2.4.6",
+    "npm": "^12.2.2",
+    "npm-pkg-hook": "^1.14.7",
+    "pkg-components": "^2.4.16",
     "qr.js": "0.0.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -147,7 +157,8 @@
     "url": "git+https://github.com/Jesus123780/front-admin-storev2.git"
   },
   "scripts": {
-    "build": "run-s next:build electron:build",
+    "build": "run-s next:build electron:compile electron:build",
+    "electron:compile": "node -e \"require('node:fs').rmSync('build', { recursive: true, force: true })\" && tsup",
     "check": "npm run lint && npm run type-check",
     "coverage": "jest --coverage",
     "e2e:fixtures": "node e2e/fixtures/generate-images.js",
@@ -155,12 +166,14 @@
     "e2e:report": "playwright show-report",
     "dev": "concurrently -n \"NEXT,ELECTRON\" -c \"yellow,blue\" --kill-others \"next dev -p 3000\" \"wait-on http://localhost:3000 && electron .\"",
     "dist": "run-s build electron:dist",
-    "electron:build": "electron-builder",
+    "electron:build": "electron-builder --publish never",
     "electron:build_watch": "tsup --watch",
     "electron:dev": "cross-env NODE_ENV='development' electron .",
     "electron:dist": "electron-builder --dir",
     "electron:dist:deb": "electron-builder --linux deb",
     "electron:watch": "cross-env NODE_ENV='development' nodemon",
+    "electron:publish:win": "electron-builder --win nsis --publish always",
+    "release:win": "run-s next:build electron:compile electron:publish:win",
     "format": "dprint fmt",
     "link:pkgch": "npm link npm-pkg-hook pkg-components && rm -rf .next",
     "link:pkgche": "npm link npm-pkg-hook pkg-components eslint-config-next-front && rm -rf .next",
@@ -182,5 +195,5 @@
     "test:watch": "npm run test -- --watch",
     "type-check": "tsc --noEmit"
   },
-  "version": "1.0.5"
+  "version": "1.0.6"
 }

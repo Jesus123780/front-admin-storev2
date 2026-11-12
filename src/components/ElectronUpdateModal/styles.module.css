@@ -1,0 +1,270 @@
+
+.dialog {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: min(440px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 28px;
+  overflow-y: auto;
+  border: 1px solid color-mix(
+    in srgb,
+    currentColor 12%,
+    transparent
+  );
+  border-radius: 18px;
+  background: var(--color-white, #fff);
+  color: var(--color-text-primary, #25262b);
+  box-shadow: 0 22px 80px rgb(0 0 0 / 20%);
+}
+
+.dialog:not([open]) {
+  display: none;
+}
+
+.dialog[open] {
+  animation: updaterSlideIn 300ms ease-out;
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.close {
+  position: absolute;
+  inset: 12px 12px auto auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: color-mix(
+    in srgb,
+    currentColor 7%,
+    transparent
+  );
+}
+
+.symbol {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 18px;
+  border-radius: 15px;
+  background: color-mix(
+    in srgb,
+    var(--color-primary-red, #f00) 9%,
+    white
+  );
+  color: var(--color-primary-red, #f00);
+  font-size: 27px;
+  font-weight: bold;
+}
+
+.title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.description {
+  margin: 14px 0 22px;
+  font-size: 14px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.progressGroup {
+  display: grid;
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.progress {
+  display: block;
+  width: 100%;
+  height: 9px;
+  accent-color: var(--color-primary-red, #f00);
+}
+
+.helper {
+  margin: 18px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.error {
+  margin: 18px 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: color-mix(
+    in srgb,
+    var(--color-primary-red, #f00) 7%,
+    white
+  );
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.primary,
+.secondary {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.primary {
+  border: 1px solid var(--color-primary-red, #f00);
+  background: var(--color-primary-red, #f00);
+  color: white;
+}
+
+.primary:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--color-primary-red, #f00) 85%,
+    black
+  );
+}
+
+.primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.secondary {
+  border: 1px solid color-mix(
+    in srgb,
+    currentColor 17%,
+    transparent
+  );
+  background: transparent;
+  color: inherit;
+}
+
+.secondary:hover {
+  background: color-mix(
+    in srgb,
+    currentColor 5%,
+    transparent
+  );
+}
+
+.previewNotice {
+  margin: 16px 0 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: color-mix(
+    in srgb,
+    currentColor 5%,
+    transparent
+  );
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.footer {
+  margin: 18px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.reopen {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10000;
+  padding: 12px 17px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-primary-red, #f00);
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.close:focus-visible,
+.primary:focus-visible,
+.secondary:focus-visible,
+.reopen:focus-visible {
+  outline: 2px solid var(--color-primary-red, #f00);
+  outline-offset: 3px;
+}
+
+@keyframes updaterSlideIn {
+  from {
+    transform: translateY(34px);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .dialog {
+    padding: 24px 20px;
+    border-radius: 14px;
+  }
+
+  .title {
+    font-size: 19px;
+  }
+
+  .reopen {
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100vw - 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog[open] {
+    animation: none;
+  }
+
+  .primary,
+  .secondary {
+    transition: none;
+  }
+}
