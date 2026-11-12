@@ -195,5 +195,5 @@
     "test:watch": "npm run test -- --watch",
     "type-check": "tsc --noEmit"
   },
-  "version": "1.0.6"
+  "version": "1.0.7"
 }
