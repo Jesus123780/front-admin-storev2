@@ -1,7 +1,9 @@
-name: Venty - Windows installer and auto-update release
+
+name: Venty - Windows Release
 
 on:
   workflow_dispatch:
+
   push:
     tags:
       - 'v*'
@@ -11,79 +13,106 @@ permissions:
 
 jobs:
   windows:
-    runs-on: windows-latest
-    timeout-minutes: 50
+    name: Build Windows NSIS
+    runs-on: windows-2022
+    timeout-minutes: 90
+
     env:
       CI: 'true'
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Node.js 20
-        uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
-          node-version: '20'
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
           cache: npm
 
-      - name: Validar que el tag coincide con package.json
+      - name: Show environment
+        shell: pwsh
+        run: |
+          node --version
+          npm --version
+          Write-Host "Commit: $env:GITHUB_SHA"
+
+      - name: Validate release version
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
           $tag = '${{ github.ref_name }}'
           $version = node -p "require('./package.json').version"
+
           if ($tag -ne "v$version") {
-            throw "El tag $tag no coincide con package.json version=$version"
+            throw "El tag $tag no coincide con la version $version"
           }
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
-      # Si no está versionado el .exe, intenta generarlo con el script existente.
-      # Ajusta este paso si front-back-server es otro repo o necesita secrets.
-      - name: Ensure bundled backend exists
+      # Este archivo debe llegar desde el repositorio
+      # o descargarse desde un artefacto del backend.
+      - name: Validate backend executable
         shell: pwsh
         run: |
           $exe = 'front-back-server/front-back-server.exe'
-          if (-not (Test-Path $exe)) {
-            Write-Host 'No existe el ejecutable backend; ejecutando prebuild:backend'
-            npm run prebuild:backend
-            if ($LASTEXITCODE -ne 0) { throw 'Falló prebuild:backend' }
+
+          if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) {
+            throw "No existe $exe. Debes incorporar el ejecutable del backend al workflow antes de generar el instalador."
           }
-          if (-not (Test-Path $exe)) {
-            throw "No existe $exe. Revisa la generación o descarga del backend."
+
+          $file = Get-Item $exe
+
+          if ($file.Length -eq 0) {
+            throw "El backend ejecutable esta vacio."
           }
+
+          Write-Host "Backend encontrado: $($file.Length) bytes"
 
       - name: Build Next.js standalone
         run: npm run next:build
 
-      - name: Compile Electron / preload / start.dev
+      - name: Compile Electron
         run: npm run electron:compile
 
-      - name: Validate output files
+      - name: Validate compilation
         shell: pwsh
         run: |
-          @('build/main.js', 'build/preload.js', 'build/start.dev.js') | ForEach-Object {
-            if (-not (Test-Path $_)) { throw "Falta archivo compilado: $_" }
+          $required = @(
+            'build/main.js',
+            'build/preload.js',
+            'build/start.dev.js',
+            '.next/standalone/server.js'
+          )
+
+          foreach ($file in $required) {
+            if (-not (Test-Path -LiteralPath $file)) {
+              throw "Falta el archivo: $file"
+            }
           }
 
-      # Instalador base 1.0.5, sólo artefacto descargable, sin publicación.
-      - name: Build NSIS (manual test)
+          Write-Host "Compilacion validada."
+
+      # Ejecución manual: genera un instalador de prueba.
+      - name: Build Windows test installer
         if: github.event_name == 'workflow_dispatch'
         run: npx electron-builder --win nsis --publish never
 
-      - name: Upload testing installer
+      - name: Upload test installer
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: Venty-Windows-Base-${{ github.sha }}
+          name: Venty-Windows-Test-${{ github.sha }}
           path: dist/*.exe
           if-no-files-found: error
           retention-days: 14
 
-      # Al subir v1.0.6, publica los assets y los metadatos.
-      - name: Publish Windows release
+      # Ejecución por tag: publica la Release.
+      - name: Publish Windows Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

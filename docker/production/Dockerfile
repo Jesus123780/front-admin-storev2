@@ -1,31 +1,58 @@
-# Base image for building
-FROM node:lts-alpine AS base
+
+# ==================================================
+# BUILD - Next.js
+# ==================================================
+
+FROM node:22-bookworm-slim AS builder
+
 WORKDIR /app
 
-# Copy only package.json and package-lock.json and install dependencies
-COPY package.json package-lock.json ./
-RUN npm install pkg-components npm-pkg-hook
-RUN npm install -g npm && npm ci
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy the rest of the source code
+COPY package.json package-lock.json ./
+
+RUN npm ci --no-audit --no-fund
+
 COPY . .
 
-# Build the application
-RUN npm run build
+# Compilar solamente la aplicación web.
+RUN npm run next:build
 
-# Final production image
-FROM node:lts-alpine AS production
-ENV PORT=3000
+# Verificar que Next.js generó standalone.
+RUN test -f .next/standalone/server.js
+
+
+# ==================================================
+# PRODUCTION
+# ==================================================
+
+FROM node:22-bookworm-slim AS production
+
 WORKDIR /app
 
-# Copy artifacts from the build stage
-COPY --from=base /app/nginx/default.conf /etc/nginx/sites-available/default
-COPY --from=base /app/package*.json ./
-COPY --from=base /app/.next ./.next
-COPY --from=base /app/public ./public
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-# Install production dependencies
-RUN npm install -g npm && npm install next
+# Copiar los archivos necesarios de standalone.
+COPY --from=builder --chown=node:node \
+  /app/.next/standalone ./
+
+# Copiar archivos estáticos.
+COPY --from=builder --chown=node:node \
+  /app/.next/static ./.next/static
+
+# Copiar carpeta pública.
+COPY --from=builder --chown=node:node \
+  /app/public ./public
+
+# Permitir que Next.js escriba su caché.
+RUN mkdir -p .next/cache && \
+    chown -R node:node .next
+
+USER node
 
 EXPOSE 3000
-CMD npm run start
+
+CMD ["node", "server.js"]

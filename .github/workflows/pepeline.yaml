@@ -1,66 +1,129 @@
+
 name: Deployment Pipeline
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [develop]
-    types: [opened, synchronize]
+    branches:
+      - main
 
-env:
-  DOCKER_COMPOSE_FILE: ./docker/production/Dockerfile
-  REMOTE_PATH: proyects/front-admin-store
-  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_DIGITAL_OCEAN }}
-  SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-  DEPLOY_USER: SHA256:M+TnZQFB8/ewAurTcryvpyTCQqm37ACqgoxiXBl9SOY.
-  SERVER_IP: 167.172.137.233
+  pull_request:
+    branches:
+      - develop
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  verify:
+    name: Verify Next.js Build
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Show versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build Next.js
+        run: npm run next:build
 
   deploy:
-    runs-on: ubuntu-latest
+    name: Docker Build and Deploy
+
+    needs:
+      - verify
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-24.04
+
+    env:
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_PATH: proyects/front-admin-store
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_DIGITAL_OCEAN }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 16
-    - name: Install dependencies
-      run: npm install -no-audit --no-fund --no-optional -f
-    - name: Build
-      run: npm run build -f
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-  login-docker:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 16
-    - name: Login to Docker Hub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        file: ./docker/production/Dockerfile
-        push: true
-        tags: juvinaojesus/front-admin-store
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Set up SSH connection
-      run: |
-        mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/production/Dockerfile
+          push: true
+          tags: |
+            juvinaojesus/front-admin-store:latest
+            juvinaojesus/front-admin-store:${{ github.sha }}
 
-    - name: Deploy to DigitalOcean
-      run: |
-        ssh "$DEPLOY_USER"@"$SERVER_IP" "cd $REMOTE_PATH && docker-compose pull && docker-compose up -d"
+      - name: Deploy to DigitalOcean
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -n "$DEPLOY_USER" || {
+            echo "Falta DEPLOY_USER"
+            exit 1
+          }
+
+          test -n "$DEPLOY_HOST" || {
+            echo "Falta DEPLOY_HOST"
+            exit 1
+          }
+
+          test -n "$SSH_PRIVATE_KEY" || {
+            echo "Falta SSH_PRIVATE_KEY_DIGITAL_OCEAN"
+            exit 1
+          }
+
+          test -n "$SSH_KNOWN_HOSTS" || {
+            echo "Falta SSH_KNOWN_HOSTS"
+            exit 1
+          }
+
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+          ssh \
+            -i "$HOME/.ssh/deploy_key" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd '$DEPLOY_PATH' && docker compose pull && docker compose up -d"
