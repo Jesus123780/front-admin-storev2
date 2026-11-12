@@ -1,10 +1,11 @@
+
 name: Venty - Windows Release
 
+# Un push normal a main NO publica instaladores.
+# Manual = compilacion de prueba. Tag v* = publicacion.
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
 
@@ -17,7 +18,7 @@ concurrency:
 
 jobs:
   windows:
-    name: Build and publish Windows NSIS
+    name: Build Venty Windows NSIS
     runs-on: windows-2022
     timeout-minutes: 150
 
@@ -47,23 +48,18 @@ jobs:
           npm ci --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { throw 'Fallo npm ci del frontend' }
 
-      - name: Configure release version
+      - name: Validate release version
         run: |
-          $base = node -p "require('./package.json').version"
-          if ($base -notmatch '^\d+\.\d+\.\d+$') {
-            throw "Version base no admitida: $base"
+          $version = node -p "require('./package.json').version"
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo leer la version' }
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Version no admitida: $version"
           }
-          if ($env:GITHUB_REF -eq 'refs/heads/main') {
-            $parts = $base.Split('.')
-            $patch = [int]$parts[2] + [int]$env:GITHUB_RUN_NUMBER
-            $version = "$($parts[0]).$($parts[1]).$patch"
-            npm version $version --no-git-tag-version --ignore-scripts
-            if ($LASTEXITCODE -ne 0) { throw 'Fallo al establecer version del build' }
-          } elseif ($env:GITHUB_REF -like 'refs/tags/v*') {
-            $version = $env:GITHUB_REF_NAME.Substring(1)
-            if ($version -ne $base) { throw "Tag v$version no coincide con $base" }
-          } else {
-            $version = $base
+          if ($env:GITHUB_EVENT_NAME -eq 'push') {
+            $tagVersion = $env:GITHUB_REF_NAME.Substring(1)
+            if ($tagVersion -ne $version) {
+              throw "El tag v$tagVersion no coincide con package.json ($version)"
+            }
           }
           Add-Content -Path $env:GITHUB_ENV -Value "VENTY_RELEASE_TAG=v$version"
           Write-Host "Version de Venty: $version"
@@ -85,34 +81,31 @@ jobs:
           node configure-publisher.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Fallo la configuracion de publicacion' }
 
-      # Next.js 15 puede fallar en Windows si el proyecto esta en D:
-      # al seguir rutas protegidas del perfil en C:\Users.
-      # Este paso crea una copia aislada del frontend en la unidad C:.
+      # Conservamos el workaround que ya permitio compilar Next.js.
       - name: Build Next.js standalone on C drive
         run: |
           $source = $env:GITHUB_WORKSPACE
           $mirror = "C:\venty-ci-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
-          Write-Host "Origen: $source"
-          Write-Host "Build aislado: $mirror"
-
           New-Item -ItemType Directory -Path $mirror -Force | Out-Null
+          Write-Host "Frontend de origen: $source"
+          Write-Host "Compilacion aislada: $mirror"
 
           & robocopy $source $mirror /E /R:2 /W:2 /XD '.git' 'node_modules' '.next' 'backend-source' 'dist' 'build' 'front-back-server'
-          if ($LASTEXITCODE -ge 8) { throw "Fallo copiar frontend a C: (robocopy $LASTEXITCODE)" }
+          if ($LASTEXITCODE -ge 8) {
+            throw "Fallo copiar frontend a C: (robocopy $LASTEXITCODE)"
+          }
+          $global:LASTEXITCODE = 0
 
           Push-Location $mirror
           try {
-            Write-Host "Node: $(node --version)"
-            Write-Host "Build en: $(Get-Location)"
-
             npm ci --no-audit --no-fund
-            if ($LASTEXITCODE -ne 0) { throw 'Fallo npm ci en unidad C:' }
+            if ($LASTEXITCODE -ne 0) { throw 'Fallo npm ci en C:' }
 
             npm run next:build
-            if ($LASTEXITCODE -ne 0) { throw 'Fallo next:build en unidad C:' }
+            if ($LASTEXITCODE -ne 0) { throw 'Fallo Next.js en C:' }
 
             if (-not (Test-Path '.next/standalone/server.js' -PathType Leaf)) {
-              throw 'Next.js no genero .next/standalone/server.js en C:'
+              throw 'No se genero .next/standalone/server.js'
             }
           } finally {
             Pop-Location
@@ -120,16 +113,20 @@ jobs:
 
           $builtNext = Join-Path $mirror '.next'
           $targetNext = Join-Path $source '.next'
-          if (Test-Path $targetNext) { Remove-Item $targetNext -Recurse -Force }
+          if (Test-Path $targetNext) {
+            Remove-Item $targetNext -Recurse -Force
+          }
           New-Item -ItemType Directory -Path $targetNext -Force | Out-Null
-
           & robocopy $builtNext $targetNext /E /R:2 /W:2
-          if ($LASTEXITCODE -ge 8) { throw "Fallo devolver .next a D: (robocopy $LASTEXITCODE)" }
+          if ($LASTEXITCODE -ge 8) {
+            throw "Fallo devolver .next al workspace (robocopy $LASTEXITCODE)"
+          }
+          $global:LASTEXITCODE = 0
 
           if (-not (Test-Path (Join-Path $targetNext 'standalone/server.js') -PathType Leaf)) {
-            throw 'No se encontro el standalone tras copiarlo al workspace original'
+            throw 'No se encontro standalone/server.js despues de copiar'
           }
-          Write-Host 'Next.js standalone compilado en C: y copiado a D: correctamente.'
+          Write-Host 'Next.js compilado y copiado correctamente.'
 
       - name: Checkout backend
         uses: actions/checkout@v6
@@ -140,6 +137,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Python 3.11
+        id: python311
         uses: actions/setup-python@v6
         with:
           python-version: '3.11'
@@ -149,13 +147,20 @@ jobs:
         working-directory: backend-source
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
+          NODE_GYP_FORCE_PYTHON: ${{ steps.python311.outputs.python-path }}
+          PYTHON: ${{ steps.python311.outputs.python-path }}
+          npm_config_python: ${{ steps.python311.outputs.python-path }}
         run: |
-          $python = (Get-Command python).Source
-          python --version
-          python -c "import distutils; print('distutils OK')"
-          if ($LASTEXITCODE -ne 0) { throw 'Falta distutils; revisar Python' }
-          $env:NODE_GYP_FORCE_PYTHON = $python
-          $env:npm_config_python = $python
+          $python = $env:NODE_GYP_FORCE_PYTHON
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
+            throw "No existe el Python seleccionado: $python"
+          }
+          & $python -c "import sys; import distutils.version; assert sys.version_info[:2] == (3, 11), sys.version; print(sys.executable); print(sys.version)"
+          if ($LASTEXITCODE -ne 0) {
+            throw 'node-gyp necesita Python 3.11 con distutils'
+          }
+          Write-Host "Python fijado para node-gyp: $python"
+
           npm ci --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { throw 'Fallo npm ci del backend' }
 
@@ -217,13 +222,15 @@ jobs:
           } finally {
             $stream.Dispose()
           }
-          if ($mz0 -ne 77 -or $mz1 -ne 90) { throw 'El ejecutable no es un PE de Windows (MZ)' }
-          Write-Host "Backend listo: $target ($($exe.Length) bytes)"
+          if ($mz0 -ne 77 -or $mz1 -ne 90) {
+            throw 'El ejecutable no es un archivo PE de Windows (MZ)'
+          }
+          Write-Host "Backend generado: $target ($($exe.Length) bytes)"
 
       - name: Compile Electron
         run: |
           npm run electron:compile
-          if ($LASTEXITCODE -ne 0) { throw 'Fallo tsup de Electron' }
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo compilacion de Electron' }
 
       - name: Validate build assets
         run: |
@@ -234,43 +241,55 @@ jobs:
             '.next/standalone/server.js',
             'front-back-server/front-back-server.exe'
           ) | ForEach-Object {
-            if (-not (Test-Path $_ -PathType Leaf)) { throw "Falta archivo $_" }
+            if (-not (Test-Path $_ -PathType Leaf)) {
+              throw "Falta el archivo $_"
+            }
           }
 
+      # Ejecucion manual: solo instalador descargable, NO release.
       - name: Build test installer (manual only)
         if: github.event_name == 'workflow_dispatch'
         run: |
           npx electron-builder --win nsis --publish never
-          if ($LASTEXITCODE -ne 0) { throw 'Fallo electron-builder en modo prueba' }
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo el instalador de prueba' }
+          if (-not (Get-ChildItem 'dist/*.exe' -ErrorAction SilentlyContinue)) {
+            throw 'No se genero ningun instalador .exe'
+          }
 
       - name: Upload test installer
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: Venty-Windows-Test-${{ github.sha }}
-          path: dist/*.exe
+          name: Venty-Windows-Test-${{ github.run_id }}
+          path: |
+            dist/*.exe
+            dist/latest.yml
+            dist/*.blockmap
           if-no-files-found: error
           retention-days: 14
 
+      # Solo un push de tag publica una actualizacion.
       - name: Ensure release is new
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release view $env:VENTY_RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json tagName 2>$null
           if ($LASTEXITCODE -eq 0) {
-            throw "La release $env:VENTY_RELEASE_TAG ya existe. No se reemplazara."
+            throw "La release $env:VENTY_RELEASE_TAG ya existe"
           }
+          $global:LASTEXITCODE = 0
 
       - name: Build and publish GitHub Release
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npx electron-builder --win nsis --publish always
           if ($LASTEXITCODE -ne 0) { throw 'Fallo la publicacion de Electron Builder' }
           if (-not (Test-Path 'dist/latest.yml' -PathType Leaf)) {
-            throw 'No se genero latest.yml; no se habilitara el update'
+            throw 'No se genero latest.yml; no se publicara la release'
           }
           gh release edit $env:VENTY_RELEASE_TAG --repo $env:GITHUB_REPOSITORY --draft=false --latest
-          if ($LASTEXITCODE -ne 0) { throw 'Fallo la activacion de GitHub Release' }
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo activar GitHub Release' }
+          Write-Host "Release publicada: $env:VENTY_RELEASE_TAG"
