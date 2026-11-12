@@ -636,27 +636,6 @@ export const CreateSales = ({
     }
     return null
   }
-  const restPropsSalesModal = {
-    code,
-    data,
-    paymentMethod: data?.payId === 1 ? 'TRANSFERENCIA' : 'EFECTIVO',
-    delivery,
-    print,
-    totalProductPrice,
-    values,
-    handleChange,
-    discount,
-    setDelivery,
-    componentRef,
-    promiseResolveRef,
-    handlePrint,
-    isPrinting,
-    dataClientes,
-    setPrint,
-    loading,
-    handleSubmit,
-    handleDownLoad
-  }
   const existComment = oneProductToComment?.comment?.length > 0
 
   const handleCloseModal = () => {
@@ -779,6 +758,28 @@ export const CreateSales = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentMethodsData, data?.payId])
+
+  const restPropsSalesModal = {
+    code,
+    data,
+    paymentMethod: paymentMethods.find(method => method.id === data?.payId)?.name ?? 'Sin seleccionar',
+    delivery,
+    print,
+    totalProductPrice,
+    values,
+    handleChange,
+    discount,
+    setDelivery,
+    componentRef,
+    promiseResolveRef,
+    handlePrint,
+    isPrinting,
+    dataClientes,
+    setPrint,
+    loading,
+    handleSubmit,
+    handleDownLoad
+  }
 
   const { data: dataFilter, buildVariables } = useFilterConfigs()
   const [activeFilter, setActiveFilter] = useState(0)
@@ -1122,8 +1123,9 @@ const salesDividerPosition =
           setPrint({ callback: handlePrint })
         }}
         isLoading={isLoading}
+        isSubmittingSale={loadingRegisterSale}
         loadingClients={loadingClients}
-        loadingProduct={true}
+        loadingProduct={loading}
         numberFormat={numberFormat}
         onClick={(producto) => {
           return selectProduct(producto)

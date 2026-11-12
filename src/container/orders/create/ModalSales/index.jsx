@@ -73,17 +73,17 @@ export const ModalSales = ({
       >
         <InputHooks
           autoComplete='off'
-          name='ValueDelivery'
+          name='valueDelivery'
           onChange={handleChange}
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
-              e.stateventDefault()
+              e.preventDefault()
               e.target.blur()
               setDelivery(!delivery)
             }
           }}
           placeholder='Costo de envió'
-          value={values?.ValueDelivery}
+          value={values?.valueDelivery}
         />
         <InputHooks
           autoComplete='off'
@@ -120,7 +120,7 @@ ModalSales.propTypes = {
   setPrint: PropTypes.func,
   totalProductPrice: PropTypes.number,
   values: PropTypes.shape({
-    ValueDelivery: PropTypes.any,
+    valueDelivery: PropTypes.any,
     change: PropTypes.any
   })
 }
