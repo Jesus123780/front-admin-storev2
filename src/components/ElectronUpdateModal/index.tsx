@@ -53,8 +53,10 @@ const getFriendlyUpdateError = (message: string | null): string => {
   }
 
   if (
-    /latest-mac\\.yml|latest\\.yml|Cannot find.*release artifacts/i.test(message) ||
-    (/404/.test(message) && /releases\\/download/i.test(message))
+    message.includes('latest-mac.yml') ||
+    message.includes('latest.yml') ||
+    message.includes('Cannot find') && message.includes('release artifacts') ||
+    (message.includes('404') && message.includes('releases/download'))
   ) {
     return 'La actualización aún no está disponible para tu equipo. Puedes seguir usando Venty e intentarlo más tarde.'
   }
