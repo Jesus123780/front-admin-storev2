@@ -19,7 +19,7 @@ jobs:
   windows:
     name: Build and publish Windows NSIS
     runs-on: windows-2022
-    timeout-minutes: 120
+    timeout-minutes: 150
 
     env:
       CI: 'true'
@@ -85,20 +85,51 @@ jobs:
           node configure-publisher.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Fallo la configuracion de publicacion' }
 
-      # IMPORTANTE: Next.js se compila ANTES de traer backend-source al workspace.
-      # Esta separacion evita que el rastreo standalone/webpack explore sus dependencias.
-      - name: Build Next.js standalone (isolated)
+      # Next.js 15 puede fallar en Windows si el proyecto esta en D:
+      # al seguir rutas protegidas del perfil en C:\Users.
+      # Este paso crea una copia aislada del frontend en la unidad C:.
+      - name: Build Next.js standalone on C drive
         run: |
-          if (Test-Path 'backend-source') {
-            throw 'backend-source existe antes del build de Next. Limpia el checkout.'
+          $source = $env:GITHUB_WORKSPACE
+          $mirror = "C:\venty-ci-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          Write-Host "Origen: $source"
+          Write-Host "Build aislado: $mirror"
+
+          New-Item -ItemType Directory -Path $mirror -Force | Out-Null
+
+          & robocopy $source $mirror /E /R:2 /W:2 /XD '.git' 'node_modules' '.next' 'backend-source' 'dist' 'build' 'front-back-server'
+          if ($LASTEXITCODE -ge 8) { throw "Fallo copiar frontend a C: (robocopy $LASTEXITCODE)" }
+
+          Push-Location $mirror
+          try {
+            Write-Host "Node: $(node --version)"
+            Write-Host "Build en: $(Get-Location)"
+
+            npm ci --no-audit --no-fund
+            if ($LASTEXITCODE -ne 0) { throw 'Fallo npm ci en unidad C:' }
+
+            npm run next:build
+            if ($LASTEXITCODE -ne 0) { throw 'Fallo next:build en unidad C:' }
+
+            if (-not (Test-Path '.next/standalone/server.js' -PathType Leaf)) {
+              throw 'Next.js no genero .next/standalone/server.js en C:'
+            }
+          } finally {
+            Pop-Location
           }
-          Write-Host "Workspace: $env:GITHUB_WORKSPACE"
-          Write-Host "Node: $(node --version)"
-          npm run next:build
-          if ($LASTEXITCODE -ne 0) { throw 'Fallo el build aislado de Next.js' }
-          if (-not (Test-Path '.next/standalone/server.js' -PathType Leaf)) {
-            throw 'Next.js no genero .next/standalone/server.js'
+
+          $builtNext = Join-Path $mirror '.next'
+          $targetNext = Join-Path $source '.next'
+          if (Test-Path $targetNext) { Remove-Item $targetNext -Recurse -Force }
+          New-Item -ItemType Directory -Path $targetNext -Force | Out-Null
+
+          & robocopy $builtNext $targetNext /E /R:2 /W:2
+          if ($LASTEXITCODE -ge 8) { throw "Fallo devolver .next a D: (robocopy $LASTEXITCODE)" }
+
+          if (-not (Test-Path (Join-Path $targetNext 'standalone/server.js') -PathType Leaf)) {
+            throw 'No se encontro el standalone tras copiarlo al workspace original'
           }
+          Write-Host 'Next.js standalone compilado en C: y copiado a D: correctamente.'
 
       - name: Checkout backend
         uses: actions/checkout@v6
@@ -140,7 +171,6 @@ jobs:
       - name: Configure backend pkg for CI
         working-directory: backend-source
         run: |
-          # No empaquetar archivos .env ni datos privados del equipo.
           if (Test-Path '.env') { Remove-Item '.env' -Force }
           @'
           const fs = require('node:fs');
@@ -180,6 +210,14 @@ jobs:
           Copy-Item -LiteralPath $source -Destination $target -Force
           $exe = Get-Item $target
           if ($exe.Length -le 1024) { throw 'El ejecutable no parece valido' }
+          $stream = [System.IO.File]::OpenRead((Resolve-Path $target).Path)
+          try {
+            $mz0 = $stream.ReadByte()
+            $mz1 = $stream.ReadByte()
+          } finally {
+            $stream.Dispose()
+          }
+          if ($mz0 -ne 77 -or $mz1 -ne 90) { throw 'El ejecutable no es un PE de Windows (MZ)' }
           Write-Host "Backend listo: $target ($($exe.Length) bytes)"
 
       - name: Compile Electron
@@ -219,7 +257,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $existing = gh release view $env:VENTY_RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json tagName 2>$null
+          gh release view $env:VENTY_RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json tagName 2>$null
           if ($LASTEXITCODE -eq 0) {
             throw "La release $env:VENTY_RELEASE_TAG ya existe. No se reemplazara."
           }
@@ -230,7 +268,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npx electron-builder --win nsis --publish always
-          if ($LASTEXITCODE -ne 0) { throw 'Falló la publicacion de Electron Builder' }
+          if ($LASTEXITCODE -ne 0) { throw 'Fallo la publicacion de Electron Builder' }
           if (-not (Test-Path 'dist/latest.yml' -PathType Leaf)) {
             throw 'No se genero latest.yml; no se habilitara el update'
           }
