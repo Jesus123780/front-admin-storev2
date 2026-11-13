@@ -96,39 +96,23 @@ export const Goal = () => {
                 </button>
             </Column> */}
             <KmhGoalChart
-                size={150}
                 current={loading ? 0 : data?.total}
                 goal={loading ? 0 : Number(dailyGoal ?? 0)}
-                orientation="horizontal"
-                startAngle={180}
-                sweepDirection="clockwise"
-                strokeWidth={16}
-                animated
-                animateOnMount
-                animationDuration={1200}
-                animationDelay={100}
-                animationEasing="ease-out"
+                chartType="semicircle"
+                variant="card"
+                tone="success"
+                responsive
+                size={280}
+                strokeWidth={14}
                 showTicks
-                tickCount={5}
-                tickLength={6}
+                tickCount={10}
+                showProgressIndicator
                 showGoalMarker
-                colorStops={[
-                    {
-                        minPercentage: 0,
-                        color: '#E74C3C'
-                    },
-                    {
-                        minPercentage: 60,
-                        color: '#E6A23C'
-                    },
-                    {
-                        minPercentage: 85,
-                        color: '#27AE60'
-                    }
-                ]}
-                caption="Ventas del día"
-                showOverflowLabel
-                showGoalReachedLabel
+                animated
+                animationDuration={1200}
+                animationEasing="ease-in-out"
+                caption="Objetivo de ventas"
+                description="Progreso del día"
             />
         </Column>
     )
