@@ -1,6 +1,6 @@
 import {
- AwesomeModal, 
   CashPaymentFields,
+ AwesomeModal, 
  InputHooks,
 Loading 
 } from 'pkg-components'
@@ -112,7 +112,7 @@ export const ModalSales = ({
           name='change'
           disabled={!canEditChange}
           onChange={(event, hasError) => {
-            if (canEditChange) {handleChange(event, hasError)}
+            if (canEditChange) handleChange(event, hasError)
           }}
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
