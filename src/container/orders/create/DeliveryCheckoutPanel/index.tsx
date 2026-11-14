@@ -1,13 +1,14 @@
 'use client'
-import { useId } from 'react'
 import type { DeliveryCheckout, DeliveryMode } from 'npm-pkg-hook'
+import { useId } from 'react'
+
 import styles from './styles.module.css'
 const labels: Record<DeliveryMode,string> = {
  NONE:'Retiro o consumo en local. No se cobra domicilio.', MERCHANT:'La tarifa entra en el cobro y es ingreso del comercio.', MERCHANT_EXTERNAL:'El comercio cobra el servicio y asume el costo del proveedor.', THIRD_PARTY_COLLECTED:'El comercio recauda y debe entregar la tarifa al proveedor.', THIRD_PARTY_DIRECT:'El cliente paga el domicilio directamente al proveedor.', MERCHANT_SUBSIDIZED:'El cliente no paga el domicilio; el comercio asume el costo.', MERCHANT_SUBSIDIZED_EXTERNAL:'El comercio cubre el costo del proveedor externo.'
 }
 const costModes = new Set(['MERCHANT','MERCHANT_EXTERNAL','MERCHANT_SUBSIDIZED','MERCHANT_SUBSIDIZED_EXTERNAL'])
 function money(s: string) {const [w,d='00']=s.split('.');return '$ '+w.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+d.padEnd(2,'0')}
-export function DeliveryCheckoutPanel({checkout:c,disabled=false}:{checkout:DeliveryCheckout;disabled?:boolean}) {
+export function DeliveryCheckoutPanel({ checkout:c,disabled=false }:{checkout:DeliveryCheckout;disabled?:boolean}) {
  const uid=useId(), m=c.method, t=c.totals
  const lock=disabled||c.loading
  return <section className={styles.panel} aria-labelledby={`${uid}-title`} aria-busy={c.loading||c.pending}>
