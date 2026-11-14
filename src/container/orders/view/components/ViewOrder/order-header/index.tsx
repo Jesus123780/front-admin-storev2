@@ -1,8 +1,8 @@
 'use client'
 
-import { CopyToClipboard, Icon } from 'pkg-components'
 import React from 'react'
-
+import { CopyToClipboard, Icon } from 'pkg-components'
+import { formatOrderDate, parseOrderDate } from '../helpers/order-format'
 import styles from './order-header.module.css'
 
 export type OrderStatus = {
@@ -26,13 +26,13 @@ const OrderHeader: React.FC<Props> = ({
   statusOrder
 }) => {
   const safeCode = pCodeRef.trim()
-  const label = status?.trim() || 'Estado desconocido'
+  const label = status?.trim() || statusOrder?.name?.trim() || 'Estado desconocido'
   // El backend define los colores del estado. Variables del theme como fallback.
   const badgeStyle: React.CSSProperties = {
     backgroundColor: statusOrder?.backgroundColor || 'var(--color-background-gray-light, #f5f5f5)',
     color: statusOrder?.color || 'var(--color-text-black, #282828)'
   }
-  const validCreatedAt = createdAt && !Number.isNaN(new Date(createdAt).getTime())
+  const validCreatedAt = parseOrderDate(createdAt)
 
   return (
     <header className={styles.header}>
@@ -59,8 +59,8 @@ const OrderHeader: React.FC<Props> = ({
         {createdAt && (
           <div className={styles.date}>
             <span aria-hidden="true"><Icon icon="IconSimpleCalendar" size={17} /></span>
-            <time dateTime={validCreatedAt ? new Date(createdAt).toISOString() : undefined}>
-              {createdAt}
+            <time dateTime={validCreatedAt?.toISOString()}>
+              {formatOrderDate(createdAt)}
             </time>
           </div>
         )}

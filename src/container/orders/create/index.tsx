@@ -1,5 +1,6 @@
 'use client'
 
+import { DeliveryCheckoutPanel } from './DeliveryCheckoutPanel'
 import { useRouter } from 'next/navigation'
 import {
   ConfigurationScope,
@@ -275,6 +276,7 @@ export const CreateSales = ({
     values,
     paymentKind,
     cashCheckout,
+    deliveryCheckout,
     handleCashReceivedChange,
     handleUpdateAllExtra,
     handleAddOptional,
@@ -314,6 +316,7 @@ export const CreateSales = ({
     searchPendingOrders
   } = useSales({
     automaticCashChange: true,
+    deliveryCheckoutEnabled: true,
     disabled: false,
     router,
     sendNotification,
@@ -781,6 +784,7 @@ export const CreateSales = ({
     paymentMethod: paymentMethods.find(method => method.id === data?.payId)?.name ?? 'Sin seleccionar',
     paymentKind,
     cashCheckout,
+    deliverySection: <DeliveryCheckoutPanel checkout={deliveryCheckout} disabled={isSubmitting || loadingRegisterSale} />,
     onCashReceivedChange: handleCashReceivedChange,
     delivery,
     print,
@@ -1122,6 +1126,7 @@ export const CreateSales = ({
         pagination={pagination}
         paymentMethods={paymentMethods}
         paymentKind={paymentKind}
+        deliverySection={<DeliveryCheckoutPanel checkout={deliveryCheckout} disabled={isSubmitting || loadingRegisterSale} />}
         cashCheckout={cashCheckout}
         onCashReceivedChange={handleCashReceivedChange}
         productsFood={productsFood}

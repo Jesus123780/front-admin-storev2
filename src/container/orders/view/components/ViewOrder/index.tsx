@@ -36,6 +36,7 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
   const hasOrder = Boolean(order)
   const orderCode = order?.pCodeRef?.trim() ?? ''
   const allTotals = totals?.totals ?? order?.totals ?? []
+
   return (
     <div
       className={styles.container}
@@ -77,7 +78,7 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
                   store={order?.store}
                   createdAt={order?.createdAt}
                 />
-                <OrderItems items={order?.shoppingCarts ?? []} />
+                <OrderItems items={order?.shoppingCarts ?? []} financials={order?.financials} />
                 <CodeDisplay pCodeRef={orderCode} />
               </div>
 
@@ -85,13 +86,15 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
                 <OrderTotals
                   key={orderCode || '__no_code__'}
                   totals={allTotals}
+                  financials={order?.financials}
                   note={note}
                   onSaveNote={onSaveNote}
                 />
-                <OrderPayments paymentMethod={order?.paymentMethod} />
+                <OrderPayments paymentMethod={order?.paymentMethod} financials={order?.financials} change={order?.change} />
                 <OrderActions
                   handlePrint={handlePrint}
                   disabled={loading || !orderCode}
+                  requiresReview={Boolean(order?.financials && (!order.financials.valid || !order.financials.breakdownVerified))}
                 />
               </aside>
             </div>

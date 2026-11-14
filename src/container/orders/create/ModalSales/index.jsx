@@ -1,6 +1,6 @@
 import {
-  CashPaymentFields,
  AwesomeModal, 
+  CashPaymentFields,
  InputHooks,
 Loading 
 } from 'pkg-components'
@@ -26,6 +26,7 @@ export const ModalSales = ({
   setDelivery = () => { return },
   handleChange = () => { return },
   handleSubmit = () => { return },
+  deliverySection,
   cashCheckout,
   onCashReceivedChange,
   ...rest
@@ -58,6 +59,7 @@ export const ModalSales = ({
         useScroll={true}
         zIndex={printZIndex}
       >
+        {deliverySection}
         {cashCheckout && onCashReceivedChange && (
           <CashPaymentFields checkout={cashCheckout} onReceivedChange={onCashReceivedChange} disabled={Boolean(loading)} />
         )}
@@ -89,6 +91,7 @@ export const ModalSales = ({
         title='Añade el costo del envío'
         zIndex={deliveryZIndex}
       >
+        {deliverySection ?? (
         <InputHooks
           autoComplete='off'
           name='valueDelivery'
@@ -103,6 +106,7 @@ export const ModalSales = ({
           placeholder='Costo de envió'
           value={values?.valueDelivery}
         />
+        )}
         {cashCheckout && onCashReceivedChange ? (
           <CashPaymentFields checkout={cashCheckout} onReceivedChange={onCashReceivedChange} disabled={Boolean(loading)} />
         ) : (
@@ -112,7 +116,7 @@ export const ModalSales = ({
           name='change'
           disabled={!canEditChange}
           onChange={(event, hasError) => {
-            if (canEditChange) handleChange(event, hasError)
+            if (canEditChange) {handleChange(event, hasError)}
           }}
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
@@ -131,6 +135,7 @@ export const ModalSales = ({
 }
 
 ModalSales.propTypes = {
+  deliverySection: PropTypes.node,
   cashCheckout: PropTypes.object,
   onCashReceivedChange: PropTypes.func,
   code: PropTypes.any,

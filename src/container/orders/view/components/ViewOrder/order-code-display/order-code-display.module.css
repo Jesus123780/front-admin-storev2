@@ -15,3 +15,9 @@
 .qr > * { width: 128px; height: 128px; }
 .code { font-size: 14px; letter-spacing: .02em; font-weight: 700; overflow-wrap: anywhere; }
 .empty { color: var(--order-muted, var(--color-text-gray-light, #666)); margin: 0; font-size: 13px; }
+
+/* Design-system theme and global-width reset compatibility. */
+
+.icon{background:var(--order-page-bg,var(--color-background-gray-light,#f5f5f5));color:var(--order-accent,#ea1d2c)}
+.code{width:auto;min-width:0}
+.icon>*{width:auto;max-width:100%}

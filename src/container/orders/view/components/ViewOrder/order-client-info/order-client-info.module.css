@@ -32,3 +32,9 @@
 .storeSection { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--order-border, var(--color-neutral-gray, #e5e5e5)); }
 .storeSection .details { margin-top: 18px; }
 @media (max-width: 570px) { .details { grid-template-columns: minmax(0, 1fr); } }
+
+/* Design-system theme and global-width reset compatibility. */
+
+.headingIcon,.detailIcon{background:var(--order-page-bg,var(--color-background-gray-light,#f5f5f5));color:var(--order-accent,#ea1d2c)}
+@container(max-width:520px){.details{grid-template-columns:minmax(0,1fr)}}
+.headingIcon>*,.detailIcon>*{width:auto;max-width:100%}
