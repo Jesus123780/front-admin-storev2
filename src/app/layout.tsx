@@ -7,7 +7,7 @@ import { ROUTES } from 'pkg-components'
 import { useEffect, useState } from 'react'
 
 import { ElectronUpdateModal } from '@/components/ElectronUpdateModal'
-import { VentyLoadingProvider } from '@/components/Loader/Context/Context'
+import { LoadingProvider } from '@/components/Loader/Context/Context'
 import { Loader } from '@/components/Loader/index'
 import { MemoLayout } from '@/container/Layout'
 import Context from '@/context/Context'
@@ -74,7 +74,7 @@ export default function RootLayout({
       />
 
       <body>
-        <VentyLoadingProvider>
+        <LoadingProvider>
           <ElectronUpdateModal />
 
           <QueryProvider>
@@ -97,7 +97,7 @@ export default function RootLayout({
               </Context>
             )}
           </QueryProvider>
-        </VentyLoadingProvider>
+        </LoadingProvider>
 
         {/* Pantalla inicial durante hidratación */}
         <Loader

@@ -12,7 +12,7 @@ type VisibleStatus =
   | 'downloaded'
   | 'error'
 
-const PREVIEW_KEY = 'venty.updater.preview'
+const PREVIEW_KEY = 'updater.preview'
 
 const getPreviewStatus = (
   value: string | null
@@ -108,10 +108,10 @@ export const ElectronUpdateModal = () => {
 
       setPreviewStatus(preview)
 
-      console.info('[Venty Updater] Preview:', preview)
+      console.info('[Updater] Preview:', preview)
     } catch (error) {
       console.error(
-        '[Venty Updater] Error leyendo preview:',
+        '[Updater] Error leyendo preview:',
         error
       )
     }
@@ -201,7 +201,7 @@ export const ElectronUpdateModal = () => {
         return `La versión ${updateVersion ?? 'nueva'} está lista para instalarse. Guarda tus cambios antes de reiniciar.`
 
       case 'error':
-        return 'Puedes continuar utilizando Venty normalmente.'
+        return 'Puedes continuar utilizando normalmente.'
 
       default:
         return ''

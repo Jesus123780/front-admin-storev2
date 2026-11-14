@@ -1,566 +1,255 @@
+/* Venty receipt. All palette and typography come from the existing design system. */
+.page, .ticket {
+  --receipt-action: var(--color-primary-red-dark, #A21B11);
+  --ticket-surface: var(--color-background-white, #fff);
+  --ticket-text: var(--color-text-black, #282828);
+  --ticket-muted: var(--color-text-gray-light, #666);
+  --ticket-border: var(--color-neutral-gray, #e5e5e5);
+  --ticket-soft: var(--color-background-gray-light, #f5f5f5);
+  --ticket-accent: var(--color-campaigns-red, #ea1d2c);
+  --ticket-success: var(--color-text-black, #282828);
+  --ticket-max: 400px;
+  --ticket-inset: clamp(16px, 5cqi, 25px);
+  --ticket-notch: 9px;
+  --ticket-tooth: 12px;
+  --ticket-tooth-height: 6px;
+  --ticket-enter: 620ms;
+  --ticket-reveal: 420ms;
+  --ticket-ease: cubic-bezier(.22,1,.36,1);
+}
 .page {
-  position: relative;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  gap: var(--spacing-xl, 16px);
   width: 100%;
-  min-height: 100%;
-  padding: 24px 16px 48px;
-  box-sizing: border-box;
-  background: #f5f6f8;
+  min-width: 0;
+  padding: var(--spacing-xl, 16px) clamp(8px, 3vw, 24px) var(--spacing-3xl, 32px);
+  background: transparent;
+  color: var(--ticket-text);
+  font-family: var(--font-family-regular, system-ui), sans-serif;
+  container: receipt-page / inline-size;
 }
-
-.ticketWrapper {
-  display: flex;
-  justify-content: flex-start;
-  width: 100%;
-}
-
-/* ========================================
-   TICKET
-======================================== */
-
+.ticketWrapper { display: flex; justify-content: flex-start; width: 100%; min-width: 0; }
+.stage { width: 100%; max-width: var(--ticket-max); min-width: 0; }
+.ticket, .ticket *, .ticket *::before, .ticket *::after { box-sizing: border-box; }
 .ticket {
   position: relative;
-  width: 100%;
-  max-width: 390px;
-  overflow: hidden;
-  box-sizing: border-box;
-  padding: 28px 24px 22px;
-  border-radius: 4px;
-  background: #ffffff;
-  color: #1f2937;
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Monaco,
-    Consolas,
-    "Liberation Mono",
-    "Courier New",
-    monospace;
-
-  box-shadow:
-    0 20px 45px rgba(15, 23, 42, 0.08),
-    0 4px 12px rgba(15, 23, 42, 0.05);
-}
-
-/* ========================================
-   HEADER
-======================================== */
-
-.header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.logoWrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 72px;
-  margin-bottom: 12px;
-  overflow: hidden;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-
-  background: #ffffff;
-}
-
-.logo {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.storeName {
-  margin: 0;
-
-  color: #111827;
-
-  font-size: 17px;
-  font-weight: 800;
-  line-height: 1.3;
-  letter-spacing: -0.02em;
-}
-
-.storeInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-
-  max-width: 100%;
-  margin-top: 8px;
-
-  color: #6b7280;
-
-  font-size: 10px;
-  line-height: 1.5;
-
-  word-break: break-word;
-}
-
-/* ========================================
-   REFERENCIA
-======================================== */
-
-.reference {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  margin-top: 18px;
-  padding: 12px 14px;
-
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-
-  background: #f9fafb;
-}
-
-.referenceLabel {
-  color: #9ca3af;
-
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.referenceCode {
-  margin-top: 3px;
-
-  color: #111827;
-
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.referenceDate {
-  margin-top: 3px;
-
-  color: #6b7280;
-
-  font-size: 9px;
-}
-
-/* ========================================
-   CLIENTE
-======================================== */
-
-.clientBox {
-  margin-top: 14px;
-  padding: 12px;
-
-  border-radius: 8px;
-
-  background: #f8fafc;
-}
-
-.sectionTitle {
-  margin-bottom: 8px;
-
-  color: #374151;
-
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.clientGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.clientItem {
-  display: flex;
-  justify-content: space-between;
-
-  gap: 12px;
-
-  font-size: 10px;
-  line-height: 1.4;
-}
-
-.clientItem span {
-  color: #9ca3af;
-}
-
-.clientItem strong {
-  max-width: 65%;
-
-  color: #374151;
-
-  font-weight: 600;
-  text-align: right;
-
-  word-break: break-word;
-}
-
-/* ========================================
-   DIVIDER
-======================================== */
-
-.divider {
-  width: 100%;
-  margin: 16px 0;
-
-  border-top: 1px dashed #d1d5db;
-}
-
-/* ========================================
-   TÍTULO
-======================================== */
-
-.ticketTitle {
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-
-  margin: 4px 0 14px;
-}
-
-.ticketTitle h2 {
-  margin: 0;
-
-  color: #111827;
-
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-
-  white-space: nowrap;
-}
-
-.ticketTitleLine {
-  flex: 1;
-
-  height: 1px;
-
-  background: #e5e7eb;
-}
-
-/* ========================================
-   PRODUCTOS
-======================================== */
-
-.products {
-  width: 100%;
-}
-
-.tableHead,
-.productRow,
-.extraRow {
-  display: grid;
-
-  grid-template-columns:
-    minmax(0, 2fr)
-    minmax(28px, 0.6fr)
-    minmax(48px, 1fr)
-    minmax(52px, 1fr);
-
-  gap: 6px;
-
-  align-items: start;
-}
-
-.tableHead {
-  padding-bottom: 7px;
-
-  border-bottom: 1px solid #e5e7eb;
-
-  color: #9ca3af;
-
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.tableHead span:not(:first-child) {
-  text-align: right;
-}
-
-.tableBody {
-  display: flex;
-  flex-direction: column;
-
-  gap: 8px;
-
-  margin-top: 9px;
-}
-
-.productRow {
-  color: #374151;
-
-  font-size: 10px;
-  line-height: 1.45;
-}
-
-.description {
+  max-width: var(--ticket-max, 400px);
   min-width: 0;
-
+  color: var(--ticket-text, #282828);
+  font-family: var(--font-family-regular, system-ui), sans-serif;
+  font-size: var(--font-size-md, 14px);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
-
-  text-align: left;
+  /* Shadow follows the actual alpha outline rather than a rectangle. */
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / .045)) drop-shadow(0 13px 18px rgb(0 0 0 / .085));
 }
-
-.number {
-  text-align: right;
-
-  font-variant-numeric: tabular-nums;
-
-  white-space: nowrap;
-}
-
-.productRow .number:last-child {
-  color: #111827;
-
-  font-weight: 700;
-}
-
-/* ========================================
-   EXTRAS
-======================================== */
-
-.extraRow {
-  color: #6b7280;
-
-  font-size: 9px;
-}
-
-.extraRow .description {
-  padding-left: 8px;
-}
-
-.extraIndicator {
-  display: inline-block;
-
-  margin-right: 3px;
-
-  color: #9ca3af;
-
-  font-weight: 700;
-}
-
-.optionalRow {
-  padding: 2px 0 0 8px;
-
-  color: #4b5563;
-
-  font-size: 9px;
-  font-weight: 700;
-}
-
-.free {
-  color: #6b7280;
-
-  font-size: 8px;
-  font-style: italic;
-
-  text-align: right;
-}
-
-/* ========================================
-   RESUMEN
-======================================== */
-
-.summary {
-  display: flex;
-  flex-direction: column;
-
-  gap: 7px;
-}
-
-.summaryRow,
-.totalRow,
-.paymentMethod {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 12px;
-}
-
-.summaryRow {
-  color: #6b7280;
-
-  font-size: 10px;
-}
-
-.summaryRow span:last-child {
-  color: #374151;
-
-  font-variant-numeric: tabular-nums;
-}
-
-.totalRow {
-  padding: 11px 0;
-
-  border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
-
-  color: #111827;
-
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.totalRow strong {
-  font-size: 16px;
-
-  font-variant-numeric: tabular-nums;
-}
-
-.paymentMethod {
-  margin-top: 2px;
-
-  color: #9ca3af;
-
-  font-size: 9px;
-}
-
-.paymentMethod strong {
-  color: #4b5563;
-
-  font-weight: 600;
-
-  text-transform: capitalize;
-}
-
-/* ========================================
-   FOOTER
-======================================== */
-
-.footer {
-  padding-top: 18px;
-
-  text-align: center;
-}
-
-.thanks {
-  margin: 0;
-
-  color: #111827;
-
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.footerMessage {
-  margin: 5px 0 0;
-
-  color: #9ca3af;
-
-  font-size: 8px;
-}
-
-/* ========================================
-   BORDE DENTADO
-======================================== */
-
-.zigzag {
-  position: absolute;
-
-  right: 0;
-  bottom: -1px;
-  left: 0;
-
-  height: 7px;
-
+.ticket h1, .ticket h2, .ticket h3, .ticket h4, .ticket p, .ticket dl, .ticket dd, .ticket dt, .ticket ul, .ticket li { margin: 0; padding: 0; min-width: 0; width: auto; }
+.ticket ul { list-style: none; }
+.paperTop, .paperBody, .paperBottom { display: block; min-width: 0; width: 100%; padding-inline: var(--ticket-inset); background: var(--ticket-surface); }
+.paperTop { padding-block: 23px 17px; border-radius: var(--border-radius-sm, 10px) var(--border-radius-sm, 10px) 0 0; }
+.paperBody { padding-block: var(--spacing-xl, 16px); }
+.paperBottom { padding-block: var(--spacing-xl, 16px) var(--spacing-2xl, 24px); }
+/* Physical cuts at the exact seam in normal flow. If gradients are unsupported,
+   the stable rectangular paper remains usable. The transparent areas are real. */
+.perforation {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: calc(2 * var(--ticket-notch));
+  background: var(--ticket-surface);
   background:
-    linear-gradient(
-      135deg,
-      transparent 50%,
-      #f5f6f8 50%
-    )
-    0 0 / 10px 10px repeat-x,
-
-    linear-gradient(
-      45deg,
-      transparent 50%,
-      #f5f6f8 50%
-    )
-    5px 0 / 10px 10px repeat-x;
+    radial-gradient(circle at 0 50%, transparent calc(var(--ticket-notch) - .4px), var(--ticket-surface) var(--ticket-notch)) left / 50.1% 100% no-repeat,
+    radial-gradient(circle at 100% 50%, transparent calc(var(--ticket-notch) - .4px), var(--ticket-surface) var(--ticket-notch)) right / 50.1% 100% no-repeat;
 }
-
-/* ========================================
-   ACCIONES
-======================================== */
-
-.actionFooter {
-  display: flex;
-  justify-content: center;
-
-  margin-top: 20px;
-}
-
-/* ========================================
-   RESPONSIVE
-======================================== */
-
-@media (max-width: 480px) {
-  .page {
-    padding: 12px 8px 32px;
-  }
-
-  .ticket {
-    max-width: 100%;
-
-    padding: 24px 16px 20px;
-
-    border-radius: 4px;
-  }
-
-  .tableHead,
-  .productRow,
-  .extraRow {
-    grid-template-columns:
-      minmax(0, 1.8fr)
-      minmax(24px, 0.55fr)
-      minmax(44px, 0.9fr)
-      minmax(48px, 0.9fr);
-
-    gap: 4px;
+.perforation > span { position: absolute; inset-inline: calc(var(--ticket-notch) + 7px); top: 50%; width: auto; height: 0; border-top: 1px dashed var(--ticket-border); pointer-events: none; }
+.zigzag { display: block; width: 100%; height: var(--ticket-tooth-height); background: var(--ticket-surface); }
+@supports (mask-image: linear-gradient(black, transparent)) {
+  .zigzag {
+    mask-image: conic-gradient(from -45deg at 50% 100%, #000 90deg, transparent 0);
+    mask-size: var(--ticket-tooth) var(--ticket-tooth-height);
+    mask-repeat: repeat-x;
   }
 }
-
-/* ========================================
-   PRINT
-======================================== */
-
+/* Commerce identity */
+.header { display: flex; align-items: center; flex-direction: column; gap: 9px; text-align: center; }
+.brandMark { width: auto; display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-family: var(--font-family-bold, sans-serif), sans-serif; font-size: var(--font-size-xs, 11px); font-weight: 700; letter-spacing: .16em; color: var(--ticket-muted); }
+.brandMark span { color: var(--ticket-accent); }
+.logoWrapper { display: grid; place-items: center; width: min(120px, 100%); height: 64px; margin-block: 3px; overflow: hidden; }
+.logoWrapper .logo { display: block; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; }
+.ticket .storeName { max-width: 100%; color: var(--ticket-text); font-family: var(--font-family-bold, sans-serif), sans-serif; font-weight: 700; font-size: clamp(19px, 6cqi, 25px); letter-spacing: -.035em; line-height: 1.18; }
+.storeInfo { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--ticket-muted); font-size: var(--font-size-sm, 12px); line-height: 1.55; }
+.storeInfo span { width: auto; max-width: 100%; }
+.reference { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 5px; margin-top: var(--spacing-xl, 16px); padding: var(--spacing-lg, 12px) var(--spacing-md, 8px); border: 1px solid var(--ticket-border); border-radius: var(--border-radius-md, 12px); }
+.ticket .eyebrow { width: auto; color: var(--ticket-muted); font-family: var(--font-family-medium, sans-serif), sans-serif; font-size: var(--font-size-xs, 11px); line-height: 1.4; font-weight: 600; letter-spacing: .055em; text-transform: uppercase; }
+.referenceCode { width: auto; max-width: 100%; font-family: var(--font-family-bold, sans-serif), sans-serif; font-size: var(--font-size-xl, 18px); font-weight: 700; letter-spacing: -.025em; line-height: 1.3; overflow-wrap: anywhere; }
+.referenceDate { color: var(--ticket-muted); font-size: var(--font-size-sm, 12px); width: auto; }
+/* Customer and financial metadata */
+.clientBox { display: block; width: 100%; margin-bottom: var(--spacing-2xl, 24px); }
+.ticket .clientGrid { display: grid; gap: 6px; margin-top: 9px; }
+.metaRow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--spacing-md, 8px); align-items: baseline; }
+.metaRow dt { color: var(--ticket-muted); font-size: var(--font-size-sm, 12px); }
+.metaRow dd { color: var(--ticket-text); text-align: end; font-size: var(--font-size-sm, 12px); font-weight: 600; overflow-wrap: anywhere; }
+/* Two-column layout: one line total; unit price and qty in subordinate line. */
+.productsHeader { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 5px 8px; min-width: 0; }
+.ticket .productsHeader h2 { flex: 0 1 auto; font-family: var(--font-family-bold, sans-serif), sans-serif; font-size: var(--font-size-lg, 16px); line-height: 1.3; font-weight: 700; letter-spacing: -.02em; }
+.productsHeader > span { color: var(--ticket-muted); font-size: var(--font-size-sm, 12px); width: auto; }
+.columns { display: flex; justify-content: space-between; gap: var(--spacing-md, 8px); padding-block: 12px 6px; border-bottom: 1px solid var(--ticket-border); color: var(--ticket-muted); font-size: var(--font-size-xs, 11px); }
+.columns span { width: auto; }
+.ticket .productList { display: block; width: 100%; }
+.ticket .product { padding-block: 14px; border-bottom: 1px solid var(--ticket-border); }
+.ticket .product:last-child { border-bottom: 0; padding-bottom: 1px; }
+.productRow, .extraRow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 42%); align-items: start; gap: 10px; min-width: 0; }
+.productInfo { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.ticket .productName { color: var(--ticket-text); font-size: var(--font-size-md, 14px); font-family: var(--font-family-bold, sans-serif), sans-serif; line-height: 1.4; font-weight: 700; }
+.itemMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; color: var(--ticket-muted); font-size: var(--font-size-sm, 12px); }
+.itemMeta > span { width: auto; }
+.ticket .courtesyTag { display: inline-flex; flex: 0 0 auto; width: fit-content; height: auto; min-height: 18px; margin: 0; padding: 3px 7px; background: var(--ticket-soft); color: var(--ticket-success); border: 1px solid var(--ticket-border); border-radius: var(--border-radius-full, 999px); text-transform: none; font-size: 10px; }
+.lineAmount { display: flex; align-items: flex-end; flex-direction: column; gap: 2px; min-width: 0; text-align: end; }
+.lineAmount strong { width: auto; max-width: 100%; font-size: var(--font-size-md, 14px); line-height: 1.35; font-weight: 700; overflow-wrap: anywhere; }
+.lineAmount del { width: auto; color: var(--ticket-muted); font-size: var(--font-size-xs, 11px); }
+.addons { display: grid; gap: 9px; margin-block-start: 10px; padding-inline-start: 10px; border-inline-start: 2px solid var(--ticket-border); min-width: 0; }
+.ticket .extras { display: grid; gap: 7px; }
+.ticket .extraRow { display: grid; }
+.extraRow > div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.extraName { color: var(--ticket-text); font-size: var(--font-size-sm, 12px); }
+.extraMeta, .extraAmount { color: var(--ticket-muted); font-size: var(--font-size-xs, 11px); }
+.extraAmount { color: var(--ticket-text); font-size: var(--font-size-sm, 12px); text-align: end; }
+.options { display: grid; gap: 8px; }
+.ticket .optionGroup h4 { color: var(--ticket-muted); font-size: var(--font-size-xs, 11px); font-weight: 600; line-height: 1.5; }
+.ticket .optionGroup ul { display: flex; flex-wrap: wrap; gap: 3px 5px; margin-top: 4px; }
+.ticket .optionGroup li { border: 1px solid var(--ticket-border); border-radius: var(--border-radius-2xs, 4px); background: var(--ticket-soft); padding: 2px 6px; max-width: 100%; color: var(--ticket-text); font-size: var(--font-size-xs, 11px); line-height: 1.4; }
+.ticket .comment { color: var(--ticket-muted); font-size: var(--font-size-xs, 11px); white-space: pre-wrap; }
+.ticket .empty { padding-block: var(--spacing-xl, 16px); color: var(--ticket-muted); font-size: var(--font-size-sm, 12px); }
+/* Financial focal point */
+.ticket .summaryMeta { display: grid; gap: 9px; }
+.totalBox { display: flex; flex-direction: column; gap: 5px; padding: var(--spacing-lg, 12px) var(--spacing-xl, 16px); margin-top: 15px; border: 1px solid var(--ticket-border); border-radius: var(--border-radius-md, 12px); background: var(--ticket-soft); min-width: 0; }
+.totalLabel { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; color: var(--ticket-muted); font-size: var(--font-size-sm, 12px); }
+.totalLabel small { width: auto; font-size: var(--font-size-xs, 11px); font-weight: 600; letter-spacing: .05em; }
+.totalAmount { display: block; width: 100%; color: var(--ticket-text); font-family: var(--font-family-bold, sans-serif), sans-serif; font-size: clamp(24px, 8cqi, 36px); font-weight: 700; line-height: 1.15; letter-spacing: -.05em; overflow-wrap: anywhere; }
+.ticket .dataNotice { border-inline-start: 2px solid var(--color-feedback-warning-dark, #CC870F); padding-inline-start: 8px; margin-top: 12px; font-size: var(--font-size-xs, 11px); color: var(--ticket-text); }
+.footer { text-align: center; padding-top: var(--spacing-2xl, 24px); }
+.footerMark { display: inline-block; width: auto; font-family: var(--font-family-bold, sans-serif), sans-serif; font-size: var(--font-size-xl, 18px); font-weight: 700; letter-spacing: -.07em; line-height: 1; color: var(--ticket-text); }
+.footerMark span { color: var(--ticket-accent); }
+.ticket .thanks { margin-top: 7px; font-weight: 600; font-size: var(--font-size-sm, 12px); }
+.ticket .footerMessage { margin-top: 3px; font-size: var(--font-size-xs, 11px); color: var(--ticket-muted); }
+/* Actions are outside the referenced document. */
+.actionFooter { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; max-width: var(--ticket-max); }
+.actionFooter .actionButton { min-height: 48px; border-radius: var(--border-radius-md, 12px); }
+.actionContent { display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-md, 8px); width: auto; font-weight: 600; }
+.actionContent > span { display: inline-flex; width: auto; }
+.actionFooter button:focus-visible { outline: 2px solid var(--color-secondary-blue, #0062ff); outline-offset: 3px; }
+.submitError { margin: 0; color: var(--ticket-text); border-inline-start: 2px solid var(--color-feedback-error-dark, #ee0000); padding: 8px; font-size: var(--font-size-sm, 12px); }
+/* Geometry only. Keep long documents static to avoid a giant composited layer. */
+@media (prefers-reduced-motion: no-preference) {
+  .ticket[data-printing='false'][data-long='false'] { animation: paperFeed var(--ticket-enter) var(--ticket-ease); }
+  .ticket[data-printing='false'][data-long='false'] .totalAmount { animation: totalSettle var(--ticket-reveal) var(--ticket-ease) 130ms both; transform-origin: left center; }
+  .page[data-printing='false'] .actionFooter .actionButton { transition: transform 150ms ease; }
+  .actionFooter .actionButton:not(:disabled):active { transform: scale(.985); }
+}
+@keyframes paperFeed { from { clip-path: inset(0 0 100% 0); transform: translateY(-8px); } to { clip-path: inset(-42px -42px -42px -42px); transform: translateY(0); } }
+@keyframes totalSettle { from { transform: translateY(5px) scale(.98); } to { transform: translateY(0) scale(1); } }
+.ticket[data-printing='true'], .ticket[data-printing='true'] * { animation: none !important; transition: none !important; transform: none !important; clip-path: none !important; }
+@container receipt-page (max-width: 300px) {
+  .ticket { --ticket-inset: 14px; --ticket-notch: 7px; }
+  .productRow, .extraRow { gap: 6px; grid-template-columns: minmax(0, 1fr) minmax(0, 44%); }
+  .totalBox { padding-inline: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .ticket, .ticket *, .actionFooter *, .actionFooter *::before, .actionFooter *::after { animation: none !important; transition: none !important; } }
+@media (forced-colors: active) { .ticket { filter: none; } .paperTop, .paperBody, .paperBottom { border-inline: 1px solid CanvasText; } .perforation { border-bottom: 1px dashed CanvasText; } }
+/* PRINT: isolated ticket or parent document supplied by the caller. No global @page
+   rule: do not alter other print routes. Printer driver defines actual paper size. */
 @media print {
-  .page {
-    padding: 0;
-
-    background: #ffffff;
-  }
-
-  .ticketWrapper {
-    width: 100%;
-  }
-
+  .page { padding: 0 !important; background: #fff !important; display: block; container-type: normal; }
+  .ticketWrapper, .stage { display: block; width: 100%; max-width: none; }
   .ticket {
-    max-width: none;
-
-    border-radius: 0;
-
-    box-shadow: none;
+    --ticket-surface: #fff; --ticket-text: #000; --ticket-muted: #222; --ticket-border: #777; --ticket-soft: #fff; --ticket-accent: #000; --ticket-success: #000;
+    --ticket-inset: 0px; --ticket-print-default: 100%;
+    width: 100%; max-width: var(--ticket-print-width, var(--ticket-print-default)); margin-inline: auto;
+    display: block; filter: none !important; overflow: visible !important; clip-path: none !important;
+    color: #000; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.3;
   }
-
-  .actionFooter {
-    display: none;
-  }
-
-  .logoWrapper {
-    border: none;
-  }
+  .ticket[data-paper='58mm'] { --ticket-print-default: 48mm; }
+  .ticket[data-paper='80mm'] { --ticket-print-default: 72mm; }
+  .ticket[data-paper='a4'] { --ticket-print-default: 100mm; }
+  .ticket, .ticket *, .ticket *::before, .ticket *::after { animation: none !important; transition: none !important; transform: none !important; box-shadow: none !important; filter: none !important; background: transparent !important; color: #000 !important; }
+  .paperTop, .paperBody, .paperBottom { display: block; padding: 3mm 0; border: none; border-radius: 0; overflow: visible !important; }
+  .header, .reference, .clientBox, .totalBox, .footer { break-inside: avoid; }
+  .ticket .product { break-inside: auto; }
+  .productRow, .extraRow, .optionGroup, .summaryMeta .metaRow { break-inside: avoid; }
+  .ticket .productName, .ticket .productsHeader h2 { break-after: avoid; }
+  .ticket .logoWrapper { width: 26mm; height: 13mm; }
+  .ticket .logo { filter: grayscale(1) !important; }
+  .ticket .storeName { font-size: 13pt; }
+  .reference { border: none; padding: 2mm 0 0; margin-top: 2mm; }
+  .perforation { height: 0; border-top: 1px dashed #555; background: none !important; }
+  .perforation > span, .zigzag, .actionFooter, .brandMark { display: none !important; }
+  .productRow, .extraRow { grid-template-columns: minmax(0, 1fr) minmax(0, 44%); gap: 2mm; }
+  .ticket .product { padding-block: 2mm; }
+  .ticket .productName, .lineAmount strong { font-size: 9pt; }
+  .ticket .itemMeta, .extraName, .extraAmount, .metaRow dt, .metaRow dd { font-size: 8pt; }
+  .ticket .optionGroup li { border: none; padding: 0; }
+  .ticket .optionGroup li:not(:last-child)::after { content: ','; }
+  .totalBox { border: 0; border-block: 1px solid #000; border-radius: 0; padding: 3mm 0; }
+  .totalAmount { font-size: 17pt; letter-spacing: -.02em; }
+  .footer { padding-top: 3mm; }
 }
+
+/* v3 — commercial receipt hierarchy, preserving the perforated paper. */
+.page, .ticket {
+  --ticket-max: 420px;
+  --ticket-saving: color-mix(in srgb, var(--color-text-success, #50a773) 55%, var(--ticket-text) 45%);
+  --ticket-warning: var(--color-feedback-warning-dark, #CC870F);
+}
+.ticket .reference { background: var(--ticket-soft); border: 0; }
+.ticket .storeName { font-size: clamp(20px, 6cqi, 26px); }
+.ticket .product { padding-block: var(--spacing-xl, 16px); }
+.ticket .productName { font-size: var(--font-size-lg, 16px); }
+.ticket .itemMeta { font-size: var(--font-size-sm, 12px); }
+.ticket .lineAmount strong { font-size: var(--font-size-lg, 16px); }
+.ticket .discountText { display: block; width: auto; color: var(--ticket-saving); font-size: var(--font-size-sm, 12px); font-weight: 600; line-height: 1.45; }
+.ticket .naturalZero, .ticket .sku { color: var(--ticket-muted); font-size: var(--font-size-xs, 11px); }
+.ticket .courtesyTag { color: var(--ticket-saving); background: color-mix(in srgb, var(--ticket-saving) 9%, var(--ticket-surface)); border: 0; }
+.ticket .addonHeading { margin-bottom: var(--spacing-md, 8px); color: var(--ticket-muted); font-size: var(--font-size-xs, 11px); font-weight: 600; }
+.addonGroup { min-width: 0; }
+.extraAmount del { display: block; color: var(--ticket-muted); font-size: var(--font-size-xs, 11px); }
+.optionGroup h4 small { font-weight: 400; font-size: inherit; }
+.ticket .optionGroup ul { display: block; }
+.ticket .optionGroup li { display: inline; border: 0; padding: 0; background: none; font-size: var(--font-size-sm, 12px); }
+.ticket .optionGroup li:not(:last-child)::after { content: ', '; }
+.ticket .summaryHeading { font-size: var(--font-size-lg, 16px); font-weight: 700; letter-spacing: -.02em; margin-bottom: var(--spacing-xl, 16px); }
+.ticket .summaryMeta .metaRow dt, .ticket .summaryMeta .metaRow dd { font-size: var(--font-size-md, 14px); }
+.ticket .metaRow[data-saving='true'] dd { color: var(--ticket-saving); }
+.ticket .totalBox { background: none; border: 0; border-top: 1px solid var(--ticket-border); border-radius: 0; padding: var(--spacing-xl, 16px) 0 var(--spacing-md, 8px); margin-top: var(--spacing-xl, 16px); }
+.ticket .totalLabel { font-weight: 600; }
+.ticket .totalAmount { font-size: clamp(28px, 9cqi, 38px); }
+.paymentBox { display: grid; gap: var(--spacing-md, 8px); padding: var(--spacing-lg, 12px); margin-top: var(--spacing-md, 8px); background: var(--ticket-soft); border-radius: var(--border-radius-md, 12px); min-width: 0; }
+.paymentIdentity { display: flex; align-items: center; gap: var(--spacing-lg, 12px); min-width: 0; }
+.paymentIcon { display: grid; flex: 0 0 36px; place-items: center; width: 36px; height: 36px; border-radius: var(--border-radius-sm, 10px); background: var(--ticket-surface); border: 1px solid var(--ticket-border); color: var(--ticket-text); }
+.paymentText { display: grid; gap: 2px; flex: 1; width: auto; min-width: 0; }
+.paymentText span { color: var(--ticket-muted); font-size: var(--font-size-xs, 11px); }
+.paymentText strong { color: var(--ticket-text); font-size: var(--font-size-md, 14px); }
+.ticket .paymentChange { border-top: 1px solid var(--ticket-border); padding-top: var(--spacing-md, 8px); }
+.operatorNotice { box-sizing: border-box; width: 100%; max-width: var(--ticket-max); min-width: 0; border: 1px solid var(--ticket-border); border-inline-start: 3px solid var(--ticket-warning); border-radius: var(--border-radius-sm, 10px); padding: var(--spacing-lg, 12px); background: var(--ticket-surface); color: var(--ticket-text); font-size: var(--font-size-sm, 12px); line-height: 1.5; overflow-wrap: anywhere; }
+.operatorNotice ul { width: auto; margin: 4px 0 0; padding-inline-start: 18px; }
+.operatorNotice li { width: auto; }
+@media print {
+  .operatorNotice { display: none !important; }
+  .ticket .productName, .ticket .lineAmount strong, .ticket .summaryHeading { font-size: 9pt; }
+  .ticket .summaryMeta .metaRow dt, .ticket .summaryMeta .metaRow dd, .ticket .discountText, .ticket .optionGroup li { font-size: 8pt; }
+  .ticket .totalAmount { font-size: 17pt; }
+  .ticket .paymentBox { border: 0; padding: 2mm 0; break-inside: avoid; }
+  .ticket .paymentIcon { display: none; }
+  .ticket .reference { background: transparent !important; }
+  .ticket .totalBox { border-block: 1px solid #000; padding: 2mm 0; }
+}
+.debugActions { box-sizing: border-box; width: 100%; max-width: var(--ticket-max); display: grid; gap: 8px; color: var(--ticket-muted); font-size: var(--font-size-sm, 12px); }
+.debugActions p { margin: 0; }
+.debugActions button { min-height: 44px; background: var(--ticket-surface); color: var(--ticket-text); border: 1px solid var(--ticket-border); border-radius: var(--border-radius-md, 12px); font: inherit; cursor: pointer; }
+.debugActions button:focus-visible { outline: 2px solid var(--color-secondary-blue, #0062ff); outline-offset: 3px; }
+@media print { .debugActions { display: none !important; } }

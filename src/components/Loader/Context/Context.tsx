@@ -24,7 +24,7 @@ interface LoadingContextValue {
 const LoadingContext =
   createContext<LoadingContextValue | null>(null)
 
-export function VentyLoadingProvider({
+export function LoadingProvider({
   children
 }: {
   children: ReactNode
@@ -104,7 +104,7 @@ export function useVentyLoading() {
 
   if (!context) {
     throw new Error(
-      'useVentyLoading debe usarse dentro de VentyLoadingProvider'
+      'useVentyLoading debe usarse dentro de LoadingProvider'
     )
   }
 

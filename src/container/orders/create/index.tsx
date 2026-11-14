@@ -6,13 +6,11 @@ import {
   generateStoreURL,
   useAmountInput,
   useFilterConfigs,
-  useFormatDate,
   useGetAllPaymentMethods,
   useGetClients,
   useGetResolvedConfiguration,
   usePrintSaleTicket,
   usePushNotifications,
-  // useReactToPrint,
   useSales,
   useScanFeedback,
   useStore,
@@ -31,7 +29,6 @@ import {
   getGlobalStyle,
   InputHooks,
   numberFormat,
-  ROUTES,
   Row
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
@@ -40,9 +37,12 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState
 } from 'react'
+
+import { MENU_OPTIONS } from '@/context/helpers'
 
 import { Context } from '../../../context/Context'
 import { ModalScanner } from '../../ModalScanner'
@@ -52,7 +52,7 @@ import { ModalSales } from './ModalSales'
 import { ProductNotFoundDialog } from './ProductNotFoundDialog'
 import { SubItems } from './SubItems'
 import { SuccessSaleModal } from './Success'
-import { MENU_OPTIONS } from '@/context/helpers'
+import { createInvoiceSnapshot, confirmInvoiceSnapshot, toLegacyInvoiceData, type InvoiceSnapshot } from './sale-invoice-snapshot.ts'
 
 /* =========================================================
    SALES TABLE CONFIGURATION
@@ -157,23 +157,26 @@ export const CreateSales = ({
     setSalesOpen,
     handleClick
   } = useContext(Context)
-  const [client, setClient] = useState({
-    clientName: '',
-    ccClient: '',
-    ClientAddress: '',
-    clientNumber: ''
-  })
+
   // Explicit, app-owned signal for the post-sale success UX. Decoupled from the
   // hook's internal `openCurrentSale` so the Success modal has a single source
   // of truth and no competing states.
   const [saleSuccess, setSaleSuccess] = useState(false)
+  const [confirmedCode, setConfirmedCode] = useState<string | null>(null)
+  const [previewDate, setPreviewDate] = useState<number | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const submitLockRef = useRef(false)
+  const completedCheckoutRef = useRef(false)
+  const pendingInvoiceRef = useRef<InvoiceSnapshot | null>(null)
+  const confirmedInvoiceRef = useRef<InvoiceSnapshot | null>(null)
+  const printLockRef = useRef(false)
+  const downloadLockRef = useRef(false)
   const [dataClientes, { loading: loadingClients }] = useGetClients()
-  const date = new Date()
   const [fetchMoreLoader, setFetchMoreLoader] = useState(false)
+  const fetchMoreLockRef = useRef(false)
   const [isPrinting, setIsPrinting] = useState(false)
-  const [prod, setProd] = useState(null)
-  const componentRef = useRef(null)
-  const promiseResolveRef = useRef(null)
+  const componentRef = useRef<HTMLDivElement | null>(null)
+  const promiseResolveRef = useRef<(() => void) | null>(null)
   const router = useRouter()
   const [dataStore] = useStore()
   const [storeTables] = useStoreTables()
@@ -192,7 +195,8 @@ export const CreateSales = ({
   // con la animación "pop". null = sin resaltado. Se limpia tras ~1.2s para
   // permitir re-disparar la animación al escanear el mismo producto de nuevo.
   const [highlightedPid, setHighlightedPid] = useState(null)
-  const highlightTimerRef = useRef(null)
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const highlightFrameRef = useRef<number | null>(null)
   // Retroalimentación sonora/vibración del escaneo (Web Audio API).
   const {
     soundEnabled,
@@ -202,30 +206,30 @@ export const CreateSales = ({
     vibrate
   } = useScanFeedback()
 
-  // Web Push: only the subscription flag and the server-send action are needed
-  // here to notify when a sale is registered from this screen.
-  const {
-    isSubscribed,
-    onClickShowLocalNotification
-  } = usePushNotifications()
-
-  // Guards against sending a duplicate push for the same sale code if
-  // onSaleSuccess fires more than once for a single registration.
-  const notifiedSaleCodesRef = useRef(new Set())
-
-  // Holds the latest push sender so the stable onSaleSuccess callback (captured
-  // once by useSales) always runs against current subscription state, avoiding
-  // a stale closure.
-  const notifyNewSaleRef = useRef(() => { })
-  notifyNewSaleRef.current = (saleCode) => {
-    if (!isSubscribed || !saleCode) {
-      return
+  // Keep one local notification per confirmed sale. Remote push is a separate
+  // integration; sending both here could duplicate the notification.
+  const { onClickShowLocalNotification } = usePushNotifications()
+  const notifiedSaleCodesRef = useRef(new Set<string>())
+  const notifyNewSaleRef = useRef<(saleCode: string) => void>(() => {})
+  useEffect(() => {
+    notifyNewSaleRef.current = (saleCode) => {
+      const seen = notifiedSaleCodesRef.current
+      if (!saleCode || seen.has(saleCode)) return
+      seen.add(saleCode)
+      if (seen.size > 256) {
+        const first = seen.values().next().value
+        if (first !== undefined) seen.delete(first)
+      }
+      void Promise.resolve().then(() => onClickShowLocalNotification({
+        title: 'Nueva venta',
+        description: `Venta ${saleCode}`,
+        url: `/orders/${encodeURIComponent(saleCode)}`,
+        tag: `sale-${saleCode}`
+      })).catch(() => {
+        // Notification failure must never change the outcome of a confirmed sale.
+      })
     }
-    if (notifiedSaleCodesRef.current.has(saleCode)) {
-      return
-    }
-    notifiedSaleCodesRef.current.add(saleCode)
-  }
+  }, [onClickShowLocalNotification])
 
   const onCloseModalSale = () => {
     setMessagesToast([])
@@ -245,7 +249,7 @@ export const CreateSales = ({
     loadingRegisterSale,
     handleChange,
     handleProduct,
-    handleSubmit,
+    handleSubmit: submitSale,
     loading,
     modalItem,
     oneProductToComment,
@@ -255,6 +259,7 @@ export const CreateSales = ({
     print,
     product,
     discount,
+    discountableSubtotal,
     setProduct,
     productsFood,
     pagination,
@@ -268,6 +273,9 @@ export const CreateSales = ({
     handleComment,
     totalProductPrice,
     values,
+    paymentKind,
+    cashCheckout,
+    handleCashReceivedChange,
     handleUpdateAllExtra,
     handleAddOptional,
     handleIncrementExtra,
@@ -282,7 +290,6 @@ export const CreateSales = ({
     handleChangeFilter,
     setValues,
     handleChangeCheck,
-    code,
     handleSavePendingOrder,
 
     // Filtros del modal (reusables): traducen la selección a variables de la
@@ -294,7 +301,6 @@ export const CreateSales = ({
     pendingOrders,
     activePendingOrders,
     pendingOrdersCount,
-    activePendingOrderId,
     isPendingOrdersReady,
     canPersistPendingOrders,
 
@@ -307,35 +313,40 @@ export const CreateSales = ({
     persistPendingOrder,
     searchPendingOrders
   } = useSales({
+    automaticCashChange: true,
     disabled: false,
     router,
     sendNotification,
     setAlertBox,
     setSalesOpen: onCloseModalSale,
     onSaleSuccess: (payload) => {
-      // Sale registered successfully: the hook already closed the invoice/print
-      // modal. Present the Success modal via our explicit signal.
-      if (payload?.code) {
-        onClickShowLocalNotification({
-          title: 'Nueva venta',
-          description: `Venta ${payload.code}`,
-          url: `/orders/${encodeURIComponent(payload.code)}`,
-          tag: `sale-${payload.code}`
-        })
-        setSaleSuccess(payload)
-        // Fire the OS-level Web Push deep-linking to the order detail.
-        notifyNewSaleRef.current(payload.code)
+      const saleCode = typeof payload?.code === 'string' ? payload.code.trim() : ''
+      if (!saleCode || completedCheckoutRef.current) return
+      completedCheckoutRef.current = true
 
-      }
+      // The backend has confirmed the sale. Do not read the live cart here:
+      // useSales may already have reset its values.
+      confirmedInvoiceRef.current = pendingInvoiceRef.current
+        ? confirmInvoiceSnapshot(pendingInvoiceRef.current, saleCode)
+        : null
+      setConfirmedCode(saleCode)
+      setSaleSuccess(true)
+      notifyNewSaleRef.current(saleCode)
     }
   })
+
+  const client = useMemo(() => {
+    const clients = Array.isArray(dataClientes) ? dataClientes : []
+    return clients.find(item => item?.cliId === values?.cliId && Boolean(values?.cliId)) ?? {
+      clientName: '', ccClient: '', ClientAddress: '', clientNumber: ''
+    }
+  }, [dataClientes, values?.cliId])
 
   // Limpia el temporizador del resaltado al desmontar para evitar fugas.
   useEffect(() => {
     return () => {
-      if (highlightTimerRef.current) {
-        clearTimeout(highlightTimerRef.current)
-      }
+      if (highlightTimerRef.current !== null) clearTimeout(highlightTimerRef.current)
+      if (highlightFrameRef.current !== null) cancelAnimationFrame(highlightFrameRef.current)
     }
   }, [])
 
@@ -353,7 +364,9 @@ export const CreateSales = ({
       clearTimeout(highlightTimerRef.current)
     }
     setHighlightedPid(null)
-    requestAnimationFrame(() => {
+    if (highlightFrameRef.current !== null) cancelAnimationFrame(highlightFrameRef.current)
+    highlightFrameRef.current = requestAnimationFrame(() => {
+      highlightFrameRef.current = null
       setHighlightedPid(String(pId))
     })
     highlightTimerRef.current = setTimeout(() => {
@@ -374,6 +387,7 @@ export const CreateSales = ({
    *  - DUPLICATE_EVENT → se ignora (rebote de la misma lectura).
    */
   const handleScannedCode = async (rawCode) => {
+    if (submitLockRef.current || saleSuccess || print) return
     if (typeof handleAddProductByBarcode !== 'function') { return }
     const outcome = await handleAddProductByBarcode(rawCode)
     if (!outcome || typeof outcome !== 'object') { return }
@@ -439,19 +453,25 @@ export const CreateSales = ({
   // barcode and add it to the cart. Typing in an input/textarea is ignored so
   // normal form entry is never hijacked.
   const scanBufferRef = useRef({ chars: '', lastTime: 0 })
+  const scannedCodeRef = useRef(handleScannedCode)
+  useEffect(() => { scannedCodeRef.current = handleScannedCode }, [handleScannedCode])
   useEffect(() => {
     const INTER_KEY_MS = 50 // scanners emit keys much faster than humans
     const MIN_LENGTH = 6 // ignore short/accidental sequences
 
-    const handleKeyDown = (event) => {
-      const target = event.target
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target instanceof HTMLElement ? event.target : null
       const tag = target?.tagName
       const isEditable =
         tag === 'INPUT' ||
         tag === 'TEXTAREA' ||
         tag === 'SELECT' ||
         target?.isContentEditable
-      if (isEditable) { return }
+      if (isEditable || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) {
+        scanBufferRef.current = { chars: '', lastTime: 0 }
+        return
+      }
+      if (event.repeat) return
 
       const now = Date.now()
       const buffer = scanBufferRef.current
@@ -469,7 +489,7 @@ export const CreateSales = ({
           event.preventDefault()
           // Flujo único: consulta backend, agrega al carrito, sonido y, si no
           // existe, abre el diálogo de creación.
-          Promise.resolve(handleScannedCode(code)).catch(() => { })
+          Promise.resolve(scannedCodeRef.current(code)).catch(() => { })
         }
         return
       }
@@ -485,8 +505,7 @@ export const CreateSales = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleAddProductByBarcode, playSuccess, playError, dataStore])
+  }, [])
 
   const restPropsSliderCategory = {
     data: datCat,
@@ -519,7 +538,7 @@ export const CreateSales = ({
     loading: loadingExtraProduct,
     disabled: disabledModalItems,
     sumExtraProducts,
-    product: prod ?? product?.PRODUCT,
+    product: getProductById(product?.PRODUCT?.pId) ?? product?.PRODUCT,
     modalItem,
     handleUpdateAllExtra,
     handleIncrementExtra,
@@ -541,163 +560,126 @@ export const CreateSales = ({
     updateProductQuantity(1)
   }
 
-  function updateProductQuantity(quantityChange) {
-    try {
-      const item = getProductById(product?.PRODUCT.pId)
-      // Use the unitPrice stored on the cart item, not catalog ProPrice.
-      // Catalog ProPrice may differ after a discount is applied.
-      const unitPrice = item?.unitPrice ?? item?.ProPrice ?? 0
-      setProd({
-        ...item,
-        ProQuantity: item.ProQuantity + quantityChange,
-        ProPrice: Math.max(0, (item.ProQuantity + quantityChange) * unitPrice)
-      })
-      if (quantityChange < 0) {
-        dispatch({ type: 'REMOVE_PRODUCT', payload: prod ?? product?.PRODUCT })
-        if (item?.ProQuantity === 1) {
-          setModalItem(false)
-          setProduct({ PRODUCT: {} })
-        }
-      } else {
-        dispatch({ type: 'ADD_TO_CART', payload: product?.PRODUCT })
+  function updateProductQuantity(quantityChange: number) {
+    const item = getProductById(product?.PRODUCT?.pId)
+    if (!item) return
+    // The reducer is the source of truth for stock, totals and courtesy flags.
+    if (quantityChange < 0) {
+      dispatch({ type: 'REMOVE_PRODUCT', payload: item })
+      if (Number(item.ProQuantity) === 1) {
+        setModalItem(false)
+        setProduct({ PRODUCT: { pId: null } })
       }
-    } catch (error) {
-      if (typeof error === 'string') {
-        return sendNotification({
-          message: error,
-          title: 'Error',
-          backgroundColor: 'error'
-        })
-      }
+    } else if (quantityChange > 0 && product?.PRODUCT) {
+      dispatch({ type: 'ADD_TO_CART', payload: product.PRODUCT })
+    }
+  }
+
+  function getProductById(pId: string | null | undefined) {
+    if (!pId) return undefined
+    return data?.PRODUCT?.find(item => item.pId === pId)
+  }
+
+  const handleSubmit = async () => {
+    if (submitLockRef.current || loadingRegisterSale || saleSuccess || completedCheckoutRef.current) return
+    if (!data?.PRODUCT?.length) {
+      sendNotification({ title: 'Carrito vacío', description: 'Agrega al menos un producto.', backgroundColor: 'warning' })
       return
     }
-  }
-
-  function getProductById(pId) {
-    return (
-      data?.PRODUCT?.find((item) => {
-        return item.pId === pId
-      }) || {}
-    )
-  }
-
-  const handlePrint = () => {
-    console.log('Print function called');
-  }
-
-  const { ClientAddress } = client || {
-    clientName: '',
-    ccClient: '',
-    ClientAddress: '',
-    clientNumber: ''
-  }
-
-  const { yearMonthDay, longDayName } = useFormatDate({})
-  const localDate = date.toLocaleTimeString()
-  const customDate = `${yearMonthDay + ' - ' + localDate + ' - ' + longDayName
-    }`
-
-  const {
-    city,
-    storeName,
-    Image: src,
-    storePhone,
-    NitStore,
-    department,
-    idStore
-  } = dataStore || {}
-  const urlStore = generateStoreURL({ city, department, storeName, idStore })
-
-  const dataToPrint = {
-    srcLogo: src ?? '/images/DEFAULTBANNER.png',
-    addressStore: ClientAddress,
-    storePhone: storePhone,
-    date: customDate,
-    client: {
-      ...client
-    },
-    ref: code,
-    products: data?.PRODUCT || [],
-    total: numberFormat(totalProductPrice),
-    change: values.change,
-    NitStore,
-    delivery: values.valueDelivery,
-    storeName,
-    urlStore
-  }
-
-  const handleDownLoad = () => {
-    if (dataToPrint) {
-      return generatePdfDocumentInvoice({
-        data: dataToPrint,
-        titleFile: `VENTA_${code}_${customDate}`,
-        numberFormat
-      })
+    if (!data?.payId) {
+      sendNotification({ title: 'Método de pago', description: 'Selecciona un método de pago.', backgroundColor: 'warning' })
+      return
     }
-    return null
+    if (!cashCheckout?.canSubmit) {
+      sendNotification({ title: 'Verifica el cobro', description: cashCheckout?.message || 'Completa los datos del pago.', backgroundColor: 'warning' })
+      return
+    }
+    submitLockRef.current = true
+    setIsSubmitting(true)
+    try {
+      const submittedAt = Date.now()
+      // Capture the submitted data before useSales clears client/values.
+      // PDF is a checkout snapshot, not a substitute for querying the persisted sale.
+      pendingInvoiceRef.current = null
+      try {
+        pendingInvoiceRef.current = createInvoiceSnapshot({
+          store: dataStore,
+          client,
+          products: data.PRODUCT,
+          total: cashCheckout.subtotal,
+          change: cashCheckout.change,
+          delivery: cashCheckout.delivery,
+          urlStore: generateStoreURL({ city: dataStore?.city, department: dataStore?.department, storeName: dataStore?.storeName, idStore: dataStore?.idStore }),
+          submittedAt
+        })
+      } catch {
+        // A legacy PDF adapter must never prevent the backend from registering
+        // an otherwise valid sale. The download action will explain the failure.
+        pendingInvoiceRef.current = null
+      }
+      await submitSale()
+    } finally {
+      pendingInvoiceRef.current = null
+      submitLockRef.current = false
+      setIsSubmitting(false)
+    }
   }
-  const existComment = oneProductToComment?.comment?.length > 0
+
+  const handleDownLoad = async () => {
+    if (downloadLockRef.current) return
+    const invoice = confirmedInvoiceRef.current
+    if (!invoice || !confirmedCode || invoice.data.ref !== confirmedCode) {
+      sendNotification({ title: 'Comprobante no disponible', description: 'Consulta el detalle de la venta registrada.', backgroundColor: 'warning' })
+      return
+    }
+    downloadLockRef.current = true
+    try {
+      await generatePdfDocumentInvoice({ data: toLegacyInvoiceData(invoice), titleFile: `VENTA_${invoice.data.ref}.pdf`, numberFormat })
+    } catch {
+      sendNotification({ title: 'Error al descargar', description: 'No se pudo generar el PDF. Intenta nuevamente.', backgroundColor: 'error' })
+    } finally {
+      downloadLockRef.current = false
+    }
+  }
+
+  const existComment = Boolean(oneProductToComment?.comment?.length)
 
   const handleCloseModal = () => {
+    if (submitLockRef.current) return
     dispatch({ type: 'REMOVE_ALL_PRODUCTS' })
     setValues({})
+    setPreviewDate(null)
     onCloseModalSale()
   }
 
-  useEffect(() => {
-    const setInitialValues = () => {
-      if (
-        !values.cliId ||
-        Boolean(dataClientes?.length > 0) ||
-        dataStore?.idStore
-      ) {
-        const client = dataClientes?.data?.find((client) => {
-          return client?.cliId === values?.cliId
-        })
-        const cliId = dataClientes?.data?.find((client) => {
-          return client?.ccClient === dataStore?.idStore
-        })?.cliId
+  const isLoading = loadingRegisterSale || loading || isSubmitting || isPrinting
 
-        if (cliId) {
-          setClient(client)
-        }
-      }
-    }
-
-    setInitialValues()
-
-  }, [values?.cliId]);
-
-  const isLoading = loadingRegisterSale || loading || isPrinting
-
-  const fetchMoreProducts = () => {
+  const fetchMoreProducts = async () => {
+    if (fetchMoreLockRef.current || !productsFood?.length) return
+    fetchMoreLockRef.current = true
     setFetchMoreLoader(true)
-    if (productsFood?.length > 0) {
-      fetchMore({
-        variables: { max: showMore, min: 0 },
+    const nextMax = showMore + 100
+    try {
+      await fetchMore({
+        variables: { max: nextMax, min: 0 },
         updateQuery: (previousResult, { fetchMoreResult }) => {
-          const totalCount = fetchMoreResult.productFoodsAll.length
-          return totalCount
-            ? {
-              // Aquí debes especificar la forma en que se actualizará la lista de productos
-              productFoodsAll: [
-                ...previousResult.productFoodsAll,
-                ...fetchMoreResult.productFoodsAll.filter((newItem) => {
-                  return !previousResult.productFoodsAll.some((oldItem) => {
-                    return oldItem.pId === newItem.pId
-                  })
-                })
-              ]
-            }
-            : previousResult
-        },
-        onError: () => {
-          setFetchMoreLoader(false)
+          const incoming = fetchMoreResult?.productFoodsAll ?? []
+          if (!incoming.length) return previousResult
+          const existing = previousResult?.productFoodsAll ?? []
+          const seen = new Set(existing.map(item => item.pId))
+          const additions = incoming.filter(item => {
+            if (seen.has(item.pId)) return false
+            seen.add(item.pId)
+            return true
+          })
+          return { ...previousResult, ...fetchMoreResult, productFoodsAll: [...existing, ...additions] }
         }
       })
-      setShowMore((s) => {
-        return s + 100
-      })
+      setShowMore(nextMax)
+    } catch {
+      sendNotification({ title: 'Error al cargar productos', description: 'Intenta nuevamente.', backgroundColor: 'error' })
+    } finally {
+      fetchMoreLockRef.current = false
       setFetchMoreLoader(false)
     }
   }
@@ -713,7 +695,7 @@ export const CreateSales = ({
   const selectProduct = (product) => {
     if (!product) { return }
     handleProduct(product)
-    setModalItem(!modalItem)
+    setModalItem(true)
   }
 
   const handleToggleFree = (producto) => {
@@ -731,15 +713,32 @@ export const CreateSales = ({
     setOpenAside(!openAside)
   }
   const [handlePrintSale] = usePrintSaleTicket()
+  const handlePrint = async () => {
+    if (!confirmedCode || printLockRef.current) return
+    printLockRef.current = true
+    setIsPrinting(true)
+    try {
+      if (typeof handlePrintSale !== 'function') throw new Error('Servicio de impresión no disponible')
+      const result = await handlePrintSale(confirmedCode)
+      sendNotification({
+        title: result?.success ? 'Impresión enviada' : 'Error al imprimir',
+        description: result?.message ?? 'No se pudo enviar el comprobante a la impresora.',
+        backgroundColor: result?.success ? 'success' : 'error'
+      })
+    } catch {
+      sendNotification({ title: 'Error al imprimir', description: 'No se pudo enviar el comprobante a la impresora.', backgroundColor: 'error' })
+    } finally {
+      printLockRef.current = false
+      setIsPrinting(false)
+    }
+  }
   const { data: paymentMethodsData } = useGetAllPaymentMethods()
 
-  const paymentMethods = paymentMethodsData.map((method) => {
-    return {
-      id: method.payId,
-      name: method.name,
-      icon: method.icon
-    }
-  })
+  const paymentMethods = useMemo(() => (paymentMethodsData ?? []).map(method => ({
+    id: method.payId,
+    name: method.name,
+    icon: method.icon
+  })), [paymentMethodsData])
 
   // Selecciona "Efectivo" por defecto en cuanto cargan los métodos de pago y
   // aún no hay ninguno elegido. Esto resalta la tarjeta y, sobre todo, deja
@@ -756,13 +755,33 @@ export const CreateSales = ({
     if (defaultMethod?.id) {
       dispatch({ type: 'PAYMENT_METHOD', payload: defaultMethod.id })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentMethodsData, data?.payId])
+  }, [paymentMethods, data?.payId, dispatch])
+
+  const handleOpenSalePreview = () => {
+    if (print || submitLockRef.current || loadingRegisterSale || saleSuccess) return
+    if (!cashCheckout?.canSubmit) {
+      sendNotification({ title: 'Verifica el cobro', description: cashCheckout?.message || 'Completa los datos del pago.', backgroundColor: 'warning' })
+      return
+    }
+    completedCheckoutRef.current = false
+    setPreviewDate(Date.now())
+    setPrint()
+  }
+
+  const handleCloseSalePreview = () => {
+    if (!print || submitLockRef.current) return
+    setPrint()
+    setPreviewDate(null)
+  }
 
   const restPropsSalesModal = {
-    code,
+    code: null, // Sale reference is generated by useSales on submission. Never reuse the previous sale's code.
+    saleDate: previewDate,
     data,
     paymentMethod: paymentMethods.find(method => method.id === data?.payId)?.name ?? 'Sin seleccionar',
+    paymentKind,
+    cashCheckout,
+    onCashReceivedChange: handleCashReceivedChange,
     delivery,
     print,
     totalProductPrice,
@@ -773,10 +792,10 @@ export const CreateSales = ({
     componentRef,
     promiseResolveRef,
     handlePrint,
-    isPrinting,
+    isPrinting: false, // Server-side thermal printing does not use the DOM print handshake.
     dataClientes,
-    setPrint,
-    loading,
+    setPrint: handleCloseSalePreview,
+    loading: loading || isSubmitting || loadingRegisterSale,
     handleSubmit,
     handleDownLoad
   }
@@ -814,46 +833,21 @@ export const CreateSales = ({
     onClearFilters: handleClearFiltersFromModal
   }
 
-  /* =========================================================
-   SALES TABLE CONFIGURATION
-========================================================= */
+  /* Sales table configuration: USER > STORE > APP */
+  const {
+    value: savedSalesDividerPositions,
+    loading: loadingSalesDividerPositions,
+    error: salesDividerConfigurationError
+  } = useGetResolvedConfiguration({
+    componentName: SALES_TABLE_CONFIGURATION.componentName,
+    key: SALES_TABLE_CONFIGURATION.key,
+    defaultValue: DEFAULT_SALES_DIVIDER_POSITIONS
+  })
 
-  /**
-   * Retrieve the effective configuration.
-   *
-   * Precedence:
-   * USER > STORE > APP
-   */
-/* =========================================================
-   SALES TABLE CONFIGURATION
-========================================================= */
-
-const {
-  value: savedSalesDividerPositions,
-  loading: loadingSalesDividerPositions,
-  error: salesDividerConfigurationError
-} = useGetResolvedConfiguration({
-  componentName: SALES_TABLE_CONFIGURATION.componentName,
-  key: SALES_TABLE_CONFIGURATION.key,
-  defaultValue: DEFAULT_SALES_DIVIDER_POSITIONS
-})
-
-/**
- * Normaliza la configuración recuperada.
- */
-const normalizedSavedSalesDividerPositions = normalizeSalesDividerPositions(
-  savedSalesDividerPositions
-)
-
-/**
- * Mientras se consulta la configuración, utiliza una distribución
- * provisional. Cuando termina la consulta, utiliza la configuración
- * recuperada o el valor predeterminado si no existe.
- */
-const salesDividerPosition =
-  normalizedSavedSalesDividerPositions ??
-  DEFAULT_SALES_DIVIDER_POSITIONS
-
+  const salesDividerPosition = useMemo(
+    () => normalizeSalesDividerPositions(savedSalesDividerPositions) ?? DEFAULT_SALES_DIVIDER_POSITIONS,
+    [savedSalesDividerPositions]
+  )
 
   /**
    * Mutation responsible for persisting configuration.
@@ -1034,16 +1028,12 @@ const salesDividerPosition =
   return (
     <>
       <SuccessSaleModal
-        code={code}
+        code={confirmedCode ?? ''}
         dispatch={dispatch}
         handleCloseModal={handleCloseModal}
         handleDownLoad={handleDownLoad}
-        handlePrint={() => {
-          return handlePrintSale(code)
-        }}
-        loading={isPrinting}
+        handlePrint={handlePrint}
         openCurrentSale={saleSuccess}
-        products={data?.PRODUCT || []}
         router={router}
         setOpenCurrentSale={setSaleSuccess}
       />
@@ -1119,13 +1109,11 @@ const salesDividerPosition =
         handleIncrement={handleIncrementClick}
         handleOpenAside={handleOpenAside}
         handlePageChange={handlePageChange}
-        handleSave={() => {
-          setPrint({ callback: handlePrint })
-        }}
+        handleSave={handleOpenSalePreview}
         isLoading={isLoading}
-        isSubmittingSale={loadingRegisterSale}
+        isSubmittingSale={isSubmitting || loadingRegisterSale}
         loadingClients={loadingClients}
-        loadingProduct={loading}
+        loadingProduct={loading || fetchMoreLoader}
         numberFormat={numberFormat}
         onClick={(producto) => {
           return selectProduct(producto)
@@ -1133,14 +1121,19 @@ const salesDividerPosition =
         openAside={openAside}
         pagination={pagination}
         paymentMethods={paymentMethods}
+        paymentKind={paymentKind}
+        cashCheckout={cashCheckout}
+        onCashReceivedChange={handleCashReceivedChange}
         productsFood={productsFood}
         propsSliderCategory={restPropsSliderCategory}
         setShow={(show) => {
+          if (submitLockRef.current) return
           handleCloseModal()
           setShow(show)
         }}
         show={show}
         storeTables={storeTables}
+        discountableSubtotal={discountableSubtotal}
         totalProductPrice={numberFormat(totalProductPrice)}
         useAmountInput={useAmountInput}
         values={values}
@@ -1176,16 +1169,16 @@ const salesDividerPosition =
         <Column alignItems='center' justifyContent='space-between'>
           <CardProductSimple
             {...oneProductToComment}
-            ProDescription={oneProductToComment.ProDescription}
-            ProDescuento={oneProductToComment.ProDescuento}
-            ProImage={oneProductToComment.ProImage}
-            ProPrice={oneProductToComment.ProPrice}
-            ProQuantity={oneProductToComment.ProQuantity}
-            ValueDelivery={oneProductToComment.ValueDelivery}
+            ProDescription={oneProductToComment?.ProDescription}
+            ProDescuento={oneProductToComment?.ProDescuento}
+            ProImage={oneProductToComment?.ProImage}
+            ProPrice={oneProductToComment?.ProPrice}
+            ProQuantity={oneProductToComment?.ProQuantity}
+            ValueDelivery={oneProductToComment?.ValueDelivery}
             comment={false}
             edit={false}
-            key={oneProductToComment.pId}
-            pName={oneProductToComment.pName}
+            key={oneProductToComment?.pId}
+            pName={oneProductToComment?.pName}
             render={null}
           />
           <Divider marginTop={getGlobalStyle('--spacing-xl')} />
@@ -1219,7 +1212,7 @@ const salesDividerPosition =
 
             <Button
               primary
-              disabled={!values.comment}
+              disabled={!values.comment || !oneProductToComment?.pId}
               onClick={() =>
                 dispatch({
                   type: 'PUT_COMMENT',

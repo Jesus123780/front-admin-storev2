@@ -1,7 +1,7 @@
 
 import styles from './styles.module.css'
 
-export interface VentyLoaderProps {
+export interface LoaderProps {
   label?: string
   inline?: boolean
   exiting?: boolean
@@ -11,7 +11,7 @@ export function Loader({
   label = 'Cargando...',
   inline = false,
   exiting = false
-}: VentyLoaderProps) {
+}: LoaderProps) {
   const className = [
     styles.loader,
     inline ? styles.inline : styles.screen,

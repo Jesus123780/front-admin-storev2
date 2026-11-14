@@ -1,5 +1,5 @@
 
-name: Venty - Verify Next.js
+name: Verify Next.js
 
 on:
   push:

@@ -1,8 +1,3 @@
-
-/* ==========================================
-   VENTY LOADER — DESIGN SYSTEM
-   ========================================== */
-
 .loader {
   --loader-bg: var(--color-background-white, #ffffff);
   --loader-accent: var(--color-background-primary, #ea1d2c);

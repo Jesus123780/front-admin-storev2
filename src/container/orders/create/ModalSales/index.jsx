@@ -1,5 +1,6 @@
 import {
  AwesomeModal, 
+  CashPaymentFields,
  InputHooks,
 Loading 
 } from 'pkg-components'
@@ -21,13 +22,26 @@ export const ModalSales = ({
   delivery,
   loading,
   discount = {},
+  paymentKind,
   setDelivery = () => { return },
   handleChange = () => { return },
   handleSubmit = () => { return },
+  cashCheckout,
+  onCashReceivedChange,
   ...rest
 }) => {
   const printZIndex = useModalLayer(Boolean(print))
   const deliveryZIndex = useModalLayer(Boolean(delivery))
+  const paymentName = typeof rest.paymentMethod === 'string'
+    ? rest.paymentMethod.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ')
+    : ''
+  const resolvedKind = paymentKind ?? (paymentName && paymentName !== 'sin seleccionar'
+    ? /^(efectivo|cash|pago en efectivo|dinero en efectivo)$/.test(paymentName) ? 'cash' : 'non-cash'
+    : 'unknown')
+  const canEditChange = resolvedKind === 'cash' && !loading
+  // Preserve raw change for unknown methods so the receipt can still alert.
+  const receiptChange = resolvedKind === 'non-cash' ? 0 : values?.change
+  const receiptValues = resolvedKind === 'non-cash' ? { ...values, change: 0 } : values
   return (
     <div>
       {loading && <Loading />}
@@ -44,15 +58,19 @@ export const ModalSales = ({
         useScroll={true}
         zIndex={printZIndex}
       >
+        {cashCheckout && onCashReceivedChange && (
+          <CashPaymentFields checkout={cashCheckout} onReceivedChange={onCashReceivedChange} disabled={Boolean(loading)} />
+        )}
         <Prints
-          change={values?.change}
+          change={receiptChange}
+          paymentKind={resolvedKind}
           code={code}
           data={data?.PRODUCT || []}
           dataClientes={dataClientes}
           discount={discount}
-          handleSubmit={handleSubmit}
+          handleSubmit={cashCheckout && !cashCheckout.canSubmit ? undefined : handleSubmit}
           total={totalProductPrice}
-          values={values}
+          values={receiptValues}
           {...rest}
         />
       </AwesomeModal>
@@ -85,10 +103,17 @@ export const ModalSales = ({
           placeholder='Costo de envió'
           value={values?.valueDelivery}
         />
-        <InputHooks
+        {cashCheckout && onCashReceivedChange ? (
+          <CashPaymentFields checkout={cashCheckout} onReceivedChange={onCashReceivedChange} disabled={Boolean(loading)} />
+        ) : (
+          <InputHooks
+          key={resolvedKind === 'cash' ? 'change-cash' : 'change-disabled'}
           autoComplete='off'
           name='change'
-          onChange={handleChange}
+          disabled={!canEditChange}
+          onChange={(event, hasError) => {
+            if (canEditChange) {handleChange(event, hasError)}
+          }}
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
@@ -97,14 +122,17 @@ export const ModalSales = ({
             }
           }}
           placeholder='Cambio'
-          value={values?.change}
+          value={resolvedKind === 'cash' ? (values?.change ?? '') : ''}
         />
+        )}
       </AwesomeModal>
     </div>
   )
 }
 
 ModalSales.propTypes = {
+  cashCheckout: PropTypes.object,
+  onCashReceivedChange: PropTypes.func,
   code: PropTypes.any,
   data: PropTypes.shape({
     PRODUCT: PropTypes.array
@@ -115,6 +143,7 @@ ModalSales.propTypes = {
   handleChange: PropTypes.func,
   handleSubmit: PropTypes.func,
   loading: PropTypes.any,
+  paymentKind: PropTypes.oneOf(['cash', 'non-cash', 'unknown']),
   print: PropTypes.any,
   setDelivery: PropTypes.func,
   setPrint: PropTypes.func,
