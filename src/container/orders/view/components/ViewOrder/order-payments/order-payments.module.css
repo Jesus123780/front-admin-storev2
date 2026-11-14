@@ -1,6 +1,7 @@
-/* components/order-payments/order-payments.module.css */
-.container { background:#fff; border-radius:8px; padding:12px; border:1px solid #f3f5f7; display:flex; flex-direction:column; gap:12px; }
-.title { margin:0; font-weight:700; color:#0b2545; }
-.method { display:flex; justify-content:space-between; align-items:center; padding:10px; border-radius:8px; border:1px solid #e6eef9; background:#fbfdff; cursor:pointer; font-weight:600; }
-.method.active { border-color:#c7e0ff; background:#ecf8ff; }
-.check { margin-left:8px; color:#0b2545; font-weight:700; }
+.container { min-width: 0; background: var(--order-surface, var(--color-background-white, #fff)); border: 1px solid var(--order-border, var(--color-neutral-gray, #e5e5e5)); border-radius: var(--border-radius-lg, 20px); padding: 20px; }
+.title { font-size: 16px; font-weight: 750; margin: 0 0 15px; }
+.method { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--order-page-bg, var(--color-background-gray-light, #f5f5f5)); border-radius: var(--border-radius-md, 12px); min-width: 0; }
+.icon { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--border-radius-sm, 10px); width: 44px; height: 44px; flex: 0 0 auto; color: var(--order-accent, var(--color-secondary-blue, #0062ff)); background: var(--color-background-secondary-light, #e4f7fc); }
+.info { min-width: 0; width: auto; flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px; }
+.methodLabel { font-size: 11px; color: var(--order-muted, var(--color-text-gray-light, #666)); }
+.name { font-size: 13px; overflow-wrap: anywhere; }

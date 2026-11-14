@@ -1,32 +1,126 @@
-/* components/order-page/OrderPage/order-page.module.css */
 .container {
-  padding: 16px;
+  --order-surface: var(--color-background-white, #fff);
+  --order-page-bg: var(--color-background-gray-light, #f5f5f5);
+  --order-border: var(--color-neutral-gray, #e5e5e5);
+  --order-text: var(--color-text-black, #282828);
+  --order-muted: var(--color-text-gray-light, #666);
+  --order-accent: var(--color-secondary-blue, #0062ff);
+  position: relative;
   display: flex;
   justify-content: center;
-}
-.panel {
+  box-sizing: border-box;
   width: 100%;
-  max-width: 1100px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(12, 40, 80, 0.06);
-  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(8px, 2vw, 24px);
+  color: var(--order-text);
+  background: var(--order-page-bg);
 }
+
+.container *,
+.container *::before,
+.container *::after { box-sizing: border-box; }
+
+.panel {
+  width: min(100%, 1160px);
+  min-width: 0;
+  background: var(--order-surface);
+  border: 1px solid var(--order-border);
+  border-radius: var(--border-radius-lg, 20px);
+  box-shadow: var(--box-shadow-2xs, 0 4px 8px rgba(27,33,56,.06));
+  overflow: clip;
+}
+
 .content {
-  display: flex;
-  gap: 24px;
-  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(285px, 330px);
+  align-items: start;
+  gap: clamp(14px, 2vw, 24px);
+  padding: clamp(14px, 2.5vw, 28px);
 }
-.left {
-  flex: 1 1 60%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+
+.left,
 .right {
-  flex: 0 0 320px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-left: 12px;
+  gap: var(--spacing-xl, 16px);
+}
+
+.right { position: sticky; top: 16px; }
+
+.container[data-modal='true'] {
+  height: 100%;
+  padding: 0;
+  background: var(--order-surface);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.container[data-modal='true'] .panel {
+  width: 100%;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+.container[data-modal='true'] .content { grid-template-columns: minmax(0, 1fr); }
+.container[data-modal='true'] .right { position: static; }
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--order-surface);
+  color: var(--order-muted);
+  font-size: 14px;
+  font-weight: 600;
+  /* Vista existente: bloquea acciones mientras se actualiza. */
+}
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--order-border);
+  border-top-color: var(--order-accent);
+  border-radius: 50%;
+  animation: order-spin .8s linear infinite;
+}
+@keyframes order-spin { to { transform: rotate(1turn); } }
+
+.emptyState { padding: 70px 24px; text-align: center; }
+.emptyState h2 { margin: 12px 0 6px; font-size: 20px; }
+.emptyState p { margin: 0; color: var(--order-muted); line-height: 1.5; }
+.emptyIcon { font-size: 44px; color: var(--order-muted); }
+
+.skeletonRoot { padding: 26px; display: grid; gap: 24px; }
+.skeletonGrid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+.skeletonTitle,
+.skeletonBlock {
+  border-radius: var(--border-radius-md, 12px);
+  background: var(--color-loaders-background, #f3f3f3);
+  animation: order-pulse 1.5s ease-in-out infinite alternate;
+}
+.skeletonTitle { height: 58px; width: 55%; }
+.skeletonBlock { height: 320px; }
+@keyframes order-pulse { to { filter: brightness(.93); } }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+@media (max-width: 850px) {
+  .content,
+  .skeletonGrid { grid-template-columns: minmax(0, 1fr); }
+  .right { position: static; }
+}
+@media (max-width: 520px) {
+  .container:not([data-modal='true']) { padding: 0; }
+  .container:not([data-modal='true']) .panel { border-radius: 0; border: 0; }
+  .content { padding: 12px; gap: 12px; }
+  .left, .right { gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner, .skeletonTitle, .skeletonBlock { animation: none; }
 }

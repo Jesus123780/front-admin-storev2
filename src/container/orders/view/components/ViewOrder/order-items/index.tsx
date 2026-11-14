@@ -1,37 +1,38 @@
-// components/order-items/index.tsx
 'use client'
-import React from 'react'
 
+import React from 'react'
 import type { ShoppingCart } from '../../types/order'
 import OrderItemRow from './order-item-row'
 import styles from './order-items.module.css'
 
-type Props = {
-  items: ShoppingCart[]
-}
+type Props = { items?: ShoppingCart[] | null }
 
-const OrderItems: React.FC<Props> = ({ items = [] }) => {
-  // Group by product name categories if needed. For this mock, products already have names like Treatment, Component used, Medicine
-  const grouped = items?.reduce<Record<string, ShoppingCart[]>>((acc, cur) => {
-    const key = cur.products.pName || 'Others'
-    acc[key] = acc[key] || []
-    acc[key].push(cur)
-    return acc
-  }, {})
-
+const OrderItems: React.FC<Props> = ({ items }) => {
+  const headingId = React.useId()
+  const list = items ?? []
+  const totalUnits = list.reduce((count, item) => count + (Number.isFinite(Number(item.cantProducts)) ? Math.max(0, Number(item.cantProducts)) : 0), 0)
   return (
-    <section className={styles.container}>
-      <h3 className={styles.title}>
-        Productos
-      </h3>
-      {Object.entries(grouped).map(([group, list]) => (
-        <div key={group} className={styles.group}>
-          <div className={styles.groupTitle}>{group} ({list.length})</div>
-          <div className={styles.groupList}>
-            {list.map((it) => <OrderItemRow key={it.shoppingCartId} item={it} />)}
-          </div>
+    <section className={styles.container} aria-labelledby={headingId}>
+      <header className={styles.header}>
+        <div>
+          <h2 id={headingId} className={styles.title}>Productos</h2>
+          <p className={styles.subtitle}>Detalle de artículos de la orden</p>
         </div>
-      ))}
+        <span className={styles.counter} aria-label={`${totalUnits} unidades en ${list.length} líneas`}>
+          {totalUnits} {totalUnits === 1 ? 'unidad' : 'unidades'}
+        </span>
+      </header>
+      {list.length === 0 ? (
+        <div className={styles.empty} role="status">No hay productos registrados en esta orden.</div>
+      ) : (
+        <ul className={styles.list}>
+          {list.map((item, index) => (
+            <li key={item.shoppingCartId || `${item.pId}-${index}`} className={styles.listItem}>
+              <OrderItemRow item={item} />
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

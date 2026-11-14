@@ -1,41 +1,36 @@
-import {
-    Column, Divider, getGlobalStyle, ImageQRCode,
-    Row,
-    Text
-} from 'pkg-components'
-import { FC } from 'react'
+'use client'
 
-interface CodeDisplayProps {
-    pCodeRef?: string | null
-}
+import React from 'react'
+import { Icon, ImageQRCode } from 'pkg-components'
+import styles from './order-code-display.module.css'
 
-export const CodeDisplay: FC<CodeDisplayProps> = ({ pCodeRef }) => {
-    return (
-        <div style={{
-            border: `1px solid ${getGlobalStyle('--color-neutral-gray-light')}`,
-            padding: getGlobalStyle('--spacing-xl'),
-            borderRadius: getGlobalStyle('--border-radius-md'),
-        }}>
-            <Row>
-                <Column>
-                    <Text font='light' size='sm' color='gray'>
-                        Código de la orden
-                    </Text>
-                    <Divider
-                        marginBottom={getGlobalStyle('--spacing-sm')}
-                        marginTop={getGlobalStyle('--spacing-sm')}
-                    />
-                    <Column style={{
-                        width: getGlobalStyle('--spacing-10xl'),
-                        height: getGlobalStyle('--spacing-10xl')
-                    }}>
-                        <ImageQRCode
-                            size={50}
-                            value={pCodeRef ?? ''}
-                        />
-                    </Column>
-                </Column>
-            </Row>
+export interface CodeDisplayProps { pCodeRef?: string | null }
+
+export const CodeDisplay: React.FC<CodeDisplayProps> = React.memo(({ pCodeRef }) => {
+  const headingId = React.useId()
+  const code = pCodeRef?.trim() ?? ''
+  return (
+    <section className={styles.container} aria-labelledby={headingId}>
+      <div className={styles.heading}>
+        <span className={styles.icon} aria-hidden="true"><Icon icon="IconQrCode" size={22} /></span>
+        <div className={styles.headingBody}>
+          <h2 id={headingId} className={styles.title}>Código QR de la orden</h2>
+          <p className={styles.subtitle}>Identifica esta orden fácilmente.</p>
         </div>
-    )
-}
+      </div>
+      <div className={styles.body}>
+        {code ? (
+          <>
+            <div className={styles.qr} role="img" aria-label={`Código QR de la orden ${code}`}>
+              <ImageQRCode size={128} value={code} />
+            </div>
+            <span className={styles.code}>{code}</span>
+          </>
+        ) : (
+          <p className={styles.empty}>Esta orden todavía no tiene un código disponible.</p>
+        )}
+      </div>
+    </section>
+  )
+})
+CodeDisplay.displayName = 'CodeDisplay'

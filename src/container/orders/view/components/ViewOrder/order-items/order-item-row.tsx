@@ -1,49 +1,52 @@
-import {
-  CounterAnimation,
-  Divider,
-  Image,
-  numberFormat,
-  Row,
-  Text
-} from 'pkg-components'
-import React from 'react'
+'use client'
 
+import React from 'react'
+import { Icon, Image } from 'pkg-components'
 import type { ShoppingCart } from '../../types/order'
+import { formatCOP, formatText } from '../helpers/order-format'
 import styles from './order-item-row.module.css'
 
-const ItemRow: React.FC<{ item: ShoppingCart }> = ({ item }) => {
-  const p = item.products
+type Props = { item: ShoppingCart }
+
+const OrderItemRow: React.FC<Props> = ({ item }) => {
+  const product = item.products
+  // La cantidad vendida es la del carrito, NO el stock del catálogo ProQuantity.
+  const quantity = Number.isFinite(Number(item.cantProducts))
+    ? Math.max(0, Number(item.cantProducts))
+    : 0
+  // Precio almacenado en la línea: evita mostrar un precio de catálogo actualizado.
+  const recordedPrice = typeof item.priceProduct === 'number' && Number.isFinite(item.priceProduct)
+    ? item.priceProduct
+    : product?.ProPrice
+
   return (
-    <div className={styles.row}>
-      <div className={styles.thumb}>
-        {p.ProImage
-          ? <Image className={styles.image} src={p.ProImage} alt={p.pName} />
-          : <div style={{ fontSize: 12 }}>No image</div>
-        }
+    <article className={styles.row}>
+      <div className={styles.thumbnail}>
+        {product?.ProImage ? (
+          <Image
+            src={product.ProImage}
+            alt={formatText(product?.pName, 'Producto')}
+            className={styles.image}
+            width="76"
+            height="76"
+          />
+        ) : (
+          <span aria-hidden="true" className={styles.placeholder}><Icon icon="IconBox" size={26} /></span>
+        )}
       </div>
       <div className={styles.info}>
-        <Text font='light' size='4xl'>
-          {p.pName}
-        </Text>
-        <div className={styles.meta}>
-          <Row>
-            <Text font='light' size='md'>
-              Cantidad:
-            </Text>
-            <CounterAnimation
-              number={Number(p.ProQuantity ?? 0)}
-              size='1rem'
-              numberformat={false}
-            />
-          </Row>
-          <Divider />
-          <span className={styles.price}>
-            {numberFormat(p.ProPrice)}
-          </span>
+        <h3 className={styles.name}>{formatText(product?.pName, 'Producto sin nombre')}</h3>
+        {product?.pCode && <p className={styles.sku}>Ref. {product.pCode}</p>}
+        <div className={styles.bottom}>
+          <span className={styles.quantity}>Cantidad: <strong>{quantity}</strong></span>
+          <div className={styles.priceWrapper}>
+            <span className={styles.priceLabel}>Precio registrado</span>
+            <span className={styles.price}>{formatCOP(recordedPrice)}</span>
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   )
 }
 
-export default React.memo(ItemRow)
+export default React.memo(OrderItemRow)

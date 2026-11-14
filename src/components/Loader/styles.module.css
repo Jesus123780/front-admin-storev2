@@ -1,0 +1,405 @@
+
+/* ==========================================
+   VENTY LOADER — DESIGN SYSTEM
+   ========================================== */
+
+.loader {
+  --loader-bg: var(--color-background-white, #ffffff);
+  --loader-accent: var(--color-background-primary, #ea1d2c);
+  --loader-accent-dark: var(--color-primary-red2, #c00000);
+  --loader-accent-light: var(--color-primary-red-bg, #fff4f4);
+
+  --loader-text: var(--color-text-black, #282828);
+  --loader-text-secondary: var(--color-text-gray-light, #666666);
+
+  --loader-exit-duration: 560ms;
+  --loader-motion-easing: cubic-bezier(0.76, 0, 0.24, 1);
+
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+
+  isolation: isolate;
+  overflow: hidden;
+
+  padding: var(--spacing-3xl, 2rem);
+
+  color: var(--loader-text);
+  background: var(--loader-bg);
+
+  font-family:
+    var(--font-family-regular, 'Open Sans'),
+    system-ui,
+    sans-serif;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.loader *,
+.loader *::before,
+.loader *::after {
+  box-sizing: border-box;
+}
+
+/* ==========================================
+   FULL SCREEN
+   ========================================== */
+
+.screen {
+  position: fixed;
+  inset: 0;
+
+  z-index: var(--z-index-high, 999999999);
+
+  width: 100%;
+  height: 100%;
+
+  visibility: visible;
+  pointer-events: auto;
+
+  transform: translate3d(0, 0, 0);
+
+  transition:
+    transform
+      var(--loader-exit-duration)
+      var(--loader-motion-easing),
+    visibility 0s linear;
+}
+
+/* El loader sale completamente del viewport
+   antes de aplicar visibility: hidden. */
+
+.screen.exiting {
+  transform: translate3d(0, -100%, 0);
+
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    transform
+      var(--loader-exit-duration)
+      var(--loader-motion-easing),
+    visibility 0s linear
+      var(--loader-exit-duration);
+}
+
+/* ==========================================
+   INLINE MODE
+   ========================================== */
+
+.inline {
+  position: relative;
+
+  width: 100%;
+  min-height: 240px;
+
+  border-radius: var(--border-radius-lg, 1.25rem);
+
+  padding: var(--spacing-4xl, 3rem)
+    var(--spacing-xl, 1rem);
+}
+
+/* ==========================================
+   CONTENT
+   ========================================== */
+
+.content {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: min(100%, 260px);
+
+  gap: var(--spacing-2xl, 1.5rem);
+
+  text-align: center;
+}
+
+/* ==========================================
+   BRAND
+   ========================================== */
+
+.brand {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  gap: var(--spacing-lg, 0.75rem);
+
+  max-width: 100%;
+
+  transform-origin: center;
+}
+
+/* ==========================================
+   BRAND SYMBOL
+   ========================================== */
+
+.symbol {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  width: clamp(52px, 12vw, 64px);
+  aspect-ratio: 1;
+
+  border-radius: var(--border-radius-lg, 1.25rem);
+
+  background: var(--loader-accent);
+
+  background-image: var(
+    --color-primary-red-header,
+    linear-gradient(
+      180deg,
+      #ea1d2c 0%,
+      #c00000 100%
+    )
+  );
+
+  box-shadow: var(--box-shadow-sm);
+
+  transform-origin: center;
+
+  animation: brandBreathing
+    2.8s
+    cubic-bezier(0.45, 0, 0.55, 1)
+    infinite;
+}
+
+.symbol span {
+  display: block;
+
+  color: var(--color-base-white, #ffffff);
+
+  font-family:
+    var(--font-family-bold, 'Open Sans'),
+    system-ui,
+    sans-serif;
+
+  font-size: clamp(30px, 8vw, 38px);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: 1;
+
+  transform: translateY(-1px);
+}
+
+/* ==========================================
+   BRAND NAME
+   ========================================== */
+
+.brandName {
+  display: block;
+
+  color: var(--loader-text);
+
+  font-family:
+    var(--font-family-bold, 'Open Sans'),
+    system-ui,
+    sans-serif;
+
+  font-size: clamp(36px, 8vw, 48px);
+  font-weight: var(--font-weight-extrabold, 800);
+
+  letter-spacing: -0.065em;
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+/* ==========================================
+   PROGRESS TRACK
+   ========================================== */
+
+.progress {
+  position: relative;
+
+  width: min(100%, 180px);
+  height: 4px;
+
+  overflow: hidden;
+
+  border-radius: var(--border-radius-full, 999px);
+
+  background: var(--loader-accent-light);
+
+  transform: translateZ(0);
+}
+
+/* ==========================================
+   PROGRESS INDICATOR
+   ========================================== */
+
+.progressIndicator {
+  position: absolute;
+
+  inset-block: 0;
+  left: 0;
+
+  display: block;
+
+  width: 38%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    var(--loader-accent-dark),
+    var(--loader-accent)
+  );
+
+  transform: translate3d(-110%, 0, 0);
+
+  animation: progressTravel
+    1.65s
+    cubic-bezier(0.45, 0, 0.35, 1)
+    infinite;
+}
+
+/* ==========================================
+   DESCRIPTION
+   ========================================== */
+
+.description {
+  margin: 0;
+
+  max-width: 100%;
+
+  color: var(--loader-text-secondary);
+
+  font-family:
+    var(--font-family-medium, 'Open Sans'),
+    system-ui,
+    sans-serif;
+
+  font-size: var(--font-size-md, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+
+  line-height: 1.5;
+  letter-spacing: var(--letter-spacing-normal, 0);
+
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* ==========================================
+   BRAND ANIMATION
+   ========================================== */
+
+@keyframes brandBreathing {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, -3px, 0) scale(1.045);
+  }
+}
+
+/* ==========================================
+   PROGRESS ANIMATION
+   ========================================== */
+
+@keyframes progressTravel {
+  0% {
+    transform: translate3d(-110%, 0, 0) scaleX(0.75);
+  }
+
+  35% {
+    transform: translate3d(25%, 0, 0) scaleX(1);
+  }
+
+  65% {
+    transform: translate3d(155%, 0, 0) scaleX(1.15);
+  }
+
+  100% {
+    transform: translate3d(300%, 0, 0) scaleX(0.75);
+  }
+}
+
+/* ==========================================
+   PAUSE ANIMATIONS WHEN EXITING
+   ========================================== */
+
+.screen.exiting .symbol,
+.screen.exiting .progressIndicator {
+  animation-play-state: paused;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 480px) {
+  .loader {
+    padding: var(--spacing-2xl, 1.5rem);
+  }
+
+  .content {
+    gap: var(--spacing-xl, 1rem);
+  }
+
+  .brand {
+    gap: var(--spacing-md, 0.5rem);
+  }
+
+  .progress {
+    width: min(100%, 150px);
+  }
+
+  .description {
+    font-size: var(--font-size-sm, 0.75rem);
+  }
+}
+
+@media (max-height: 320px) {
+  .content {
+    gap: var(--spacing-lg, 0.75rem);
+  }
+
+  .symbol {
+    width: 44px;
+  }
+
+  .symbol span {
+    font-size: 26px;
+  }
+
+  .brandName {
+    font-size: 32px;
+  }
+}
+
+/* ==========================================
+   ACCESSIBILITY
+   ========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .symbol,
+  .progressIndicator {
+    animation: none;
+  }
+
+  .symbol {
+    transform: none;
+  }
+
+  .progressIndicator {
+    transform: translateX(82%);
+  }
+
+  .screen,
+  .screen.exiting {
+    transition: none;
+  }
+}

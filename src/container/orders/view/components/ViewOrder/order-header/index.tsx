@@ -1,115 +1,71 @@
-import {
-  Column,
-  CopyToClipboard,
-  getGlobalStyle,
-  Icon,
-  Row,
-  Text
-} from 'pkg-components'
-import React, { useContext } from 'react'
+'use client'
 
-import { Context } from '@/context/Context'
-
+import React from 'react'
+import { CopyToClipboard, Icon } from 'pkg-components'
+import { formatOrderDate } from '../helpers/order-format'
 import styles from './order-header.module.css'
+
+export type OrderStatus = {
+  name?: string | null
+  color?: string | null
+  backgroundColor?: string | null
+}
 
 type Props = {
   pCodeRef: string
-  modalView: boolean
-  status?: string
+  modalView?: boolean
+  status?: string | null
   createdAt?: string | null
-  statusOrder: { name: string, backgroundColor: string, color: string }
+  statusOrder?: OrderStatus | null
 }
 
 const OrderHeader: React.FC<Props> = ({
   pCodeRef,
-  status = 'DESCONOCIDO',
+  status,
   createdAt,
-  modalView = false,
   statusOrder
 }) => {
-  const { sendNotification } = useContext(Context)
-
-  if (modalView) {
-    return (
-      <Column as='header' gap='md' style={{ padding: getGlobalStyle('--spacing-2xl') }}>
-        <div className={styles.left}>
-          <Row gap="md" alignItems='center'>
-            <Text className={styles.title}>
-              Orden
-            </Text>
-            <CopyToClipboard
-              text={pCodeRef}
-              onCopyError={() => { }}
-              onCopySuccess={() => {
-                sendNotification({
-                  backgroundColor: 'success',
-                  description: `El código ${pCodeRef} ha sido copiado al portapapeles.`,
-                  title: 'Éxito',
-                  position: 'bottom-center',
-                })
-              }}
-            />
-          </Row>
-        </div>
-        <div className={styles.right}>
-          <Column gap='sm' justifyContent='flex-start' alignItems='flex-start'>
-            <Column style={{
-              backgroundColor: statusOrder.backgroundColor,
-              color: statusOrder.color,
-              width: 'fit-content'
-            }}>
-              <Text className={styles.badge}>
-                {status}
-              </Text>
-            </Column>
-          </Column>
-        </div>
-      </Column>
-    )
+  const safeCode = pCodeRef.trim()
+  const label = status?.trim() || 'Estado desconocido'
+  // El backend define los colores del estado. Variables del theme como fallback.
+  const badgeStyle: React.CSSProperties = {
+    backgroundColor: statusOrder?.backgroundColor || 'var(--color-background-gray-light, #f5f5f5)',
+    color: statusOrder?.color || 'var(--color-text-black, #282828)'
   }
+  const validCreatedAt = createdAt && !Number.isNaN(new Date(createdAt).getTime())
 
   return (
-    <Row as='header' justifyContent='space-between' gap='md' style={{ padding: getGlobalStyle('--spacing-2xl') }}>
-      <div className={styles.left}>
-        <Row gap="md" alignItems='center'>
-          <Text className={styles.title}>
-            Orden
-          </Text>
-          <CopyToClipboard text={pCodeRef}
-            onCopySuccess={() => {
-              sendNotification({
-                backgroundColor: 'success',
-                description: `El código ${pCodeRef} ha sido copiado al portapapeles.`,
-                title: 'Éxito'
-              })
-            }}
-          />
-        </Row>
+    <header className={styles.header}>
+      <div className={styles.identity}>
+        <p className={styles.eyebrow}>Detalle de la compra</p>
+        <div className={styles.heading}>
+          <h1 className={styles.title}>Orden</h1>
+          {safeCode ? (
+            <div className={styles.code}>
+              <span className={styles.codeText}>#{safeCode}</span>
+              <CopyToClipboard
+                text={safeCode}
+                label="Copiar código"
+                showText={false}
+                copiedMessage="Copiado"
+                errorMessage="Error al copiar"
+              />
+            </div>
+          ) : <span className={styles.codeUnavailable}>Sin código</span>}
+        </div>
       </div>
-      <div className={styles.right}>
-        <Column gap='sm' justifyContent='flex-end' alignItems='flex-end'>
-          <Column style={{
-            backgroundColor: statusOrder.backgroundColor,
-            color: statusOrder.color,
-            width: 'fit-content'
-          }}>
-            <Text className={styles.badge}>
-              {status}
-            </Text>
-          </Column>
-          {createdAt
-            && (
-              <Row alignItems='center' gap='sm' justifyContent='flex-end'>
-                <Icon icon='IconSimpleCalendar' size={25} />
-                <Text as='time' className={styles.time}>
-                  {createdAt}
-                </Text>
-              </Row>
-            )
-          }
-        </Column>
+      <div className={styles.meta}>
+        <span className={styles.badge} style={badgeStyle}>{label}</span>
+        {createdAt && (
+          <div className={styles.date}>
+            <span aria-hidden="true"><Icon icon="IconSimpleCalendar" size={17} /></span>
+            <time dateTime={validCreatedAt ? new Date(createdAt).toISOString() : undefined}>
+              {formatOrderDate(createdAt)}
+            </time>
+          </div>
+        )}
       </div>
-    </Row>
+    </header>
   )
 }
 

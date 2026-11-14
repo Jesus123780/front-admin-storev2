@@ -19,6 +19,7 @@ import {
   BarCodes,
   Button,
   Column,
+  CopyToClipboard,
   DaySelector,
   Divider,
   getGlobalStyle,
@@ -412,6 +413,20 @@ export const ProductView: React.FC<IProductViewProps> = ({
         >
           Eliminar
         </Button>
+        <Column style={{
+          width: 'min-content'
+        }}>
+          <CopyToClipboard text={String(pId)}
+            onCopySuccess={() => {
+              sendNotification({
+                backgroundColor: 'success',
+                description: `El código ${String(pId)} ha sido copiado al portapapeles.`,
+                title: 'Éxito'
+              })
+            }}
+          />
+        </Column>
+
       </Row>
       <div style={{
         display: 'grid',

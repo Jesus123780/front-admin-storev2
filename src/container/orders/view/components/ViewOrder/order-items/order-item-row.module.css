@@ -1,53 +1,18 @@
-/* components/order-items/order-item-row.module.css */
-.row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 10px;
-  border-radius: 8px;
-  background: #fbfdff;
-  border: 1px solid #eef6ff;
-}
-
-.thumb {
-  width: 56px;
-  height: 56px;
-  border-radius: 6px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  border: 1px solid #e6eef9;
-}
-
-.info {
-  flex: 1;
-}
-
-.image {
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-}
-
-.name {
-  font-weight: 600;
-  font-size: 14px;
-  color: #0b2545;
-}
-
-.meta {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 4px;
-}
-
-.price {
-  font-weight: 700;
-}
-
-.qty {
-  font-size: 13px;
-  color: #6b7280;
+.row { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.thumbnail { flex: 0 0 80px; width: 80px; height: 80px; overflow: hidden; border: 1px solid var(--order-border, var(--color-neutral-gray, #e5e5e5)); border-radius: var(--border-radius-md, 12px); background: var(--order-page-bg, var(--color-background-gray-light, #f5f5f5)); }
+.image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.placeholder { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--order-muted, var(--color-text-gray-light, #666)); }
+.info { flex: 1; width: auto; min-width: 0; }
+.name { margin: 0; font-size: 14px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.sku { margin: 4px 0 0; font-size: 11px; color: var(--order-muted, var(--color-text-gray-light, #666)); overflow-wrap: anywhere; }
+.bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.quantity { font-size: 12px; white-space: nowrap; color: var(--order-muted, var(--color-text-gray-light, #666)); }
+.quantity strong { color: var(--order-text, var(--color-text-black, #282828)); font-size: 13px; }
+.priceWrapper { width: auto; flex: 0 0 auto; display: flex; flex-direction: column; gap: 3px; text-align: right; }
+.priceLabel { font-size: 10px; color: var(--order-muted, var(--color-text-gray-light, #666)); }
+.price { font-size: 15px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media (max-width: 440px) {
+ .row { align-items: flex-start; gap: 11px; }
+ .thumbnail { flex-basis: 66px; width: 66px; height: 66px; }
+ .priceWrapper { text-align: left; }
 }

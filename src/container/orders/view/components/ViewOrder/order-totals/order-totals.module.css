@@ -1,76 +1,24 @@
-.container {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 18px;
-  border: 1px solid #e5e9f0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-
-/* Línea normal */
-.section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-}
-
-/* Etiqueta */
-.label {
-  color: #6b7280;
-  font-weight: 500;
-}
-
-/* Valor */
-.value {
-  font-weight: 600;
-  color: #111827;
-}
-
-/* TOTAL DESTACADO */
-.total {
-  display: flex;
-  justify-content: space-between;
-  padding-top: 12px;
-  border-top: 1px solid #dbe3eb;
-  margin-top: 4px;
-  align-items: center;
-  font-size: 16px;
-}
-
-.total .label {
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.total .value {
-  font-weight: 800;
-  color: #0f172a;
-}
-
-/* NOTA */
-.note {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.textarea {
-  width: 100%;
-  min-height: 75px;
-  border: 1px solid #dbe3eb;
-  border-radius: 10px;
-  padding: 10px;
-  resize: vertical;
-  font-size: 14px;
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s;
-}
-
-.textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-}
+.container { min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 20px; background: var(--order-surface, var(--color-background-white, #fff)); border: 1px solid var(--order-border, var(--color-neutral-gray, #e5e5e5)); border-radius: var(--border-radius-lg, 20px); }
+.title { font-size: 17px; font-weight: 750; letter-spacing: -.02em; margin: 0; }
+.totals { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.totalRow { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; min-width: 0; }
+.totalLabel { width: auto; min-width: 0; color: var(--order-muted, var(--color-text-gray-light, #666)); font-size: 13px; overflow-wrap: anywhere; }
+.totalValue { width: auto; flex: 0 0 auto; margin: 0; font-size: 13px; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.grandTotal { align-items: center; border-top: 1px dashed var(--order-border, var(--color-neutral-gray, #e5e5e5)); padding-top: 17px; margin-top: 5px; }
+.grandTotal .totalLabel { width: auto; min-width: 0; color: var(--order-text, var(--color-text-black, #282828)); font-size: 14px; font-weight: 700; }
+.grandTotal .totalValue { color: var(--order-text, var(--color-text-black, #282828)); font-size: 21px; font-weight: 850; letter-spacing: -.03em; }
+.empty { margin: 0; font-size: 13px; color: var(--order-muted, var(--color-text-gray-light, #666)); }
+.note { display: flex; flex-direction: column; gap: 9px; padding-top: 18px; border-top: 1px solid var(--order-border, var(--color-neutral-gray, #e5e5e5)); }
+.noteHeading { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.noteTitle { font-size: 13px; font-weight: 700; }
+.counter { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--order-muted, var(--color-text-gray-light, #666)); }
+.textarea { box-sizing: border-box; width: 100%; min-height: 100px; padding: 12px; resize: vertical; border: 1px solid var(--order-border, var(--color-neutral-gray, #e5e5e5)); border-radius: var(--border-radius-md, 12px); background: var(--order-surface, var(--color-background-white, #fff)); color: var(--order-text, var(--color-text-black, #282828)); font: inherit; font-size: 13px; line-height: 1.5; transition: border-color 160ms ease, box-shadow 160ms ease; }
+.textarea::placeholder { color: var(--order-muted, var(--color-text-gray-light, #666)); }
+.textarea:hover:not(:disabled) { border-color: var(--order-muted, var(--color-text-gray-light, #666)); }
+.textarea:focus-visible { outline: 2px solid var(--order-accent, var(--color-secondary-blue, #0062ff)); outline-offset: 2px; }
+.textarea:disabled { cursor: wait; }
+.hint, .success, .error { font-size: 11px; line-height: 1.5; margin: 0; }
+.hint { color: var(--order-muted, var(--color-text-gray-light, #666)); }
+.success { color: var(--color-text-success, #50a773); }
+.error { color: var(--color-text-error, #ee0000); }
+@media (prefers-reduced-motion: reduce) { .textarea { transition: none; } }
