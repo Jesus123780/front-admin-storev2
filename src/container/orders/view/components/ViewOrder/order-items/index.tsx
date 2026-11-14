@@ -1,40 +1,32 @@
 'use client'
 
-import React from 'react'
-import type { ShoppingCart } from '../../types/order'
+import { memo } from 'react'
+
+import type { OrderItemCart } from './order-item.types'
+import { finiteNumber } from './order-item.utils'
 import OrderItemRow from './order-item-row'
 import styles from './order-items.module.css'
 
-type Props = { items?: ShoppingCart[] | null }
-
-const OrderItems: React.FC<Props> = ({ items }) => {
-  const headingId = React.useId()
-  const list = items ?? []
-  const totalUnits = list.reduce((count, item) => count + (Number.isFinite(Number(item.cantProducts)) ? Math.max(0, Number(item.cantProducts)) : 0), 0)
+const OrderItems = memo(function OrderItems({ items }: { items?: Array<OrderItemCart | null> | null }) {
+  const rows = (items ?? []).filter((item): item is OrderItemCart => item != null)
+  const counts = rows.map(item => finiteNumber(item.cantProducts))
+  const total = counts.some(value => value === null) ? null : counts.reduce<number>((sum, value) => sum + (value ?? 0), 0)
   return (
-    <section className={styles.container} aria-labelledby={headingId}>
+    <section className={styles.container} aria-label='Productos de la orden'>
       <header className={styles.header}>
-        <div>
-          <h2 id={headingId} className={styles.title}>Productos</h2>
+        <div className={styles.heading}>
+          <h2 className={styles.title}>Productos</h2>
           <p className={styles.subtitle}>Detalle de artículos de la orden</p>
         </div>
-        <span className={styles.counter} aria-label={`${totalUnits} unidades en ${list.length} líneas`}>
-          {totalUnits} {totalUnits === 1 ? 'unidad' : 'unidades'}
-        </span>
+        <span className={styles.counter}>{total === null ? `${rows.length} artículos` : `${total} ${total === 1 ? 'unidad' : 'unidades'}`}</span>
       </header>
-      {list.length === 0 ? (
-        <div className={styles.empty} role="status">No hay productos registrados en esta orden.</div>
-      ) : (
+      {rows.length ? (
         <ul className={styles.list}>
-          {list.map((item, index) => (
-            <li key={item.shoppingCartId || `${item.pId}-${index}`} className={styles.listItem}>
-              <OrderItemRow item={item} />
-            </li>
-          ))}
+          {rows.map(item => <li className={styles.listItem} key={item.shoppingCartId}><OrderItemRow item={item} /></li>)}
         </ul>
-      )}
+      ) : <p className={styles.empty}>No hay productos registrados en esta orden.</p>}
     </section>
   )
-}
+})
 
-export default React.memo(OrderItems)
+export default OrderItems

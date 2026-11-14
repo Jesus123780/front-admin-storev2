@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useEffect, useId, useState } from 'react'
-import { RippleButton } from 'pkg-components'
+import { numberFormat, RippleButton } from 'pkg-components'
+import React, {
+ useEffect, useId, useState 
+} from 'react'
 
-import { formatCOP, isGrandTotal } from '../helpers/order-format'
+import { isGrandTotal } from '../helpers/order-format'
 import styles from './order-totals.module.css'
 
 export type Total = { name: string; value: number }
@@ -36,7 +38,7 @@ const OrderTotals: React.FC<Props> = ({ totals = [], note = '', onSaveNote }) =>
 
   async function saveNote(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!onSaveNote || !dirty || saving) return
+    if (!onSaveNote || !dirty || saving) {return}
     setSaving(true)
     setFeedback(null)
     try {
@@ -60,7 +62,7 @@ const OrderTotals: React.FC<Props> = ({ totals = [], note = '', onSaveNote }) =>
             return (
               <div className={`${styles.totalRow} ${isTotal ? styles.grandTotal : ''}`} key={`${row.name}-${index}`}>
                 <dt className={styles.totalLabel}>{row.name}</dt>
-                <dd className={styles.totalValue}>{formatCOP(row.value)}</dd>
+                <dd className={styles.totalValue}>{numberFormat(row.value)}</dd>
               </div>
             )
           })}

@@ -36,7 +36,6 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
   const hasOrder = Boolean(order)
   const orderCode = order?.pCodeRef?.trim() ?? ''
   const allTotals = totals?.totals ?? order?.totals ?? []
-
   return (
     <div
       className={styles.container}

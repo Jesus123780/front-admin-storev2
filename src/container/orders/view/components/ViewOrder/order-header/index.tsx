@@ -1,8 +1,8 @@
 'use client'
 
-import React from 'react'
 import { CopyToClipboard, Icon } from 'pkg-components'
-import { formatOrderDate } from '../helpers/order-format'
+import React from 'react'
+
 import styles from './order-header.module.css'
 
 export type OrderStatus = {
@@ -60,7 +60,7 @@ const OrderHeader: React.FC<Props> = ({
           <div className={styles.date}>
             <span aria-hidden="true"><Icon icon="IconSimpleCalendar" size={17} /></span>
             <time dateTime={validCreatedAt ? new Date(createdAt).toISOString() : undefined}>
-              {formatOrderDate(createdAt)}
+              {createdAt}
             </time>
           </div>
         )}

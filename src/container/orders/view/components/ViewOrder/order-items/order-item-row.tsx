@@ -1,52 +1,57 @@
 'use client'
 
-import React from 'react'
-import { Icon, Image } from 'pkg-components'
-import type { ShoppingCart } from '../../types/order'
-import { formatCOP, formatText } from '../helpers/order-format'
+import { Icon, Image, numberFormat, Tag } from 'pkg-components'
+import { memo } from 'react'
+
+import type { OrderItemCart } from './order-item.types'
+import { getItemAmounts, label, resolveImage } from './order-item.utils'
+import { OrderItemDetails } from './order-item-details'
 import styles from './order-item-row.module.css'
 
-type Props = { item: ShoppingCart }
-
-const OrderItemRow: React.FC<Props> = ({ item }) => {
+const OrderItemRow = memo(function OrderItemRow({ item }: { item: OrderItemCart }) {
   const product = item.products
-  // La cantidad vendida es la del carrito, NO el stock del catálogo ProQuantity.
-  const quantity = Number.isFinite(Number(item.cantProducts))
-    ? Math.max(0, Number(item.cantProducts))
-    : 0
-  // Precio almacenado en la línea: evita mostrar un precio de catálogo actualizado.
-  const recordedPrice = typeof item.priceProduct === 'number' && Number.isFinite(item.priceProduct)
-    ? item.priceProduct
-    : product?.ProPrice
+  const { quantity, unit, original, free, courtesy } = getItemAmounts(item)
+  const productName = label(product?.pName, 'Producto sin nombre')
+  const image = resolveImage(product?.ProImage)
 
   return (
-    <article className={styles.row}>
+    <article className={styles.row} data-free={free}>
       <div className={styles.thumbnail}>
-        {product?.ProImage ? (
-          <Image
-            src={product.ProImage}
-            alt={formatText(product?.pName, 'Producto')}
-            className={styles.image}
-            width="76"
-            height="76"
-          />
+        {image ? (
+          <Image src={image} alt={productName} className={styles.image} width='76' height='76' />
         ) : (
-          <span aria-hidden="true" className={styles.placeholder}><Icon icon="IconBox" size={26} /></span>
+          <span className={styles.placeholder} aria-hidden='true'>
+            <Icon icon='IconBox' size={24} color='currentColor' />
+          </span>
         )}
       </div>
       <div className={styles.info}>
-        <h3 className={styles.name}>{formatText(product?.pName, 'Producto sin nombre')}</h3>
+        <div className={styles.productHeading}>
+          <h3 className={styles.name}>{productName}</h3>
+          {free && (
+            <Tag className={styles.freeTag} label='Gratis' color='success' backgroundColor='success'
+              variant='soft' size='sm' rounded='full' weight='semibold' textTransform='none' />
+          )}
+        </div>
         {product?.pCode && <p className={styles.sku}>Ref. {product.pCode}</p>}
         <div className={styles.bottom}>
-          <span className={styles.quantity}>Cantidad: <strong>{quantity}</strong></span>
+          <span className={styles.quantity}>Cantidad: <strong>{quantity ?? '—'}</strong></span>
           <div className={styles.priceWrapper}>
-            <span className={styles.priceLabel}>Precio registrado</span>
-            <span className={styles.price}>{formatCOP(recordedPrice)}</span>
+            <span className={styles.priceLabel}>{free ? 'Precio cobrado por unidad' : 'Precio unitario'}</span>
+            {courtesy && original !== null && <del className={styles.originalPrice}>{numberFormat(original)}</del>}
+            <span className={styles.price} data-free={free}>{unit === null ? '—' : numberFormat(unit)}</span>
           </div>
         </div>
+        {courtesy && (
+          <p className={styles.courtesyNotice}>
+            <span aria-hidden='true' className={styles.courtesyIcon}>✓</span>
+            Este producto fue marcado como gratis.
+          </p>
+        )}
       </div>
+      <div className={styles.detailSlot}><OrderItemDetails item={item} /></div>
     </article>
   )
-}
+})
 
-export default React.memo(OrderItemRow)
+export default OrderItemRow

@@ -1,94 +1,299 @@
+
 'use client'
 
-import { useGetSale, usePrintSaleTicket } from 'npm-pkg-hook'
-import { Loading } from 'pkg-components'
-import { useContext, useEffect, useRef, useState } from 'react'
+import {
+  useGetSale,
+  usePrintSaleTicket
+} from 'npm-pkg-hook'
+import {
+  Icon,
+  RippleButton
+} from 'pkg-components'
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useState
+} from 'react'
 
 import OrderDetail from '@/container/orders/view/components/ViewOrder'
-import type { Order } from '../types/order'
 import { Context } from '@/context/Context'
 
-type Props = { orderId: string }
+import type { Order } from '../types/order'
+import styles from './order-detail-client.module.css'
 
-export interface SaleResponse {
-  getOneSalesStore: { data: Order | null }
+type Props = {
+  orderId: string
 }
 
-/** Adaptador de datos. El diseño y el estado de la vista viven en OrderDetail. */
-export default function OrderDetailClient({ orderId }: Props) {
-  const [data, setData] = useState<SaleResponse | null>(null)
-  const [error, setError] = useState('')
-  const [fetching, setFetching] = useState(true)
-  const { handleGetSale, loading } = useGetSale()
-  const [handlePrintSale] = usePrintSaleTicket()
+export interface SaleResponse {
+  getOneSalesStore: {
+    data: Order | null
+    message?: string
+    errors?: Array<{ message?: string }> | null
+  }
+}
+
+type RequestState =
+  | { status: 'loading' }
+  | { status: 'success' }
+  | { status: 'error'; message: string }
+
+interface OrderErrorStateProps {
+  message: string
+  onRetry?: () => void
+}
+
+const OrderErrorState = ({
+  message,
+  onRetry
+}: OrderErrorStateProps) => {
+  return (
+    <section className={styles.errorContainer}>
+      <div className={styles.errorContent}>
+        <div
+          className={styles.errorIcon}
+          aria-hidden='true'
+        >
+          <Icon
+            icon='IconWarning'
+            size={34}
+            color='var(--color-icons-gray)'
+          />
+        </div>
+
+        <div className={styles.errorInformation} role='alert'>
+          <h2 className={styles.errorTitle}>
+            No pudimos cargar la orden
+          </h2>
+
+          <p className={styles.errorDescription}>
+            {message}
+          </p>
+        </div>
+
+        {onRetry && (
+          <div className={styles.actions}>
+            <RippleButton
+              type='button'
+              radius='12px'
+              padding='14px 24px'
+              onClick={onRetry}
+            >
+              <span className={styles.retryButton}>
+                <span aria-hidden='true'>
+                  <Icon
+                    icon='IconReload'
+                    size={18}
+                    color='#ffffff'
+                  />
+                </span>
+
+                Reintentar consulta
+              </span>
+            </RippleButton>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Cada instancia representa exclusivamente una orden.
+ * Apollo Client administra los datos de la consulta.
+ */
+function OrderDetailContent({ orderId }: Props) {
   const { sendNotification } = useContext(Context)
 
-  // Evita solicitar nuevamente la orden si el hook expone una función no memorizada.
-  const getSaleRef = useRef(handleGetSale)
-  useEffect(() => { getSaleRef.current = handleGetSale }, [handleGetSale])
+  const {
+    getOneSalesStore,
+    data,
+    loading
+  } = useGetSale()
 
+  const [handlePrintSale] = usePrintSaleTicket()
+
+  const [attempt, setAttempt] = useState(0)
+
+  const [request, setRequest] = useState<RequestState>({
+    status: 'loading'
+  })
+
+  const sale = data as
+    | SaleResponse['getOneSalesStore']
+    | undefined
+
+  const order = sale?.data ?? null
+  const orderCode = order?.pCodeRef?.trim()
+
+  /**
+   * Consulta inicial y reintentos.
+   *
+   * No duplicamos la respuesta de Apollo en un useState.
+   * El indicador current evita actualizar nuestro estado
+   * cuando la instancia ya no está activa.
+   */
   useEffect(() => {
     let current = true
-    setData(null)
-    setError('')
-    setFetching(true)
 
-    void (async () => {
+    const fetchOrder = async (): Promise<void> => {
+      setRequest({ status: 'loading' })
+
       try {
-        const response = await getSaleRef.current(orderId)
-        if (!current) return
-        const next = response?.data as SaleResponse | undefined
-        if (!next?.getOneSalesStore?.data) {
-          setError('No encontramos la información de esta orden.')
+        const response = await getOneSalesStore({
+          variables: {
+            pCodeRef: orderId
+          },
+          fetchPolicy: 'no-cache'
+        })
+        if (!current) {return}
+
+        if (response.error) {
+          throw response.error
+        }
+
+        const result = (
+          response.data as SaleResponse | undefined
+        )?.getOneSalesStore
+
+        if (result?.errors?.length) {
+          setRequest({
+            status: 'error',
+            message: 'No fue posible consultar esta orden.'
+          })
+
           return
         }
-        setData(next)
+
+        if (!result?.data) {
+          setRequest({
+            status: 'error',
+            message: 'No encontramos información para esta orden.'
+          })
+
+          return
+        }
+
+        setRequest({
+          status: 'success'
+        })
       } catch {
-        if (current) setError('Ocurrió un error al consultar la orden.')
-      } finally {
-        if (current) setFetching(false)
+        if (!current) {return}
+
+        setRequest({
+          status: 'error',
+          message:
+            'Ocurrió un inconveniente al consultar la información. Intenta nuevamente.'
+        })
       }
-    })()
+    }
 
-    return () => { current = false }
-  }, [orderId])
+    void fetchOrder()
 
-  const order = data?.getOneSalesStore?.data ?? null
+    return () => {
+      current = false
+    }
+  }, [orderId, attempt, getOneSalesStore])
 
-  const handleClickPrint = async () => {
-    const code = order?.pCodeRef?.trim()
-    if (!code) return
-    try {
-      const response = await handlePrintSale(code)
-      const success = Boolean(response?.success)
+  const handleRetry = useCallback(() => {
+    setRequest({ status: 'loading' })
+    setAttempt(previous => previous + 1)
+  }, [])
+
+  /**
+   * OrderActions administra el estado visual de impresión.
+   * Este adaptador solamente ejecuta la operación.
+   */
+  const handleClickPrint = useCallback(async (): Promise<void> => {
+    if (!orderCode) {
+      throw new Error('La orden no tiene un código válido.')
+    }
+
+    if (typeof handlePrintSale !== 'function') {
+      throw new Error('El servicio de impresión no está disponible.')
+    }
+
+    const response = await handlePrintSale(orderCode)
+      .catch(() => undefined)
+
+    if (!response?.success) {
+      const message =
+        response?.message ||
+        'No fue posible enviar el comprobante a la impresora.'
+
       sendNotification({
-        description: response?.message ?? 'No se pudo conectar con el servidor',
-        title: success ? 'Impresión enviada' : 'Error al imprimir',
-        backgroundColor: success ? 'success' : 'error'
-      })
-      // Permite que OrderActions gestione la señal de error sin notificar éxito.
-      if (!success) throw new Error('La impresión fue rechazada')
-    } catch (error) {
-      if (error instanceof Error && error.message === 'La impresión fue rechazada') throw error
-      sendNotification({
-        description: 'Ocurrió un error al solicitar la impresión.',
         title: 'Error al imprimir',
+        description: message,
         backgroundColor: 'error'
       })
-      throw error
+
+      // OrderActions recibe el rechazo y actualiza
+      // correctamente su estado visual.
+      throw new Error(message)
     }
+
+    sendNotification({
+      title: 'Impresión enviada',
+      description:
+        response.message ||
+        'El comprobante fue enviado correctamente.',
+      backgroundColor: 'success'
+    })
+  }, [
+    orderCode,
+    handlePrintSale,
+    sendNotification
+  ])
+
+  if (request.status === 'loading') {
+    return (
+      <OrderDetail
+        order={null}
+        loading
+      />
+    )
   }
 
-  if ((fetching || loading) && !data) return <Loading />
-  if (error) return <div role="alert" style={{ padding: 24 }}>{error}</div>
-
+  if (request.status === 'error') {
+    return (
+      <OrderErrorState
+        message={request.message}
+        onRetry={handleRetry}
+      />
+    )
+  }
+  console.log({order})
   return (
     <OrderDetail
       order={order}
       loading={loading}
       modalView={false}
       handlePrint={handleClickPrint}
-      totals={{ totals: order?.totals ?? [] }}
+    />
+  )
+}
+
+/**
+ * Reinicia el ciclo de vida al cambiar de orden.
+ */
+export default function OrderDetailClient({
+  orderId
+}: Props) {
+  const normalizedOrderId = orderId?.trim()
+
+  if (!normalizedOrderId) {
+    return (
+      <OrderErrorState
+        message='El identificador de la orden no es válido.'
+      />
+    )
+  }
+
+  return (
+    <OrderDetailContent
+      key={normalizedOrderId}
+      orderId={normalizedOrderId}
     />
   )
 }

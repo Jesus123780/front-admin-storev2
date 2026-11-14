@@ -31,7 +31,6 @@ export const OrderActions: React.FC<OrderActionsProps> = React.memo(({ handlePri
       <RippleButton
         type="button"
         className={styles.printButton}
-        bgColor="var(--color-secondary-blue, #0062ff)"
         color="#fff"
         radius="12px"
         padding="14px 18px"

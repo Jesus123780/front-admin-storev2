@@ -8,6 +8,7 @@ export type Product = {
   ProPrice: number
   ProQuantity: number
   ProImage?: string
+  free: boolean | number
   vat?: number
   __typename?: string
 }

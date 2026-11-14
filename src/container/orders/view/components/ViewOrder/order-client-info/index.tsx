@@ -1,10 +1,10 @@
 'use client'
 
+import { getGlobalStyle, Icon, Image } from 'pkg-components'
 import React from 'react'
-import { Icon } from 'pkg-components'
 
 import type { Client, Store } from '../../types/order'
-import { formatOrderDate, formatText } from '../helpers/order-format'
+import { formatText } from '../helpers/order-format'
 import styles from './order-client-info.module.css'
 
 type Props = {
@@ -41,6 +41,7 @@ function Detail({ icon, label, value, href }: DetailProps) {
 }
 
 const OrderClientInfo: React.FC<Props> = ({ client, store, createdAt }) => {
+  console.log(store)
   const headingId = React.useId()
   const fullName = [client?.clientName, client?.clientLastName]
     .filter((value) => typeof value === 'string' && value.trim().length > 0)
@@ -66,16 +67,20 @@ const OrderClientInfo: React.FC<Props> = ({ client, store, createdAt }) => {
         <Detail icon="IconLocationMap2" label="Dirección" value={client?.ClientAddress} />
         <Detail icon="IconFingerPrint" label="Documento" value={client?.ccClient} />
         {createdAt && (
-          <Detail icon="IconSimpleCalendar" label="Fecha de creación" value={formatOrderDate(createdAt)} />
+          <Detail icon="IconSimpleCalendar" label="Fecha de creación" value={createdAt} />
         )}
       </dl>
 
       <div className={styles.storeSection}>
         <div className={styles.sectionHeading}>
-          <span className={styles.headingIcon} aria-hidden="true"><Icon icon="IconStore" size={20} /></span>
+          <span className={styles.headingIcon} aria-hidden="true">
+           <Icon icon='IconStore' size={20} color={getGlobalStyle('--color-icons-black')}  />
+          </span>
           <div>
             <h3 className={styles.headingSmall}>Comercio</h3>
-            <p className={styles.subtitle}>Datos del establecimiento</p>
+            <p className={styles.subtitle}>
+              Datos del establecimiento
+            </p>
           </div>
         </div>
         <dl className={styles.details}>
