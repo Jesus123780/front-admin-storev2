@@ -253,3 +253,8 @@
 .debugActions button { min-height: 44px; background: var(--ticket-surface); color: var(--ticket-text); border: 1px solid var(--ticket-border); border-radius: var(--border-radius-md, 12px); font: inherit; cursor: pointer; }
 .debugActions button:focus-visible { outline: 2px solid var(--color-secondary-blue, #0062ff); outline-offset: 3px; }
 @media print { .debugActions { display: none !important; } }
+
+/* Exact v15: payments external to the POS are informational, not additions. */
+.ticket .externalPayment { margin-top: 10px; padding: 8px 0; border-top: 1px dashed var(--ticket-border); }
+.ticket .externalPayment dd { font-variant-numeric: tabular-nums; }
+@media print { .ticket .externalPayment { break-inside: avoid; } }

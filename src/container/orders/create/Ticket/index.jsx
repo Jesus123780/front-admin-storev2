@@ -1,60 +1,17 @@
 'use client'
-
-import { generateStoreURL,numberFormat } from 'npm-pkg-hook'
-import { Bill } from 'pkg-components'
+import React, { useRef } from 'react'
 import PropTypes from 'prop-types'
-import React from 'react'
+import { Prints } from '../Printsale'
+import { createInvoiceSnapshot } from '../sale-invoice-snapshot'
 
-export const Ticket = ({ componentRef, dataToPrint }) => {
-  const {
-    date,
-    products,
-    total,
-    storeName,
-    paymentMethod,
-    NitStore,
-    ref,
-    client,
-    change,
-    city,
-    uPhoNum,
-    department,
-    addressStore,
-    discount,
-    idStore,
-    storePhone
-  } = dataToPrint || {}
-  const restaurant = {
-    storeName,
-    paymentMethod,
-    address: addressStore,
-    ref: ref,
-    change: change,
-    NitStore: NitStore,
-    tlf: storePhone || uPhoNum
-  }
-  const bill = {
-    date
-  }
-  const urlStore = generateStoreURL({ city, department, storeName, idStore })
-  return (
-    <div ref={componentRef}>
-      <Bill
-        bill={bill}
-        client={client}
-        discount={discount}
-        numberFormat={numberFormat}
-        products={products}
-        restaurant={restaurant}
-        total={total}
-        urlStore={urlStore}
-      />
-    </div>
-
-  )
+/** Legacy entry point: only accept confirmed financial data, never a raw Bill subtotal. */
+export const Ticket = ({ componentRef, dataToPrint, snapshot, expectedStoreId }) => {
+  const localRef=useRef(null)
+  const pending=useRef(null)
+  try {
+    const document=snapshot ?? createInvoiceSnapshot(dataToPrint,dataToPrint?.pCodeRef,expectedStoreId)
+    if(document?.view?.financials?.source!=='persisted')throw new Error('Comprobante no confirmado')
+    return <Prints componentRef={componentRef??localRef} promiseResolveRef={pending} isPrinting={false} mode='receipt' code={document.reference} saleDate={document.date?.iso} data={[]} values={{}} paymentMethod={document.view.payment.name} change={document.view.payment.change} total={document.view.financials.total} persistedView={document.view} persistedStore={document.store} persistedClient={document.client}/>
+  } catch { return <div role='status'>Consulta el detalle de la venta para obtener el comprobante conciliado.</div> }
 }
-
-Ticket.propTypes = {
-  componentRef: PropTypes.any,
-  dataToPrint: PropTypes.object
-}
+Ticket.propTypes={componentRef:PropTypes.any,dataToPrint:PropTypes.object,snapshot:PropTypes.object,expectedStoreId:PropTypes.string}

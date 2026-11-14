@@ -1,20 +1,16 @@
 'use client'
 
-import {
- Icon, Image, numberFormat, Tag 
-} from 'pkg-components'
+import { Icon, Image, Tag } from 'pkg-components'
 import { useState } from 'react'
-
 import styles from '../Prints.module.css'
-import { formatQuantity } from './normalize'
-import type {
- Amount, ReceiptClient, ReceiptFinancials, ReceiptPayment,ReceiptProduct, ReceiptStore 
-} from './types'
+import { formatMoney, formatQuantity } from './normalize'
+import { formatReceiptMoney, receiptRows, paymentRows } from './financial-receipt'
+import type { ReceiptClient, ReceiptProduct, ReceiptStore, ReceiptFinancials, ReceiptPayment } from './types'
 
 export function ReceiptHeader({ store }: { store: ReceiptStore }) {
   const [failed, setFailed] = useState('')
   return <header className={styles.header}>
-    <div className={styles.brandMark} aria-hidden='true'>{process.env.NEXT_PUBLIC_BUSINESS_TITLE} <span>·</span> POS</div>
+    <div className={styles.brandMark} aria-hidden='true'>{process.env.NEXT_PUBLIC_BUSINESS_TITLE || 'VENTY'} <span>·</span> POS</div>
     {store.logo && failed !== store.logo && <div className={styles.logoWrapper} onErrorCapture={() => setFailed(store.logo)}>
       <Image src={store.logo} alt={`Logo de ${store.name}`} className={styles.logo} />
     </div>}
@@ -32,7 +28,7 @@ export function Perforation() {
 }
 
 export function ReceiptClientInfo({ client }: { client: ReceiptClient | null }) {
-  if (!client) {return null}
+  if (!client) return null
   const fields = [['Nombre', client.name], ['Documento', client.document], ['Teléfono', client.phone], ['Dirección', client.address]].filter(([, value]) => value)
   return <section className={styles.clientBox} aria-label='Datos del cliente'>
     <h2 className={styles.eyebrow}>Datos del cliente</h2>
@@ -41,7 +37,7 @@ export function ReceiptClientInfo({ client }: { client: ReceiptClient | null }) 
 }
 
 function ReceiptItem({ item }: { item: ReceiptProduct }) {
-  const courtesy = item.free && item.total === 0
+  const courtesy = item.free
   const discounted = !courtesy && item.discountAmount !== null && item.discountAmount > 0
   const showOriginal = (courtesy || discounted) && item.originalTotal !== null && item.total !== null && item.originalTotal > item.total
   return <li className={styles.product}>
@@ -49,24 +45,24 @@ function ReceiptItem({ item }: { item: ReceiptProduct }) {
       <div className={styles.productInfo}>
         <h3 className={styles.productName}>{item.name}</h3>
         <div className={styles.itemMeta}>
-          <span>{formatQuantity(item.quantity)} × {numberFormat(item.unitPrice)}</span>
+          <span>{formatQuantity(item.quantity)} × {formatMoney(item.unitPrice)}</span>
           {item.sku && <span className={styles.sku}>Ref. {item.sku}</span>}
           {courtesy && <Tag label='Cortesía' color='success' backgroundColor='success' variant='soft' rounded='full' textTransform='none' className={styles.courtesyTag} />}
         </div>
-        {discounted && <span className={styles.discountText}>Descuento{item.originalTotal !== null && item.originalTotal > 0 && item.discountAmount !== null ? ` del ${Number((item.discountAmount / item.originalTotal * 100).toFixed(2))}%` : ''} · −{numberFormat(item.discountAmount)}</span>}
-        {courtesy && <span className={styles.discountText}>Este producto fue marcado como gratis.</span>}
+        {discounted && <span className={styles.discountText}>Descuento{item.discountPercent !== null && item.discountPercent > 0 ? ` del ${item.discountPercent}%` : ''} · −{formatMoney(item.discountAmount)}</span>}
+        {courtesy && <span className={styles.discountText}>Producto sin cobro. Los complementos seleccionados conservan su importe.</span>}
         {!item.free && item.total === 0 && item.originalTotal === 0 && <span className={styles.naturalZero}>Sin costo</span>}
       </div>
       <div className={styles.lineAmount}>
-        {showOriginal && <del aria-label={`Precio original de la línea: ${numberFormat(item.originalTotal)}`}>{numberFormat(item.originalTotal)}</del>}
-        <strong>{numberFormat(item.total)}</strong>
+        {showOriginal && <del aria-label={`Precio original de la línea: ${formatMoney(item.originalTotal)}`}>{formatMoney(item.originalTotal)}</del>}
+        <strong>{formatMoney(item.total)}</strong><small className={styles.extraMeta}>Neto producto</small>
       </div>
     </div>
     {(item.extras.length > 0 || item.optionals.length > 0 || item.comment) && <div className={styles.addons}>
       {item.extras.length > 0 && <div className={styles.addonGroup}><h4 className={styles.addonHeading}>Complementos</h4><ul className={styles.extras} aria-label='Complementos seleccionados'>
         {item.extras.map(extra => <li className={styles.extraRow} key={extra.key}>
-          <div><span className={styles.extraName}>{formatQuantity(extra.quantity)} × {extra.name}</span>{extra.quantity !== 1 && <span className={styles.extraMeta}>{numberFormat(extra.unitPrice)}/ud.</span>}</div>
-          <span className={styles.extraAmount}>{!extra.inconsistentCourtesyPrice && extra.discountAmount !== null && extra.discountAmount > 0 && <del>{numberFormat(extra.originalTotal)}</del>}{numberFormat(extra.total)}</span>
+          <div><span className={styles.extraName}>{formatQuantity(extra.quantity)} × {extra.name}</span><span className={styles.extraMeta}>Base {formatMoney(extra.unitPrice)}/ud.</span></div>
+          <span className={styles.extraAmount}>{extra.discountAmount !== null && extra.discountAmount > 0 && <del>{formatMoney(extra.originalTotal)}</del>} {formatMoney(extra.total)}</span>
         </li>)}
       </ul></div>}
       {item.optionals.length > 0 && <div className={styles.options} aria-label='Opciones seleccionadas'>
@@ -88,36 +84,13 @@ export function ReceiptProducts({ items }: { items: readonly ReceiptProduct[] })
   </section>
 }
 
-function MoneyRow({ label, value, subtract = false }: { label: string; value: Amount; subtract?: boolean }) {
-  return <div className={styles.metaRow} data-saving={subtract}><dt>{label}</dt><dd>{subtract && value !== null ? '− ' : ''}{numberFormat(value)}</dd></div>
-}
-
 export function ReceiptSummary({ financials, payment, mode = 'preview' }: { financials: ReceiptFinancials; payment: ReceiptPayment; mode?: 'preview' | 'receipt' }) {
-  const { total, productNet, extraNet, productGross, extraGross, appliedDiscount, courtesy, showBreakdown, reportedDiscountLabel } = financials
+  const rows = receiptRows(financials)
   return <section className={styles.summary} aria-label='Resumen de la venta'>
     <h2 className={styles.summaryHeading}>Resumen de compra</h2>
-    <dl className={styles.summaryMeta}>
-      {showBreakdown ? <>
-        <MoneyRow label='Subtotal de productos' value={productGross} />
-        <MoneyRow label='Complementos' value={extraGross} />
-        {appliedDiscount !== null && appliedDiscount > 0 && <MoneyRow label='Descuento aplicado' value={appliedDiscount} subtract />}
-        {courtesy !== null && courtesy > 0 && <MoneyRow label='Cortesías' value={courtesy} subtract />}
-      </> : <>
-        <MoneyRow label='Productos · importe neto' value={productNet} />
-        <MoneyRow label='Complementos · importe neto' value={extraNet} />
-        {reportedDiscountLabel && <div className={styles.metaRow}><dt>Descuento informado (no se resta de nuevo)</dt><dd>{reportedDiscountLabel}</dd></div>}
-      </>}
-    </dl>
-    <div className={styles.totalBox}>
-      <span className={styles.totalLabel}>{mode === 'preview' ? 'Total a pagar' : 'Total de la venta'} <small>COP</small></span>
-      <strong className={styles.totalAmount}>{numberFormat(total)}</strong>
-    </div>
-    {(payment.name || payment.change !== null) && <div className={styles.paymentBox}>
-      <div className={styles.paymentIdentity}>
-        <span className={styles.paymentIcon} aria-hidden='true'><Icon icon={payment.kind === 'cash' ? 'IconDollar' : 'IconSales'} size={18} color='currentColor' /></span>
-        <div className={styles.paymentText}><span>Método de pago</span><strong>{payment.name || 'No informado'}</strong></div>
-      </div>
-      {payment.change !== null && <dl className={styles.paymentChange}><MoneyRow label='Cambio' value={payment.change} /></dl>}
-    </div>}
+    <dl className={styles.summaryMeta}>{rows.filter(r => r.label !== 'Total a cobrar en POS' && r.label !== 'Total cliente incl. pago externo').map(r => <div key={r.label} className={styles.metaRow} data-saving={r.effect === 'SUBTRACT'}><dt>{r.label}</dt><dd>{r.effect === 'SUBTRACT' ? '− ' : ''}{r.value}</dd></div>)}</dl>
+    <div className={styles.totalBox}><span className={styles.totalLabel}>{mode === 'preview' ? 'Total a cobrar en POS' : 'Total registrado en POS'} <small>COP</small></span><strong className={styles.totalAmount}>{formatReceiptMoney(financials.total)}</strong></div>
+    {rows.filter(r => r.label === 'Total cliente incl. pago externo').map(r => <dl className={styles.externalPayment} key={r.label}><div className={styles.metaRow}><dt>{r.label}</dt><dd>{r.value}</dd></div></dl>)}
+    <div className={styles.paymentBox}><div className={styles.paymentIdentity}><span className={styles.paymentIcon} aria-hidden='true'><Icon icon={payment.kind === 'cash' ? 'IconDollar' : 'IconSales'} size={18} color='currentColor' /></span><div className={styles.paymentText}><span>Método de pago</span><strong>{payment.name || 'No informado'}</strong></div></div><dl className={styles.paymentChange}>{paymentRows(payment).slice(1).map(r => <div key={r.label} className={styles.metaRow}><dt>{r.label}</dt><dd>{r.value}</dd></div>)}</dl></div>
   </section>
 }

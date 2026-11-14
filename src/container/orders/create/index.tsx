@@ -2,9 +2,11 @@
 
 import { DeliveryCheckoutPanel } from './DeliveryCheckoutPanel'
 import { useRouter } from 'next/navigation'
+import { useApolloClient } from '@apollo/client'
+import { GET_CONFIRMED_RECEIPT } from './receipt/queries'
+import { buildPreviewReceipt, formatReceiptMoney } from './receipt/financial-receipt'
 import {
   ConfigurationScope,
-  generateStoreURL,
   useAmountInput,
   useFilterConfigs,
   useGetAllPaymentMethods,
@@ -25,7 +27,6 @@ import {
   Column,
   Divider,
   FloatingScanButtons,
-  generatePdfDocumentInvoice,
   GenerateSales as GenerateSalesPkg,
   getGlobalStyle,
   InputHooks,
@@ -53,7 +54,7 @@ import { ModalSales } from './ModalSales'
 import { ProductNotFoundDialog } from './ProductNotFoundDialog'
 import { SubItems } from './SubItems'
 import { SuccessSaleModal } from './Success'
-import { createInvoiceSnapshot, confirmInvoiceSnapshot, toLegacyInvoiceData, type InvoiceSnapshot } from './sale-invoice-snapshot.ts'
+import { createInvoiceSnapshot } from './sale-invoice-snapshot'
 
 /* =========================================================
    SALES TABLE CONFIGURATION
@@ -168,8 +169,6 @@ export const CreateSales = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const submitLockRef = useRef(false)
   const completedCheckoutRef = useRef(false)
-  const pendingInvoiceRef = useRef<InvoiceSnapshot | null>(null)
-  const confirmedInvoiceRef = useRef<InvoiceSnapshot | null>(null)
   const printLockRef = useRef(false)
   const downloadLockRef = useRef(false)
   const [dataClientes, { loading: loadingClients }] = useGetClients()
@@ -179,6 +178,7 @@ export const CreateSales = ({
   const componentRef = useRef<HTMLDivElement | null>(null)
   const promiseResolveRef = useRef<(() => void) | null>(null)
   const router = useRouter()
+  const apollo = useApolloClient()
   const [dataStore] = useStore()
   const [storeTables] = useStoreTables()
 
@@ -327,16 +327,19 @@ export const CreateSales = ({
       if (!saleCode || completedCheckoutRef.current) return
       completedCheckoutRef.current = true
 
-      // The backend has confirmed the sale. Do not read the live cart here:
-      // useSales may already have reset its values.
-      confirmedInvoiceRef.current = pendingInvoiceRef.current
-        ? confirmInvoiceSnapshot(pendingInvoiceRef.current, saleCode)
-        : null
+      // The backend confirmed the sale; downloads will read its immutable financial record.
       setConfirmedCode(saleCode)
       setSaleSuccess(true)
       notifyNewSaleRef.current(saleCode)
     }
   })
+
+  const previewInput = useMemo(() => ({
+    cart: data.PRODUCT ?? [], discountType: data.discountType,
+    discountPercent: data.discountPercent, discountAmount: data.discountAmount,
+    quote: deliveryCheckout?.quote ?? null, quoteReady: deliveryCheckout?.ready === true,
+    cash: cashCheckout, paymentMethod: '', paymentKind
+  }), [data.PRODUCT, data.discountType, data.discountPercent, data.discountAmount, deliveryCheckout?.quote, deliveryCheckout?.ready, cashCheckout, paymentKind])
 
   const client = useMemo(() => {
     const clients = Array.isArray(dataClientes) ? dataClientes : []
@@ -600,49 +603,31 @@ export const CreateSales = ({
     submitLockRef.current = true
     setIsSubmitting(true)
     try {
-      const submittedAt = Date.now()
-      // Capture the submitted data before useSales clears client/values.
-      // PDF is a checkout snapshot, not a substitute for querying the persisted sale.
-      pendingInvoiceRef.current = null
-      try {
-        pendingInvoiceRef.current = createInvoiceSnapshot({
-          store: dataStore,
-          client,
-          products: data.PRODUCT,
-          total: cashCheckout.subtotal,
-          change: cashCheckout.change,
-          delivery: cashCheckout.delivery,
-          urlStore: generateStoreURL({ city: dataStore?.city, department: dataStore?.department, storeName: dataStore?.storeName, idStore: dataStore?.idStore }),
-          submittedAt
-        })
-      } catch {
-        // A legacy PDF adapter must never prevent the backend from registering
-        // an otherwise valid sale. The download action will explain the failure.
-        pendingInvoiceRef.current = null
-      }
+      const preview = buildPreviewReceipt(previewInput)
+      if (!preview.canConfirm) throw new Error('La cotización o el checkout no está listo')
       await submitSale()
+    } catch (error) {
+      sendNotification({title: 'Verifica el cobro', description: error instanceof Error ? error.message : 'No fue posible completar la venta.', backgroundColor: 'warning'})
     } finally {
-      pendingInvoiceRef.current = null
       submitLockRef.current = false
       setIsSubmitting(false)
     }
   }
 
   const handleDownLoad = async () => {
-    if (downloadLockRef.current) return
-    const invoice = confirmedInvoiceRef.current
-    if (!invoice || !confirmedCode || invoice.data.ref !== confirmedCode) {
-      sendNotification({ title: 'Comprobante no disponible', description: 'Consulta el detalle de la venta registrada.', backgroundColor: 'warning' })
-      return
-    }
+    if (downloadLockRef.current || !confirmedCode || !dataStore?.idStore) return
     downloadLockRef.current = true
     try {
-      await generatePdfDocumentInvoice({ data: toLegacyInvoiceData(invoice), titleFile: `VENTA_${invoice.data.ref}.pdf`, numberFormat })
-    } catch {
-      sendNotification({ title: 'Error al descargar', description: 'No se pudo generar el PDF. Intenta nuevamente.', backgroundColor: 'error' })
-    } finally {
-      downloadLockRef.current = false
-    }
+      const reference = confirmedCode
+      const { data: result } = await apollo.query({query:GET_CONFIRMED_RECEIPT,variables:{pCodeRef:reference},fetchPolicy:'no-cache',context:{queryDeduplication:false}})
+      const response = result?.getOneSalesStore
+      if (!response?.success || !response.data) throw new Error(response?.message || 'No se pudo consultar la venta')
+      const invoice = createInvoiceSnapshot(response.data, reference, dataStore.idStore)
+      const { downloadConfirmedReceipt } = await import('./receipt/download-pdf')
+      await downloadConfirmedReceipt(invoice)
+    } catch (error) {
+      sendNotification({ title: 'Comprobante no disponible', description: error instanceof Error ? error.message : 'Consulta el detalle de la venta registrada.', backgroundColor: 'warning' })
+    } finally { downloadLockRef.current = false }
   }
 
   const existComment = Boolean(oneProductToComment?.comment?.length)
@@ -784,6 +769,7 @@ export const CreateSales = ({
     paymentMethod: paymentMethods.find(method => method.id === data?.payId)?.name ?? 'Sin seleccionar',
     paymentKind,
     cashCheckout,
+    previewInput: { ...previewInput, paymentMethod: paymentMethods.find(method => method.id === data?.payId)?.name ?? 'Sin seleccionar' },
     deliverySection: <DeliveryCheckoutPanel checkout={deliveryCheckout} disabled={isSubmitting || loadingRegisterSale} />,
     onCashReceivedChange: handleCashReceivedChange,
     delivery,
@@ -1139,7 +1125,7 @@ export const CreateSales = ({
         show={show}
         storeTables={storeTables}
         discountableSubtotal={discountableSubtotal}
-        totalProductPrice={numberFormat(totalProductPrice)}
+        totalProductPrice={formatReceiptMoney(totalProductPrice)}
         useAmountInput={useAmountInput}
         values={values}
         handleAddAllProductsToCart={handleAddAllProductsToCart}

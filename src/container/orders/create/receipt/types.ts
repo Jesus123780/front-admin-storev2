@@ -1,12 +1,19 @@
 import type { RefObject, MutableRefObject } from 'react'
+import type { PreviewInput, ReceiptView } from './financial-receipt'
+export type { ReceiptPayment, ReceiptFinancials, ReceiptProduct, ReceiptExtra, ReceiptOption, Amount } from './financial-receipt'
 
 export type ReceiptDiscount = number | { type?: string | null; value?: number | null } | null
 export type ReceiptPaper = 'auto' | '58mm' | '80mm' | 'a4'
 export type SourceRecord = Record<string, unknown>
-export type Amount = number | null
+
 
 export interface PrintsMemoProps {
   data: readonly unknown[]
+  previewInput?: PreviewInput
+  persistedView?: ReceiptView
+  persistedStore?: ReceiptStore
+  persistedClient?: ReceiptClient | null
+  checkoutBlocked?: boolean
   dataClientes?: unknown
   values: unknown
   paymentMethod: string
@@ -34,38 +41,6 @@ export interface PrintsMemoProps {
   onPrintPreparationIssue?: (reason: string) => void
 }
 
-export interface ReceiptExtra {
-  key: string
-  name: string
-  quantity: Amount
-  unitPrice: Amount
-  total: Amount
-  originalTotal: Amount
-  discountAmount: Amount
-  reportedDiscountAmount: Amount
-  inconsistentCourtesyPrice: boolean
-}
-export interface ReceiptOption {
-  key: string
-  name: string
-  options: { key: string; name: string }[]
-}
-export interface ReceiptProduct {
-  key: string
-  name: string
-  quantity: Amount
-  unitPrice: Amount
-  total: Amount
-  free: boolean
-  originalTotal: Amount
-  discountAmount: Amount
-  discountPercent: Amount
-  reportedDiscountAmount: Amount
-  sku: string
-  comment: string
-  extras: ReceiptExtra[]
-  optionals: ReceiptOption[]
-}
 export interface ReceiptStore {
   name: string
   logo: string
@@ -80,24 +55,3 @@ export interface ReceiptClient {
   address: string
 }
 
-export interface ReceiptFinancials {
-  total: Amount
-  productNet: Amount
-  extraNet: Amount
-  productGross: Amount
-  extraGross: Amount
-  appliedDiscount: Amount
-  courtesy: Amount
-  reportedDiscount: Amount
-  reportedDiscountLabel: string | null
-  netMatches: boolean
-  showBreakdown: boolean
-  warnings: string[]
-}
-export interface ReceiptPayment {
-  name: string
-  kind: 'cash' | 'non-cash' | 'unknown'
-  change: Amount
-  reportedChange: Amount
-  warning: string | null
-}

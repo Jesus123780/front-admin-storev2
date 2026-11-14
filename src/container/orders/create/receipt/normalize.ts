@@ -1,3 +1,5 @@
+import { minor, moneyNumber, productMinor } from 'exact-cart-totals'
+import { formatReceiptMoney } from './financial-receipt'
 import type { Amount, ReceiptClient, ReceiptDiscount, ReceiptExtra, ReceiptOption, ReceiptProduct, ReceiptStore, SourceRecord, ReceiptFinancials, ReceiptPayment } from './types'
 
 export const record = (value: unknown): SourceRecord =>
@@ -31,8 +33,7 @@ const positiveQuantity = (value: unknown): Amount => {
 }
 
 export const isFree = (value: unknown): boolean => value === true || value === 1 || value === '1'
-const money = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 2 })
-export const formatMoney = (value: Amount): string => value === null ? '—' : money.format(value)
+export const formatMoney = (value: Amount): string => formatReceiptMoney(value)
 export const formatQuantity = (value: Amount): string => value === null ? '—' : String(value)
 
 const safeLogo = (value: unknown): string => {
@@ -89,7 +90,7 @@ export const normalizeExtras = (source: unknown, parentCourtesy = false): Receip
   // No fallback from a malformed or absent effective line price.
   const total = amount(extra.newExtraPrice)
   const unitPrice = amount(extra.extraPrice)
-  const originalTotal = parentCourtesy && unitPrice !== null ? Math.round(unitPrice * quantity * 100) / 100 : lineOriginal(extra.originalNewExtraPrice, unitPrice, quantity, total, extra.discountAmount)
+  const originalTotal = parentCourtesy && unitPrice !== null ? moneyNumber(productMinor(unitPrice, quantity, 'half-up', 'extra')) : lineOriginal(extra.originalNewExtraPrice, unitPrice, quantity, total, extra.discountAmount)
   // A legacy courtesy bug zeroed paid extras without any independent discount.
   // Keep the received net (never invent revenue in the receipt), but do not
   // label this as a verified commercial discount or strike the amount.
@@ -98,6 +99,7 @@ export const normalizeExtras = (source: unknown, parentCourtesy = false): Receip
 })
 
 /** Cart contract: ProPrice = line total, unitPrice = stored base unit price. */
+/** @deprecated Legacy display adapter only. Use buildPreviewReceipt/buildPersistedReceipt for checkout. */
 export const normalizeProducts = (source: unknown): ReceiptProduct[] => list(source).map((raw, index) => {
   const item = record(raw)
   const quantity = positiveQuantity(item.ProQuantity)
@@ -105,7 +107,7 @@ export const normalizeProducts = (source: unknown): ReceiptProduct[] => list(sou
   const total = amount(item.ProPrice)
   // Courtesy metadata reports a commercial discount of 0. It must not
   // hide the real original price (zero + 0 is not the courtesy value).
-  const courtesyBase = isFree(item.free) && total === 0 && unitPrice !== null && quantity !== null && unitPrice >= 0 ? addAmounts([Math.round(unitPrice * quantity * 100) / 100]) : null
+  const courtesyBase = isFree(item.free) && total === 0 && unitPrice !== null && quantity !== null && unitPrice >= 0 ? addAmounts([moneyNumber(productMinor(unitPrice, quantity, 'half-up', 'product'))]) : null
   const originalTotal = courtesyBase ?? lineOriginal(item.originalProPrice, unitPrice, quantity, total, item.discountAmount)
   const percent = amount(item.discountPercent)
   return {
@@ -165,8 +167,7 @@ export const selectedCartForExport = (source: unknown): SourceRecord[] => list(s
 /** Work in integer cents for comparison and addition; never mutate the provided total. */
 function cents(value: Amount): number | null {
   if (value === null || !Number.isFinite(value)) return null
-  const scaled = Math.round(value * 100)
-  return Number.isSafeInteger(scaled) && Math.abs(value * 100 - scaled) < 0.0001 ? scaled : null
+  try { const signed = value < 0 ? -minor(-value) : minor(value); const n = Number(signed); return Number.isSafeInteger(n) ? n : null } catch { return null }
 }
 function addAmounts(values: readonly Amount[]): Amount {
   let sum = 0
@@ -198,6 +199,7 @@ function reportedDiscountAmount(discount: ReceiptDiscount | undefined): Amount {
   if (typeof discount === 'number') return amount(discount)
   return discount?.type === 'AMOUNT' ? amount(discount.value) : null
 }
+/** @deprecated No delivery classification in this legacy helper. Never use to authorize a sale. */
 export function summarizeReceipt(items: readonly ReceiptProduct[], total: Amount, discount?: ReceiptDiscount): ReceiptFinancials {
   const extras = items.flatMap(item => item.extras)
   const productNet = addAmounts(items.map(item => item.total))
