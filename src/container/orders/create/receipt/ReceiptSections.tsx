@@ -1,11 +1,18 @@
 'use client'
 
-import { Icon, Image, Tag } from 'pkg-components'
+import {
+ Icon, Image, Tag 
+} from 'pkg-components'
 import { useState } from 'react'
+
 import styles from '../Prints.module.css'
+import {
+ formatReceiptMoney, paymentRows,receiptRows 
+} from './financial-receipt'
 import { formatMoney, formatQuantity } from './normalize'
-import { formatReceiptMoney, receiptRows, paymentRows } from './financial-receipt'
-import type { ReceiptClient, ReceiptProduct, ReceiptStore, ReceiptFinancials, ReceiptPayment } from './types'
+import type {
+ ReceiptClient, ReceiptFinancials, ReceiptPayment,ReceiptProduct, ReceiptStore 
+} from './types'
 
 export function ReceiptHeader({ store }: { store: ReceiptStore }) {
   const [failed, setFailed] = useState('')
@@ -28,7 +35,7 @@ export function Perforation() {
 }
 
 export function ReceiptClientInfo({ client }: { client: ReceiptClient | null }) {
-  if (!client) return null
+  if (!client) {return null}
   const fields = [['Nombre', client.name], ['Documento', client.document], ['Teléfono', client.phone], ['Dirección', client.address]].filter(([, value]) => value)
   return <section className={styles.clientBox} aria-label='Datos del cliente'>
     <h2 className={styles.eyebrow}>Datos del cliente</h2>

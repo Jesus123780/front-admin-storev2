@@ -185,30 +185,51 @@ function createHttpLink(service: string) {
   })
 }
 
-/**
- * 🔌 GraphQL over WS (subscriptions)
- */
-function createWsLink() {
-  if (globalThis.window === undefined) { return null }
+/** Normalize either an HTTP base URL or an explicit WebSocket endpoint. */
+function socketUrl(raw?: string): string | undefined {
+  if (!raw) return undefined
+  const base = raw.trim().replace(/^http:/i, 'ws:').replace(/^https:/i, 'wss:').replace(/\/+$/, '')
+  if (!/^wss?:\/\//i.test(base)) return undefined
+  return base.endsWith('/graphql') ? base : `${base}/graphql`
+}
 
-  const url = process.env.NEXT_PUBLIC_URL_ADMIN_SERVER_SOCKET
+function createWsLink(raw: string | undefined, label: string) {
+  if (typeof window === 'undefined') return null
+  const url = socketUrl(raw)
+  if (!url) return null
+  return new GraphQLWsLink(createClient({
+    url,
+    lazy: true,
+    keepAlive: 15_000,
+    retryAttempts: 10,
+    connectionAckWaitTimeout: 10_000,
+    connectionParams: () => buildAuthHeaders(),
+    on: {
+      connected: () => console.info(`[${label}] Connected`),
+      closed: event => console.info(`[${label}] Closed`, event.code),
+      error: error => console.error(`[${label}] WebSocket error`, error)
+    }
+  }))
+}
 
-  if (!url) { return null }
+const BACKEND_SUBSCRIPTIONS = new Set([
+  'newStoreOrder', 'StockUpdatedById', 'StockUpdatedAll',
+  'reportJobUpdated', 'greetings', 'increment'
+])
 
-  return new GraphQLWsLink(
-    createClient({
-      url: `${url}/graphql`,
-      connectionParams: () => buildAuthHeaders(),
-      retryAttempts: 5,
-      shouldRetry: () => true,
-      on: {
-        connected: () => console.log('✅ WS connected'),
-        closed: (e) => console.log('❌ WS closed', e),
+function isBackendSubscription(query: Parameters<typeof getMainDefinition>[0]): boolean {
+  const def = getMainDefinition(query)
+  return def.kind === 'OperationDefinition' &&
+    def.operation === 'subscription' &&
+    def.selectionSet.selections.some(selection =>
+      selection.kind === 'Field' && BACKEND_SUBSCRIPTIONS.has(selection.name.value)
+    )
+}
 
-        error: (err) => console.error('⚠️ WS error:', err),
-      },
-    })
-  )
+function unavailableWs(label: string): ApolloLink {
+  return new ApolloLink(() => new Observable(observer => {
+    observer.error(new Error(`${label}: WebSocket endpoint unavailable`))
+  }))
 }
 
 /** Decode only for client-side scope checks, never for authorization. */
@@ -222,9 +243,8 @@ function cashTokenClaims(authorization: string): {sub?: string; exp?: number} {
 /** Each cash stream binds auth headers and tenant to its own operation. */
 function createCashWsLink() {
   return new ApolloLink(operation => new Observable(observer => {
-    const raw = process.env.NEXT_PUBLIC_CASH_WS_URL || process.env.NEXT_PUBLIC_URL_BACK_SERVER
-    if (!raw || typeof window === 'undefined') { observer.error(new Error('Cash WebSocket unavailable')); return }
-    const url = raw.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:').replace(/\/$/, '')
+    const url = socketUrl(process.env.NEXT_PUBLIC_CASH_WS_URL || process.env.NEXT_PUBLIC_URL_BACK_SERVER)
+    if (!url || typeof window === 'undefined') { observer.error(new Error('Cash WebSocket unavailable')); return }
     let disposed = false
     let stop: (() => void) | undefined
     let monitor: ReturnType<typeof setInterval> | undefined
@@ -238,7 +258,7 @@ function createCashWsLink() {
       }
       if (disposed) return
       if (headers.restaurant !== operation.variables.storeId || !cashTokenClaims(headers.authorization).sub) throw new Error('Cash auth scope missing')
-      const client = createClient({ url: url.endsWith('/graphql') ? url : `${url}/graphql`, lazy: true, retryAttempts: 0, connectionParams: () => headers, connectionAckWaitTimeout: 10000 })
+      const client = createClient({ url, lazy: true, retryAttempts: 0, connectionParams: () => headers, connectionAckWaitTimeout: 10000 })
       const unsubscribe = client.subscribe({ query: print(operation.query), variables: operation.variables, operationName: operation.operationName }, {
         next: result => observer.next(result as any), error: error => observer.error(error), complete: () => observer.complete()
       })
@@ -256,7 +276,12 @@ function createCashWsLink() {
 
 function createApolloClient() {
   const ssrMode = typeof window === 'undefined'
-  const wsLink = createWsLink()
+  const legacyWsLink = createWsLink(process.env.NEXT_PUBLIC_URL_ADMIN_SERVER_SOCKET, 'AdminWS') ?? unavailableWs('AdminWS')
+  const backendWsLink = createWsLink(
+    process.env.NEXT_PUBLIC_CASH_WS_URL || process.env.NEXT_PUBLIC_URL_BACK_SERVER,
+    'BackendWS'
+  ) ?? unavailableWs('BackendWS')
+  const cashWsLink = createCashWsLink()
 
   const httpLink = new ApolloLink((operation, forward) => {
     const { clientName: service, cashScope } = operation.getContext()
@@ -270,25 +295,36 @@ function createApolloClient() {
     return link.request(operation, forward)
   })
 
-  // 👇 Split: subscriptions → WS | queries/mutations → HTTP
-  const splitLink = !ssrMode && wsLink
-    ? split(
-      ({ query }) => {
-        const def = getMainDefinition(query)
-        return (
-          def.kind === 'OperationDefinition' &&
-          def.operation === 'subscription'
-        )
-      },
-      wsLink,
-      httpLink
+  // Route subscriptions by their actual GraphQL root field (not operation name).
+  // Explicit BACKEND_REALTIME also supports the updated order hook.
+  const subscriptionsLink = split(
+    operation => {
+      const def = getMainDefinition(operation.query)
+      return def.kind === 'OperationDefinition' && def.operation === 'subscription' &&
+        (operation.getContext().clientName === 'CASH_REALTIME' ||
+          def.selectionSet.selections.some(selection => selection.kind === 'Field' && selection.name.value === 'cashManagementChanged'))
+    },
+    cashWsLink,
+    split(
+      operation => operation.getContext().clientName === 'BACKEND_REALTIME' || isBackendSubscription(operation.query),
+      backendWsLink,
+      legacyWsLink
     )
-    : httpLink
+  )
+
+  const splitLink = split(
+    ({ query }) => {
+      const def = getMainDefinition(query)
+      return def.kind === 'OperationDefinition' && def.operation === 'subscription'
+    },
+    subscriptionsLink,
+    ApolloLink.from([errorLink, httpLink])
+  )
 
   return new ApolloClient({
     ssrMode,
     connectToDevTools: true,
-    link: split(operation => operation.getContext().clientName === 'CASH_REALTIME', createCashWsLink(), ApolloLink.from([errorLink, splitLink])),
+    link: splitLink,
     cache,
     typeDefs,
     defaultOptions: {

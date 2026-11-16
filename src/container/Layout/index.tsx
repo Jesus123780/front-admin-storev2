@@ -47,7 +47,6 @@ import {
   Icon,
   LateralModal,
   Orders,
-  Overline,
   Plan,
   Toast
 } from 'pkg-components'
@@ -147,7 +146,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setStatus
   } = useContext(Context)
 
-    const {
+  const {
     value: theme
   } = useGetResolvedConfiguration({
     componentName: 'AppShell',
@@ -182,7 +181,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     async (
       nextTheme: ThemePreference
     ): Promise<void> => {
-      if (savingTheme) {return}
+      if (savingTheme) { return }
 
       try {
         const response = await upsertConfiguration({
@@ -302,7 +301,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
   // --------------------------------------------------
 
   const [dataStore] = useStore()
-  
+
   const idStore = dataStore?.idStore ?? ''
 
   const [count, { loading: loadingCount }] =
@@ -399,6 +398,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
 
   const playNotificationSound = useCallback(() => {
     // Add your sound playback here if required.
+
   }, [])
 
   const handleNewMessage = useCallback(() => {
@@ -409,16 +409,22 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
 
   const client = useApolloClient()
 
-  const [orders, { handleNewOrder }] =
-    useManageNewOrder({
-      playNotificationSound,
-      setCountOrders,
-      setIsOpenOrder,
-      idStore,
-      client,
-      sendNotification,
-      setAlertBox
-    })
+  const [
+    orders,
+    {
+      handleNewOrder,
+      refreshOrders,
+      retryOrder,
+      statusTypes
+    }
+  ] = useManageNewOrder({
+    client,
+    idStore,
+    setCountOrders,
+    setIsOpenOrder,
+    sendNotification,
+    playNotificationSound
+  })
 
   // Prevent duplicated Web Push notifications.
   const notifiedOrdersRef = useRef<Set<string>>(
@@ -438,30 +444,25 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       }
 
       notifiedOrdersRef.current.add(pCodeRef)
-
-      void onClickSendNotification({
+      onClickSendNotification({
         title: 'Nueva venta',
         description: `Pedido ${pCodeRef}`,
         url: `/orders/${encodeURIComponent(pCodeRef)}`,
         tag: `order-${pCodeRef}`
       })
     },
-    [
-      isSubscribed,
-      onClickSendNotification
-    ]
+    [isSubscribed, onClickSendNotification]
   )
 
   const handleIncomingOrder = useCallback(
-    (
-      order: {
-        id: string
-        idStore: string
-        pCodeRef: string
-      }
-    ): void => {
+    (order: {
+      id: string
+      idStore: string
+      pCodeRef: string
+    }): void => {
       handleNewOrder(order)
-      notifyNewOrderPush(order?.pCodeRef)
+
+      notifyNewOrderPush(order.pCodeRef)
     },
     [
       handleNewOrder,
@@ -469,15 +470,16 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     ]
   )
 
+  newStoreOrderSubscription(
+    idStore,
+    handleIncomingOrder
+  )
+
   newMessageSubscription(
     idStore,
     handleNewMessage
   )
 
-  newStoreOrderSubscription(
-    idStore,
-    handleIncomingOrder
-  )
 
   // --------------------------------------------------
   // Connection status
@@ -556,19 +558,19 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
     setIsOpenOrder(false)
 
     router.push(
-      `/pedidos?saleId=${encodeURIComponent(pCodeRef)}`
+      `/orders/${encodeURIComponent(pCodeRef)}`
     )
   }
 
-  const handleSetIsOpenOrder = (
+  const handleSetIsOpenOrder = useCallback((
     open?: boolean
   ): void => {
-    setIsOpenOrder(
+    setIsOpenOrder(previous =>
       typeof open === 'boolean'
         ? open
-        : !isOpenOrder
+        : !previous
     )
-  }
+  }, [setIsOpenOrder])
 
   // --------------------------------------------------
   // Delivery time
@@ -810,7 +812,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
       reorderedModules.map(
         (module, index) => ({
           ...(typeof module === 'object' &&
-          module !== null
+            module !== null
             ? module
             : {}),
           mPriority: index + 1
@@ -872,12 +874,7 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
         </AwesomeModal>
       )}
 
-      <Overline
-        bgColor='rgba(119, 119, 119, 0.306)'
-        onClick={() => setIsOpenOrder()}
-        show={isOpenOrder}
-        zIndex={getGlobalStyle('--z-index-99999')}
-      />
+
 
       <DeliveryTime
         createDeliveryTime={createDeliveryTime}
@@ -903,6 +900,9 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
         handleViewOrder={handleViewOrder}
         isOpen={isOpenOrder}
         orders={orders}
+        statusTypes={statusTypes}
+        onRefresh={refreshOrders}
+        onRetryOrder={retryOrder}
       />
 
       <AlertBox err={error} />
@@ -1023,11 +1023,11 @@ export const MemoLayout: React.FC<MemoLayoutProps> = ({
               width: isTablet
                 ? '100%'
                 : widths[
-                    showModalComponent as keyof typeof widths
-                  ],
+                showModalComponent as keyof typeof widths
+                ],
               height:
                 heights[
-                  showModalComponent as keyof typeof heights
+                showModalComponent as keyof typeof heights
                 ]
             } as React.CSSProperties}
             direction='right'

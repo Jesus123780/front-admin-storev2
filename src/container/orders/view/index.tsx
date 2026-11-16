@@ -68,6 +68,7 @@ export const OrdersView = ({
 
     // HOOKS
     const { data: statusTypes } = useOrderStatusTypes()
+    console.log(statusTypes)
     const { isTablet } = useMobile()
     const [handlePrintSale] = usePrintSaleTicket()
 

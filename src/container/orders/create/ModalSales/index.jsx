@@ -1,12 +1,12 @@
 'use client'
 
 import {
- AwesomeModal, CashPaymentFields, Icon,InputHooks, 
- numberFormat
+  AwesomeModal, CashPaymentFields, Icon, InputHooks,
+  numberFormat
 } from 'pkg-components'
 import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
 import React, {
- useEffect, useId, useMemo, useRef, useState 
+  useEffect, useId, useMemo, useRef, useState
 } from 'react'
 
 import { useModalLayer } from '../modalLayers'
@@ -36,7 +36,7 @@ export const ModalSales = ({
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
-  useEffect(() => { if (!print) {setError('')} }, [print])
+  useEffect(() => { if (!print) { setError('') } }, [print])
 
   const paymentName = typeof rest.paymentMethod === 'string'
     ? rest.paymentMethod.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -46,7 +46,7 @@ export const ModalSales = ({
   const closeLocked = busy || pendingRecovery
   const receiptValues = resolvedKind === 'non-cash' ? { ...values, change: 0 } : values
   const preview = useMemo(() => {
-    if (!print) {return { ready: false, issue: '' }}
+    if (!print) { return { ready: false, issue: '' } }
     try {
       const view = buildPreviewReceipt(previewInput)
       return { ready: view?.canConfirm === true, issue: '' }
@@ -58,15 +58,15 @@ export const ModalSales = ({
   const totalValid = cashCheckout?.amountsValid === true && typeof total === 'number' && Number.isFinite(total) && total >= 0
   const canSubmit = Boolean(print && !busy && !pendingRecovery && cashCheckout?.canSubmit && preview.ready && typeof handleSubmit === 'function')
   const blocker = pendingRecovery ? 'Verifica el cobro anterior antes de continuar.' : preview.issue || requiredAction?.message || cashCheckout?.message || 'Revisa los datos del cobro antes de confirmar.'
-  const close = () => { if (!running.current && !closeLocked) {setPrint(false)} }
+  const close = () => { if (!running.current && !closeLocked) { setPrint(false) } }
   const submit = async () => {
-    if (!canSubmit || running.current) {return}
+    if (!canSubmit || running.current) { return }
     running.current = true
     setPending(true)
     setError('')
     try { await handleSubmit() }
-    catch { if (mounted.current) {setError('No fue posible completar la acción. Verifica el estado de la venta antes de reintentar.')} }
-    finally { running.current = false; if (mounted.current) {setPending(false)} }
+    catch { if (mounted.current) { setError('No fue posible completar la acción. Verifica el estado de la venta antes de reintentar.') } }
+    finally { running.current = false; if (mounted.current) { setPending(false) } }
   }
   const actionTarget = pendingRecovery ? 'recovery' : requiredAction?.target ?? (
     cashCheckout?.kind === 'cash' && (cashCheckout.received == null || cashCheckout.missing > 0) ? 'cash-received' : undefined
@@ -75,8 +75,8 @@ export const ModalSales = ({
   const focusPending = () => {
     if (actionTarget === 'payment' || actionTarget === 'cash-session') { close(); return }
     const target = { recovery: recoveryRef, delivery: deliveryRef, 'cash-received': cashRef, confirmation: confirmationRef }[actionTarget]?.current
-    if (!target) {return}
-    if (target.tagName === 'DETAILS') {target.open = true}
+    if (!target) { return }
+    if (target.tagName === 'DETAILS') { target.open = true }
     target.scrollIntoView?.({ block: 'nearest', behavior: 'auto' })
     const field = target.querySelector('input:not(:disabled), select:not(:disabled), button:not(:disabled)')
       ; (field || target).focus({ preventScroll: true })
@@ -97,7 +97,13 @@ export const ModalSales = ({
         <div className={styles.workspace}>
           <main className={styles.controls} aria-label='Datos del cobro' tabIndex={0}>
             {recoverySection && <div ref={recoveryRef} tabIndex={-1} className={styles.recovery}>{recoverySection}</div>}
-            <section className={styles.card}><div className={styles.sectionHeading}><span className={styles.step}>01</span><h3>Medio de pago</h3></div><p className={styles.method}>{rest.paymentMethod || 'Sin seleccionar'}</p><p className={styles.hint}>Para cambiarlo, vuelve al checkout.</p></section>
+            <section className={styles.card}>
+              <div className={styles.sectionHeading}>
+                <span className={styles.step}>01</span><h3>Medio de pago</h3></div><p className={styles.method}>{rest.paymentMethod || 'Sin seleccionar'}</p>
+              <p className={styles.hint}>
+                Para cambiarlo, vuelve al checkout.
+              </p>
+            </section>
             <details className={styles.card} ref={deliveryRef} tabIndex={-1} open>
               <summary className={styles.sectionHeading}><span className={styles.step}>02</span><h3>Entrega</h3></summary>
               <div className={styles.delivery}>{deliverySection || <p className={styles.hint}>Sin configuración de entrega disponible.</p>}</div>
@@ -123,11 +129,11 @@ export const ModalSales = ({
       </div>
     </AwesomeModal>
     <AwesomeModal borderRadius='12px' btnCancel={false} btnConfirm={false} footer={false} header
-      backdrop={closeLocked ? 'static' : ''} keyboard={!closeLocked} onHide={() => { if (!closeLocked) {setDelivery(false)} }}
+      backdrop={closeLocked ? 'static' : ''} keyboard={!closeLocked} onHide={() => { if (!closeLocked) { setDelivery(false) } }}
       padding='20px' show={Boolean(delivery && !print)} size={MODAL_SIZES.small} title='Configurar entrega' zIndex={deliveryZIndex}>
       <div className={styles.legacy}>{deliverySection ?? <InputHooks autoComplete='off' name='valueDelivery' onChange={handleChange} placeholder='Costo de envío' value={values?.valueDelivery} />}
         {!print && hasCashFields && <CashPaymentFields checkout={cashCheckout} onReceivedChange={onCashReceivedChange} disabled={busy || pendingRecovery} />}
-        {!hasCashFields && <InputHooks autoComplete='off' name='change' disabled={resolvedKind !== 'cash' || busy} onChange={(event, hasError) => { if (resolvedKind === 'cash' && !busy) {handleChange(event, hasError)} }} placeholder='Cambio' value={resolvedKind === 'cash' ? values?.change ?? '' : ''} />}
+        {!hasCashFields && <InputHooks autoComplete='off' name='change' disabled={resolvedKind !== 'cash' || busy} onChange={(event, hasError) => { if (resolvedKind === 'cash' && !busy) { handleChange(event, hasError) } }} placeholder='Cambio' value={resolvedKind === 'cash' ? values?.change ?? '' : ''} />}
       </div>
     </AwesomeModal>
   </>

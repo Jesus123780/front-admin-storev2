@@ -1,18 +1,25 @@
 'use client'
 
+import Link from 'next/link'
 import {
- useCashPOS, useOpenCashSession, usePreviousCashFloat 
+ useCashPOS, 
+ useOpenCashSession, 
+ usePreviousCashFloat 
 } from 'npm-pkg-hook'
 import {
- CashDenominationCounter, countCashMinor, emptyCashCount, formatCashMinor, 
+ CashDenominationCounter, 
+ countCashMinor, 
+ emptyCashCount, 
+ formatCashMinor, 
  getGlobalStyle
 } from 'pkg-components'
 import {
- useEffect, useRef, useState 
+ useEffect,
+ useRef,
+ useState 
 } from 'react'
 
 import styles from './styles.module.css'
-import Link from 'next/link'
 
 type Control = ReturnType<typeof useCashPOS>
 type Source = 'PREVIOUS_SESSION' | 'TREASURY' | 'OTHER_DOCUMENTED'
