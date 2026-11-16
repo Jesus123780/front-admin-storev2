@@ -27,7 +27,7 @@ import styles from './styles.module.css'
  * @param {Intl.DateTimeFormatOptions} options - Formatting options.
  * @returns {string} Formatted date part.
  */
-const formatDatePart = (date, options) => new Intl.DateTimeFormat('es-CO', options).format(date)
+const formatDatePart = (date, options) => new Intl.DateTimeFormat('es-CO', { ...options, timeZone: 'UTC' }).format(date)
 
 /**
  * Builds a readable date range for a seven-day inventory week.
@@ -40,14 +40,14 @@ const getWeekRange = (weekStart) => {
   if (Number.isNaN(startDate.getTime())) { return '' }
 
   const endDate = new Date(startDate)
-  endDate.setDate(endDate.getDate() + 6)
+  endDate.setUTCDate(endDate.getUTCDate() + 6)
 
   const startDay = formatDatePart(startDate, { day: '2-digit' })
   const endDay = formatDatePart(endDate, { day: '2-digit' })
   const startMonth = formatDatePart(startDate, { month: 'long' })
   const endMonth = formatDatePart(endDate, { month: 'long' })
 
-  if (startDate.getMonth() === endDate.getMonth()) {
+  if (startDate.getUTCMonth() === endDate.getUTCMonth() && startDate.getUTCFullYear() === endDate.getUTCFullYear()) {
     return `${startDay} al ${endDay} ${endMonth}`
   }
   return `${startDay} ${startMonth} al ${endDay} ${endMonth}`
@@ -81,7 +81,7 @@ const parsePercentage = (value) => {
 export const InventoryPerformance = ({ filter }) => {
   const router = useRouter()
   const [stocksMovements] = useStockMovements(filter)
-  const [weeklyStockMovement] = useWeeklyStockMovement()
+  const [weeklyStockMovement, { loading: weeklyLoading, error: weeklyError }] = useWeeklyStockMovement()
   const [totalProductsInStock] = useTotalProductsInStock()
   const [totalProductSold] = useTotalProductsSolded()
   const { netTotal, totalDiscount } = useTotalAllSales()
@@ -101,7 +101,7 @@ export const InventoryPerformance = ({ filter }) => {
       icon: { icon: 'IconUpTrend', color: getGlobalStyle('--color-icons-success'), size: 28 }
     },
     {
-      label: 'Valor total decuentos aplicados',
+      label: 'Valor total descuentos aplicados',
       value: totalDiscount ?? 0,
       numberformat: true,
       icon: { icon: 'IconPromo', color: getGlobalStyle('--color-icons-success'), size: 28 }
@@ -154,7 +154,11 @@ export const InventoryPerformance = ({ filter }) => {
           </Text>
         </Column>
 
-        {visibleWeeklyMovements.length === 0
+        {weeklyLoading && visibleWeeklyMovements.length === 0
+          ? <div className={styles.emptyState} role='status'>Cargando movimientos semanales…</div>
+          : weeklyError
+            ? <div className={styles.emptyState} role='alert'>No se pudieron consultar los movimientos semanales.</div>
+            : visibleWeeklyMovements.length === 0
           ? (
             <div className={styles.emptyState}>
               <Icon color={getGlobalStyle('--color-icons-gray-light')} icon='IconInventory' size={32} />
@@ -166,7 +170,10 @@ export const InventoryPerformance = ({ filter }) => {
           : (
             <div className={styles.weeklyGrid}>
               {visibleWeeklyMovements.map((item) => {
-                const percentage = parsePercentage(item.percentageChange)
+                const known = typeof item.totalOut === 'number' && Number.isFinite(item.totalOut)
+                const previousKnown = typeof item.prevTotalOut === 'number' && Number.isFinite(item.prevTotalOut)
+                const percentage = known && previousKnown && item.prevTotalOut > 0 ? parsePercentage(item.percentageChange) : null
+                const comparisonLabel = !known ? 'Sin historial' : !previousKnown ? 'Sin referencia anterior' : item.prevTotalOut === 0 ? (item.totalOut > 0 ? 'Nueva actividad' : 'Sin movimiento') : 'Comparación no disponible'
                 const isPositive = percentage !== null && percentage > 0
                 const isNegative = percentage !== null && percentage < 0
                 const isNeutral = percentage === 0
@@ -178,10 +185,14 @@ export const InventoryPerformance = ({ filter }) => {
                       {weekRange}
                     </Text>
 
+                    <Text as='p' className={styles.weekUnits} size='xl' weight={700}>
+                      {known ? new Intl.NumberFormat('es-CO').format(item.totalOut) : '—'}
+                    </Text>
+                    <Text as='p' className={styles.weekRange} size='sm'>Unidades despachadas</Text>
                     {percentage === null
                       ? (
                         <Text as='p' className={styles.percentageNa} size='md' weight={600}>
-                          Sin datos
+                          {comparisonLabel}
                         </Text>
                       )
                       : (
