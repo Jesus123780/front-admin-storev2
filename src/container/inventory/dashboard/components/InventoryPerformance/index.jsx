@@ -1,13 +1,20 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useStockMovements, useTotalAllSales, useTotalProductsInStock, useTotalProductsSolded, useWeeklyStockMovement } from 'npm-pkg-hook'
-import { Column, getGlobalStyle, Icon, Text } from 'pkg-components'
+import {
+ useStockMovements, useTotalAllSales, useTotalProductsInStock, useTotalProductsSolded, useWeeklyStockMovement 
+} from 'npm-pkg-hook'
+import {
+ Column, getGlobalStyle, Icon, Text 
+} from 'pkg-components'
 import PropTypes from 'prop-types'
+
 import { ReportGrid } from '../../../ReportGrid'
 import { StockMovementsChart } from '../StockMovementsChart'
-import { comparisonText, formatUnits, formatWeek } from './weekly-stock-view'
 import styles from './styles.module.css'
+import {
+ comparisonText, formatUnits, formatWeek 
+} from './weekly-stock-view'
 
 export const InventoryPerformance = ({ filter }) => {
   const router = useRouter()
@@ -17,10 +24,10 @@ export const InventoryPerformance = ({ filter }) => {
   const [totalProductSold] = useTotalProductsSolded()
   const { netTotal, totalDiscount } = useTotalAllSales()
   const kpis = [
-    { label:'Valor total de ventas concluidas',value:netTotal??0,numberformat:true,icon:{icon:'IconUpTrend',color:getGlobalStyle('--color-icons-success'),size:28} },
-    { label:'Valor total descuentos aplicados',value:totalDiscount??0,numberformat:true,icon:{icon:'IconPromo',color:getGlobalStyle('--color-icons-success'),size:28} },
-    { label:'Unidades en inventario',value:totalProductsInStock??0,icon:{icon:'IconInventory',color:getGlobalStyle('--color-icons-warning'),size:28},actionIcon:'IconUpRightArrow',onClick:()=>router.push('/products/units') },
-    { label:'Unidades despachadas',value:totalProductSold??0,icon:{icon:'IconSales',color:getGlobalStyle('--color-icons-secondary'),size:28} }
+    { label:'Valor total de ventas concluidas',value:netTotal??0,numberformat:true,icon:{ icon:'IconUpTrend',color:getGlobalStyle('--color-icons-success'),size:28 } },
+    { label:'Valor total descuentos aplicados',value:totalDiscount??0,numberformat:true,icon:{ icon:'IconPromo',color:getGlobalStyle('--color-icons-success'),size:28 } },
+    { label:'Unidades en inventario',value:totalProductsInStock??0,icon:{ icon:'IconInventory',color:getGlobalStyle('--color-icons-warning'),size:28 },actionIcon:'IconUpRightArrow',onClick:()=>router.push('/products/units') },
+    { label:'Unidades despachadas',value:totalProductSold??0,icon:{ icon:'IconSales',color:getGlobalStyle('--color-icons-secondary'),size:28 } }
   ]
   const refresh = () => { void refetch().catch(()=>{}) }
   const available = weeks.some(row=>row.totalOut!==null)
