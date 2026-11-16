@@ -2,7 +2,6 @@
 
 import { useSalesTrend } from 'npm-pkg-hook'
 import {
-  CounterAnimation,
   getGlobalStyle,
   Icon,
   Text
@@ -16,8 +15,7 @@ import {
   formatCompact,
   formatCurrency,
   formatDate,
-  formatNumber,
-  getCurrencySymbol
+  formatNumber
 } from '../../utils/format'
 import { WidgetError } from '../WidgetError'
 import styles from './styles.module.css'
@@ -380,7 +378,6 @@ export const SalesTrendChart = ({
   const revealId = `salesTrendReveal-${generatedId}`
 
   const timezone = filter?.timezone || DEFAULT_TIMEZONE
-  const currencySymbol = getCurrencySymbol(currency)
 
   const points = useMemo(
     () => normalizePoints(trend?.points),
@@ -823,22 +820,7 @@ export const SalesTrendChart = ({
           {trend && (
             <>
               <div className={styles.headerStats}>
-                <span className={styles.amount}>
-                  <Text
-                    as='span'
-                    className={styles.amountSymbol}
-                    size='2xl'
-                    weight={700}
-                  >
-                    {currencySymbol}
-                  </Text>
-
-                  <CounterAnimation
-                    number={totalRevenue}
-                    numberformat
-                    size='1.75rem'
-                  />
-                </span>
+                <span className={styles.amount}>{formatCurrency(totalRevenue, { currency })}</span>
 
                 <Text
                   as='span'

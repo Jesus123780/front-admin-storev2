@@ -1,9 +1,1 @@
-.svg {
-  display: block;
-  max-width: 100%;
-  overflow: visible;
-}
-
-.placeholder {
-  display: inline-block;
-}
+.svg { display: block; max-width: 100%; overflow: hidden; }

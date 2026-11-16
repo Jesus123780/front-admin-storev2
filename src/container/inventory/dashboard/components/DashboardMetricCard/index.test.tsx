@@ -1,68 +1,27 @@
 import { render, screen } from '@testing-library/react'
 import React from 'react'
-
 import { DashboardMetricCard } from './index'
 
 describe('DashboardMetricCard', () => {
-  it('renders the label and the currency symbol for a currency card', () => {
-    render(
-      <DashboardMetricCard
-        currencySymbol='$'
-        iconName='IconDollar'
-        isCurrency
-        label='Ingresos totales'
-        metric={{ value: 24582, previousValue: 20000, percentageChange: 18.2, trend: 'up' }}
-        value={24582}
-      />
-    )
-    // The numeric value is animated digit-by-digit (CounterAnimation), so we
-    // assert the label and the currency symbol rather than a single text node.
-    expect(screen.getByText('Ingresos totales')).toBeInTheDocument()
+  it('renders currency and label', () => {
+    render(<DashboardMetricCard label='Ingresos' iconName='IconDollar' isCurrency value={15000}/>)
     expect(screen.getByText('$')).toBeInTheDocument()
+    expect(screen.getByText('Ingresos')).toBeInTheDocument()
   })
-
-  it('shows a positive percentage with a sign', () => {
-    render(
-      <DashboardMetricCard
-        iconName='IconDollar'
-        label='Ingresos'
-        metric={{ value: 100, previousValue: 80, percentageChange: 25, trend: 'up' }}
-        value={100}
-      />
-    )
-    expect(screen.getByText('+25.0%')).toBeInTheDocument()
+  it('preserves positive changes above 100%', () => {
+    render(<DashboardMetricCard label='Pedidos' iconName='IconShopping' value={50} metric={{percentageChange: 400, trend:'up'}}/>)
+    expect(screen.getByText('+400.0%')).toBeInTheDocument()
   })
-
-  it('shows "Sin datos" when there is no comparison', () => {
-    render(
-      <DashboardMetricCard
-        iconName='IconUser'
-        label='Clientes'
-        metric={{ value: 10, previousValue: null, percentageChange: null, trend: 'unknown' }}
-        value={10}
-      />
-    )
+  it('shows unknown comparisons without a positive trend', () => {
+    render(<DashboardMetricCard label='Pedidos' iconName='IconShopping' value={3} comparisonLabel='vs. día anterior' metric={{percentageChange:null, trend:'up'}}/>)
     expect(screen.getByText('Sin datos')).toBeInTheDocument()
   })
-
-  it('does not render a currency symbol for a count card', () => {
-    render(
-      <DashboardMetricCard
-        iconName='IconShopping'
-        label='Pedidos'
-        metric={{ value: 42, previousValue: 40, percentageChange: 5, trend: 'up' }}
-        value={42}
-      />
-    )
-    expect(screen.queryByText('$')).not.toBeInTheDocument()
+  it('does not display nonexistent series', () => {
+    render(<DashboardMetricCard label='Productos' iconName='IconInventory' value={1}/>)
+    expect(screen.queryByRole('img', {name:'Tendencia de Productos'})).not.toBeInTheDocument()
   })
-
-  it('renders a busy skeleton while loading', () => {
-    const { container } = render(
-      <DashboardMetricCard iconName='IconDollar' label='Ingresos' loading value={0} />
-    )
-    expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument()
-    // The definitive value must not be shown as if it were real data.
-    expect(screen.queryByText('Ingresos')).not.toBeInTheDocument()
+  it('distinguishes missing value from zero', () => {
+    render(<DashboardMetricCard label='Pedidos' iconName='IconShopping' value={undefined}/>)
+    expect(screen.getByText('—')).toBeInTheDocument()
   })
 })

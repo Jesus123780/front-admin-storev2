@@ -613,3 +613,7 @@
     transform: none;
   }
 }
+
+/* Keep the complete monetary value in normal document flow. */
+.headerText { flex: 1 1 auto; max-width: 100%; }
+.amount { display: block; max-width: 100%; min-width: 0; line-height: 1.2; overflow-wrap: anywhere; font-size: clamp(1.5rem, 2.8vw, 2.25rem); }
