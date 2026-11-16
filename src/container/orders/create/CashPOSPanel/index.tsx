@@ -4,13 +4,15 @@ import {
  useCashPOS, useOpenCashSession, usePreviousCashFloat 
 } from 'npm-pkg-hook'
 import {
- CashDenominationCounter, countCashMinor, emptyCashCount, formatCashMinor 
+ CashDenominationCounter, countCashMinor, emptyCashCount, formatCashMinor, 
+ getGlobalStyle
 } from 'pkg-components'
 import {
  useEffect, useRef, useState 
 } from 'react'
 
 import styles from './styles.module.css'
+import Link from 'next/link'
 
 type Control = ReturnType<typeof useCashPOS>
 type Source = 'PREVIOUS_SESSION' | 'TREASURY' | 'OTHER_DOCUMENTED'
@@ -39,7 +41,9 @@ export function CashPOSPanel({ control, disabled = false, onOpeningChange }: { c
     {ownOpen && <p className={styles.muted}>Turno {control.session?.businessDate}. Los cobros se registran en esta sesión.</p>}
     {control.enabled && control.known && !control.session && selected && control.access?.canOpen && !opening && <button type='button' className={styles.primary} disabled={disabled} onClick={() => setOpening(true)}>Abrir caja sin salir de la venta</button>}
     {opening && selected && control.enabled && control.access?.canOpen && <OpeningForm key={selected.id} control={control} register={selected} disabled={disabled} setLocked={setLocked} onDone={() => { setLocked(false); setOpening(false) }} />}
-    <p className={styles.muted}>Arqueos, retiros, cierre y configuración: <a href='/finance/cash' target='_blank' rel='noopener noreferrer'>Gestión de cajas</a>. No cierres un turno con un cobro pendiente de verificar.</p>
+    <p className={styles.muted}>Arqueos, retiros, cierre y configuración: <Link style={{
+      color: getGlobalStyle('--color-primary-red')
+    }} href='/finance/cash' rel='noopener noreferrer'>Gestión de cajas</Link>. No cierres un turno con un cobro pendiente de verificar.</p>
   </section>
 }
 
