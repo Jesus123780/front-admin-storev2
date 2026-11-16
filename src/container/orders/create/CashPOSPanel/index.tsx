@@ -95,7 +95,7 @@ function OpeningForm({ control, register, disabled, setLocked, onDone }: { contr
     <label className={styles.field}>Origen del dinero<select value={actualSource} disabled={disabled || frozen || requiredPrevious || previous.loading || !!previous.error} onChange={e => setSource(e.target.value as Source)}><option value='TREASURY'>Tesorería / caja fuerte</option>{last && <option value='PREVIOUS_SESSION'>Base retenida del turno anterior</option>}<option value='OTHER_DOCUMENTED'>Otro origen documentado</option></select></label>
     {actualSource === 'PREVIOUS_SESSION' && last && <p>Base anterior: {formatCashMinor(last.retainedMinor)}. Si difiere, justifica el conteo.</p>}
     <label className={styles.field}>Referencia del fondo<input maxLength={200} value={reference} disabled={disabled || frozen} onChange={e => setReference(e.target.value)} placeholder='Recibo / origen'/></label>
-    <label className={styles.field}>Observaciones<textarea maxLength={1000} rows={2} value={notes} disabled={disabled || frozen} onChange={e => setNotes(e.target.value)}/></label>
+    <label className={styles.field}>Observaciones*<textarea maxLength={1000} rows={2} value={notes} disabled={disabled || frozen} onChange={e => setNotes(e.target.value)}/></label>
     {!meetsMinimum && <p role='alert'>La base contada es inferior al mínimo configurado.</p>}
     {message && <p className={styles.notice} role='alert'>{message}</p>}
     {attempt && <p className={styles.muted}>Si el resultado es incierto, reintenta los mismos datos o verifica el turno. No registres otra apertura.</p>}

@@ -1,4 +1,6 @@
-import type { Amount, ReceiptClient, ReceiptDiscount, ReceiptExtra, ReceiptOption, ReceiptProduct, ReceiptStore, SourceRecord, ReceiptFinancials, ReceiptPayment } from './types'
+import type {
+ Amount, ReceiptClient, ReceiptDiscount, ReceiptExtra, ReceiptFinancials, ReceiptOption, ReceiptPayment,ReceiptProduct, ReceiptStore, SourceRecord 
+} from './types'
 
 export const record = (value: unknown): SourceRecord =>
   value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -10,18 +12,18 @@ export const firstText = (...values: unknown[]): string => values.map(text).find
 
 /** GraphQL values are canonical numbers / decimal strings, never locale strings. */
 export const amount = (value: unknown): Amount => {
-  if (typeof value === 'number') return Number.isFinite(value) ? value : null
-  if (typeof value !== 'string' || !/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(value.trim())) return null
+  if (typeof value === 'number') {return Number.isFinite(value) ? value : null}
+  if (typeof value !== 'string' || !/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(value.trim())) {return null}
   const number = Number(value)
   return Number.isFinite(number) ? number : null
 }
 
 /** `values.change` is formatted by the POS input in es-CO. */
 export const cashAmount = (value: unknown): Amount => {
-  if (typeof value !== 'string') return amount(value)
+  if (typeof value !== 'string') {return amount(value)}
   const clean = value.trim()
-  if (/^[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(clean)) return amount(clean.replace(/\./g, '').replace(',', '.'))
-  if (/^[+-]?\d+(?:,\d+)?$/.test(clean)) return amount(clean.replace(',', '.'))
+  if (/^[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(clean)) {return amount(clean.replace(/\./g, '').replace(',', '.'))}
+  if (/^[+-]?\d+(?:,\d+)?$/.test(clean)) {return amount(clean.replace(',', '.'))}
   return amount(clean)
 }
 
@@ -37,10 +39,10 @@ export const formatQuantity = (value: Amount): string => value === null ? '—' 
 
 const safeLogo = (value: unknown): string => {
   const src = text(value)
-  if (!src || /[\u0000-\u001f\\]/.test(src)) return ''
-  if (/^https?:\/\//i.test(src)) return src
-  if (/^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(src)) return src
-  if (/^[a-z][a-z\d+.-]*:/i.test(src) || src.startsWith('//')) return ''
+  if (!src || /[\u0000-\u001f\\]/.test(src)) {return ''}
+  if (/^https?:\/\//i.test(src)) {return src}
+  if (/^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(src)) {return src}
+  if (/^[a-z][a-z\d+.-]*:/i.test(src) || src.startsWith('//')) {return ''}
   return src
 }
 
@@ -58,10 +60,10 @@ export const normalizeStore = (value: unknown): ReceiptStore => {
 /** getClients can return an array or a paginated { data: [...] } envelope. */
 export const selectClient = (source: unknown, values: unknown): ReceiptClient | null => {
   const id = text(record(values).cliId)
-  if (!id) return null
+  if (!id) {return null}
   const candidates = Array.isArray(source) ? source : list(record(source).data)
   const found = candidates.find(candidate => text(record(candidate).cliId) === id)
-  if (!found) return null
+  if (!found) {return null}
   const client = record(found)
   const firstName = text(client.clientName)
   const lastName = text(client.clientLastName)
@@ -84,7 +86,7 @@ export const normalizeOptionals = (source: unknown): ReceiptOption[] => list(sou
 export const normalizeExtras = (source: unknown, parentCourtesy = false): ReceiptExtra[] => list(source).flatMap((raw, index) => {
   const extra = record(raw)
   const quantity = positiveQuantity(extra.quantity)
-  if (quantity === null) return [] // not selected / invalid
+  if (quantity === null) {return []} // not selected / invalid
   // newExtraPrice is the entire extra line; do not multiply it again.
   // No fallback from a malformed or absent effective line price.
   const total = amount(extra.newExtraPrice)
@@ -128,20 +130,20 @@ export const normalizeProducts = (source: unknown): ReceiptProduct[] => list(sou
 
 /** Numeric discount from useSales is an amount already reflected in the cart. */
 export const discountLabel = (discount: ReceiptDiscount | undefined): string | null => {
-  if (typeof discount === 'number') return Number.isFinite(discount) && discount > 0 ? formatMoney(discount) : null
+  if (typeof discount === 'number') {return Number.isFinite(discount) && discount > 0 ? formatMoney(discount) : null}
   const value = amount(discount?.value)
-  if (value === null || value <= 0) return null
-  if (discount?.type === 'PERCENT' && value <= 100) return `${value}%`
-  if (discount?.type === 'AMOUNT') return formatMoney(value)
+  if (value === null || value <= 0) {return null}
+  if (discount?.type === 'PERCENT' && value <= 100) {return `${value}%`}
+  if (discount?.type === 'AMOUNT') {return formatMoney(value)}
   return null
 }
 
 export const receiptDate = (value: string | number | Date | null | undefined): { label: string; iso: string } | null => {
-  if (value == null || value === '') return null
+  if (value == null || value === '') {return null}
   // Backend timestamps such as 2026-11-14 02:32:10.377 -0500.
   const normalized = typeof value === 'string' ? value.replace(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2}(?:\.\d+)?)\s*([+-]\d{2})(\d{2})$/, '$1T$2$3:$4') : value
   const date = normalized instanceof Date ? normalized : new Date(normalized)
-  if (!Number.isFinite(date.getTime())) return null
+  if (!Number.isFinite(date.getTime())) {return null}
   return { label: new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Bogota' }).format(date), iso: date.toISOString() }
 }
 
@@ -164,7 +166,7 @@ export const selectedCartForExport = (source: unknown): SourceRecord[] => list(s
 
 /** Work in integer cents for comparison and addition; never mutate the provided total. */
 function cents(value: Amount): number | null {
-  if (value === null || !Number.isFinite(value)) return null
+  if (value === null || !Number.isFinite(value)) {return null}
   const scaled = Math.round(value * 100)
   return Number.isSafeInteger(scaled) && Math.abs(value * 100 - scaled) < 0.0001 ? scaled : null
 }
@@ -172,7 +174,7 @@ function addAmounts(values: readonly Amount[]): Amount {
   let sum = 0
   for (const value of values) {
     const part = cents(value)
-    if (part === null || !Number.isSafeInteger(sum + part)) return null
+    if (part === null || !Number.isSafeInteger(sum + part)) {return null}
     sum += part
   }
   return sum / 100
@@ -182,20 +184,20 @@ function same(a: Amount, b: Amount): boolean {
   return first !== null && first === cents(b)
 }
 function reduction(original: Amount, final: Amount): Amount {
-  if (original === null || final === null || original < final || final < 0) return null
+  if (original === null || final === null || original < final || final < 0) {return null}
   return addAmounts([original, -final])
 }
 function lineOriginal(explicit: unknown, unit: Amount, quantity: Amount, final: Amount, explicitDiscount: unknown): Amount {
   const original = amount(explicit)
-  if (original !== null && original >= 0) return original
+  if (original !== null && original >= 0) {return original}
   const statedDiscount = amount(explicitDiscount)
-  if (statedDiscount !== null && statedDiscount >= 0 && final !== null) return addAmounts([final, statedDiscount])
+  if (statedDiscount !== null && statedDiscount >= 0 && final !== null) {return addAmounts([final, statedDiscount])}
   // Unit price is the base price in this POS. A matching net confirms an undiscounted line.
   const base = unit !== null && quantity !== null ? unit * quantity : null
   return same(base, final) ? final : null
 }
 function reportedDiscountAmount(discount: ReceiptDiscount | undefined): Amount {
-  if (typeof discount === 'number') return amount(discount)
+  if (typeof discount === 'number') {return amount(discount)}
   return discount?.type === 'AMOUNT' ? amount(discount.value) : null
 }
 export function summarizeReceipt(items: readonly ReceiptProduct[], total: Amount, discount?: ReceiptDiscount): ReceiptFinancials {
@@ -211,13 +213,13 @@ export function summarizeReceipt(items: readonly ReceiptProduct[], total: Amount
   const netMatches = same(addAmounts([productNet, extraNet]), total)
   const showBreakdown = netMatches && productGross !== null && extraGross !== null && appliedDiscount !== null && courtesy !== null && same(addAmounts([productGross, extraGross, -appliedDiscount, -courtesy]), total)
   const warnings: string[] = []
-  if (!netMatches) warnings.push('El total informado no coincide con las líneas y complementos disponibles. Verifica los importes antes de confirmar.')
-  if (reportedDiscount !== null && appliedDiscount !== null && !same(reportedDiscount, appliedDiscount)) warnings.push('El descuento informado no coincide con los descuentos identificados en las líneas.')
+  if (!netMatches) {warnings.push('El total informado no coincide con las líneas y complementos disponibles. Verifica los importes antes de confirmar.')}
+  if (reportedDiscount !== null && appliedDiscount !== null && !same(reportedDiscount, appliedDiscount)) {warnings.push('El descuento informado no coincide con los descuentos identificados en las líneas.')}
   // POS discountAmount on a product is the allocated discount of the entire
   // line (main + extras); compare with that scope, not just the main price.
-  if (items.filter(item => !item.free).some(item => item.reportedDiscountAmount !== null && !same(item.reportedDiscountAmount, addAmounts([item.discountAmount, ...item.extras.map(extra => extra.discountAmount)]))) || extras.some(extra => extra.reportedDiscountAmount !== null && extra.discountAmount !== null && !same(extra.reportedDiscountAmount, extra.discountAmount))) warnings.push('Existe un descuento de línea informado que no coincide con su precio original y final.')
-  if (extras.some(extra => extra.inconsistentCourtesyPrice)) warnings.push('Hay complementos con precio propio alterado por una cortesía. Corrige el carrito antes de confirmar; no se modifican importes desde el comprobante.')
-  if (items.some(item => item.free && item.total !== null && item.total !== 0)) warnings.push('Existe una línea marcada como cortesía con un importe distinto de cero.')
+  if (items.filter(item => !item.free).some(item => item.reportedDiscountAmount !== null && !same(item.reportedDiscountAmount, addAmounts([item.discountAmount, ...item.extras.map(extra => extra.discountAmount)]))) || extras.some(extra => extra.reportedDiscountAmount !== null && extra.discountAmount !== null && !same(extra.reportedDiscountAmount, extra.discountAmount))) {warnings.push('Existe un descuento de línea informado que no coincide con su precio original y final.')}
+  if (extras.some(extra => extra.inconsistentCourtesyPrice)) {warnings.push('Hay complementos con precio propio alterado por una cortesía. Corrige el carrito antes de confirmar; no se modifican importes desde el comprobante.')}
+  if (items.some(item => item.free && item.total !== null && item.total !== 0)) {warnings.push('Existe una línea marcada como cortesía con un importe distinto de cero.')}
   return { total, productNet, extraNet, productGross, extraGross, appliedDiscount, courtesy, reportedDiscount, reportedDiscountLabel: discountLabel(discount), netMatches, showBreakdown, warnings }
 }
 export function normalizePayment(method: unknown, rawChange: unknown, override?: ReceiptPayment['kind']): ReceiptPayment {
