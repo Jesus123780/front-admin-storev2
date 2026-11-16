@@ -104,3 +104,7 @@
   .weekCard { transition: none; }
   .weekCard:hover { transform: none; }
 }
+
+.weekUnits { color: var(--color-text-black); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.weekCard { flex-direction: column; }
+.percentageRow { flex-wrap: wrap; }
