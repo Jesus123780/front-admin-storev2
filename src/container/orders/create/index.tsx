@@ -47,6 +47,7 @@ import { MENU_OPTIONS } from '@/context/helpers'
 import { Context } from '../../../context/Context'
 import { ModalScanner } from '../../ModalScanner'
 import { CashPOSPanel } from './CashPOSPanel'
+import { CashRealtimeStatus } from './CashRealtimeStatus'
 import { resolveCheckoutAction } from './checkout-action'
 import { getAsideVisibility, shouldOpenRecoveryAside, resolveAsideRequest } from './checkout-visibility'
 import { CreateProductDrawer } from './CreateProductDrawer'
@@ -343,6 +344,7 @@ export const CreateSales = ({
     automaticCashChange: true,
     deliveryCheckoutEnabled: true,
     cashManagementEnabled: true,
+    cashPollingEnabled: false,
     disabled: false,
     router,
     sendNotification,
@@ -838,7 +840,10 @@ export const CreateSales = ({
   ) : null
   // Checkout controls have independent slots: confirmation must never be inside a disclosure.
   const cashSection = (!cashControl.known || cashControl.enabled) ? (
-    <CashPOSPanel control={cashControl} disabled={paymentBusy || pendingRecovery} onOpeningChange={setIsOpeningCash} />
+    <>
+      <CashRealtimeStatus connection={cashControl.connection} />
+      <CashPOSPanel control={cashControl} disabled={paymentBusy || pendingRecovery} onOpeningChange={setIsOpeningCash} />
+    </>
   ) : null
   const cashSectionSummary = !cashControl.known ? 'Consultando…'
     : cashControl.session?.status === 'OPEN' ? 'Caja abierta' : 'Requiere revisión'

@@ -12,8 +12,8 @@ export function shouldOpenRecoveryAside(state: Omit<AsideVisibility, 'openAside'
   return state.pendingRecovery && state.show && !state.print && !state.saleSuccess && !state.busy
 }
 export function resolveAsideRequest(previous: boolean, requested: unknown, blocked: boolean, closeLocked: boolean): boolean {
-  if (blocked) return false
+  if (blocked) {return false}
   const next = typeof requested === 'boolean' ? requested : !previous
-  if (!next && previous && closeLocked) return previous
+  if (!next && previous && closeLocked) {return previous}
   return next
 }

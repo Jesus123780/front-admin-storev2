@@ -4,6 +4,7 @@ import type { ApolloClient as ApolloClientType, NormalizedCacheObject } from '@a
 import {
   ApolloClient,
   ApolloLink,
+  Observable,
   fromPromise,
   split
 } from '@apollo/client'
@@ -12,6 +13,7 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { createUploadLink } from 'apollo-upload-client'
 import { createClient } from 'graphql-ws'
+import { print } from 'graphql'
 import {
   Cookies,
   SERVICES
@@ -209,12 +211,61 @@ function createWsLink() {
   )
 }
 
+/** Decode only for client-side scope checks, never for authorization. */
+function cashTokenClaims(authorization: string): {sub?: string; exp?: number} {
+  try {
+    const part = authorization.split(' ')[1].split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(part.padEnd(Math.ceil(part.length / 4) * 4, '=')))
+  } catch { return {} }
+}
+
+/** Each cash stream binds auth headers and tenant to its own operation. */
+function createCashWsLink() {
+  return new ApolloLink(operation => new Observable(observer => {
+    const raw = process.env.NEXT_PUBLIC_CASH_WS_URL || process.env.NEXT_PUBLIC_URL_BACK_SERVER
+    if (!raw || typeof window === 'undefined') { observer.error(new Error('Cash WebSocket unavailable')); return }
+    const url = raw.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:').replace(/\/$/, '')
+    let disposed = false
+    let stop: (() => void) | undefined
+    let monitor: ReturnType<typeof setInterval> | undefined
+    void (async () => {
+      let headers = buildAuthHeaders()
+      if (headers.restaurant !== operation.variables.storeId) throw new Error('Cash tenant changed')
+      const claims = cashTokenClaims(headers.authorization)
+      if (claims.exp && claims.exp * 1000 <= Date.now() + 30000) {
+        await refreshSession()
+        headers = buildAuthHeaders()
+      }
+      if (disposed) return
+      if (headers.restaurant !== operation.variables.storeId || !cashTokenClaims(headers.authorization).sub) throw new Error('Cash auth scope missing')
+      const client = createClient({ url: url.endsWith('/graphql') ? url : `${url}/graphql`, lazy: true, retryAttempts: 0, connectionParams: () => headers, connectionAckWaitTimeout: 10000 })
+      const unsubscribe = client.subscribe({ query: print(operation.query), variables: operation.variables, operationName: operation.operationName }, {
+        next: result => observer.next(result as any), error: error => observer.error(error), complete: () => observer.complete()
+      })
+      stop = () => { unsubscribe(); void client.dispose() }
+      if (disposed) { stop(); return }
+      // No HTTP polling: compare in-memory credentials only. Restart stream on rotation/logout.
+      monitor = setInterval(() => {
+        const current = buildAuthHeaders()
+        if (current.authorization !== headers.authorization || current.restaurant !== headers.restaurant) observer.error(new Error('Cash credentials changed'))
+      }, 1000)
+    })().catch(error => { if (!disposed) observer.error(error) })
+    return () => { disposed = true; if (monitor) clearInterval(monitor); stop?.() }
+  }))
+}
+
 function createApolloClient() {
   const ssrMode = typeof window === 'undefined'
   const wsLink = createWsLink()
 
   const httpLink = new ApolloLink((operation, forward) => {
-    const service = operation.getContext().clientName
+    const { clientName: service, cashScope } = operation.getContext()
+    if (cashScope) {
+      const headers = buildAuthHeaders()
+      if (headers.restaurant !== cashScope.storeId || cashTokenClaims(headers.authorization).sub !== cashScope.actorId) {
+        return new Observable(observer => { observer.error(new Error('Cash auth scope changed')) })
+      }
+    }
     const link = createHttpLink(service)
     return link.request(operation, forward)
   })
@@ -237,7 +288,7 @@ function createApolloClient() {
   return new ApolloClient({
     ssrMode,
     connectToDevTools: true,
-    link: ApolloLink.from([errorLink, splitLink]),
+    link: split(operation => operation.getContext().clientName === 'CASH_REALTIME', createCashWsLink(), ApolloLink.from([errorLink, splitLink])),
     cache,
     typeDefs,
     defaultOptions: {

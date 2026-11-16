@@ -1,4 +1,6 @@
-import { getAsideVisibility, shouldOpenRecoveryAside, resolveAsideRequest } from './checkout-visibility'
+import {
+ getAsideVisibility, resolveAsideRequest,shouldOpenRecoveryAside 
+} from './checkout-visibility'
 
 const normal = { show: true, print: false, saleSuccess: false }
 
