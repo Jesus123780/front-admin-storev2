@@ -24,6 +24,7 @@ import {
   AwesomeModal,
   Button,
   CardProductSimple,
+  CashPaymentConfirmation,
   Column,
   Divider,
   FloatingScanButtons,
@@ -55,6 +56,7 @@ import { ProductNotFoundDialog } from './ProductNotFoundDialog'
 import { SubItems } from './SubItems'
 import { SuccessSaleModal } from './Success'
 import { createInvoiceSnapshot } from './sale-invoice-snapshot'
+import { CashPOSPanel } from './CashPOSPanel'
 
 /* =========================================================
    SALES TABLE CONFIGURATION
@@ -167,6 +169,9 @@ export const CreateSales = ({
   const [confirmedCode, setConfirmedCode] = useState<string | null>(null)
   const [previewDate, setPreviewDate] = useState<number | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isOpeningCash, setIsOpeningCash] = useState(false)
+  const [isRecoveringPayment, setIsRecoveringPayment] = useState(false)
+  const recoveryLockRef = useRef(false)
   const submitLockRef = useRef(false)
   const completedCheckoutRef = useRef(false)
   const printLockRef = useRef(false)
@@ -313,10 +318,22 @@ export const CreateSales = ({
     updatePendingStatus,
     clearPendingOrders,
     persistPendingOrder,
-    searchPendingOrders
+    searchPendingOrders,
+    cashControl,
+    paymentConfirmed,
+    paymentConfirmationReady,
+    confirmCurrentPayment,
+    pendingCashReference,
+    cashStorageIssue,
+    cashOperationLocked,
+    recoveringCash,
+    resolvePendingCashReference,
+    retryPendingCashSale,
+    canRetryPendingCashSale
   } = useSales({
     automaticCashChange: true,
     deliveryCheckoutEnabled: true,
+    cashManagementEnabled: true,
     disabled: false,
     router,
     sendNotification,
@@ -393,7 +410,7 @@ export const CreateSales = ({
    *  - DUPLICATE_EVENT → se ignora (rebote de la misma lectura).
    */
   const handleScannedCode = async (rawCode) => {
-    if (submitLockRef.current || saleSuccess || print) return
+    if (submitLockRef.current || cashOperationLocked || isOpeningCash || saleSuccess || print) return
     if (typeof handleAddProductByBarcode !== 'function') { return }
     const outcome = await handleAddProductByBarcode(rawCode)
     if (!outcome || typeof outcome !== 'object') { return }
@@ -587,7 +604,7 @@ export const CreateSales = ({
   }
 
   const handleSubmit = async () => {
-    if (submitLockRef.current || loadingRegisterSale || saleSuccess || completedCheckoutRef.current) return
+    if (submitLockRef.current || loadingRegisterSale || cashOperationLocked || isOpeningCash || saleSuccess || completedCheckoutRef.current) return
     if (!data?.PRODUCT?.length) {
       sendNotification({ title: 'Carrito vacío', description: 'Agrega al menos un producto.', backgroundColor: 'warning' })
       return
@@ -633,11 +650,15 @@ export const CreateSales = ({
   const existComment = Boolean(oneProductToComment?.comment?.length)
 
   const handleCloseModal = () => {
-    if (submitLockRef.current) return
+    if (submitLockRef.current || loadingRegisterSale || pendingCashReference || cashStorageIssue || isOpeningCash) {
+      sendNotification({title:'Operación pendiente',backgroundColor:'warning',description:'Termina la apertura o verifica el cobro antes de cerrar la venta.'})
+      return false
+    }
     dispatch({ type: 'REMOVE_ALL_PRODUCTS' })
     setValues({})
     setPreviewDate(null)
     onCloseModalSale()
+    return true
   }
 
   const isLoading = loadingRegisterSale || loading || isSubmitting || isPrinting
@@ -698,6 +719,7 @@ export const CreateSales = ({
   }
   const [openAside, setOpenAside] = useState(false)
   const handleOpenAside = () => {
+    if (openAside && (isOpeningCash || pendingCashReference || cashStorageIssue || submitLockRef.current)) return
     setOpenAside(!openAside)
   }
   const [handlePrintSale] = usePrintSaleTicket()
@@ -733,20 +755,21 @@ export const CreateSales = ({
   // `data.payId` poblado para que se envíe correctamente al backend aunque el
   // usuario no toque la selección. Si no existe "Efectivo", cae al primero.
   useEffect(() => {
-    if (data?.payId || paymentMethods.length === 0) {
+    if (!cashControl.known || data?.payId || paymentMethods.length === 0) {
       return
     }
+    const available = cashControl.enabled ? paymentMethods.filter(m => cashControl.methods.some(x=>x.payId===m.id&&x.state==='active'&&x.financialKind!=='UNKNOWN')) : paymentMethods
     const defaultMethod =
-      paymentMethods.find((method) => {
-        return method.name?.toLowerCase().trim() === 'efectivo'
-      }) ?? paymentMethods[0]
+      available.find((method) => {
+        return cashControl.enabled ? cashControl.methods.some(m => m.payId === method.id && m.financialKind === 'CASH') : method.name?.toLowerCase().trim() === 'efectivo'
+      }) ?? available[0]
     if (defaultMethod?.id) {
       dispatch({ type: 'PAYMENT_METHOD', payload: defaultMethod.id })
     }
-  }, [paymentMethods, data?.payId, dispatch])
+  }, [paymentMethods, data?.payId, dispatch, cashControl.enabled, cashControl.known, cashControl.methods])
 
   const handleOpenSalePreview = () => {
-    if (print || submitLockRef.current || loadingRegisterSale || saleSuccess) return
+    if (print || submitLockRef.current || loadingRegisterSale || cashOperationLocked || isOpeningCash || saleSuccess) return
     if (!cashCheckout?.canSubmit) {
       sendNotification({ title: 'Verifica el cobro', description: cashCheckout?.message || 'Completa los datos del pago.', backgroundColor: 'warning' })
       return
@@ -757,10 +780,44 @@ export const CreateSales = ({
   }
 
   const handleCloseSalePreview = () => {
-    if (!print || submitLockRef.current) return
+    if (!print || submitLockRef.current || loadingRegisterSale || recoveringCash) return
     setPrint()
     setPreviewDate(null)
   }
+
+  const paymentBusy = isSubmitting || loadingRegisterSale || isRecoveringPayment || recoveringCash
+  const pendingRecovery = Boolean(pendingCashReference || cashStorageIssue)
+  const handleRecoverPayment = async (retry = false) => {
+    if (recoveryLockRef.current || paymentBusy) return
+    if (!retry && !window.confirm('Si se encuentra evidencia del cobro original, se recuperará el comprobante y se limpiará el carrito actual. ¿Continuar?')) return
+    recoveryLockRef.current = true
+    setIsRecoveringPayment(true)
+    try {
+      if (retry) await retryPendingCashSale()
+      else await resolvePendingCashReference()
+    } catch(e) {
+      sendNotification({title:'Revisión de cobro',backgroundColor:'warning',description:e instanceof Error?e.message:'No fue posible verificar el cobro.'})
+    } finally { recoveryLockRef.current=false;setIsRecoveringPayment(false) }
+  }
+  // Recover inside the existing checkout; the panel must not be rendered in the printable receipt.
+  const recoverySection = pendingRecovery ? <section role='status' style={{padding:12,border:'1px solid var(--color-border,#ddd)',borderRadius:8}}>
+    <strong>{pendingCashReference ? `Cobro pendiente: ${pendingCashReference}` : 'Revisión de caja requerida'}</strong>
+    <p>{cashStorageIssue || 'No vuelvas a cobrar. Verifica la venta original antes de continuar.'}</p>
+    {pendingCashReference && <>
+      <Button disabled={paymentBusy} onClick={() => void handleRecoverPayment(false)}>Verificar cobro anterior</Button>
+      {canRetryPendingCashSale && <Button disabled={paymentBusy} onClick={() => void handleRecoverPayment(true)}>Reintentar el mismo registro</Button>}
+    </>}
+  </section> : null
+  const paymentConfirmation = cashControl.enabled && (cashCheckout?.total === 0
+    ? <label><input type='checkbox' checked={paymentConfirmed} disabled={!paymentConfirmationReady || paymentBusy || isOpeningCash} onChange={e=>confirmCurrentPayment(e.target.checked)}/> Confirmo la venta sin cobro.</label>
+    : <CashPaymentConfirmation enabled={cashControl.enabled} checked={paymentConfirmed} onChange={confirmCurrentPayment} disabled={!paymentConfirmationReady || paymentBusy || isOpeningCash}/>)
+  const deliverySection = <>
+    {recoverySection}
+    <CashPOSPanel control={cashControl} disabled={paymentBusy || pendingRecovery} onOpeningChange={setIsOpeningCash}/>
+    <DeliveryCheckoutPanel checkout={deliveryCheckout} disabled={paymentBusy || pendingRecovery || isOpeningCash}/>
+    {paymentConfirmation}
+  </>
+  useEffect(() => { if (pendingRecovery && show) setOpenAside(true) }, [pendingRecovery, show])
 
   const restPropsSalesModal = {
     code: null, // Sale reference is generated by useSales on submission. Never reuse the previous sale's code.
@@ -770,7 +827,7 @@ export const CreateSales = ({
     paymentKind,
     cashCheckout,
     previewInput: { ...previewInput, paymentMethod: paymentMethods.find(method => method.id === data?.payId)?.name ?? 'Sin seleccionar' },
-    deliverySection: <DeliveryCheckoutPanel checkout={deliveryCheckout} disabled={isSubmitting || loadingRegisterSale} />,
+    deliverySection: <>{recoverySection}<DeliveryCheckoutPanel checkout={deliveryCheckout} disabled={paymentBusy || pendingRecovery}/>{paymentConfirmation}</>,
     onCashReceivedChange: handleCashReceivedChange,
     delivery,
     print,
@@ -785,7 +842,7 @@ export const CreateSales = ({
     isPrinting: false, // Server-side thermal printing does not use the DOM print handshake.
     dataClientes,
     setPrint: handleCloseSalePreview,
-    loading: loading || isSubmitting || loadingRegisterSale,
+    loading: loading || paymentBusy,
     handleSubmit,
     handleDownLoad
   }
@@ -1011,6 +1068,7 @@ export const CreateSales = ({
 
 
   const handleRedirectCreateProduct = () => {
+    if (cashOperationLocked || isOpeningCash) return
     setSalesOpen(false)
     handleClick(MENU_OPTIONS.CREATE_PRODUCTS)
     
@@ -1101,7 +1159,7 @@ export const CreateSales = ({
         handlePageChange={handlePageChange}
         handleSave={handleOpenSalePreview}
         isLoading={isLoading}
-        isSubmittingSale={isSubmitting || loadingRegisterSale}
+        isSubmittingSale={paymentBusy || pendingRecovery || isOpeningCash}
         loadingClients={loadingClients}
         loadingProduct={loading || fetchMoreLoader}
         numberFormat={numberFormat}
@@ -1112,14 +1170,13 @@ export const CreateSales = ({
         pagination={pagination}
         paymentMethods={paymentMethods}
         paymentKind={paymentKind}
-        deliverySection={<DeliveryCheckoutPanel checkout={deliveryCheckout} disabled={isSubmitting || loadingRegisterSale} />}
+        deliverySection={deliverySection}
         cashCheckout={cashCheckout}
         onCashReceivedChange={handleCashReceivedChange}
         productsFood={productsFood}
         propsSliderCategory={restPropsSliderCategory}
         setShow={(show) => {
-          if (submitLockRef.current) return
-          handleCloseModal()
+          if (show === false && !handleCloseModal()) return
           setShow(show)
         }}
         show={show}
