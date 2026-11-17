@@ -13,6 +13,7 @@ import {
 import { Context } from '@/context/Context'
 
 import styles from './whatsapp-campaign.module.css'
+import { Icon } from 'pkg-components'
 
 interface WhatsAppCampaignStepperProps {
   isReady: boolean
@@ -203,7 +204,7 @@ export default function WhatsAppCampaignStepper({ isReady }: WhatsAppCampaignSte
 
       <div className={styles.stepper} aria-label="Pasos para crear una campaña">
         <div className={`${styles.step} ${step === 0 ? styles.stepActive : styles.stepComplete}`}>
-          <span className={styles.stepNumber}>{step === 0 ? '1' : '✓'}</span>
+          <span className={styles.stepNumber}>{step === 0 ? '1' : <Icon icon='IconMiniCheck' size={15} />}</span>
           <span>Subir archivo Excel</span>
         </div>
         <div className={`${styles.step} ${step === 1 ? styles.stepActive : ''}`}>
