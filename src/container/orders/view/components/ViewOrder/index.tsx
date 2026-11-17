@@ -11,6 +11,9 @@ import OrderItems from './order-items'
 import styles from './order-page.module.css'
 import OrderPayments from './order-payments'
 import OrderTotals, { type PropsTotals } from './order-totals'
+import { RefundInventoryDetails } from './refund-view/OrderRefundView'
+import { RefundStatus } from './refund-view/RefundStatus'
+
 
 export type PropsOrderDetail = {
   /** Puede llegar vacío durante la petición desde GraphQL. */
@@ -36,6 +39,14 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
   const hasOrder = Boolean(order)
   const orderCode = order?.pCodeRef?.trim() ?? ''
   const allTotals = totals?.totals ?? order?.totals ?? []
+
+  const refundSummary = (
+    order as (
+      typeof order & {
+        refundSummary?: RefundOrderSummaryView | null
+      }
+    ) | undefined
+  )?.refundSummary
 
   return (
     <div
@@ -71,6 +82,10 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
               modalView={modalView}
             />
 
+<RefundStatus
+  summary={refundSummary}
+  originalStatus={order?.statusOrder?.name}
+/>
             <div className={styles.content}>
               <div className={styles.left}>
                 <OrderClientInfo
@@ -79,6 +94,9 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
                   createdAt={order?.createdAt}
                 />
                 <OrderItems items={order?.shoppingCarts ?? []} financials={order?.financials} />
+                <RefundInventoryDetails
+                  summary={refundSummary}
+                />
                 <CodeDisplay pCodeRef={orderCode} />
               </div>
 

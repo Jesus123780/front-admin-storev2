@@ -1,7 +1,10 @@
 'use client'
 
+import {
+ CopyToClipboard, Icon, Text 
+} from 'pkg-components'
 import React from 'react'
-import { CopyToClipboard, Icon, Text } from 'pkg-components'
+
 import { formatOrderDate, parseOrderDate } from '../helpers/order-format'
 import styles from './order-header.module.css'
 
