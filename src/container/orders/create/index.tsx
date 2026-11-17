@@ -49,11 +49,14 @@ import { ModalScanner } from '../../ModalScanner'
 import { CashPOSPanel } from './CashPOSPanel'
 import { CashRealtimeStatus } from './CashRealtimeStatus'
 import { resolveCheckoutAction } from './checkout-action'
-import { getAsideVisibility, shouldOpenRecoveryAside, resolveAsideRequest } from './checkout-visibility'
+import {
+ getAsideVisibility, resolveAsideRequest,shouldOpenRecoveryAside 
+} from './checkout-visibility'
 import { CreateProductDrawer } from './CreateProductDrawer'
 import { DeliveryCheckoutPanel } from './DeliveryCheckoutPanel'
 import { useModalLayer } from './modalLayers'
 import { ModalSales } from './ModalSales'
+import { PaymentSetupNotice } from './PaymentSetupNotice'
 import { ProductNotFoundDialog } from './ProductNotFoundDialog'
 import { buildPreviewReceipt, formatReceiptMoney } from './receipt/financial-receipt'
 import { GET_CONFIRMED_RECEIPT } from './receipt/queries'
@@ -291,6 +294,8 @@ export const CreateSales = ({
     paymentConfirmationBlocker,
     checkoutAmountIssue,
     checkoutPaymentMethods,
+    cashSessionPaymentPolicy,
+    sessionPaymentSelection,
     deliveryCheckout,
     handleCashReceivedChange,
     handleUpdateAllExtra,
@@ -1245,6 +1250,20 @@ export const CreateSales = ({
         openAside={asideVisible}
         pagination={pagination}
         paymentMethods={paymentMethods}
+        paymentSettingsSection={
+          <PaymentSetupNotice
+            cashEnabled={cashControl.enabled}
+            cashKnown={cashControl.known}
+            sessionOpen={cashControl.session?.status === 'OPEN'}
+            policyLoading={cashSessionPaymentPolicy.loading}
+            policyError={Boolean(cashSessionPaymentPolicy.error)}
+            configured={sessionPaymentSelection.configured}
+            legacy={sessionPaymentSelection.legacy}
+            availableCount={paymentMethods.length}
+            unclassifiedCount={cashControl.methods.filter(m => m.financialKind === 'UNKNOWN' && m.state === 'active').length}
+            issue={sessionPaymentSelection.issue}
+          />
+        }
         paymentKind={paymentKind}
         deliverySection={deliverySection}
         deliverySectionSummary={deliveryCheckout.ready ? 'Configurada' : 'Configurar'}
