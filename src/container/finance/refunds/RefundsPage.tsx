@@ -8,7 +8,6 @@ import styles from './SaleRefundsPanel.module.css'
 /** Self-contained App Router page. Never selects another operator's drawer silently. */
 export default function RefundsPage() {
   const { data,loading,error,refetch } = useCashSessions()
-  console.log({data})
   const sessions = useMemo(()=> (data?.getCashSessions ?? [])
     .filter(session => session.status === 'OPEN'),[data])
   const [selected,setSelected] = useState<string>('')
