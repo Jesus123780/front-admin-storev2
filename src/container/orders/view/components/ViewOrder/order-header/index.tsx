@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { CopyToClipboard, Icon } from 'pkg-components'
+import { CopyToClipboard, Icon, Text } from 'pkg-components'
 import { formatOrderDate, parseOrderDate } from '../helpers/order-format'
 import styles from './order-header.module.css'
 
@@ -42,7 +42,11 @@ const OrderHeader: React.FC<Props> = ({
           <h1 className={styles.title}>Orden</h1>
           {safeCode ? (
             <div className={styles.code}>
-              <span className={styles.codeText}>#{safeCode}</span>
+              <Text as='h2' className={styles.codeText} style={{
+                width: 'stretch'
+              }}>
+                #{safeCode}
+              </Text>
               <CopyToClipboard
                 text={safeCode}
                 label="Copiar código"
