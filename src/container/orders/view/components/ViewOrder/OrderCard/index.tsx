@@ -12,6 +12,7 @@ import {
 } from '../../../../utils/orders'
 import { OrderStatusBadge } from '../OrderStatusBadge'
 import styles from './styles.module.css'
+import { OrderBoardHistory } from '../../OrderBoardHistory'
 
 interface Props {
   order: OrderRecord
@@ -42,6 +43,13 @@ export function OrderCard({ order, status, onOpen, onPrint, onPdf, busyPdf }: Pr
         </Text>
         {client && quantity !== null && <Text as="p" color="gray-dark" customSize="0.72rem">{quantity} {quantity === 1 ? 'producto' : 'productos'}</Text>}
       </div>
+            <div className={styles.historySlot}>
+              <OrderBoardHistory
+                key={order.pCodeRef}
+                pCodeRef={order.pCodeRef}
+                active={true}
+              />
+            </div>
       <div className={styles.footer}>
         <OrderStatusBadge status={status} fallback={typeof order.status === 'string' ? order.status : 'Sin estado'} compact />
         <div className={styles.actions}>
