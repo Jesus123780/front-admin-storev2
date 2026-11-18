@@ -6,7 +6,8 @@ const ROUTES_WITHOUT_LAYOUT = new Set([
   '/register', 
   '/forgot-password', 
   '/reset-password', 
-  '/verify-email'
+  '/verify-email',
+  '/merchant/success',
 ])
 
 export function middleware(request: NextRequest) {

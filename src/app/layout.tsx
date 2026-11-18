@@ -24,7 +24,9 @@ const ROUTES_WITHOUT_LAYOUT = new Set([
   ROUTES['forgot-password'],
   ROUTES['verify-email'],
   ROUTES['reset-password'],
-  '/verify-email'
+  ROUTES.success,
+  '/verify-email',
+
 ])
 
 export default function RootLayout({
@@ -76,7 +78,6 @@ export default function RootLayout({
       <body>
         <LoadingProvider>
           <ElectronUpdateModal />
-
           <QueryProvider>
             <div id='portal' />
 

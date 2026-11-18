@@ -1,7 +1,7 @@
 'use client'
 
 import {
- useGetSale, useManageQueryParams, useOrdersFromStore, useOrderStatusTypes, usePrintSaleTicket 
+ useGetSale, useManageQueryParams, useMoveOrderOnBoard, useOrdersFromStore, useOrderStatusTypes, usePrintSaleTicket 
 } from 'npm-pkg-hook'
 import { Icon, Text } from 'pkg-components'
 import { EOrderQueryParams } from 'pkg-components/stories/organisms/ModalDetailOrder/type'
@@ -11,9 +11,6 @@ import React, {
 
 import { Context } from '@/context/Context'
 
-import type {
- DateRangeValue, OrderDetailsState, OrderRecord, OrdersLayout, OrdersPreset, OrdersSort 
-} from '../types/index'
 import { exportOrderPdf } from '../utils/exportOrderPdf'
 import {
  applyOrderFilters, extractOrders, extractSale, formatOrderDate, normalizeStatusTypes, orderStatusName, presetRange 
@@ -29,13 +26,17 @@ import {
 import { OrdersSummary } from './components/OrdersSummary'
 import { OrdersToolbar } from './components/OrdersToolbar'
 import styles from './styles.module.css'
+import type {
+ DateRangeValue, OrderDetailsState, OrderRecord, OrdersLayout, OrdersPreset, OrdersSort, 
+OrderStatusType
+} from './types'
 
 export interface OrdersViewProps { query?: EOrderQueryParams }
 
 const EMPTY_DETAIL: OrderDetailsState = { open: false, code: '', loading: false, error: null, order: null }
 
 /**
- * MVP dashboard for Venty. Read-only board: no status transition is faked.
+ * MVP dashboard for Venty. Board moves persist to boardStatusId (not financial idStatus).
  * Integrations already present in npm-pkg-hook are reused.
  */
 export function OrdersView({ query }: OrdersViewProps) {
@@ -54,6 +55,10 @@ export function OrdersView({ query }: OrdersViewProps) {
   const [openManageStatuses, setOpenManageStatuses] = useState(false)
   const [detail, setDetail] = useState<OrderDetailsState>(EMPTY_DETAIL)
   const [downloadingCode, setDownloadingCode] = useState<string | null>(null)
+  const [movingCode, setMovingCode] = useState<string | null>(null)
+  const [lastMovedCode, setLastMovedCode] = useState<string | null>(null)
+  const movingRef = useRef<{ code: string; target: OrderStatusType } | null>(null)
+  const moveBusyRef = useRef(false)
   const detailSequence = useRef(0)
   const didInitDeepLink = useRef(false)
   const didInitSearch = useRef(false)
@@ -68,10 +73,17 @@ export function OrdersView({ query }: OrdersViewProps) {
     : null
   const { handleGetSale } = useGetSale()
   const [handlePrintSale] = usePrintSaleTicket()
+  const { moveOrder } = useMoveOrderOnBoard()
 
   const receiveOrders = useCallback((payload: unknown) => {
     const list = extractOrders(payload)
-    if (list) { setOrders(list); setListError(null); setInitialLoading(false) }
+    if (list) {
+      const pending = movingRef.current
+      setOrders(pending
+        ? list.map(order => order.pCodeRef === pending.code ? { ...order, boardStatusId: pending.target.idStatus, status: pending.target.name, statusOrder: pending.target } : order)
+        : list)
+      setListError(null); setInitialLoading(false)
+    }
   }, [])
 
   // Preserve the current hook contract: [result, { refetch }].
@@ -193,6 +205,45 @@ export function OrdersView({ query }: OrdersViewProps) {
     } finally { setDownloadingCode(null) }
   }, [detail.order, downloadingCode, fetchSale, sendNotification])
 
+  /** Optimistic cross-column move; backend is authoritative and auditable. */
+  const moveBoardOrder = useCallback(async (code: string, fromStatusId: string, toStatusId: string) => {
+    if (moveBusyRef.current || fromStatusId === toStatusId) {return}
+    const original = orders.find(order => order.pCodeRef === code)
+    const target = statuses.find(status => status.idStatus === toStatusId)
+    const from = statuses.find(status => status.idStatus === fromStatusId)
+    if (!original || !from || !target) {return}
+
+    const expected = original.boardStatusId || statuses.find(status => status.name === orderStatusName(original, statuses))?.idStatus
+    if (expected !== fromStatusId) {
+      sendNotification({ title: 'Tablero desactualizado', description: 'Actualiza el tablero antes de mover esta orden.', backgroundColor: 'error' })
+      return
+    }
+
+    moveBusyRef.current = true
+    movingRef.current = { code, target }
+    setMovingCode(code)
+    setLastMovedCode(code)
+    setOrders(previous => previous.map(order => order.pCodeRef === code
+      ? { ...order, boardStatusId: target.idStatus, status: target.name, statusOrder: target }
+      : order))
+
+    try {
+      const result = await moveOrder({ pCodeRef: code, expectedStatusId: fromStatusId, toStatusId })
+      await refresh()
+      sendNotification({ title: 'Orden actualizada', description: `${code}: ${from.name} → ${result.data?.toStatusName || target.name}`, backgroundColor: 'success' })
+    } catch (error) {
+      movingRef.current = null
+      setOrders(previous => previous.map(order => order.pCodeRef === code ? original : order))
+      sendNotification({ title: 'No fue posible mover la orden', description: error instanceof Error ? error.message : 'Intenta nuevamente.', backgroundColor: 'error' })
+      // A conflict requires reading the authoritative status, not just rolling back.
+      await refresh().catch(() => undefined)
+    } finally {
+      movingRef.current = null
+      moveBusyRef.current = false
+      setMovingCode(null)
+    }
+  }, [orders, statuses, moveOrder, refresh, sendNotification])
+
   const statusCounts = useMemo(() => {
     const result: Record<string, number> = {}
     for (const order of orders) {
@@ -244,10 +295,10 @@ export function OrdersView({ query }: OrdersViewProps) {
           : !visible.length && layout === 'list' ? <OrdersEmpty filtered={hasFilters} onReset={reset} />
             : <div className={styles.content}>
               {layout === 'columns'
-                ? <DragOrders orders={visible} statusTypes={visibleStatuses} onOpen={code => { void openSale(code) }} onPrint={code => { void printOrder(code) }} onPdf={code => { void downloadPdf(code) }} downloadingCode={downloadingCode} />
+                ? <DragOrders orders={visible} statusTypes={visibleStatuses} onOpen={code => { void openSale(code) }} onPrint={code => { void printOrder(code) }} onPdf={code => { void downloadPdf(code) }} onMove={(code, fromId, toId) => { void moveBoardOrder(code, fromId, toId) }} movingCode={movingCode} lastMovedCode={lastMovedCode} downloadingCode={downloadingCode} />
                 : <ListOrders orders={visible} statusTypes={statuses} onOpen={code => { void openSale(code) }} onPrint={code => { void printOrder(code) }} onPdf={code => { void downloadPdf(code) }} downloadingCode={downloadingCode} />}
             </div>}
-      <div className={styles.footnote}><Icon icon="IconInfo" size={16} color="currentColor" /><Text as="p" customSize="0.72rem">El tablero muestra los estados configurados. Cambiar una orden de estado requerirá conectar una mutación autorizada del backend.</Text></div>
+      <div className={styles.footnote}><Icon icon="IconInfo" size={16} color="currentColor" /><Text as="p" customSize="0.72rem">Arrastra una tarjeta para modificar su estado operativo. El pago, la conciliación, el inventario y los reembolsos no se modifican.</Text></div>
     </div>
     <ModalQueries open={openDateFilter} range={range} onClose={() => setOpenDateFilter(false)} onApply={value => applyRange(value, 'custom')} />
     <ModalOrder state={detail} statuses={statuses} onClose={closeSale} onRetry={() => { void openSale(detail.code, false) }} onPrint={code => { void printOrder(code) }} onPdf={code => { void downloadPdf(code) }} downloading={downloadingCode === detail.code} />{console.log({ detail })}

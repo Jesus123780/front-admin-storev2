@@ -50,7 +50,7 @@ import { CashPOSPanel } from './CashPOSPanel'
 import { CashRealtimeStatus } from './CashRealtimeStatus'
 import { resolveCheckoutAction } from './checkout-action'
 import {
- getAsideVisibility, resolveAsideRequest,shouldOpenRecoveryAside 
+  getAsideVisibility, resolveAsideRequest, shouldOpenRecoveryAside
 } from './checkout-visibility'
 import { CreateProductDrawer } from './CreateProductDrawer'
 import { DeliveryCheckoutPanel } from './DeliveryCheckoutPanel'
@@ -227,11 +227,11 @@ export const CreateSales = ({
   useEffect(() => {
     notifyNewSaleRef.current = (saleCode) => {
       const seen = notifiedSaleCodesRef.current
-      if (!saleCode || seen.has(saleCode)) {return}
+      if (!saleCode || seen.has(saleCode)) { return }
       seen.add(saleCode)
       if (seen.size > 256) {
         const first = seen.values().next().value
-        if (first !== undefined) {seen.delete(first)}
+        if (first !== undefined) { seen.delete(first) }
       }
       void Promise.resolve().then(() => onClickShowLocalNotification({
         title: 'Nueva venta',
@@ -357,7 +357,7 @@ export const CreateSales = ({
     setSalesOpen: onCloseModalSale,
     onSaleSuccess: (payload) => {
       const saleCode = typeof payload?.code === 'string' ? payload.code.trim() : ''
-      if (!saleCode || completedCheckoutRef.current) {return}
+      if (!saleCode || completedCheckoutRef.current) { return }
       completedCheckoutRef.current = true
       // Normal confirmation and verified recovery share this terminal transition.
       setOpenAside(false)
@@ -387,8 +387,8 @@ export const CreateSales = ({
   // Limpia el temporizador del resaltado al desmontar para evitar fugas.
   useEffect(() => {
     return () => {
-      if (highlightTimerRef.current !== null) {clearTimeout(highlightTimerRef.current)}
-      if (highlightFrameRef.current !== null) {cancelAnimationFrame(highlightFrameRef.current)}
+      if (highlightTimerRef.current !== null) { clearTimeout(highlightTimerRef.current) }
+      if (highlightFrameRef.current !== null) { cancelAnimationFrame(highlightFrameRef.current) }
     }
   }, [])
 
@@ -406,7 +406,7 @@ export const CreateSales = ({
       clearTimeout(highlightTimerRef.current)
     }
     setHighlightedPid(null)
-    if (highlightFrameRef.current !== null) {cancelAnimationFrame(highlightFrameRef.current)}
+    if (highlightFrameRef.current !== null) { cancelAnimationFrame(highlightFrameRef.current) }
     highlightFrameRef.current = requestAnimationFrame(() => {
       highlightFrameRef.current = null
       setHighlightedPid(String(pId))
@@ -429,7 +429,7 @@ export const CreateSales = ({
    *  - DUPLICATE_EVENT → se ignora (rebote de la misma lectura).
    */
   const handleScannedCode = async (rawCode) => {
-    if (submitLockRef.current || cashOperationLocked || isOpeningCash || saleSuccess || print) {return}
+    if (submitLockRef.current || cashOperationLocked || isOpeningCash || saleSuccess || print) { return }
     if (typeof handleAddProductByBarcode !== 'function') { return }
     const outcome = await handleAddProductByBarcode(rawCode)
     if (!outcome || typeof outcome !== 'object') { return }
@@ -513,7 +513,7 @@ export const CreateSales = ({
         scanBufferRef.current = { chars: '', lastTime: 0 }
         return
       }
-      if (event.repeat) {return}
+      if (event.repeat) { return }
 
       const now = Date.now()
       const buffer = scanBufferRef.current
@@ -604,7 +604,7 @@ export const CreateSales = ({
 
   function updateProductQuantity(quantityChange: number) {
     const item = getProductById(product?.PRODUCT?.pId)
-    if (!item) {return}
+    if (!item) { return }
     // The reducer is the source of truth for stock, totals and courtesy flags.
     if (quantityChange < 0) {
       dispatch({ type: 'REMOVE_PRODUCT', payload: item })
@@ -618,12 +618,12 @@ export const CreateSales = ({
   }
 
   function getProductById(pId: string | null | undefined) {
-    if (!pId) {return undefined}
+    if (!pId) { return undefined }
     return data?.PRODUCT?.find(item => item.pId === pId)
   }
 
   const handleSubmit = async () => {
-    if (submitLockRef.current || loadingRegisterSale || cashOperationLocked || isOpeningCash || saleSuccess || completedCheckoutRef.current) {return}
+    if (submitLockRef.current || loadingRegisterSale || cashOperationLocked || isOpeningCash || saleSuccess || completedCheckoutRef.current) { return }
     if (!data?.PRODUCT?.length) {
       sendNotification({ title: 'Carrito vacío', description: 'Agrega al menos un producto.', backgroundColor: 'warning' })
       return
@@ -640,7 +640,7 @@ export const CreateSales = ({
     setIsSubmitting(true)
     try {
       const preview = buildPreviewReceipt(previewInput)
-      if (!preview.canConfirm) {throw new Error('La cotización o el checkout no está listo')}
+      if (!preview.canConfirm) { throw new Error('La cotización o el checkout no está listo') }
       await submitSale()
     } catch (error) {
       sendNotification({ title: 'Verifica el cobro', description: error instanceof Error ? error.message : 'No fue posible completar la venta.', backgroundColor: 'warning' })
@@ -651,13 +651,13 @@ export const CreateSales = ({
   }
 
   const handleDownLoad = async () => {
-    if (downloadLockRef.current || !confirmedCode || !dataStore?.idStore) {return}
+    if (downloadLockRef.current || !confirmedCode || !dataStore?.idStore) { return }
     downloadLockRef.current = true
     try {
       const reference = confirmedCode
       const { data: result } = await apollo.query({ query: GET_CONFIRMED_RECEIPT, variables: { pCodeRef: reference }, fetchPolicy: 'no-cache', context: { queryDeduplication: false } })
       const response = result?.getOneSalesStore
-      if (!response?.success || !response.data) {throw new Error(response?.message || 'No se pudo consultar la venta')}
+      if (!response?.success || !response.data) { throw new Error(response?.message || 'No se pudo consultar la venta') }
       const invoice = createInvoiceSnapshot(response.data, reference, dataStore.idStore)
       const { downloadConfirmedReceipt } = await import('./receipt/download-pdf')
       await downloadConfirmedReceipt(invoice)
@@ -683,7 +683,7 @@ export const CreateSales = ({
   const isLoading = loadingRegisterSale || loading || isSubmitting || isPrinting
 
   const fetchMoreProducts = async () => {
-    if (fetchMoreLockRef.current || !productsFood?.length) {return}
+    if (fetchMoreLockRef.current || !productsFood?.length) { return }
     fetchMoreLockRef.current = true
     setFetchMoreLoader(true)
     const nextMax = showMore + 100
@@ -692,11 +692,11 @@ export const CreateSales = ({
         variables: { max: nextMax, min: 0 },
         updateQuery: (previousResult, { fetchMoreResult }) => {
           const incoming = fetchMoreResult?.productFoodsAll ?? []
-          if (!incoming.length) {return previousResult}
+          if (!incoming.length) { return previousResult }
           const existing = previousResult?.productFoodsAll ?? []
           const seen = new Set(existing.map(item => item.pId))
           const additions = incoming.filter(item => {
-            if (seen.has(item.pId)) {return false}
+            if (seen.has(item.pId)) { return false }
             seen.add(item.pId)
             return true
           })
@@ -745,11 +745,11 @@ export const CreateSales = ({
   }
   const [handlePrintSale] = usePrintSaleTicket()
   const handlePrint = async () => {
-    if (!confirmedCode || printLockRef.current) {return}
+    if (!confirmedCode || printLockRef.current) { return }
     printLockRef.current = true
     setIsPrinting(true)
     try {
-      if (typeof handlePrintSale !== 'function') {throw new Error('Servicio de impresión no disponible')}
+      if (typeof handlePrintSale !== 'function') { throw new Error('Servicio de impresión no disponible') }
       const result = await handlePrintSale(confirmedCode)
       sendNotification({
         title: result?.success ? 'Impresión enviada' : 'Error al imprimir',
@@ -792,7 +792,7 @@ export const CreateSales = ({
   }, [paymentMethods, data?.payId, dispatch, cashControl.enabled, cashControl.known, cashControl.methods])
 
   const handleOpenSalePreview = () => {
-    if (!show || print || submitLockRef.current || loadingRegisterSale || cashOperationLocked || isOpeningCash || saleSuccess) {return false}
+    if (!show || print || submitLockRef.current || loadingRegisterSale || cashOperationLocked || isOpeningCash || saleSuccess) { return false }
     if (!cashCheckout?.canSubmit) {
       sendNotification({ title: 'Verifica el cobro', description: cashCheckout?.message || 'Completa los datos del pago.', backgroundColor: 'warning' })
       return false
@@ -805,7 +805,7 @@ export const CreateSales = ({
   }
 
   const handleCloseSalePreview = () => {
-    if (!print || submitLockRef.current || loadingRegisterSale || recoveringCash) {return}
+    if (!print || submitLockRef.current || loadingRegisterSale || recoveringCash) { return }
     setPrint()
     setPreviewDate(null)
   }
@@ -813,13 +813,13 @@ export const CreateSales = ({
   const paymentBusy = isSubmitting || loadingRegisterSale || isRecoveringPayment || recoveringCash
   const pendingRecovery = Boolean(pendingCashReference || cashStorageIssue)
   const handleRecoverPayment = async (retry = false) => {
-    if (recoveryLockRef.current || paymentBusy) {return}
-    if (!retry && !window.confirm('Si se encuentra evidencia del cobro original, se recuperará el comprobante y se limpiará el carrito actual. ¿Continuar?')) {return}
+    if (recoveryLockRef.current || paymentBusy) { return }
+    if (!retry && !window.confirm('Si se encuentra evidencia del cobro original, se recuperará el comprobante y se limpiará el carrito actual. ¿Continuar?')) { return }
     recoveryLockRef.current = true
     setIsRecoveringPayment(true)
     try {
-      if (retry) {await retryPendingCashSale()}
-      else {await resolvePendingCashReference()}
+      if (retry) { await retryPendingCashSale() }
+      else { await resolvePendingCashReference() }
     } catch (e) {
       sendNotification({ title: 'Revisión de cobro', backgroundColor: 'warning', description: e instanceof Error ? e.message : 'No fue posible verificar el cobro.' })
     } finally { recoveryLockRef.current = false; setIsRecoveringPayment(false) }
@@ -834,14 +834,14 @@ export const CreateSales = ({
     </>}
   </section> : null
   const paymentConfirmation = cashControl.enabled && cashCheckout?.hasItems ? (
-      <Checkbox
-        checked={paymentConfirmed}
-        disabled={!paymentConfirmationReady || paymentBusy || isOpeningCash || pendingRecovery}
-        id='_verify_payment'
-        label={cashCheckout.amountsValid && cashCheckout.total === 0 ? 'Confirmo la venta sin cobro.' : 'Confirmo que recibí el pago.'}
-        name='_verify_payment'
-        onChange={e => confirmCurrentPayment(e.target.checked)}
-      />
+    <Checkbox
+      checked={paymentConfirmed}
+      disabled={!paymentConfirmationReady || paymentBusy || isOpeningCash || pendingRecovery}
+      id='_verify_payment'
+      label={cashCheckout.amountsValid && cashCheckout.total === 0 ? 'Confirmo la venta sin cobro.' : 'Confirmo que recibí el pago.'}
+      name='_verify_payment'
+      onChange={e => confirmCurrentPayment(e.target.checked)}
+    />
   ) : null
   // Checkout controls have independent slots: confirmation must never be inside a disclosure.
   const cashSection = (!cashControl.known || cashControl.enabled) ? (
@@ -1149,7 +1149,7 @@ export const CreateSales = ({
 
 
   const handleRedirectCreateProduct = () => {
-    if (cashOperationLocked || isOpeningCash) {return}
+    if (cashOperationLocked || isOpeningCash) { return }
     setSalesOpen(false)
     handleClick(MENU_OPTIONS.CREATE_PRODUCTS)
 
@@ -1168,18 +1168,18 @@ export const CreateSales = ({
       />
 
       <ModalSales {...restPropsSalesModal} />
+
       <FloatingScanButtons
         onOpenBarcodeModal={() => {
           setScannerMode('barcode')
           setShowScanner(true)
         }}
         onOpenQRModal={() => {
-          // Escaneo QR real (vía ZXing: imagen + entrada manual). Flujo separado
-          // del de barras pero reutilizando el mismo controlador de negocio.
           setScannerMode('qr')
           setShowScanner(true)
         }}
       />
+
       <ModalScanner
         show={showScanner}
         mode={scannerMode}
@@ -1282,7 +1282,7 @@ export const CreateSales = ({
         productsFood={productsFood}
         propsSliderCategory={restPropsSliderCategory}
         setShow={(show) => {
-          if (show === false && !handleCloseModal()) {return}
+          if (show === false && !handleCloseModal()) { return }
           setShow(show)
         }}
         show={show}

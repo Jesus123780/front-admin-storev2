@@ -1,12 +1,24 @@
 'use client'
 
-import { Icon, Text } from 'pkg-components'
-import { type CSSProperties,useState } from 'react'
+import {
+  Icon,
+  type KanbanColumn,
+  KanbanDnd,
+  type KanbanMove
+} from 'pkg-components'
+import { useMemo, useState } from 'react'
 
+// Keep these imports aligned with the local app's actual exports.
 import type { OrderRecord, OrderStatusType } from '../../types'
 import { orderStatusName } from '../../utils/orders'
 import styles from './styles.module.css'
 import { OrderCard } from './ViewOrder/OrderCard'
+
+type BoardItem = {
+  id: string
+  order: OrderRecord
+  status?: OrderStatusType
+}
 
 export interface DragOrdersProps {
   orders: OrderRecord[]
@@ -14,47 +26,143 @@ export interface DragOrdersProps {
   onOpen: (code: string) => void
   onPrint: (code: string) => void
   onPdf: (code: string) => void
+  onMove: (code: string, fromStatusId: string, toStatusId: string) => void
   downloadingCode?: string | null
+  movingCode?: string | null
+  lastMovedCode?: string | null
 }
 
-/** Kanban is read-only until a real, authorized change-status mutation exists. */
-function BoardColumn({ status, group, onOpen, onPrint, onPdf, downloadingCode }: { status: OrderStatusType; group: OrderRecord[]; onOpen: DragOrdersProps['onOpen']; onPrint: DragOrdersProps['onPrint']; onPdf: DragOrdersProps['onPdf']; downloadingCode?: string | null }) {
-  const [limit, setLimit] = useState(24)
-  return <section className={styles.column} aria-label={`${status.name}: ${group.length} órdenes`} style={{ '--status-color': status.color, '--status-background': status.backgroundColor } as CSSProperties}>
-    <header className={styles.header}>
-      <span className={styles.statusIndicator} aria-hidden="true" />
-      <div className={styles.heading}>
-        <Text as="h2" customSize="0.76rem" weight={700} className={styles.name}>{status.name}</Text>
-        {status.description && <Text as="p" color="gray-dark" customSize="0.68rem" lineClamp={1} title={status.description}>{status.description}</Text>}
-      </div>
-      <span className={styles.count} aria-label={`${group.length} órdenes`}>{group.length}</span>
-    </header>
-    <div className={styles.list}>
-      {group.length ? group.slice(0, limit).map(order => <OrderCard key={order.pCodeRef} order={order} status={status} onOpen={onOpen} onPrint={onPrint} onPdf={onPdf} busyPdf={downloadingCode === order.pCodeRef} />) :
-        <div className={styles.empty}><Icon icon="IconBoxes" size={24} color="var(--color-icons-gray-light)" /><Text as="p" color="gray-dark" customSize="0.77rem">Sin órdenes en este estado</Text></div>}
-      {group.length > limit && <button type="button" className={styles.more} onClick={() => setLimit(previous => previous + 24)}>Mostrar 24 más ({group.length - limit} restantes)</button>}
-    </div>
-  </section>
-}
+const PAGE_SIZE = 24
+const UNCLASSIFIED_ID = '__unclassified__'
 
-export function DragOrders({ orders, statusTypes, onOpen, onPrint, onPdf, downloadingCode }: DragOrdersProps) {
+/**
+ * Business adapter. Drag physics/renderClone belong to pkg-components.
+ * Only cross-column drops persist: changes to the order inside the same
+ * column are not saved as a custom sequence.
+ */
+export function DragOrders({
+  orders,
+  statusTypes,
+  onOpen,
+  onPrint,
+  onPdf,
+  onMove,
+  downloadingCode,
+  movingCode,
+  lastMovedCode
+}: DragOrdersProps) {
+  const [limits, setLimits] = useState<Record<string, number>>({})
+
+  const columns = useMemo((): KanbanColumn<BoardItem>[] => {
+    const statusesById = new Map(statusTypes.map(status => [status.idStatus, status]))
+    const statusesByName = new Map(statusTypes.map(status => [status.name, status]))
+    const groups = new Map<string, OrderRecord[]>(statusTypes.map(status => [status.idStatus, []]))
+    const unclassified: OrderRecord[] = []
+
+    for (const order of orders) {
+      const status = (
+        order.boardStatusId
+          ? statusesById.get(order.boardStatusId)
+          : undefined
+      ) ?? statusesByName.get(orderStatusName(order, statusTypes))
+
+      if (status) {groups.get(status.idStatus)!.push(order)}
+      else {unclassified.push(order)}
+    }
+
+    const result: KanbanColumn<BoardItem>[] = statusTypes.map(status => {
+      const group = groups.get(status.idStatus) ?? []
+      const sorted = lastMovedCode
+        ? [...group].sort((a, b) =>
+            Number(b.pCodeRef === lastMovedCode) - Number(a.pCodeRef === lastMovedCode))
+        : group
+      const limit = limits[status.idStatus] ?? PAGE_SIZE
+
+      return {
+        id: status.idStatus,
+        title: status.name,
+        description: status.description,
+        color: status.color,
+        backgroundColor: status.backgroundColor,
+        totalCount: group.length,
+        items: sorted.slice(0, limit).map(order => ({
+          id: order.pCodeRef,
+          order,
+          status
+        })),
+        emptyLabel: 'Sin órdenes en este estado',
+        footer: group.length > limit ? (
+          <button
+            type="button"
+            className={styles.more}
+            onClick={() => setLimits(previous => ({
+              ...previous,
+              [status.idStatus]: limit + PAGE_SIZE
+            }))}
+          >
+            Mostrar {Math.min(PAGE_SIZE, group.length - limit)} más
+            {' '}({group.length - limit} restantes)
+          </button>
+        ) : undefined
+      }
+    })
+
+    if (unclassified.length) {
+      result.push({
+        id: UNCLASSIFIED_ID,
+        title: 'SIN CLASIFICAR',
+        items: unclassified.map(order => ({ id: order.pCodeRef, order })),
+        dropDisabled: true,
+        totalCount: unclassified.length,
+        emptyLabel: 'Sin órdenes sin clasificar'
+      })
+    }
+
+    return result
+  }, [orders, statusTypes, limits, lastMovedCode])
+
+  const handleMove = ({
+    itemId,
+    sourceColumnId,
+    targetColumnId
+  }: KanbanMove) => {
+    if (
+      movingCode ||
+      sourceColumnId === targetColumnId ||
+      sourceColumnId === UNCLASSIFIED_ID ||
+      targetColumnId === UNCLASSIFIED_ID
+    ) {return}
+
+    onMove(itemId, sourceColumnId, targetColumnId)
+  }
+
   return (
-    <div className={styles.board} role="region" aria-label="Tablero de órdenes por estado" tabIndex={0}>
-      <div className={styles.columns}>
-        {statusTypes.map(status => {
-          const group = orders.filter(order => orderStatusName(order, statusTypes) === status.name)
-          return <BoardColumn key={status.idStatus || status.name} status={status} group={group} onOpen={onOpen} onPrint={onPrint} onPdf={onPdf} downloadingCode={downloadingCode} />
-        })}
-        {orders.some(order => !statusTypes.some(status => status.name === orderStatusName(order, statusTypes))) && (
-          <section className={styles.column} aria-label="Órdenes sin estado configurado">
-            <header className={styles.header}><Text as="h2" weight={700}>SIN CLASIFICAR</Text></header>
-            <div className={styles.list}>
-              {orders.filter(order => !statusTypes.some(status => status.name === orderStatusName(order, statusTypes)))
-                .map(order => <OrderCard key={order.pCodeRef} order={order} status={undefined} onOpen={onOpen} onPrint={onPrint} onPdf={onPdf} busyPdf={downloadingCode === order.pCodeRef} />)}
-            </div>
-          </section>
-        )}
+    <div className={styles.root}>
+      <div className={styles.hint} role="note">
+        <Icon icon="IconDrag" size={16} color="currentColor" />
+        Arrastra desde el asa superior hacia otra columna. Los cambios se guardan en el servidor.
       </div>
+      <KanbanDnd<BoardItem>
+        columns={columns}
+        ariaLabel="Tablero de órdenes organizado por estados"
+        // Do NOT pass disabled={Boolean(movingCode)} here: movingCode becomes
+        // truthy during RBD's drop animation and disables the active droppable.
+        // The handler guards concurrent operations without changing drag props.
+        isItemDragDisabled={item => !item.status}
+        onMove={handleMove}
+        renderItem={(item, context) => (
+          <OrderCard
+            order={item.order}
+            status={item.status}
+            onOpen={onOpen}
+            onPrint={onPrint}
+            onPdf={onPdf}
+            busyPdf={downloadingCode === item.id}
+            dragging={context.dragging}
+            swipeActions
+          />
+        )}
+      />
     </div>
   )
 }

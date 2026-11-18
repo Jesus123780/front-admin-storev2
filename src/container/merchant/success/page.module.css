@@ -1,0 +1,328 @@
+
+.page {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--spacing-2xl);
+  overflow: hidden;
+  box-sizing: border-box;
+
+  background:
+    radial-gradient(
+      circle at 10% 10%,
+      var(--color-background-primary-light),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 90% 90%,
+      var(--color-background-secondary-light),
+      transparent 38%
+    ),
+    var(--color-neutral-gray-white);
+}
+
+/* Main card */
+
+.card {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 580px;
+
+  box-sizing: border-box;
+  padding: var(--spacing-4xl);
+
+  text-align: center;
+
+  border: var(--border-width-xs) solid
+    var(--color-neutral-gray);
+
+  border-radius: var(--border-radius-lg);
+
+  background: var(--color-background-white);
+
+  box-shadow: var(--box-shadow-2xs);
+
+  animation: cardEnter 650ms
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Success illustration */
+
+.successVisual {
+  display: grid;
+  place-items: center;
+  width: 124px;
+  height: 124px;
+  margin-bottom: var(--spacing-2xl);
+
+  border-radius: var(--border-radius-full);
+
+  background: color-mix(
+    in srgb,
+    var(--color-feedback-success-light) 9%,
+    transparent
+  );
+
+  animation: successReveal 650ms
+    cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 140ms;
+}
+
+.successRing {
+  display: grid;
+  place-items: center;
+
+  width: 92px;
+  height: 92px;
+
+  border-radius: var(--border-radius-full);
+
+  background: color-mix(
+    in srgb,
+    var(--color-feedback-success-light) 12%,
+    var(--color-background-white)
+  );
+}
+
+.successRing svg {
+  display: block;
+  animation: checkPop 500ms
+    cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  animation-delay: 280ms;
+}
+
+/* Text */
+
+.eyebrow {
+  margin: 0 0 var(--spacing-lg);
+
+  color: var(--color-text-success);
+
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+
+  letter-spacing: var(--letter-spacing-wider);
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-black);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.description {
+  max-width: 430px;
+  margin: var(--spacing-xl) 0 0;
+  font-size: var(--font-size-lg);
+}
+
+.instructions {
+  max-width: 420px;
+  margin: var(--spacing-2xl) 0 0;
+  font-size: var(--font-size-md);
+}
+
+/* Registration summary */
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+
+  width: 100%;
+  box-sizing: border-box;
+
+  margin-top: var(--spacing-3xl);
+  padding: var(--spacing-2xl);
+
+  text-align: left;
+
+  border: var(--border-width-xs) solid
+    var(--color-neutral-gray);
+
+  border-radius: var(--border-radius-md);
+
+  background: var(--color-neutral-gray-white);
+}
+
+.summaryItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  min-width: 0;
+}
+
+.itemIcon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+}
+
+.itemLabel {
+  color: var(--color-text-black);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Action */
+
+.actions {
+  width: 100%;
+  margin-top: var(--spacing-3xl);
+}
+
+.loginButton {
+  width: 100%;
+  min-height: 56px;
+
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.loginButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--box-shadow-sm);
+}
+
+.loginButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.loginButton:focus-visible {
+  outline: 3px solid var(--color-secondary-blue);
+  outline-offset: var(--spacing-sm);
+}
+
+.buttonContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  width: 100%;
+
+  color: var(--color-text-white);
+  font-weight: var(--font-weight-semibold);
+}
+
+.buttonContent svg {
+  flex-shrink: 0;
+  transition: transform 200ms ease;
+}
+
+.loginButton:hover:not(:disabled)
+.buttonContent svg {
+  transform: translateX(4px);
+}
+
+.error {
+  margin-top: var(--spacing-xl);
+  color: var(--color-text-error);
+  font-size: var(--font-size-md);
+}
+
+/* Animations */
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes successReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes checkPop {
+  from {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 600px) {
+  .page {
+    padding: var(--spacing-xl);
+  }
+
+  .card {
+    padding:
+      var(--spacing-3xl)
+      var(--spacing-2xl);
+
+    border-radius: var(--border-radius-md);
+  }
+
+  .successVisual {
+    width: 104px;
+    height: 104px;
+  }
+
+  .successRing {
+    width: 78px;
+    height: 78px;
+  }
+
+  .description {
+    font-size: var(--font-size-md);
+  }
+
+  .summary {
+    padding: var(--spacing-xl);
+  }
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .successVisual,
+  .successRing svg {
+    animation: none;
+  }
+
+  .loginButton,
+  .buttonContent svg {
+    transition: none;
+  }
+
+  .loginButton:hover:not(:disabled),
+  .loginButton:active:not(:disabled) {
+    transform: none;
+  }
+}

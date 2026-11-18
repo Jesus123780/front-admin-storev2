@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation } from '@apollo/client'
+import { useRouter } from 'next/navigation'
 import {
   useCategoryStore,
   useCities,
@@ -29,7 +30,6 @@ import {
   StepsComponent,
   Text,
   Toast,
-  ToastItem,
   ToastPosition
 } from 'pkg-components'
 import React, { useContext, useState } from 'react'
@@ -54,6 +54,7 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
   const [nextStep, setNextStep] = useState<number>(0)
   const { email, id } = userToken ?? { email: '', id: '', name: '' }
   const [disabled, setDisabled] = useState(false)
+  const router = useRouter()
   // CONTEXT & HOOKS
   const {
     setAlertBox,
@@ -219,6 +220,7 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
             // @ts-expect-error setDataValue has incompatible type
             setDataValue({})
             setValues({})
+             router.replace('/merchant/success')
             if (nextStep === 3) {
               sendNotification({
                 backgroundColor: 'success',
@@ -226,7 +228,6 @@ export const Restaurant: React.FC<IRestaurantProps> = ({ userToken = {} } = {}) 
                 title: 'Tienda creada con éxito'
               })
               setTimeout(() => {
-                handleSignOut()
                 sendNotification({
                   backgroundColor: 'success',
                   description: 'Debes iniciar sesión nuevamente',
