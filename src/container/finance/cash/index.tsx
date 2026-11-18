@@ -1,9 +1,10 @@
 'use client';
+import Link from 'next/link';
 import {
     type CashRegister, type CashSession, type FinancialKind, useApproveCashClose, useBeginCashClose, useCashContext, useCashCount, useCashMovements, useCashReconciliation, useCashRegisters, useCashSessions, useCashUnlinkedSales, useCloseCashSession, useCurrentCashSession, useFinancialPaymentMethods, useOpenCashSession, usePreviousCashFloat, useRecordCashMovement, useRecordDeliveryCashPayout, useRecountCashClose, useReverseCashMovement, useSaveCashRegister, useSetPaymentFinancialKind, useStore
 } from 'npm-pkg-hook';
 import {
-    CashDenominationCounter, CashVarianceSummary, countCashMinor, emptyCashCount, formatCashMinor, Text
+    CashDenominationCounter, CashVarianceSummary, countCashMinor, emptyCashCount, formatCashMinor, Icon, Text
 } from 'pkg-components';
 import React, {
     useContext, useEffect, useRef, useState
@@ -205,11 +206,24 @@ function CashManagementContent({ storeId }: {
     if (ctx.error || !enabled) {
         return <main className={styles.page}><h1>Gestión de cajas</h1><p>{ctx.error?.message ?? (response && response.storeId !== storeId ? 'El comercio de la sesión no coincide con el seleccionado.' : 'Módulo no habilitado o sin permisos.')}</p><button onClick={() => void ctx.refetch()}>Actualizar</button></main>;
     }
-    return <main className={styles.page}><header className={styles.heading}><div><Text as='span' className={styles.eyebrow}>FINANZAS</Text><Text as='h1' font='semibold'>Gestión de cajas</Text><Text as='p' color='gray'>Control de efectivo, arqueos y turnos de operación.</Text></div><a href='/orders/reconciliation'>Conciliación de ventas ↗</a></header>
-        <nav className={styles.tabs} aria-label='Administración financiera'>{([['operation', 'Caja actual'], ['registers', 'Configuración'], ['history', 'Historial y conciliación'], ['methods', 'Medios de pago']] as [
-            Tab,
-            string
-        ][]).filter(([k]) => k !== 'history' || access?.canAudit).filter(([k]) => k !== 'registers' && k !== 'methods' || access?.canManage).map(([k, label]) => <button type='button' key={k} aria-current={tab === k ? 'page' : undefined} onClick={() => { setTab(k); setAfter(0); }}>{label}</button>)}</nav>
+    return <main className={styles.page}>
+        <header className={styles.heading}>
+            <div>
+                <Text as='span' className={styles.eyebrow}>FINANZAS</Text>
+                <Text as='h1' font='semibold'>Gestión de cajas</Text>
+                <Text as='p' color='gray'>
+                    Control de efectivo, arqueos y turnos de operación.
+                </Text>
+            </div>
+            <Link href='/orders/reconciliation'>
+                Conciliación de ventas <Icon icon='IconArrowUpRight' size={20} />
+            </Link>
+        </header>
+        <nav className={styles.tabs} aria-label='Administración financiera'>
+            {([['operation', 'Caja actual'], ['registers', 'Configuración'], ['history', 'Historial y conciliación'], ['methods', 'Medios de pago']] as [
+                Tab,
+                string
+            ][]).filter(([k]) => k !== 'history' || access?.canAudit).filter(([k]) => k !== 'registers' && k !== 'methods' || access?.canManage).map(([k, label]) => <button type='button' key={k} aria-current={tab === k ? 'page' : undefined} onClick={() => { setTab(k); setAfter(0); }}>{label}</button>)}</nav>
         {error && <div className={styles.error} role='alert'>{error}</div>}{notice && <div className={styles.notice} role='status'>{notice}</div>}
         {(registers.error || methods.error || sessionQuery.error || history.error || report.error || moves.error || previousFloat.error) && <div className={styles.error} role='alert'>{(registers.error ?? methods.error ?? sessionQuery.error ?? history.error ?? report.error ?? moves.error ?? previousFloat.error)?.message}</div>}
         {registers.loading && <p role='status'>Consultando cajas del establecimiento…</p>}

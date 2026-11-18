@@ -1,302 +1,256 @@
 'use client'
-import groupBy from 'lodash/groupBy'
+
 import {
-    useFormTools,
-    useGetSale,
-    useManageQueryParams,
-    useMobile,
-    useOrdersFromStore,
-    useOrderStatusTypes,
-    usePrintSaleTicket,
-    UtilDateRange
+ useGetSale, useManageQueryParams, useOrdersFromStore, useOrderStatusTypes, usePrintSaleTicket 
 } from 'npm-pkg-hook'
-import {
-    Column,
-    DateRange,
-    Divider,
-    getGlobalStyle,
-    HorizontalScrollWrapper,
-    Icon,
-    InputQuery,
-    LayoutSwitcher,
-    Row,
-    Text
-} from 'pkg-components'
+import { Icon, Text } from 'pkg-components'
 import { EOrderQueryParams } from 'pkg-components/stories/organisms/ModalDetailOrder/type'
 import React, {
-    useContext,
-    useEffect,
-    useMemo,
-    useState
+ useCallback, useContext, useEffect, useMemo, useRef, useState 
 } from 'react'
 
 import { Context } from '@/context/Context'
 
-import { GetAllOrdersFromStoreResponse, OrderGroup } from '../types'
+import type {
+ DateRangeValue, OrderDetailsState, OrderRecord, OrdersLayout, OrdersPreset, OrdersSort 
+} from '../types/index'
+import { exportOrderPdf } from '../utils/exportOrderPdf'
+import {
+ applyOrderFilters, extractOrders, extractSale, formatOrderDate, normalizeStatusTypes, orderStatusName, presetRange 
+} from '../utils/orders'
 import { DragOrders } from './components/DragOrders'
 import { ListOrders } from './components/ListOrders'
 import { ModalOrder } from './components/ModalOrder'
 import { ModalQueries } from './components/ModalQueries'
 import { ModalStatusTypes } from './components/ModalStatusTypes'
-import { StepperOrderStatus } from './components/Stepper'
-import { SaleResponse } from './components/ViewOrder/OrderDetailClient'
-import { HORIZONTAL_SCROLL_WRAPPER } from './constants'
+import {
+ OrdersEmpty, OrdersError, OrdersSkeleton 
+} from './components/OrdersStates'
+import { OrdersSummary } from './components/OrdersSummary'
+import { OrdersToolbar } from './components/OrdersToolbar'
 import styles from './styles.module.css'
 
-interface IOrdersView {
-    query?: EOrderQueryParams,
-}
+export interface OrdersViewProps { query?: EOrderQueryParams }
 
-export const OrdersView = ({
-    query,
-}: IOrdersView) => {
-    // STATES
-    const [openModalQueries, setOpenModalQueries] = useState(false)
-    const [layout, setLayout] = useState<'list' | 'columns'>('list')
-    const [inCludeRange, setInCludeRange] = useState(true)
-    const [openModalStatusTypes, setOpenModalStatusTypes] = useState(false)
-    const [showStepper] = useState<boolean>(false)
-    const [orders, setOrders] = useState<Record<string, OrderGroup[]>>({})
-    const [ordersList, setOrdersList] = useState<OrderGroup[]>([])
-    const { sendNotification } = useContext(Context)
-    const [activeStep, setActiveStep] = useState(0)
-    const initialDates = useMemo(() => {
-        const todayRange = new UtilDateRange()
-        const { start, end } = todayRange.getRange()
-        return { fromDate: start, toDate: end }
-    }, [])
+const EMPTY_DETAIL: OrderDetailsState = { open: false, code: '', loading: false, error: null, order: null }
 
-    // HOOKS
-    const { data: statusTypes } = useOrderStatusTypes()
-    console.log(statusTypes)
-    const { isTablet } = useMobile()
-    const [handlePrintSale] = usePrintSaleTicket()
+/**
+ * MVP dashboard for Venty. Read-only board: no status transition is faked.
+ * Integrations already present in npm-pkg-hook are reused.
+ */
+export function OrdersView({ query }: OrdersViewProps) {
+  const { sendNotification } = useContext(Context)
+  const [layout, setLayout] = useState<OrdersLayout>('columns')
+  const [sort, setSort] = useState<OrdersSort>('newest')
+  const [search, setSearch] = useState('')
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
+  const [preset, setPreset] = useState<OrdersPreset>('today')
+  const [range, setRange] = useState<DateRangeValue>(() => presetRange('today'))
+  const [orders, setOrders] = useState<OrderRecord[]>([])
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [listError, setListError] = useState<string | null>(null)
+  const [openDateFilter, setOpenDateFilter] = useState(false)
+  const [openManageStatuses, setOpenManageStatuses] = useState(false)
+  const [detail, setDetail] = useState<OrderDetailsState>(EMPTY_DETAIL)
+  const [downloadingCode, setDownloadingCode] = useState<string | null>(null)
+  const detailSequence = useRef(0)
+  const didInitDeepLink = useRef(false)
+  const didInitSearch = useRef(false)
+  const latestSearch = useRef(search)
+  latestSearch.current = search
 
-    const { handleQuery, getParams } = useManageQueryParams()
-    const queryPCodeRef = getParams<{ CODE: string }>(EOrderQueryParams.CODE)
-    const [openSaleDetailOrder, setOpenSaleDetailOrder] = useState(false)
-    const { handleGetSale } = useGetSale()
-    const [data, setData] = useState<SaleResponse | null>(null)
+  const statusQuery = useOrderStatusTypes()
+  const statuses = useMemo(() => normalizeStatusTypes(statusQuery.data), [statusQuery.data])
+  const { handleQuery, getParams } = useManageQueryParams()
+  const routeCodeParam: unknown = query === EOrderQueryParams.CODE
+    ? getParams<{ CODE: string }>(EOrderQueryParams.CODE)
+    : null
+  const { handleGetSale } = useGetSale()
+  const [handlePrintSale] = usePrintSaleTicket()
 
-    const [handleChange, handleSubmit, setDataValue, { dataForm }] = useFormTools({
-        initialValues: initialDates
-    })
+  const receiveOrders = useCallback((payload: unknown) => {
+    const list = extractOrders(payload)
+    if (list) { setOrders(list); setListError(null); setInitialLoading(false) }
+  }, [])
 
-    interface StatusType {
-        name: string
+  // Preserve the current hook contract: [result, { refetch }].
+  const [, { refetch }] = useOrdersFromStore({
+    fromDate: range.fromDate,
+    toDate: range.toDate,
+    callback: receiveOrders
+  })
+  const refetchRef = useRef(refetch)
+  refetchRef.current = refetch
+
+  const refresh = useCallback(async (dates: DateRangeValue = range, queryText: string = latestSearch.current) => {
+    setRefreshing(true)
+    try {
+      const result: unknown = await refetchRef.current({
+        fromDate: dates.fromDate,
+        toDate: dates.toDate,
+        search: queryText.trim()
+      })
+      receiveOrders(result)
+      setListError(null)
+      setInitialLoading(false)
+    } catch {
+      setListError('Verifica la conexión e intenta actualizar la búsqueda.')
+      setInitialLoading(false)
+      sendNotification({ title: 'Error al actualizar', description: 'No fue posible consultar las órdenes.', backgroundColor: 'error' })
+    } finally { setRefreshing(false) }
+  }, [range, receiveOrders, sendNotification])
+
+  // Local filtering is immediate. The backend query is debounced to prevent a request on every keystroke.
+  useEffect(() => {
+    if (!didInitSearch.current) { didInitSearch.current = true; return }
+    const timer = window.setTimeout(() => { void refresh(range, search) }, 360)
+    return () => window.clearTimeout(timer)
+    // Only search changes should trigger the debounce: date changes are explicit below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search])
+
+  const applyRange = useCallback((next: DateRangeValue, nextPreset: OrdersPreset) => {
+    setRange(next)
+    setPreset(nextPreset)
+    setOpenDateFilter(false)
+    void refresh(next)
+  }, [refresh])
+
+  const fetchSale = useCallback(async (code: string): Promise<OrderRecord> => {
+    const response: unknown = await handleGetSale(code)
+    const result = extractSale(response)
+    if (!result.order) {throw new Error(result.error ?? 'No encontramos la orden solicitada.')}
+    return result.order
+  }, [handleGetSale])
+
+  const openSale = useCallback(async (code: string, syncUrl = true) => {
+    const normalized = code.trim()
+    if (!normalized) {return}
+    const sequence = ++detailSequence.current
+    setDetail({ open: true, code: normalized, loading: true, error: null, order: null })
+    if (syncUrl) {handleQuery('sale', normalized)}
+    try {
+      const order = await fetchSale(normalized)
+      if (sequence !== detailSequence.current) {return}
+      setDetail({ open: true, code: normalized, loading: false, error: null, order })
+    } catch (error) {
+      if (sequence !== detailSequence.current) {return}
+      setDetail({ open: true, code: normalized, loading: false, error: error instanceof Error ? error.message : 'Error consultando la orden.', order: null })
     }
-    const [, { refetch }] = useOrdersFromStore({
-        fromDate: dataForm.fromDate,
-        toDate: dataForm.toDate,
-        callback: (data: GetAllOrdersFromStoreResponse) => {
-            const key = 'status'
-            setOrdersList(data?.getAllSalesStore ?? [])
-            const grouped = groupBy(data?.getAllSalesStore ?? [], key)
-            // 🔹 Asegura que todos los statusTypes existan aunque no haya órdenes
+  }, [handleQuery, fetchSale])
 
+  const closeSale = useCallback(() => {
+    ++detailSequence.current
+    setDetail(previous => ({ ...previous, open: false }))
+    handleQuery('sale', '')
+  }, [handleQuery])
 
-            type GroupedOrdersByStatus = Record<string, OrderGroup[]>
-
-            const fillGroupedByStatusTypes = statusTypes?.reduce<GroupedOrdersByStatus>(
-                (acc: GroupedOrdersByStatus, statusType: StatusType) => {
-                    acc[statusType.name] = (grouped as GroupedOrdersByStatus)[statusType.name] ?? []
-                    return acc
-                },
-                {} as GroupedOrdersByStatus
-            )
-            if (statusTypes) {
-                return setOrders(fillGroupedByStatusTypes)
-            }
-            return setOrders(grouped)
-        }
-    })
-
-    const handleClickPrint = async (pCodeRef: string) => {
-        const response = await handlePrintSale(pCodeRef)
-        const { success, message } = response ?? {
-            success: false,
-            message: 'No se pudo conectar con el servidor'
-        }
-        return sendNotification({
-            description: message,
-            title: success ? 'Impresión exitosa' : 'Error al imprimir',
-            backgroundColor: success ? 'success' : 'error'
-        })
+  useEffect(() => {
+    if (!didInitDeepLink.current) {
+      didInitDeepLink.current = true
+      const codeFromRoute = typeof routeCodeParam === 'string'
+        ? routeCodeParam
+        : routeCodeParam && typeof routeCodeParam === 'object' && 'CODE' in routeCodeParam
+          ? String(routeCodeParam.CODE)
+          : null
+      const code = new URLSearchParams(window.location.search).get('sale') || codeFromRoute
+      if (code) {void openSale(code, false)}
     }
+    const syncFromHistory = () => {
+      const codeFromRoute = typeof routeCodeParam === 'string'
+        ? routeCodeParam
+        : routeCodeParam && typeof routeCodeParam === 'object' && 'CODE' in routeCodeParam
+          ? String(routeCodeParam.CODE)
+          : null
+      const code = new URLSearchParams(window.location.search).get('sale') || codeFromRoute
+      if (code) {void openSale(code, false)}
+      else { ++detailSequence.current; setDetail(previous => ({ ...previous, open: false })) }
+    }
+    window.addEventListener('popstate', syncFromHistory)
+    return () => window.removeEventListener('popstate', syncFromHistory)
+  }, [openSale])
 
-    useEffect(() => {
-        type GroupedOrdersByStatus = Record<string, OrderGroup[]>
-        setDataValue({ fromDate: initialDates.fromDate, toDate: initialDates.toDate })
-        const fillGroupedByStatusTypes = statusTypes?.reduce<GroupedOrdersByStatus>(
-            (acc: GroupedOrdersByStatus, statusType: StatusType) => {
-                acc[statusType.name] = (orders as GroupedOrdersByStatus)[statusType.name] ?? []
-                return acc
-            },
-            {} as GroupedOrdersByStatus
-        )
-        if (statusTypes) {
-            return setOrders(fillGroupedByStatusTypes)
-        }
-    }, [])
+  const printOrder = useCallback(async (code: string) => {
+    try {
+      const response = await handlePrintSale(code)
+      if (!response?.success) {throw new Error(response?.message || 'No se pudo enviar la orden a la impresora.')}
+      sendNotification({ title: 'Impresión enviada', description: response.message || `Orden ${code} enviada a imprimir.`, backgroundColor: 'success' })
+    } catch (error) {
+      sendNotification({ title: 'Error al imprimir', description: error instanceof Error ? error.message : 'No se pudo imprimir la orden.', backgroundColor: 'error' })
+    }
+  }, [handlePrintSale, sendNotification])
 
+  const downloadPdf = useCallback(async (code: string) => {
+    if (downloadingCode) {return}
+    setDownloadingCode(code)
+    try {
+      const order = detail.order?.pCodeRef === code ? detail.order : await fetchSale(code)
+      await exportOrderPdf(order)
+      sendNotification({ title: 'PDF generado', description: `Comprobante de ${code} disponible para descargar.`, backgroundColor: 'success' })
+    } catch (error) {
+      sendNotification({ title: 'No se pudo generar el PDF', description: error instanceof Error ? error.message : 'Intenta nuevamente.', backgroundColor: 'error' })
+    } finally { setDownloadingCode(null) }
+  }, [detail.order, downloadingCode, fetchSale, sendNotification])
 
-    useEffect(() => {
-        if (query === EOrderQueryParams.CODE) {
-            (async () => {
-                await handleGetSale(queryPCodeRef)
-                setOpenSaleDetailOrder(true)
-            })()
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [queryPCodeRef])
+  const statusCounts = useMemo(() => {
+    const result: Record<string, number> = {}
+    for (const order of orders) {
+      const name = orderStatusName(order, statuses)
+      result[name] = (result[name] ?? 0) + 1
+    }
+    return result
+  }, [orders, statuses])
+  const visible = useMemo(() => applyOrderFilters(orders, statuses, search, selectedStatuses, sort), [orders, statuses, search, selectedStatuses, sort])
+  const visibleStatuses = useMemo(() => selectedStatuses.length ? statuses.filter(status => selectedStatuses.includes(status.name)) : statuses, [selectedStatuses, statuses])
+  const hasFilters = Boolean(search || selectedStatuses.length || preset !== 'today')
 
-    return (
-        <div
-            className={styles.container}
-        >
-            <ModalOrder
-                data={data as SaleResponse}
-                handleClickPrint={handleClickPrint}
-                onCloseLateralMenu={() => {
-                    handleQuery('sale', '')
-                    return setOpenSaleDetailOrder(false)
-                }}
-                showModalComponent={openSaleDetailOrder}
-                loading={false}
-            />
-            <Column>
-                <ModalQueries
-                    open={openModalQueries}
-                    inCludeRange={inCludeRange}
-                    dataForm={dataForm}
-                    setInCludeRange={setInCludeRange}
-                    handleChange={handleChange}
-                    onClose={() => setOpenModalQueries(!openModalQueries)}
-                />
-                <Row justifyContent='space-between'>
-                    <DateRange
-                        endDate={dataForm.toDate ?? initialDates.toDate}
-                        startDate={dataForm.fromDate ?? initialDates.fromDate}
-                    />
-                    <>
-                        <div className={styles.container_query}>
-                            <InputQuery
-                                className={styles.input_query}
-                                dataForm={dataForm}
-                                handleChange={(e) => {
-                                    handleChange(e)
-                                    refetch({
-                                        fromDate: dataForm.fromDate,
-                                        toDate: dataForm.toDate,
-                                        search: e.target.value
-                                    })
-                                }}
-                                placeholder='Buscar'
-                            />
-                        </div>
-                        <button
-                            onClick={() => setOpenModalQueries(true)}
-                            style={{
-                                padding: getGlobalStyle('--spacing-none'),
-                                height: '50px',
-                                backgroundColor: getGlobalStyle('--color-base-transparent'),
-                                margin: `0 ${getGlobalStyle('--spacing-xl')}`,
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <Row alignItems='center'>
-                                <Icon
-                                    icon='IconConfig'
-                                    size={20}
-                                    color={getGlobalStyle(openModalQueries ? '--color-icons-primary' : '--color-text-black')}
-                                />
-                                <Text>
-                                    Filtros
-                                </Text>
-                            </Row>
-                        </button>
-                        <LayoutSwitcher
-                            setLayout={setLayout}
-                            layout={layout}
-                        />
-                    </>
-                </Row>
-                <Divider marginTop={getGlobalStyle('--spacing-xl')} />
-                {showStepper
-                    && <StepperOrderStatus
-                        callBack={() => {
-                            setOpenModalStatusTypes(!openModalStatusTypes)
-                        }}
-                        active={activeStep}
-                        steps={statusTypes?.map((status: StatusType) => status.name) ?? []}
-                        setActive={async (step: number) => {
-                            setActiveStep(step)
-                        }}
-                    />
-                }
-                {layout === 'columns' &&
-                    <>
-                        <HorizontalScrollWrapper
-                            targetId={HORIZONTAL_SCROLL_WRAPPER}
-                            columns={statusTypes?.length ?? 1}
-                            className={styles['horizontal-scroll-wrapper']}
-                            style={isTablet ? { bottom: getGlobalStyle('--spacing-6xl') } : {}}
-                        />
-                        <div
-                            id={HORIZONTAL_SCROLL_WRAPPER}
-                            style={{
-                                overflowX: 'auto',
-                                overflowY: 'hidden',
-                                whiteSpace: 'nowrap',
-                                display: 'flex',
-                                gap: '1rem',
-                                padding: '1rem'
-                            }}
-                        >
-                            <DragOrders
-                                orders={orders}
-                                statusTypes={statusTypes}
-                                onPrint={handleClickPrint}
-                            />
-                        </div>
-                    </>
-                }
-                {layout === 'list' &&
-                    <ListOrders
-                        orders={ordersList}
-                        handlePrint={handleClickPrint}
-                        handleCopy={async (pCodeRef: string) => {
-                            try {
-                                await navigator.clipboard.writeText(pCodeRef)
-                                sendNotification({
-                                    description: `  Código de orden ${pCodeRef} copiado al portapapeles.`,
-                                    title: 'Éxito',
-                                    backgroundColor: 'success',
-                                })
-                            } catch (e) {
-                                if (e instanceof Error) {
-                                    sendNotification({
-                                        description: 'No se pudo copiar el código de la orden.',
-                                        title: 'Error',
-                                        backgroundColor: 'error',
+  const reset = useCallback(() => {
+    const next = presetRange('today')
+    setSearch('')
+    setSelectedStatuses([])
+    setSort('newest')
+    setRange(next)
+    setPreset('today')
+    void refresh(next, '')
+  }, [refresh])
 
-                                    })
-                                }
-                            }
-                        }}
-                        handleOpenSale={async (pCodeRef: string) => {
-                            const response = await handleGetSale(pCodeRef)
-                            handleQuery('sale', pCodeRef)
-                            setData(response?.data as SaleResponse)
-                            setOpenSaleDetailOrder((prev) => !prev)
-                        }}
-                    />
-                }
-                <ModalStatusTypes
-                    openModalStatusTypes={openModalStatusTypes}
-                    setOpenModalStatusTypes={setOpenModalStatusTypes}
-                />
-            </Column>
+  return <main className={styles.page}>
+    <div className={styles.container}>
+      <header className={styles.intro}>
+        <div className={styles.introText}>
+          <div className={styles.heading}><div className={styles.headingIcon}><Icon icon="IconShopping" size={25} color="currentColor" /></div><div><Text as="h1" customSize="1.7rem" weight={700}>Gestión de órdenes</Text><Text as="p" customSize="0.82rem" color="gray-dark">Controla tus órdenes, revisa sus estados y consulta cada venta en un solo lugar.</Text></div></div>
         </div>
-    )
+        <div className={styles.liveHint}><span className={styles.liveDot} /> {refreshing ? 'Actualizando órdenes…' : 'Consulta bajo demanda'}</div>
+      </header>
+      <div className={styles.rangeCaption}><Icon icon="IconCalendar" size={15} color="currentColor" /><Text as="span" color="gray-dark" customSize="0.72rem">Período: {formatOrderDate(range.fromDate.toISOString())} — {formatOrderDate(range.toDate.toISOString())}</Text></div>
+      <OrdersSummary orders={visible} statuses={statuses} />
+      <OrdersToolbar
+        search={search} onSearch={setSearch} layout={layout} onLayout={setLayout}
+        sort={sort} onSort={setSort} preset={preset}
+        onPreset={value => applyRange(presetRange(value), value)} onOpenDateFilter={() => setOpenDateFilter(true)}
+        selectedStatuses={selectedStatuses}
+        onStatusToggle={name => setSelectedStatuses(previous => previous.includes(name) ? previous.filter(item => item !== name) : [...previous, name])}
+        onClearStatuses={() => setSelectedStatuses([])} statuses={statuses} counts={statusCounts}
+        onRefresh={() => { void refresh() }} refreshing={refreshing}
+        onManageStatuses={() => setOpenManageStatuses(true)}
+      />
+      <div className={styles.contentHeading}>
+        <div><Text as="h2" customSize="0.95rem" weight={700}>{layout === 'columns' ? 'Tablero de órdenes' : 'Listado de órdenes'}</Text><Text as="p" color="gray-dark" customSize="0.74rem">{visible.length} {visible.length === 1 ? 'orden encontrada' : 'órdenes encontradas'} · {layout === 'columns' ? 'Organizadas por estado' : 'Información y acciones rápidas'}</Text></div>
+        {layout === 'columns' && <div className={styles.scrollTip}><Icon icon="IconArrowRight" size={15} color="currentColor" /><Text as="span" customSize="0.7rem">Desplaza horizontalmente para ver todos los estados</Text></div>}
+      </div>
+      {initialLoading ? <OrdersSkeleton layout={layout} />
+        : listError ? <OrdersError message={listError} onRetry={() => { void refresh() }} />
+          : !visible.length && layout === 'list' ? <OrdersEmpty filtered={hasFilters} onReset={reset} />
+            : <div className={styles.content}>
+              {layout === 'columns'
+                ? <DragOrders orders={visible} statusTypes={visibleStatuses} onOpen={code => { void openSale(code) }} onPrint={code => { void printOrder(code) }} onPdf={code => { void downloadPdf(code) }} downloadingCode={downloadingCode} />
+                : <ListOrders orders={visible} statusTypes={statuses} onOpen={code => { void openSale(code) }} onPrint={code => { void printOrder(code) }} onPdf={code => { void downloadPdf(code) }} downloadingCode={downloadingCode} />}
+            </div>}
+      <div className={styles.footnote}><Icon icon="IconInfo" size={16} color="currentColor" /><Text as="p" customSize="0.72rem">El tablero muestra los estados configurados. Cambiar una orden de estado requerirá conectar una mutación autorizada del backend.</Text></div>
+    </div>
+    <ModalQueries open={openDateFilter} range={range} onClose={() => setOpenDateFilter(false)} onApply={value => applyRange(value, 'custom')} />
+    <ModalOrder state={detail} statuses={statuses} onClose={closeSale} onRetry={() => { void openSale(detail.code, false) }} onPrint={code => { void printOrder(code) }} onPdf={code => { void downloadPdf(code) }} downloading={downloadingCode === detail.code} />{console.log({ detail })}
+    <ModalStatusTypes open={openManageStatuses} onClose={() => setOpenManageStatuses(false)} />
+  </main>
 }

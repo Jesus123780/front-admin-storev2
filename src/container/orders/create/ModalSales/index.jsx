@@ -91,7 +91,9 @@ export const ModalSales = ({
       useScroll={true} title='Revisar y confirmar venta' zIndex={printZIndex} onHide={close}>
       <div className={styles.shell} aria-labelledby={`${uid}-heading`} role='region' aria-busy={busy}>
         <header className={styles.header}>
-          <div><span className={styles.eyebrow}>PUNTO DE VENTA</span><h2 id={`${uid}-heading`}>Revisar y confirmar venta</h2><p>Verifica el cobro y el comprobante antes de registrar.</p></div>
+          <div><span className={styles.eyebrow}>
+            PUNTO DE VENTA
+          </span><h2 id={`${uid}-heading`}>Revisar y confirmar venta</h2><p>Verifica el cobro y el comprobante antes de registrar.</p></div>
           <button type='button' className={styles.close} aria-label='Volver al checkout' disabled={closeLocked} onClick={close}><Icon icon='IconClose' size={22} color='currentColor' /></button>
         </header>
         <div className={styles.workspace}>
