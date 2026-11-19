@@ -734,8 +734,8 @@ export function OrdersView({ query }: OrdersViewProps) {
       />
 
       <ModalStatusTypes
-        open={openManageStatuses}
-        onClose={() => setOpenManageStatuses(false)}
+        openModalStatusTypes={openManageStatuses}
+        setOpenModalStatusTypes={() => setOpenManageStatuses(false)}
       />
     </main>
   )

@@ -11,5 +11,7 @@ export const productSchema = Joi.object({
   // this unknown key (Joi rejects unknown keys by default), which kept the
   // "Crear producto" button disabled as soon as a barcode was entered.
   ProBarCode: Joi.string().allow(null, '').optional(),
-  names: Joi.string().required()
+  names: Joi.string().required(),
+  minStock: Joi.number().optional(),
+  maxStock: Joi.number().optional(),
 })

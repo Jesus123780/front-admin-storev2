@@ -1,10 +1,8 @@
-'use client'
+'use client';
 
 import {
-    usePathname,
-    useRouter,
-    useSearchParams
-} from 'next/navigation'
+ usePathname, useRouter, useSearchParams 
+} from 'next/navigation';
 import {
     timeSuggestions,
     useDessert,
@@ -13,8 +11,8 @@ import {
     useLogout,
     useManageQueryParams,
     useSaveAvailableProduct,
-    useStore
-} from 'npm-pkg-hook'
+    useStore,
+} from 'npm-pkg-hook';
 import {
     AwesomeModal,
     BarCodes,
@@ -33,41 +31,39 @@ import {
     OptionalExtraProducts,
     Row,
     Tag,
-    Text
-} from 'pkg-components'
-import InputHooks from 'pkg-components/stories/molecules/Inputs/InputHooks/InputHooks'
-import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst'
+    Text,
+} from 'pkg-components';
+import InputHooks from 'pkg-components/stories/molecules/Inputs/InputHooks/InputHooks';
+import { MODAL_SIZES } from 'pkg-components/stories/organisms/AwesomeModal/constanst';
 import React, {
-    memo,
-    useContext,
-    useEffect,
-    useState
-} from 'react'
+ memo, useContext, useEffect, useState 
+} from 'react';
 
-import { Context } from '../../../context/Context'
-import { filterKeyObject } from '../../../utils'
-import { Categories } from '../../categories'
-import { ExtrasProductsItems } from '../extras/ExtrasProductsItems'
-import { FormProduct } from './Form'
-import { productSchema } from './schema/producSchema'
-import styles from './styles.module.css'
-import { FoodComponentMemoProps } from './types'
+import { Context } from '../../../context/Context';
+import { filterKeyObject } from '../../../utils';
+import { Categories } from '../../categories';
+import { ExtrasProductsItems } from '../extras/ExtrasProductsItems';
+import { FormProduct } from './Form';
+import { productSchema } from './schema/producSchema';
+import StockSettings from './StockSettings';
+import styles from './styles.module.css';
+import { FoodComponentMemoProps } from './types';
 
 const titleHeaders = [
     'DETALLES',
     'ADICIONALES',
     'COMPLEMENTOS',
-    'DISPONIBILIDAD'
-]
+    'DISPONIBILIDAD',
+];
 
 interface DayConfig {
-    startTime: string
-    endTime: string
+    startTime: string;
+    endTime: string;
 }
 
 interface AvailabilityCheck {
-    availability: boolean
-    noAvailability: boolean
+    availability: boolean;
+    noAvailability: boolean;
 }
 
 /**
@@ -97,7 +93,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         ProDescription: '',
         ProDescuento: '',
         ProPrice: 0,
-        ValueDelivery: ''
+        ValueDelivery: '',
     },
     fetchMore,
     handleChange,
@@ -119,35 +115,35 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     setShowMore,
     ...props
 }) => {
-    const router = useRouter()
-    const location = useRouter()
-    const searchParams = useSearchParams()
-    const pathname = usePathname()
+    const router = useRouter();
+    const location = useRouter();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
 
-    const { onClickLogout } = useLogout({})
+    const { onClickLogout } = useLogout({});
 
     const { getQuery } = useManageQueryParams({
         router: location,
-        searchParams
-    })
+        searchParams,
+    });
 
     const { handleQuery, handleCleanQuery } = useManageQueryParams({
         router,
-        searchParams
-    })
+        searchParams,
+    });
 
-    const { setAlertBox, sendNotification } = useContext(Context)
+    const { setAlertBox, sendNotification } = useContext(Context);
 
-    const [dataStore] = useStore()
-    const { idStore } = dataStore ?? {}
+    const [dataStore] = useStore();
+    const { idStore } = dataStore ?? {};
 
-    const food = getQuery('food')
+    const food = getQuery('food');
 
-    const [showCategoryModal, setShowCategoryModal] = useState(false)
-    const [openAlertClose, setOpenAlertClose] = useState(false)
-    const [openModalDessert, setOpenModalDessert] = useState(true)
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [openAlertClose, setOpenAlertClose] = useState(false);
+    const [openModalDessert, setOpenModalDessert] = useState(true);
 
-    const [dayConfigs, setDayConfigs] = useState<Record<number, DayConfig>>({})
+    const [dayConfigs, setDayConfigs] = useState<Record<number, DayConfig>>({});
 
     const {
         dataTags,
@@ -157,7 +153,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         newTags,
         loadingTags,
         registerTags,
-        tags
+        tags,
     } = tagsProps ?? {
         dataTags: [],
         handleAddTag: () => false,
@@ -167,9 +163,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         loadingTags: false,
         registerTags: () => { },
         tags: {
-            tag: ''
-        }
-    }
+            tag: '',
+        },
+    };
 
     const {
         handleDaySelection,
@@ -177,8 +173,8 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         selectedDays,
         handleCleanSelectedDays,
         loading: loaAvailable,
-        days
-    } = useSaveAvailableProduct()
+        days,
+    } = useSaveAvailableProduct();
 
     const {
         handleCheck: handleCheckDessert,
@@ -203,27 +199,22 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         setOpenModalEditExtra,
         handleAddList,
         handleCleanData,
-        setData
+        setData,
     } = useDessert({
         pId,
         initialData: null,
-        sendNotification
-    })
+        sendNotification,
+    });
 
-    const {
-        preview,
-        inputRef,
-        onFileChange,
-        validTypes
-    } = propsImageEdit ?? {}
+    const { preview, inputRef, onFileChange, validTypes } = propsImageEdit ?? {};
 
     const handleOpenModalDessert = () => {
-        setOpenModalDessert((previous) => !previous)
-    }
+        setOpenModalDessert((previous) => !previous);
+    };
 
     const handleOpenCloseAlert = () => {
-        setOpenAlertClose((previous) => !previous)
-    }
+        setOpenAlertClose((previous) => !previous);
+    };
 
     /**
      * Updates the start or end time for a specific day.
@@ -231,17 +222,17 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
     const handleChangeAvailability = (
         day: number,
         field: 'startTime' | 'endTime',
-        value: string
+        value: string,
     ) => {
         setDayConfigs((previous) => ({
             ...previous,
             [day]: {
                 startTime: previous[day]?.startTime ?? '',
                 endTime: previous[day]?.endTime ?? '',
-                [field]: value
-            }
-        }))
-    }
+                [field]: value,
+            },
+        }));
+    };
 
     /**
      * Keeps availability modes mutually exclusive and clears obsolete schedules.
@@ -252,28 +243,28 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
      */
     const handleAvailabilityChange = (
         selectedOption: keyof AvailabilityCheck,
-        checked: boolean
+        checked: boolean,
     ) => {
         const nextState: AvailabilityCheck = {
             availability: false,
-            noAvailability: false
-        }
+            noAvailability: false,
+        };
 
         if (checked) {
-            nextState[selectedOption] = true
+            nextState[selectedOption] = true;
         }
 
         const shouldClearSchedule =
             (selectedOption === 'availability' && checked) ||
-            (selectedOption === 'noAvailability' && !checked)
+            (selectedOption === 'noAvailability' && !checked);
 
         if (shouldClearSchedule) {
-            handleCleanSelectedDays()
-            setDayConfigs({})
+            handleCleanSelectedDays();
+            setDayConfigs({});
         }
 
-        setCheckAvailableDays(nextState)
-    }
+        setCheckAvailableDays(nextState);
+    };
 
     const propsForm = {
         handleRegister,
@@ -292,8 +283,8 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         image,
         errors,
         handleShowCategories: () => setShowCategoryModal((previous) => !previous),
-        ...props
-    }
+        ...props,
+    };
 
     const propsListProducts = {
         onClickClear,
@@ -310,12 +301,12 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         setShowMore,
         pState: 1,
         handleDelete,
-        ...props
-    }
+        ...props,
+    };
 
     const [handleGetOneProduct, { dataExtra }] = useGetOneProductsFood({
-        fetchOnlyProduct: false
-    })
+        fetchOnlyProduct: false,
+    });
 
     const {
         handleAdd: handleAddExtra,
@@ -330,12 +321,12 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         handleSelect,
         LineItems,
         inputRefs,
-        handleCleanLines: CleanLines
+        handleCleanLines: CleanLines,
     } = useDessertWithPrice({
         sendNotification,
         setAlertBox,
-        dataExtra
-    })
+        dataExtra,
+    });
 
     const propsExtra = {
         handleAdd: handleAddExtra,
@@ -353,143 +344,142 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         handleFocusChange,
         setLine,
         LineItems,
-        handleCleanLines: CleanLines
-    }
+        handleCleanLines: CleanLines,
+    };
 
     /**
      * Closes the product workflow and clears its query parameters.
      */
     const cancelAll = () => {
-        setShowComponentModal(false)
-        handleClick(false)
-        setActive(STEPS.PRODUCT)
-        handleCleanQuery('food')
-        handleCleanQuery('product')
-    }
+        setShowComponentModal(false);
+        handleClick(false);
+        setActive(STEPS.PRODUCT);
+        handleCleanQuery('food');
+        handleCleanQuery('product');
+    };
 
     /**
      * Loads the product associated with the current workflow.
      */
     const handlerCreateDessert = async () => {
         if (!pId || !food) {
-            setShowComponentModal(false)
-            handleClick(false)
+            setShowComponentModal(false);
+            handleClick(false);
 
             return sendNotification({
                 description: 'Lo sentimos, no encontramos tu producto.',
                 title: 'Error',
-                backgroundColor: 'error'
-            })
+                backgroundColor: 'error',
+            });
         }
 
-        setActive((previous) => previous + 1)
-        setOpenModalDessert(true)
+        setActive((previous) => previous + 1);
+        setOpenModalDessert(true);
 
         return handleGetOneProduct({
-            pId: pId ?? food
-        })
-    }
+            pId: pId ?? food,
+        });
+    };
 
     /** Creates the input expected by the availability mutation. */
     const createFormInput = () => {
-        const productId = pId || food
+        const productId = pId || food;
 
         return selectedDays.map((day: number) => ({
             idStore,
             pId: productId,
             dayAvailable: day,
             startDate: dayConfigs[day]?.startTime,
-            endDate: dayConfigs[day]?.endTime
-        }))
-    }
+            endDate: dayConfigs[day]?.endTime,
+        }));
+    };
 
     /** Sends the availability mutation and handles its response. */
     const handleRegisterAvailableProduct = async (
-        input: ReturnType<typeof createFormInput>
+        input: ReturnType<typeof createFormInput>,
     ): Promise<void> => {
         // El producto debe existir antes de registrar su disponibilidad.
         // Sin un pId válido la mutación falla con un error de llave foránea.
-        const productId = pId || food
+        const productId = pId || food;
 
         if (input.length > 0 && !productId) {
             sendNotification({
                 description:
                     'No encontramos el producto. Guarda primero los datos del producto antes de configurar su disponibilidad.',
                 title: 'Error',
-                backgroundColor: 'error'
-            })
+                backgroundColor: 'error',
+            });
 
-            return
+            return;
         }
 
         try {
             const response = await registerAvailableProduct({
-                variables: { input }
-            })
+                variables: { input },
+            });
 
-            const result = response?.data?.registerAvailableProduct
+            const result = response?.data?.registerAvailableProduct;
 
             if (result?.success) {
-                sendSuccessNotification()
+                sendSuccessNotification();
 
                 sendNotification({
                     description: result.message,
                     title: 'Éxito',
-                    backgroundColor: 'success'
-                })
+                    backgroundColor: 'success',
+                });
 
-                return
+                return;
             }
 
             // El backend puede detallar la causa en `errors`.
             const detailedError = result?.errors
                 ?.map((error) => error?.message)
                 .filter(Boolean)
-                .join(' ')
+                .join(' ');
 
             const message =
                 detailedError ||
                 result?.message ||
-                'Ha ocurrido un error al guardar los días disponibles.'
+                'Ha ocurrido un error al guardar los días disponibles.';
 
             sendNotification({
                 description: message,
                 title: 'Error',
-                backgroundColor: 'error'
-            })
+                backgroundColor: 'error',
+            });
 
             if (result?.message === 'Session expired') {
-                await onClickLogout({ redirect: true })
+                await onClickLogout({ redirect: true });
 
                 setAlertBox({
-                    message:
-                        'La sesión ha expirado, por favor vuelve a iniciar sesión.'
-                })
+                    message: 'La sesión ha expirado, por favor vuelve a iniciar sesión.',
+                });
             }
         } catch {
             sendNotification({
                 description:
                     'No fue posible guardar la disponibilidad. Intenta nuevamente.',
                 title: 'Error',
-                backgroundColor: 'error'
-            })
+                backgroundColor: 'error',
+            });
         }
-    }
+    };
 
     /** Resets the form after successfully saving the product. */
     const sendSuccessNotification = () => {
-        setShowComponentModal(false)
-        handleClick(false)
-        setActive(0)
-        handleCleanSelectedDays()
+        setShowComponentModal(false);
+        handleClick(false);
+        setActive(0);
+        handleCleanSelectedDays();
 
         setCheckAvailableDays({
             availability: true,
-            noAvailability: false
-        })
+            noAvailability: false,
+        });
 
-        setDayConfigs({})
-        handleCleanData({})
+        setDayConfigs({});
+        handleCleanData({});
 
         setErrors({
             ProDescription: false,
@@ -497,31 +487,31 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
             ProPrice: false,
             ValueDelivery: false,
             carProId: false,
-            names: ''
-        })
-    }
+            names: '',
+        });
+    };
 
     /** Processes the current workflow step. */
     const handlerSteps = async (): Promise<void> => {
         if (active === STEPS.PRODUCT) {
-            const response = await handleRegister()
-            const result = response?.data?.updateProductFoods
+            const response = await handleRegister();
+            const result = response?.data?.updateProductFoods;
 
             if (result?.success) {
                 sendNotification({
                     backgroundColor: 'success',
                     title: 'Éxito',
-                    description: result.message
-                })
+                    description: result.message,
+                });
 
-                const productId = result?.data?.pId
+                const productId = result?.data?.pId;
 
                 if (productId) {
-                    handleQuery('food', productId)
+                    handleQuery('food', productId);
                 }
 
-                setActive(STEPS.DESSERTS)
-                return
+                setActive(STEPS.DESSERTS);
+                return;
             }
 
             result?.errors?.forEach((error) => {
@@ -529,12 +519,11 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     backgroundColor: 'error',
                     title: 'Error',
                     description:
-                        error.messag ??
-                        'No fue posible guardar los datos del producto.'
-                })
-            })
+                        error.messag ?? 'No fue posible guardar los datos del producto.',
+                });
+            });
 
-            return
+            return;
         }
 
         if (active === STEPS.DESSERTS) {
@@ -542,22 +531,22 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 sendNotification({
                     backgroundColor: 'warning',
                     title: 'Alerta',
-                    description: 'Completa los campos requeridos.'
-                })
+                    description: 'Completa los campos requeridos.',
+                });
 
-                return
+                return;
             }
 
             if (food) {
-                setActive(STEPS.COMPLEMENTS)
+                setActive(STEPS.COMPLEMENTS);
             }
 
-            return
+            return;
         }
 
         if (active === STEPS.COMPLEMENTS) {
-            setActive(STEPS.AVAILABILITY)
-            return
+            setActive(STEPS.AVAILABILITY);
+            return;
         }
 
         if (active === STEPS.AVAILABILITY) {
@@ -566,10 +555,10 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     backgroundColor: 'warning',
                     title: 'Alerta',
                     description:
-                        'Selecciona cómo estará disponible el producto para continuar.'
-                })
+                        'Selecciona cómo estará disponible el producto para continuar.',
+                });
 
-                return
+                return;
             }
 
             if (check.noAvailability && selectedDays.length === 0) {
@@ -577,40 +566,34 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     backgroundColor: 'warning',
                     title: 'Alerta',
                     description:
-                        'Selecciona al menos un día para configurar la disponibilidad.'
-                })
+                        'Selecciona al menos un día para configurar la disponibilidad.',
+                });
 
-                return
+                return;
             }
 
             // Siempre disponible = sin registros de horarios específicos.
             // Horarios específicos = enviar únicamente los días configurados.
-            const input = check.noAvailability
-                ? createFormInput()
-                : []
+            const input = check.noAvailability ? createFormInput() : [];
 
-            await handleRegisterAvailableProduct(input)
+            await handleRegisterAvailableProduct(input);
         }
-    }
+    };
 
     const handleContinue = async (): Promise<void> => {
-        await handlerSteps()
-    }
+        await handlerSteps();
+    };
 
     const valuesObj = filterKeyObject(
         {
             ...values,
-            names
+            names,
         },
-        [
-            'ProWeight',
-            'carProId',
-            'ProHeight'
-        ],
-        false
-    )
+        ['ProWeight', 'carProId', 'ProHeight'],
+        false,
+    );
 
-    const { error } = productSchema.validate(valuesObj)
+    const { error } = productSchema.validate(valuesObj);
 
     const disabled = {
         0: error,
@@ -618,57 +601,56 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         2: false,
         3:
             !check?.availability &&
-            (!check?.noAvailability || selectedDays.length === 0)
-    }
+            (!check?.noAvailability || selectedDays.length === 0),
+    };
 
     interface StepButtonConfig {
-        label: string
-        iconName: string
+        label: string;
+        iconName: string;
     }
 
     const buttonConfig: Record<number, StepButtonConfig> = {
         [STEPS.PRODUCT]: {
             label: 'Crear producto',
-            iconName: 'IconBox'
+            iconName: 'IconBox',
         },
         [STEPS.DESSERTS]: {
             label: 'Continuar',
-            iconName: 'IconArrowRight'
+            iconName: 'IconArrowRight',
         },
         [STEPS.COMPLEMENTS]: {
             label: 'Continuar',
-            iconName: 'IconArrowRight'
+            iconName: 'IconArrowRight',
         },
         [STEPS.AVAILABILITY]: {
             label: 'Selecciona disponibilidad',
-            iconName: 'IconCalendar'
-        }
-    }
-
+            iconName: 'IconCalendar',
+        },
+    };
 
     const asSaveAvailableProduct =
         active === STEPS.AVAILABILITY &&
         (Boolean(check?.availability) ||
-            (Boolean(check?.noAvailability) && selectedDays.length > 0))
+            (Boolean(check?.noAvailability) && selectedDays.length > 0));
 
     const currentButtonConfig: StepButtonConfig =
         active === STEPS.AVAILABILITY && asSaveAvailableProduct
             ? {
                 label: 'Guardar',
-                iconName: 'IconSuccess'
+                iconName: 'IconSuccess',
             }
-            : buttonConfig[active] ?? {
+            : (buttonConfig[active] ?? {
                 label: 'Continuar',
-                iconName: 'IconArrowRight'
-            }
+                iconName: 'IconArrowRight',
+            });
 
     useEffect(() => {
         if (active === STEPS.COMPLEMENTS) {
             handleGetOneProduct({
-                pId: pId ?? food
-            })
+                pId: pId ?? food,
+            });
         }
-    }, [active])
+    }, [active]);
 
     const components: Record<number, React.ReactNode> = {
         0: (
@@ -678,20 +660,44 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 </div>
 
                 <div className={styles.product_image}>
+                    <StockSettings
+                        handleCheckStock={handleCheckStock}
+                        stock={stock ?? 0}
+                        manageStock={checkStock}
+                        minStock={values.minStock ?? 0}
+                        maxStock={values.maxStock ?? null}
+                        onChange={(config) => {
+                            handleChange({
+                                target: {
+                                    name: 'minStock',
+                                    value: config.minStock,
+                                },
+                            });
+                            handleChange({
+                                target: {
+                                    name: 'maxStock',
+                                    value: config.maxStock,
+                                },
+                            });
+                            // Actualiza el estado del formulario
+                            // config: { manageStock, minStock, maxStock }
+                        }}
+                    />
+
                     <ImageProductEdit {...propsImageEdit} />
                     <InputHooks
                         tabIndex={6}
-                        info='Acepta EAN-13, EAN-8, UPC, CODE128 o CODE39. El formato se detecta automáticamente.'
-                        name='ProBarCode'
+                        info="Acepta EAN-13, EAN-8, UPC, CODE128 o CODE39. El formato se detecta automáticamente."
+                        name="ProBarCode"
                         onChange={handleChange}
                         required={false}
-                        title='Código de barras'
-                        type='text'
+                        title="Código de barras"
+                        type="text"
                         value={values?.ProBarCode ?? ''}
                     />
                     <Divider marginTop={getGlobalStyle('--spacing-3xl')} />
 
-                    <Text as='p' size='sm'>
+                    <Text as="p" size="sm">
                         Déjalo vacío para que el sistema genere un código de barras válido
                         automáticamente.
                     </Text>
@@ -703,39 +709,38 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 <div className={styles.product_tags}>
                     <Row className={styles.tags_header}>
                         <Icon
-                            icon='IconTag'
+                            icon="IconTag"
                             size={24}
                             color={getGlobalStyle('--color-icons-black')}
                         />
 
                         <Text
-                            size='2xl'
+                            size="2xl"
                             styles={{
                                 color: getGlobalStyle('--color-text-black'),
-                                fontWeight: getGlobalStyle('--font-weight-bold')
+                                fontWeight: getGlobalStyle('--font-weight-bold'),
                             }}
                         >
                             Tags
                         </Text>
-                        <Button primary={false} size='small'>
+                        <Button primary={false} size="small">
                             Opcional
                         </Button>
                     </Row>
 
                     <Text
-                        size='sm'
+                        size="sm"
                         styles={{ color: getGlobalStyle('--color-text-gray-dark-light') }}
                     >
-                        Los tags ayudan a tus clientes a encontrar este producto
-                        más rápido.
+                        Los tags ayudan a tus clientes a encontrar este producto más rápido.
                     </Text>
 
                     <div className={styles.tags_section}>
                         <Text
-                            size='md'
+                            size="md"
                             styles={{
                                 color: getGlobalStyle('--color-text-black'),
-                                fontWeight: getGlobalStyle('--font-weight-semibold')
+                                fontWeight: getGlobalStyle('--font-weight-semibold'),
                             }}
                         >
                             1. Escribe un tag y presiona Enter o +
@@ -753,36 +758,40 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         />
 
                         <Text
-                            size='sm'
+                            size="sm"
                             styles={{ color: getGlobalStyle('--color-text-gray-dark-light') }}
                         >
-                            {'Al presionar Enter o + se guardan automáticamente. Ejemplos: oferta, nuevo, vegano.'}
+                            {
+                                'Al presionar Enter o + se guardan automáticamente. Ejemplos: oferta, nuevo, vegano.'
+                            }
                         </Text>
                     </div>
 
                     {Array.isArray(dataTags) && dataTags.length > 0 && (
                         <div className={styles.tags_section}>
                             <Text
-                                size='md'
+                                size="md"
                                 styles={{
                                     color: getGlobalStyle('--color-text-black'),
-                                    fontWeight: getGlobalStyle('--font-weight-semibold')
+                                    fontWeight: getGlobalStyle('--font-weight-semibold'),
                                 }}
                             >
                                 2. Reutiliza un tag guardado
                             </Text>
 
                             <Text
-                                size='sm'
-                                styles={{ color: getGlobalStyle('--color-text-gray-dark-light') }}
+                                size="sm"
+                                styles={{
+                                    color: getGlobalStyle('--color-text-gray-dark-light'),
+                                }}
                             >
-                                Toca un tag para seleccionarlo. Usa la X para
-                                eliminarlo definitivamente.
+                                Toca un tag para seleccionarlo. Usa la X para eliminarlo
+                                definitivamente.
                             </Text>
 
                             <Row className={styles.tags_list}>
                                 {dataTags.map((tag) => {
-                                    const isSelected = tags?.id === tag.id
+                                    const isSelected = tags?.id === tag.id;
 
                                     return (
                                         <div
@@ -790,16 +799,12 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                                             className={`${styles.contain_tag_list} ${isSelected ? styles.tag_selected : ''}`}
                                         >
                                             <Button
-                                                onClick={() =>
-                                                    handleAddTag(tag.id, tag.tag)
-                                                }
-                                                border='none'
-                                                borderRadius='0'
-                                                padding='0'
+                                                onClick={() => handleAddTag(tag.id, tag.tag)}
+                                                border="none"
+                                                borderRadius="0"
+                                                padding="0"
                                                 title={
-                                                    isSelected
-                                                        ? 'Quitar selección'
-                                                        : 'Seleccionar tag'
+                                                    isSelected ? 'Quitar selección' : 'Seleccionar tag'
                                                 }
                                             >
                                                 <Tag label={tag.tag}>
@@ -813,23 +818,25 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
 
                                             <Button
                                                 onClick={() => handleRemoveTag(tag)}
-                                                border='none'
+                                                border="none"
                                                 styles={{
-                                                    backgroundColor: getGlobalStyle('--color-primary-pink-light'),
-                                                    opacity: getGlobalStyle('--opacity-75')
+                                                    backgroundColor: getGlobalStyle(
+                                                        '--color-primary-pink-light',
+                                                    ),
+                                                    opacity: getGlobalStyle('--opacity-75'),
                                                 }}
                                                 borderRadius={getGlobalStyle('--border-radius-2xs')}
-                                                padding='0'
-                                                title='Eliminar tag'
+                                                padding="0"
+                                                title="Eliminar tag"
                                             >
                                                 <Icon
                                                     color={getGlobalStyle('--color-icons-primary')}
-                                                    icon='IconCancel'
+                                                    icon="IconCancel"
                                                     size={16}
                                                 />
                                             </Button>
                                         </div>
-                                    )
+                                    );
                                 })}
                             </Row>
                         </div>
@@ -838,18 +845,17 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     {Boolean(tags?.tag) && (
                         <div className={styles.tag_selected_box}>
                             <Text
-                                size='sm'
-                                styles={{ color: getGlobalStyle('--color-text-gray-dark-light') }}
+                                size="sm"
+                                styles={{
+                                    color: getGlobalStyle('--color-text-gray-dark-light'),
+                                }}
                             >
                                 Tag seleccionado
                             </Text>
 
-                            <Tag
-                                label={tags.tag}
-                                backgroundColor='green'
-                            >
+                            <Tag label={tags.tag} backgroundColor="green">
                                 <Icon
-                                    icon='IconSuccess'
+                                    icon="IconSuccess"
                                     size={16}
                                     color={getGlobalStyle('--color-icons-white')}
                                 />
@@ -870,11 +876,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         handleDecrement={handleDecreaseStock}
                         handleIncrement={handleIncreaseStock}
                         ProQuantity={stock}
-                        pId=''
+                        pId=""
                         tag={tags}
-                        ProImage={
-                            preview ?? '/images/dish-image-placeholder.png'
-                        }
+                        ProImage={preview ?? '/images/dish-image-placeholder.png'}
                         pName={names}
                         ProPrice={values.ProPrice}
                         ProDescuento={values?.ProDescuento}
@@ -891,7 +895,7 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 dataListIds={dataListIds}
                 editOneExtra={editOneExtra}
                 editOneItem={(args) => {
-                    editOneItem({ ...args, isCustomSubOpExPid: true })
+                    editOneItem({ ...args, isCustomSubOpExPid: true });
                 }}
                 handleAdd={handleAdd}
                 handleAddList={handleAddList}
@@ -920,9 +924,9 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 <Button
                     onClick={handleOpenModalDessert}
                     primary
-                    width='max-content'
-                    iconName='IconBox'
-                    iconPosition='left'
+                    width="max-content"
+                    iconName="IconBox"
+                    iconPosition="left"
                 >
                     Crear subproductos
                 </Button>
@@ -941,21 +945,14 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
         3: (
             <section className={styles.container_availability}>
                 <header className={styles.availability_header}>
-                    <Text
-                        color='primary'
-                        size='3xl'
-                        weight='bold'
-                    >
+                    <Text color="primary" size="3xl" weight="bold">
                         Disponibilidad
                     </Text>
 
-                    <Text
-                        size='sm'
-                        color='gray-dark'
-                    >
-                        Configura cuándo pueden comprar este producto.
-                        Puedes mantenerlo disponible todos los días o
-                        seleccionar los días y horarios de atención.
+                    <Text size="sm" color="gray-dark">
+                        Configura cuándo pueden comprar este producto. Puedes mantenerlo
+                        disponible todos los días o seleccionar los días y horarios de
+                        atención.
                     </Text>
                 </header>
 
@@ -963,41 +960,37 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                     <div className={styles.availability_option}>
                         <Checkbox
                             checked={Boolean(check.availability)}
-                            id='checkboxAvailability'
-                            label='Siempre disponible'
-                            name='availability'
+                            id="checkboxAvailability"
+                            label="Siempre disponible"
+                            name="availability"
                             onChange={(event) => {
-                                handleAvailabilityChange(
-                                    'availability',
-                                    event.target.checked
-                                )
+                                handleAvailabilityChange('availability', event.target.checked);
                             }}
                         />
 
-                        <Text size='sm' color='gray-dark'>
-                            Los clientes podrán comprar este producto sin
-                            restricciones de días u horarios configurados
-                            en esta sección.
+                        <Text size="sm" color="gray-dark">
+                            Los clientes podrán comprar este producto sin restricciones de
+                            días u horarios configurados en esta sección.
                         </Text>
                     </div>
 
                     <div className={styles.availability_option}>
                         <Checkbox
                             checked={Boolean(check.noAvailability)}
-                            id='checkboxNoAvailability'
-                            label='Horarios específicos'
-                            name='noAvailability'
+                            id="checkboxNoAvailability"
+                            label="Horarios específicos"
+                            name="noAvailability"
                             onChange={(event) => {
                                 handleAvailabilityChange(
                                     'noAvailability',
-                                    event.target.checked
-                                )
+                                    event.target.checked,
+                                );
                             }}
                         />
 
-                        <Text size='sm' color='gray-dark'>
-                            Define los días de la semana y las horas en
-                            que estará disponible para tus clientes.
+                        <Text size="sm" color="gray-dark">
+                            Define los días de la semana y las horas en que estará disponible
+                            para tus clientes.
                         </Text>
                     </div>
                 </div>
@@ -1005,14 +998,13 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 {check.noAvailability && (
                     <section className={styles.availability_schedule}>
                         <header className={styles.availability_schedule_header}>
-                            <Text size='xl' weight='bold'>
+                            <Text size="xl" weight="bold">
                                 Días y horarios
                             </Text>
 
-                            <Text size='large' color='gray-dark-dark'>
-                                Selecciona los días disponibles y configura
-                                la hora de inicio y finalización para cada
-                                día seleccionado.
+                            <Text size="large" color="gray-dark-dark">
+                                Selecciona los días disponibles y configura la hora de inicio y
+                                finalización para cada día seleccionado.
                             </Text>
                         </header>
 
@@ -1030,15 +1022,15 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         </div>
 
                         {selectedDays.length === 0 && (
-                            <Text size='large' color='gray-dark'>
+                            <Text size="large" color="gray-dark">
                                 Aún no has seleccionado ningún día.
                             </Text>
                         )}
                     </section>
                 )}
             </section>
-        )
-    }
+        ),
+    };
 
     return (
         <>
@@ -1046,16 +1038,16 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
 
             <div className={styles.food_component}>
                 <AwesomeModal
-                    customHeight='70vh'
+                    customHeight="70vh"
                     footer={false}
                     header={false}
                     onCancel={() => false}
                     onConfirm={() => setShowCategoryModal(false)}
                     onHide={() => setShowCategoryModal(false)}
-                    padding='20px'
+                    padding="20px"
                     question={false}
                     show={showCategoryModal}
-                    size='50%'
+                    size="50%"
                     zIndex={getGlobalStyle('--z-index-modal')}
                 >
                     <Categories />
@@ -1064,31 +1056,28 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 <AwesomeModal
                     btnCancel
                     btnConfirm
-                    customHeight='200px'
+                    customHeight="200px"
                     footer={true}
                     header={false}
                     onCancel={() => { }}
                     onConfirm={cancelAll}
                     onHide={handleOpenCloseAlert}
-                    padding='20px'
+                    padding="20px"
                     question={false}
                     show={openAlertClose}
                     size={MODAL_SIZES.small}
                     zIndex={getGlobalStyle('--z-index-high')}
                 >
-                    <Text size='3xl' weight='extrabold'>
-                        Es posible que el producto no contenga todos los
-                        elementos necesarios.
+                    <Text size="3xl" weight="extrabold">
+                        Es posible que el producto no contenga todos los elementos
+                        necesarios.
                     </Text>
 
                     <Divider marginTop={getGlobalStyle('--spacing-2xl')} />
                 </AwesomeModal>
 
                 <div className={styles.header_steps_sticky}>
-                    <HeaderSteps
-                        active={active}
-                        steps={titleHeaders}
-                    />
+                    <HeaderSteps active={active} steps={titleHeaders} />
                 </div>
 
                 <main className={styles.container_steps}>
@@ -1096,30 +1085,23 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                 </main>
 
                 <footer className={styles.container_steps_actions}>
-                    {active !== STEPS.DESSERTS &&
-                        active !== STEPS.PRODUCT && (
-                            <Button
-                                onClick={() => {
-                                    setActive((previous) =>
-                                        Math.max(STEPS.PRODUCT, previous - 1)
-                                    )
-                                }}
-                            >
-                                Volver
-                            </Button>
-                        )}
+                    {active !== STEPS.DESSERTS && active !== STEPS.PRODUCT && (
+                        <Button
+                            onClick={() => {
+                                setActive((previous) => Math.max(STEPS.PRODUCT, previous - 1));
+                            }}
+                        >
+                            Volver
+                        </Button>
+                    )}
 
                     {pathname !== '/products' ? (
                         <Button
                             onClick={
-                                active === STEPS.DESSERTS
-                                    ? handleOpenCloseAlert
-                                    : cancelAll
+                                active === STEPS.DESSERTS ? handleOpenCloseAlert : cancelAll
                             }
                         >
-                            {active === STEPS.DESSERTS
-                                ? 'Cerrar'
-                                : 'Cancelar'}
+                            {active === STEPS.DESSERTS ? 'Cerrar' : 'Cancelar'}
                         </Button>
                     ) : (
                         <div className={styles.actions_spacer} />
@@ -1130,16 +1112,16 @@ export const FoodComponentMemo: React.FC<FoodComponentMemoProps> = ({
                         loading={loading}
                         onClick={handleContinue}
                         primary
-                        size='medium'
+                        size="medium"
                         iconName={currentButtonConfig.iconName}
-                        iconPosition='right'
+                        iconPosition="right"
                     >
                         {currentButtonConfig.label}
                     </Button>
                 </footer>
             </div>
         </>
-    )
-}
+    );
+};
 
-export const FoodComponent = memo(FoodComponentMemo)
+export const FoodComponent = memo(FoodComponentMemo);
