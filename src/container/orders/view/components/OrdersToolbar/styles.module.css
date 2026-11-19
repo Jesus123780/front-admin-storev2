@@ -29,3 +29,30 @@
 .root button:focus-visible,.root select:focus-visible{outline:2px solid var(--color-secondary-blue);outline-offset:2px}
 @media(max-width:750px){.root{padding:var(--spacing-lg)}.main{align-items:stretch}.tools{justify-content:flex-start}.search{max-width:none;flex-basis:100%;order:-1}.periods{width:100%;overflow-x:auto;flex-wrap:nowrap}.statusArea{align-items:flex-start}.manage span,.refreshLabel{display:none}.toolButton{padding:0 11px}.layouts{margin-left:auto}}
 @media(prefers-reduced-motion:reduce){.root *{transition:none!important}}
+
+
+
+.refreshIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transform-origin: center;
+}
+
+.isSpinning {
+  animation: orders-refresh-spin 850ms linear infinite;
+}
+
+@keyframes orders-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .isSpinning {
+    animation: none;
+  }
+}
+

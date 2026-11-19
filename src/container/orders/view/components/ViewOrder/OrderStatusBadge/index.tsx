@@ -1,6 +1,8 @@
-import type { CSSProperties } from 'react'
 import { Text } from 'pkg-components'
-import type { OrderStatusType } from '../../types'
+import type { CSSProperties } from 'react'
+
+import { OrderStatusType } from '@/container/orders/types';
+
 import styles from './styles.module.css'
 
 interface Props { status: OrderStatusType | undefined; fallback?: string; compact?: boolean }

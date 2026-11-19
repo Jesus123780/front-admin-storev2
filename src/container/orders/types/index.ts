@@ -56,6 +56,7 @@ export interface OrderRecord {
   totalProductsPrice?: number | null
   netTotal?: number | null
   valueDelivery?: number | null
+  boardStatusId?: number | null
   tip?: number | null
   paymentMethod?: OrderPayment | null
   client?: OrderClient | null

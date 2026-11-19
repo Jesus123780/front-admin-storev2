@@ -82,10 +82,10 @@ const OrderDetail: React.FC<PropsOrderDetail> = ({
               modalView={modalView}
             />
 
-<RefundStatus
-  summary={refundSummary}
-  originalStatus={order?.statusOrder?.name}
-/>
+            <RefundStatus
+              summary={refundSummary}
+              originalStatus={order?.statusOrder?.name}
+            />
             <div className={styles.content}>
               <div className={styles.left}>
                 <OrderClientInfo

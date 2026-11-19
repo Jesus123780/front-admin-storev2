@@ -175,22 +175,115 @@ export function applyOrderFilters(
   })
 }
 
-function startOfDay(d: Date): Date { return new Date(d.getFullYear(), d.getMonth(), d.getDate()) }
-function endOfDay(d: Date): Date { return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999) }
-export function presetRange(preset: Exclude<OrdersPreset, 'custom'>, now = new Date()): DateRangeValue {
-  const day = startOfDay(now)
-  if (preset === 'yesterday') {day.setDate(day.getDate() - 1)}
-  else if (preset === '7days') {day.setDate(day.getDate() - 6)}
-  else if (preset === '30days') {day.setDate(day.getDate() - 29)}
-  return { fromDate: day, toDate: endOfDay(preset === 'yesterday' ? day : now) }
+
+const DAY_MS = 86_400_000
+const COLOMBIA_UTC_OFFSET_MS = 5 * 60 * 60 * 1000
+
+const colombiaFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/Bogota',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+})
+
+function colombiaDateParts(date: Date) {
+  const parts = colombiaFormatter.formatToParts(date)
+
+  const get = (type: string): number =>
+    Number(parts.find(part => part.type === type)?.value)
+
+  return {
+    year: get('year'),
+    month: get('month'),
+    day: get('day')
+  }
+}
+
+function colombiaDayBoundary(
+  year: number,
+  month: number,
+  day: number,
+  end = false
+): Date {
+  const start = Date.UTC(
+    year,
+    month - 1,
+    day,
+    0, 0, 0, 0
+  ) + COLOMBIA_UTC_OFFSET_MS
+
+  return new Date(end ? start + DAY_MS - 1 : start)
+}
+
+export function presetRange(
+  preset: Exclude<OrdersPreset, 'custom'>,
+  now = new Date()
+): DateRangeValue {
+  const { year, month, day } = colombiaDateParts(now)
+
+  const todayStart = colombiaDayBoundary(
+    year,
+    month,
+    day
+  )
+
+  const days = preset === '7days'
+    ? 7
+    : preset === '30days'
+      ? 30
+      : 1
+
+  if (preset === 'yesterday') {
+    const yesterdayStart = new Date(
+      todayStart.getTime() - DAY_MS
+    )
+
+    return {
+      fromDate: yesterdayStart,
+      toDate: new Date(todayStart.getTime() - 1)
+    }
+  }
+
+  return {
+    fromDate: new Date(
+      todayStart.getTime() - (days - 1) * DAY_MS
+    ),
+    toDate: new Date(
+      todayStart.getTime() + DAY_MS - 1
+    )
+  }
 }
 
 export function localDateInput(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+  const { year, month, day } = colombiaDateParts(date)
+
+  return [
+    year,
+    String(month).padStart(2, '0'),
+    String(day).padStart(2, '0')
+  ].join('-')
 }
 
-export function fromDateInput(value: string, end: boolean): Date {
+export function fromDateInput(
+  value: string,
+  end: boolean
+): Date {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Date(NaN)
+  }
+
   const [year, month, day] = value.split('-').map(Number)
-  return end ? new Date(year, month - 1, day, 23, 59, 59, 999) : new Date(year, month - 1, day)
+
+  const result = colombiaDayBoundary(
+    year,
+    month,
+    day,
+    end
+  )
+
+  if (localDateInput(result) !== value) {
+    return new Date(NaN)
+  }
+
+  return result
 }

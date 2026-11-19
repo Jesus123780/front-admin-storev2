@@ -1,11 +1,14 @@
 'use client'
 
 import {
+  Column,
+  getGlobalStyle,
   Icon,
   type KanbanColumn,
   KanbanDnd,
   type KanbanMove
 } from 'pkg-components'
+import { SwipeableCard } from 'pkg-components/stories/molecules/SwipeableCard'
 import { useMemo, useState } from 'react'
 
 // Keep these imports aligned with the local app's actual exports.
@@ -66,15 +69,15 @@ export function DragOrders({
           : undefined
       ) ?? statusesByName.get(orderStatusName(order, statusTypes))
 
-      if (status) {groups.get(status.idStatus)!.push(order)}
-      else {unclassified.push(order)}
+      if (status) { groups.get(status.idStatus)!.push(order) }
+      else { unclassified.push(order) }
     }
 
     const result: KanbanColumn<BoardItem>[] = statusTypes.map(status => {
       const group = groups.get(status.idStatus) ?? []
       const sorted = lastMovedCode
         ? [...group].sort((a, b) =>
-            Number(b.pCodeRef === lastMovedCode) - Number(a.pCodeRef === lastMovedCode))
+          Number(b.pCodeRef === lastMovedCode) - Number(a.pCodeRef === lastMovedCode))
         : group
       const limit = limits[status.idStatus] ?? PAGE_SIZE
 
@@ -131,7 +134,7 @@ export function DragOrders({
       sourceColumnId === targetColumnId ||
       sourceColumnId === UNCLASSIFIED_ID ||
       targetColumnId === UNCLASSIFIED_ID
-    ) {return}
+    ) { return }
 
     onMove(itemId, sourceColumnId, targetColumnId)
   }
@@ -151,16 +154,141 @@ export function DragOrders({
         isItemDragDisabled={item => !item.status}
         onMove={handleMove}
         renderItem={(item, context) => (
-          <OrderCard
-            order={item.order}
-            status={item.status}
-            onOpen={onOpen}
-            onPrint={onPrint}
-            onPdf={onPdf}
-            busyPdf={downloadingCode === item.id}
-            dragging={context.dragging}
-            swipeActions
-          />
+          <SwipeableCard
+            swipeDirections="both"
+            swipeWidth={110}
+            deleteOnKeyboard
+            rightActions={
+              <Column
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  minHeight: 150,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '8px 0',
+                  boxSizing: 'border-box'
+                }}
+              >
+                {/* Eliminar */}
+                <button
+                  type='button'
+                  title='Eliminar producto'
+                  onClick={(event) => {
+                    event.stopPropagation()
+
+                  }}
+                  style={{
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 40,
+                    height: 40,
+                    flexShrink: 0,
+                    borderRadius: 12,
+                    backgroundColor: getGlobalStyle(
+                      '--color-primary-red-bg'
+                    )
+                  }}
+                >
+                  <Icon
+                    icon='IconDelete'
+                    color={getGlobalStyle(
+                      '--color-icons-primary'
+                    )}
+                    size={18}
+                  />
+                </button>
+
+                {/* Comentario */}
+                <button
+                  type='button'
+                  title='Agregar comentario'
+                  onClick={(event) => {
+                    event.stopPropagation()
+                  }}
+                  style={{
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 40,
+                    height: 40,
+                    flexShrink: 0,
+                    borderRadius: 12,
+                    backgroundColor: getGlobalStyle(
+                      '--color-feedback-success-dark'
+                    )
+                  }}
+                >
+                  <Icon
+                    icon='IconComment'
+                    color={getGlobalStyle(
+                      '--color-icons-white'
+                    )}
+                    size={18}
+                  />
+                </button>
+
+                {/* Complementos */}
+                <button
+                  type='button'
+                  title='Abrir orden'
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onOpen(String(item?.order?.pCodeRef))
+                  }}
+                  style={{
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 40,
+                    height: 40,
+                    flexShrink: 0,
+                    borderRadius: 12,
+                    backgroundColor: getGlobalStyle(
+                      '--color-neutral-gray-white'
+                    )
+                  }}
+                >
+                  <Icon
+                    size={20}
+                    icon='IconListBullet'
+                  />
+                </button>
+              </Column>
+            }
+            motion="snappy"
+            animationDuration={450}
+            exitDuration={250}
+            rotateOnSwipe={2}
+            scaleOnSwipe={0.02}
+            gradientAnimation
+            sticky
+            shake
+            autoClose
+            autoCloseDelay={3000}
+            onDelete={() => console.log('Eliminación completa')}
+            onFullSwipeRight={() => console.log('Archivado')}
+          >
+            <OrderCard
+              order={item.order}
+              status={item.status}
+              onOpen={onOpen}
+              onPrint={onPrint}
+              onPdf={onPdf}
+              busyPdf={downloadingCode === item.id}
+            />
+          </SwipeableCard>
+
         )}
       />
     </div>
